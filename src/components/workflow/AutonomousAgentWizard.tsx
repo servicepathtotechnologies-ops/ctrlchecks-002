@@ -23,6 +23,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { InputGuideLink } from './InputGuideLink';
 import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';
 import { WorkflowConfirmationStep } from './WorkflowConfirmationStep';
+import { HelpTooltip } from '@/components/ui/help-tooltip';
+import { generateFieldGuide } from './guideGenerator';
 import { 
     WorkflowGenerationStateManager, 
     WorkflowGenerationState,
@@ -2814,12 +2816,31 @@ export function AutonomousAgentWizard() {
                                                     fieldType = 'smtp';
                                                 }
                                                 
+                                                const guide = generateFieldGuide(
+                                                    'credentials',
+                                                    credKey,
+                                                    credLabel,
+                                                    isPassword ? 'password' : 'text',
+                                                    credLabel
+                                                );
+
                                                 return (
                                                     <div key={i} className="space-y-2 w-full">
-                                                        <Label htmlFor={`required-cred-${i}`} className="text-sm font-medium block">
-                                                            {credLabel}
-                                                            <span className="text-red-400 ml-1">*</span>
-                                                        </Label>
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <Label htmlFor={`required-cred-${i}`} className="text-sm font-medium block">
+                                                                {credLabel}
+                                                                <span className="text-red-400 ml-1">*</span>
+                                                            </Label>
+                                                            <HelpTooltip
+                                                                helpText={{
+                                                                    title: guide.title,
+                                                                    description: guide.steps.slice(0, 4).join('\n'),
+                                                                    example: guide.example,
+                                                                }}
+                                                                ariaLabel={`Help for ${credLabel}`}
+                                                                side="left"
+                                                            />
+                                                        </div>
                                                         <Input
                                                             id={`required-cred-${i}`}
                                                             type={isPassword ? 'password' : 'text'}
@@ -2939,10 +2960,25 @@ export function AutonomousAgentWizard() {
                                                     return (
                                                         <div className="space-y-4">
                                                             <div>
-                                                                <Label htmlFor={`question-${currentQuestionIndex}`} className="text-base font-semibold">
-                                                                    {questionLabel}
-                                                                    {question.required && <span className="text-red-400 ml-1">*</span>}
-                                                                </Label>
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <Label htmlFor={`question-${currentQuestionIndex}`} className="text-base font-semibold">
+                                                                        {questionLabel}
+                                                                        {question.required && <span className="text-red-400 ml-1">*</span>}
+                                                                    </Label>
+                                                                    {(question.helpText || question.description || question.example) ? (
+                                                                        <HelpTooltip
+                                                                            helpText={{
+                                                                                title: `What is "${questionLabel}"?`,
+                                                                                description: String(question.helpText || question.description || '').trim(),
+                                                                                example: question.example
+                                                                                    ? (typeof question.example === 'string' ? question.example : JSON.stringify(question.example))
+                                                                                    : undefined,
+                                                                            }}
+                                                                            ariaLabel={`Help for ${questionLabel}`}
+                                                                            side="left"
+                                                                        />
+                                                                    ) : null}
+                                                                </div>
                                                                 {question.description && (
                                                                     <p className="text-sm text-muted-foreground mt-1">{question.description}</p>
                                                                 )}
@@ -3443,10 +3479,22 @@ export function AutonomousAgentWizard() {
                                                         
                                                         return (
                                                             <div key={i} className="space-y-2">
-                                                                <Label htmlFor={`required-cred-${i}`} className="text-sm font-medium">
-                                                                    {credLabel}
-                                                                    <span className="text-red-400 ml-1">*</span>
-                                                                </Label>
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <Label htmlFor={`required-cred-${i}`} className="text-sm font-medium">
+                                                                        {credLabel}
+                                                                        <span className="text-red-400 ml-1">*</span>
+                                                                    </Label>
+                                                                    {(cred.helpText || cred.description) ? (
+                                                                        <HelpTooltip
+                                                                            helpText={{
+                                                                                title: `What is "${credLabel}"?`,
+                                                                                description: String(cred.helpText || cred.description || '').trim(),
+                                                                            }}
+                                                                            ariaLabel={`Help for ${credLabel}`}
+                                                                            side="left"
+                                                                        />
+                                                                    ) : null}
+                                                                </div>
                                                                 <Input
                                                                     id={`required-cred-${i}`}
                                                                     type={isPassword ? 'password' : 'text'}
@@ -3466,6 +3514,7 @@ export function AutonomousAgentWizard() {
                                                                         fieldLabel={credLabel}
                                                                         fieldType={fieldType}
                                                                         placeholder={credLabel}
+                                                                        helpText={String(cred.helpText || '')}
                                                                     />
                                                                 </div>
                                                             </div>

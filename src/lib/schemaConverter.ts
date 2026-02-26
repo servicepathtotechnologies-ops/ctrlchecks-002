@@ -46,16 +46,19 @@ export function convertSchemaToConfigField(
       frontendType = 'text';
   }
 
-  // Extract options from examples if available (for select fields)
-  let options: { label: string; value: string }[] | undefined;
-  if (fieldSchema.examples && fieldSchema.examples.length > 0) {
-    // If examples are strings, use them as select options
+  const keyLower = fieldKey.toLowerCase();
+  const isEmailLikeField = keyLower.includes('email') || keyLower.includes('recipient');
+
+  // Prefer explicit UI options from backend (systematic UI contract)
+  let options: { label: string; value: string }[] | undefined = fieldSchema.ui?.options;
+  if (options && options.length > 0) {
+    frontendType = 'select';
+  } else if (!isEmailLikeField && fieldSchema.examples && fieldSchema.examples.length > 0) {
+    // Fallback: infer select options from string examples (legacy behavior)
     const stringExamples = fieldSchema.examples
       .filter(ex => typeof ex === 'string')
       .map(ex => String(ex))
-      // ✅ Radix Select forbids empty-string item values; empty string is reserved for "clear selection"
       .filter(ex => ex.trim().length > 0);
-    // Increased limit to 20 to accommodate more options (e.g., Notion operations)
     if (stringExamples.length > 0 && stringExamples.length <= 20) {
       options = stringExamples.map(ex => ({
         label: String(ex).charAt(0).toUpperCase() + String(ex).slice(1).replace(/([A-Z])/g, ' $1').trim(),
@@ -63,6 +66,11 @@ export function convertSchemaToConfigField(
       }));
       frontendType = 'select';
     }
+  }
+
+  // Backend widget hints (e.g., multi_email)
+  if (fieldSchema.ui?.widget === 'multi_email') {
+    frontendType = 'textarea';
   }
 
   // Create ConfigField
@@ -116,6 +124,27 @@ export function validateNodeInputsAgainstSchema(
       errors.push({
         field: requiredField,
         message: `${requiredField} is required`,
+      });
+    }
+  }
+
+  // ✅ Systematic UI: conditional required fields (schema-driven)
+  for (const [fieldKey, fieldSchema] of Object.entries(nodeDefinition.inputSchema)) {
+    const requiredIf = (fieldSchema as any)?.ui?.requiredIf as { field: string; equals: any } | undefined;
+    if (!requiredIf) continue;
+    const depValue = (inputs as any)?.[requiredIf.field];
+    if (depValue !== requiredIf.equals) continue;
+
+    const value = (inputs as any)?.[fieldKey];
+    const missing =
+      value === undefined ||
+      value === null ||
+      value === '' ||
+      (Array.isArray(value) && value.length === 0);
+    if (missing) {
+      errors.push({
+        field: fieldKey,
+        message: `${fieldKey} is required`,
       });
     }
   }

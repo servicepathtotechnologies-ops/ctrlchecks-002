@@ -1387,6 +1387,21 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
                             Configuration
                           </h3>
                           {nodeDefinition.configFields.map((field) => {
+                            // ✅ Systematic UI: conditional visibility based on backend schema ui.requiredIf
+                            let effectiveRequired = field.required;
+                            if (backendSchema) {
+                              const ui = (backendSchema.inputSchema as any)?.[field.key]?.ui;
+                              const requiredIf = ui?.requiredIf as { field: string; equals: any } | undefined;
+                              if (requiredIf) {
+                                const currentConfig = selectedNode.data.config || {};
+                                const conditionMet = (currentConfig as any)?.[requiredIf.field] === requiredIf.equals;
+                                if (!conditionMet) {
+                                  return null;
+                                }
+                                effectiveRequired = true;
+                              }
+                            }
+
                             // Get dynamic helpText for Instagram operation field
                             let effectiveHelpText = field.helpText;
                             if (selectedNode.data.type === 'instagram' && field.key === 'operation') {
@@ -1408,7 +1423,7 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
                                 {selectedNode.data.type === 'if_else' && field.key === 'conditions' ? (
                                   <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1">
                                     {field.label}
-                                    {field.required && <span className="text-destructive/80">*</span>}
+                                    {effectiveRequired && <span className="text-destructive/80">*</span>}
                                     {/* ✅ SCHEMA-DRIVEN UI: Show schema-driven indicator */}
                                     {backendSchema && (
                                       <span className="ml-1 text-[10px] text-muted-foreground/50" title="Rendered from backend schema">
@@ -1419,7 +1434,7 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
                                 ) : (
                                   <Label htmlFor={field.key} className="text-xs font-medium text-foreground/90 flex items-center gap-1">
                                     {field.label}
-                                    {field.required && <span className="text-destructive/80">*</span>}
+                                    {effectiveRequired && <span className="text-destructive/80">*</span>}
                                     {/* ✅ SCHEMA-DRIVEN UI: Show schema-driven indicator */}
                                     {backendSchema && (
                                       <span className="ml-1 text-[10px] text-muted-foreground/50" title="Rendered from backend schema">

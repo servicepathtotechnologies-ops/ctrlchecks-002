@@ -30,6 +30,11 @@ export interface InputFieldSchema {
   default?: any;
   examples?: any[];
   validation?: (value: any) => boolean | string;
+  ui?: {
+    options?: Array<{ label: string; value: string }>;
+    requiredIf?: { field: string; equals: any };
+    widget?: 'text' | 'textarea' | 'json' | 'multi_email';
+  };
 }
 
 export interface OutputFieldSchema {
