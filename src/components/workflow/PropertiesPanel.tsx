@@ -957,7 +957,35 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
               <Textarea
                 id={field.key}
                 value={typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
-                onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                onChange={(e) => {
+                  const textValue = e.target.value;
+                  // ✅ UNIVERSAL FIX: Parse JSON strings for object/json fields
+                  // Check if this field expects an object/json type from backend schema
+                  if (backendSchema?.inputSchema?.[field.key]?.type === 'object' || 
+                      backendSchema?.inputSchema?.[field.key]?.type === 'json') {
+                    // Try to parse JSON string, but keep as string if invalid (user might be typing)
+                    if (textValue.trim() === '' || textValue.trim() === '{}' || textValue.trim() === '[]') {
+                      handleConfigChange(field.key, textValue.trim() === '' ? '' : textValue);
+                    } else {
+                      try {
+                        const parsed = JSON.parse(textValue);
+                        // Only save parsed object if it's actually an object (not array)
+                        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                          handleConfigChange(field.key, parsed);
+                        } else {
+                          // Keep as string if parsed to array or other type
+                          handleConfigChange(field.key, textValue);
+                        }
+                      } catch {
+                        // Invalid JSON - keep as string (user might be typing)
+                        handleConfigChange(field.key, textValue);
+                      }
+                    }
+                  } else {
+                    // Not an object/json field - save as string
+                    handleConfigChange(field.key, textValue);
+                  }
+                }}
                 placeholder={field.placeholder}
                 className="min-h-[100px] font-mono text-xs border-border/60 focus-visible:ring-1 focus-visible:ring-ring/50"
                 onMouseDown={handleInputMouseDown}

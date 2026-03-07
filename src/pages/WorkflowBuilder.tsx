@@ -91,6 +91,12 @@ export default function WorkflowBuilder() {
           }
         });
         
+        // ✅ WORLD-CLASS FIX: Validate node count matches between frontend and backend
+        const expectedNodeCount = backendWorkflow.nodes.length;
+        if (expectedNodeCount === 0) {
+          console.warn('[WorkflowBuilder] ⚠️  Backend workflow has 0 nodes - this may indicate a data loading issue');
+        }
+        
         const normalizedBackend = normalizeBackendWorkflow(backendWorkflow);
         
         // Step 2: Validate and fix workflow (regenerate IDs, validate types, etc.)
@@ -98,6 +104,15 @@ export default function WorkflowBuilder() {
           nodes: normalizedBackend.nodes,
           edges: normalizedBackend.edges,
         });
+        
+        // ✅ WORLD-CLASS FIX: Verify node count after normalization
+        if (normalized.nodes.length !== expectedNodeCount && expectedNodeCount > 0) {
+          console.warn(
+            `[WorkflowBuilder] ⚠️  Node count mismatch after normalization: ` +
+            `expected ${expectedNodeCount}, got ${normalized.nodes.length}. ` +
+            `This may indicate a data integrity issue.`
+          );
+        }
         
         // Step 3: Validate all node types are registered in React Flow
         const typeValidation = validateNodeTypesRegistered(normalized.nodes);

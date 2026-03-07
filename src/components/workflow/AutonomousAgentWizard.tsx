@@ -131,7 +131,7 @@ const ensureStateForBlueprint = (
     // No action needed
 };
 
-type WizardStep = 'idle' | 'analyzing' | 'questioning' | 'refining' | 'confirmation' | 'workflow-confirmation' | 'credentials' | 'building' | 'executing' | 'complete';
+type WizardStep = 'idle' | 'analyzing' | 'summarize' | 'questioning' | 'refining' | 'confirmation' | 'workflow-confirmation' | 'credentials' | 'building' | 'executing' | 'complete';
 
 interface AgentQuestion {
     id: string;
@@ -207,6 +207,17 @@ export function AutonomousAgentWizard() {
     const [buildStartTime, setBuildStartTime] = useState<number | null>(null);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [cognitiveTextIndex, setCognitiveTextIndex] = useState(0);
+    // Summarize Layer: Prompt variations
+    const [promptVariations, setPromptVariations] = useState<Array<{
+        id: string;
+        prompt: string;
+        matchedKeywords: string[];
+        confidence: number;
+        reasoning: string;
+    }>>([]);
+    const [selectedPromptVariation, setSelectedPromptVariation] = useState<string | null>(null);
+    const [originalPrompt, setOriginalPrompt] = useState<string>('');
+    const [isSummarizeLayerProcessing, setIsSummarizeLayerProcessing] = useState<boolean>(false);
     const [circleTextIndex, setCircleTextIndex] = useState(0);
     const [workflowUnderstandingConfirmed, setWorkflowUnderstandingConfirmed] = useState(false);
     const [pendingWorkflowData, setPendingWorkflowData] = useState<{ 
@@ -502,6 +513,8 @@ export function AutonomousAgentWizard() {
         // Scroll immediately BEFORE state change - no waiting
         scrollImmediately(step2Ref);
         setStep('analyzing');
+        setIsSummarizeLayerProcessing(true); // Track that we're processing summarize layer
+        setPromptVariations([]); // Clear previous variations
 
         try {
             console.log('Submitting workflow prompt:', prompt);
@@ -520,25 +533,40 @@ export function AutonomousAgentWizard() {
             }
 
             const data = await response.json();
+            
+            // Check if this is a summarize layer response (prompt variations)
+            if (data.phase === 'summarize' && data.promptVariations) {
+                console.log('[Frontend] Summarize layer - received prompt variations');
+                setPromptVariations(data.promptVariations);
+                setOriginalPrompt(data.originalPrompt || prompt);
+                setIsSummarizeLayerProcessing(false); // Summarize layer complete
+                setStep('questioning'); // Show summary container with variations
+                scrollToStep(step2Ref, 300);
+                return; // Return to show variations in summary container
+            }
+            
+            // Normal analysis response - summarize layer was skipped or completed
+            setIsSummarizeLayerProcessing(false);
+            
+            // Normal analysis response
             setAnalysis(data);
             const initialAnswers: Record<string, string> = {};
-            data.questions.forEach((q: AgentQuestion) => {
-                if (q.options.length > 0) initialAnswers[q.id] = q.options[0];
+            data.questions?.forEach((q: AgentQuestion) => {
+                if (q.options && q.options.length > 0) initialAnswers[q.id] = q.options[0];
             });
             setAnswers(initialAnswers);
             
             // Execution Flow Architecture (STEP-2): Update state manager
-            stateManager.setClarifyingQuestions(data.questions);
+            stateManager.setClarifyingQuestions(data.questions || []);
             stateManager.setClarifyingAnswers(initialAnswers);
             
-            // Note: Auto-continue disabled - always show questions step if questions exist
-            // If no questions, still proceed to next step but don't auto-skip
-            
+            // Always show summary container - user will click "Continue Building" button
+            // Don't auto-continue - let user see summary first
             setStep('questioning');
-            // Ensure step 2 is visible after questions load
             scrollToStep(step2Ref, 300);
         } catch (err: any) {
             console.error(err);
+            setIsSummarizeLayerProcessing(false); // Reset flag on error
             toast({ title: 'Analysis Failed', description: err.message, variant: 'destructive' });
             setStep('idle');
         }
@@ -725,10 +753,76 @@ export function AutonomousAgentWizard() {
         return finalCredentials;
     };
 
-    const handleRefine = async () => {
+    // Handle proceeding with selected prompt variation (auto-continue)
+    // Handle proceeding with selected prompt variation - DIRECTLY to workflow generation (skip analysis)
+    const handleProceedWithSelectedPrompt = async (variation: { id: string; prompt: string; matchedKeywords: string[]; confidence: number; reasoning: string }) => {
+        if (!variation) return;
+
+        console.log('[Frontend] Proceeding with selected prompt variation, going directly to workflow generation');
+        console.log('[Frontend] Selected prompt variation:', variation.prompt);
+        
+        // ✅ CRITICAL: Store selected prompt variation
+        // DO NOT update prompt state yet - only update when "Continue Building" is clicked
+        const selectedPrompt = variation.prompt;
+        
+        // Clear summarize layer state
+        setPromptVariations([]);
+        setSelectedPromptVariation(null);
+        setOriginalPrompt('');
+        setIsSummarizeLayerProcessing(false);
+        
+        // ✅ CRITICAL: Update prompt state NOW (when "Continue Building" is clicked)
+        // This updates the input field to show the selected prompt
+        setPrompt(selectedPrompt);
+        
+        // Set analysis with the selected prompt
+        setAnalysis({
+            summary: selectedPrompt,
+            questions: [], // No questions - go directly to generation
+            clarifiedPromptPreview: selectedPrompt,
+            predictedStepCount: 3, // Default estimate
+        } as AnalysisResult);
+        
+        // Set empty answers
+        setAnswers({});
+        stateManager.setClarifyingQuestions([]);
+        stateManager.setClarifyingAnswers({});
+        
+        // ✅ CRITICAL: Confirm understanding with selected prompt variation
+        // This ensures the state manager knows we're ready to build
+        const confirmResult = stateManager.confirmUnderstanding(selectedPrompt);
+        if (!confirmResult.success) {
+            console.warn('[Frontend] Understanding confirmation warning:', confirmResult.error);
+        }
+        
+        // ✅ CRITICAL: Set refinement object with selected prompt
+        // This ensures the selected variation prompt is available in state
+        setRefinement({
+            refinedPrompt: selectedPrompt, // ✅ This is the selected variation prompt
+            systemPrompt: selectedPrompt,
+            requirements: {},
+        });
+        
+        // ✅ CRITICAL: Skip refine mode entirely - go directly to workflow generation
+        // After selecting a prompt variation, we don't need to refine again
+        setStep('building');
+        
+        // ✅ CRITICAL: Pass selected prompt DIRECTLY to handleBuild to avoid async state issues
+        // This ensures the selected variation is used, not the original prompt
+        setTimeout(() => {
+            handleBuild(selectedPrompt); // Pass selected prompt explicitly
+        }, 100);
+    };
+
+    const handleRefine = async (explicitPrompt?: string) => {
         // Execution Flow Architecture (STEP-2): Validate state transition
+        // Allow transition if questions are empty (auto-continue scenario) or if in correct state
+        // Also allow if coming from summarize layer (step is 'refining' or 'questioning' with no questions)
         const currentState = mapWizardStepToState(step);
-        if (currentState !== WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE) {
+        const hasQuestions = analysis?.questions && analysis.questions.length > 0;
+        const isFromSummarizeLayer = (step === 'refining' || step === 'questioning') && (!hasQuestions || promptVariations.length === 0);
+        
+        if (hasQuestions && currentState !== WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE && !isFromSummarizeLayer) {
             toast({
                 title: 'Invalid State',
                 description: 'Cannot refine: Must complete clarification first',
@@ -737,25 +831,31 @@ export function AutonomousAgentWizard() {
             return;
         }
         
+        // ✅ CRITICAL: Use explicit prompt if provided (from selected variation), otherwise use state prompt
+        const promptToUse = explicitPrompt || prompt;
+        
+        console.log('[Frontend] Using prompt for refinement:', promptToUse);
+        console.log('[Frontend] Prompt source:', explicitPrompt ? 'selected variation (explicit)' : 'state (prompt)');
+        
         // Update answers in state manager
         stateManager.setClarifyingAnswers(answers);
         
         // Scroll immediately BEFORE state change - no waiting
         scrollImmediately(step3Ref);
         setStep('refining');
-        const fa = analysis?.questions.map(q => ({
+        const fa = analysis?.questions?.map(q => ({
             question: q.text,
             answer: answers[q.id]
         })) || [];
 
         try {
-            console.log('Submitting workflow prompt:', prompt);
+            console.log('Submitting workflow prompt:', promptToUse);
             console.log('Mode:', 'refine');
             console.log('Answers:', fa);
             const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt, mode: 'refine', answers: fa })
+                body: JSON.stringify({ prompt: promptToUse, mode: 'refine', answers: fa })
             });
 
             if (!response.ok) {
@@ -1024,14 +1124,29 @@ export function AutonomousAgentWizard() {
                 setStep('confirmation');
                 scrollToStep(step3Ref, 300);
             } else {
-                // No workflow yet - stay in refining step
-                console.log('⚠️ [Frontend] No workflow in response - staying in refining step');
-                console.log('📋 [Frontend] Will wait for workflow to be built before asking for credentials');
-                setStep('refining');
-                toast({
-                    title: 'Building Workflow',
-                    description: 'Generating workflow structure...',
-                });
+                // No workflow yet - automatically generate workflow using mode: 'create'
+                console.log('✅ [Frontend] Refinement complete - automatically generating workflow...');
+                console.log('📋 [Frontend] Proceeding to workflow generation (mode: create)');
+                
+                // ✅ CRITICAL: Use refined prompt from backend, or fallback to current prompt state
+                // The refined prompt should be the selected variation prompt that was sent
+                const promptToUse = data.refinedPrompt || prompt;
+                console.log('[Frontend] Using prompt for workflow generation:', promptToUse);
+                
+                // Update prompt state with refined prompt if available
+                if (data.refinedPrompt) {
+                    setPrompt(data.refinedPrompt);
+                }
+                
+                // Ensure refinement data is set (handleBuild needs it)
+                setRefinement(data);
+                
+                // Set step to 'building' so handleBuild knows we're ready
+                // handleBuild will use mode: 'create' to generate the workflow
+                // The prompt is already set in state, so handleBuild will use it
+                setTimeout(() => {
+                    handleBuild();
+                }, 500); // Small delay to ensure state is updated
             }
         } catch (err: any) {
             console.error(err);
@@ -1420,7 +1535,7 @@ export function AutonomousAgentWizard() {
         }
     };
 
-    const handleBuild = async () => {
+    const handleBuild = async (explicitPrompt?: string) => {
         // ✅ PRODUCTION FLOW: Unified configuration submission (inputs + credentials)
         if (pendingWorkflowData && step === 'configuration') {
             console.log('✅ Submitting unified configuration (inputs + credentials)');
@@ -1581,7 +1696,13 @@ export function AutonomousAgentWizard() {
                         edges: workflowGraph?.edges || finalWorkflow.edges || []
                     });
                     
-                    // Fix state transitions
+                    // ✅ CRITICAL: Check if workflow is already ready before setting blueprint
+                    // If already ready, skip blueprint setting (it's already set from initial generation)
+                    const currentState = stateManager.getCurrentState();
+                    const isAlreadyReady = currentState === WorkflowGenerationState.STATE_7_WORKFLOW_READY;
+                    
+                    if (!isAlreadyReady) {
+                        // Fix state transitions only if not already ready
                     ensureStateForBlueprint(
                         stateManager, 
                         refinement?.refinedPrompt || refinement?.systemPrompt || prompt,
@@ -1593,6 +1714,10 @@ export function AutonomousAgentWizard() {
                     const readyResult = stateManager.markWorkflowReady();
                     if (!readyResult.success) {
                         console.warn('[StateManager] Warning:', readyResult.error);
+                        }
+                    } else {
+                        // Workflow is already ready - just update nodes/edges without state transition
+                        console.log('[StateManager] Workflow already ready - skipping blueprint setting');
                     }
                     
                     setGeneratedWorkflowId(savedWorkflow.id);
@@ -1784,8 +1909,20 @@ export function AutonomousAgentWizard() {
             // Get Supabase URL and session token
             const { data: { session } } = await supabase.auth.getSession();
             
-            // Determine the prompt to use: check refinement.refinedPrompt, or fallback to original prompt
-            const finalPrompt = refinement?.refinedPrompt || prompt;
+            // ✅ CRITICAL: Determine the prompt to use - prioritize explicit prompt, then refinement, then state prompt
+            // explicitPrompt is passed directly from handleProceedWithSelectedPrompt to avoid async state issues
+            const finalPrompt = explicitPrompt || refinement?.refinedPrompt || prompt;
+            
+            console.log('[Frontend] handleBuild - Final prompt for workflow generation:', finalPrompt);
+            console.log('[Frontend] Prompt source:', explicitPrompt ? 'explicitPrompt (selected variation - direct)' : refinement?.refinedPrompt ? 'refinement.refinedPrompt (selected variation)' : 'state.prompt (fallback)');
+            console.log('[Frontend] Explicit prompt value:', explicitPrompt);
+            console.log('[Frontend] State prompt value:', prompt);
+            console.log('[Frontend] Refinement refinedPrompt value:', refinement?.refinedPrompt);
+            
+            // ✅ CRITICAL: Verify we're using the selected variation, not the original prompt
+            if (!explicitPrompt && !refinement?.refinedPrompt) {
+                console.warn('[Frontend] ⚠️ WARNING: No explicit prompt or refinement.refinedPrompt - using state.prompt. Selected variation may not be set correctly.');
+            }
             
             if (!finalPrompt || !finalPrompt.trim()) {
                 throw new Error('Prompt is required. Please provide a workflow description.');
@@ -2088,6 +2225,11 @@ export function AutonomousAgentWizard() {
                                     
                                     const normalized = validateAndFixWorkflow({ nodes: nodesWithCredentials, edges: workflowEdges });
                                     
+                                    // ✅ CRITICAL: Check if workflow is already ready before setting blueprint
+                                    const currentState = stateManager.getCurrentState();
+                                    const isAlreadyReady = currentState === WorkflowGenerationState.STATE_7_WORKFLOW_READY;
+                                    
+                                    if (!isAlreadyReady) {
                                     // Fix state transitions: Ensure we're in the correct state before setting blueprint
                                     ensureStateForBlueprint(
                                         stateManager, 
@@ -2097,6 +2239,10 @@ export function AutonomousAgentWizard() {
                                     
                                     // Execution Flow Architecture (STEP-2): Set workflow blueprint
                                     stateManager.setWorkflowBlueprint({ nodes: normalized.nodes, edges: normalized.edges });
+                                    } else {
+                                        // Workflow is already ready - skip blueprint setting
+                                        console.log('[StateManager] Workflow already ready - skipping blueprint setting');
+                                    }
                                     
                                     // Execution Flow Architecture (STEP-2): Check for validation errors
                                     // If validation fixes were applied, we might have had errors
@@ -2514,19 +2660,211 @@ export function AutonomousAgentWizard() {
                                     </div>
                                 ))}
                             </div>
+
+                            {/* Prompt variations will show in Summary Container below */}
                         </motion.div>
                     </div>
 
-                    {/* Loading state for analyzing */}
+                    {/* Loading state for analyzing / summarize layer processing */}
                     {step === 'analyzing' && (
                         <GlassBlurLoader 
-                            text="Analyzing Requirements..."
-                            description="Decomposing your request into logical steps and identifying necessary integrations."
+                            text={isSummarizeLayerProcessing ? "Refining Your Intent..." : "Analyzing Requirements..."}
+                            description={isSummarizeLayerProcessing ? "Understanding your prompt, matching keywords, and generating refined variations..." : "Decomposing your request into logical steps and identifying necessary integrations."}
                         />
                     )}
 
+                    {/* Legacy: Separate Summarize Step (kept for fallback, but should not be used) */}
+                    {step === 'summarize' && promptVariations.length > 0 && (
+                        <div ref={step2Ref} className="scroll-mt-6">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }} 
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex flex-col gap-6"
+                            >
+                            <Card className="shadow-xl overflow-hidden">
+                                    <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-indigo-500" />
+                                <CardHeader>
+                                        <CardTitle className="flex items-center gap-2 text-purple-400">
+                                            <Layers className="h-5 w-5" /> Select Your Intent
+                                    </CardTitle>
+                                        <CardDescription className="text-muted-foreground">
+                                            We've generated {promptVariations.length} refined versions of your prompt. Select the one that best matches your intent.
+                                        </CardDescription>
+                                </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {originalPrompt && (
+                                            <div className="p-3 bg-muted/50 rounded-lg border border-border">
+                                                <p className="text-sm font-medium text-muted-foreground mb-1">Original Prompt:</p>
+                                                <p className="text-sm text-foreground">{originalPrompt}</p>
+                                            </div>
+                                        )}
+                                        
+                                <div className="grid gap-4">
+                                            {promptVariations.map((variation, index) => {
+                                                const isSelected = selectedPromptVariation === variation.id;
+                                                return (
+                                                    <Card
+                                                        key={variation.id}
+                                                        className={`cursor-pointer transition-all hover:border-indigo-500/50 ${
+                                                            isSelected
+                                                                ? 'border-indigo-500 bg-indigo-500/10 shadow-lg'
+                                                                : 'border-border hover:bg-muted/50'
+                                                        }`}
+                                                        onClick={() => setSelectedPromptVariation(variation.id)}
+                                                    >
+                                            <CardHeader className="pb-3">
+                                                            <div className="flex items-start justify-between">
+                                                                <CardTitle className="text-base flex items-center gap-2">
+                                                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 text-xs font-bold">
+                                                                        {index + 1}
+                                                                    </span>
+                                                                    Option {index + 1}
+                                                                </CardTitle>
+                                                                {isSelected && (
+                                                                    <CheckCircle2 className="h-5 w-5 text-indigo-500" />
+                                                                )}
+                                                            </div>
+                                            </CardHeader>
+                                            <CardContent>
+                                                            <p className="text-foreground leading-relaxed mb-3">
+                                                                {variation.prompt}
+                                                            </p>
+                                                            {variation.matchedKeywords && variation.matchedKeywords.length > 0 && (
+                                                                <div className="flex flex-wrap gap-2 mb-3">
+                                                                    {variation.matchedKeywords.slice(0, 5).map((keyword) => (
+                                                                        <span
+                                                                            key={keyword}
+                                                                            className="px-2 py-1 text-xs bg-indigo-500/20 text-indigo-400 rounded"
+                                                                        >
+                                                                            {keyword}
+                                                                        </span>
+                                                                    ))}
+                                                                    {variation.matchedKeywords.length > 5 && (
+                                                                        <span className="px-2 py-1 text-xs text-muted-foreground">
+                                                                            +{variation.matchedKeywords.length - 5} more
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            {variation.reasoning && (
+                                                                <p className="text-xs text-muted-foreground italic">
+                                                                    {variation.reasoning}
+                                                                </p>
+                                                            )}
+                                                        </CardContent>
+                                                    </Card>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="flex gap-3 pt-4">
+                                            <Button
+                                                onClick={async () => {
+                                                    if (selectedPromptVariation) {
+                                                        const selectedVariation = promptVariations.find(v => v.id === selectedPromptVariation);
+                                                        if (selectedVariation) {
+                                                            // Update prompt with selected variation
+                                                            setPrompt(selectedVariation.prompt);
+                                                            
+                                                            // Proceed to workflow analysis with selected prompt
+                                                            setIsSummarizeLayerProcessing(false); // Now analyzing, not summarizing
+                                                            setStep('analyzing');
+                                                            
+                                                            try {
+                                                                // Trigger analysis with selected prompt
+                                                                const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({
+                                                                        prompt: selectedVariation.prompt,
+                                                                        mode: 'analyze',
+                                                                        selectedPromptVariation: selectedVariation.prompt
+                                                                    })
+                                                                });
+
+                                                                if (!response.ok) {
+                                                                    const error = await response.json().catch(() => ({ error: 'Analysis failed' }));
+                                                                    const errorMessage = error.error || error.message || error.details || 'Analysis failed';
+                                                                    throw new Error(errorMessage);
+                                                                }
+
+                                                                const data = await response.json();
+                                                                
+                                                                // Check if we got another summarize response (shouldn't happen, but handle it)
+                                                                if (data.phase === 'summarize' && data.promptVariations) {
+                                                                    setPromptVariations(data.promptVariations);
+                                                                    setOriginalPrompt(data.originalPrompt || selectedVariation.prompt);
+                                                                    setStep('summarize');
+                                                                    return;
+                                                                }
+                                                                
+                                                                // Normal analysis response - proceed to workflow analysis
+                                                                setAnalysis(data);
+                                                                const initialAnswers: Record<string, string> = {};
+                                                                data.questions?.forEach((q: AgentQuestion) => {
+                                                                    if (q.options && q.options.length > 0) initialAnswers[q.id] = q.options[0];
+                                                                });
+                                                                setAnswers(initialAnswers);
+                                                                
+                                                                // Update state manager
+                                                                stateManager.setClarifyingQuestions(data.questions || []);
+                                                                stateManager.setClarifyingAnswers(initialAnswers);
+                                                                
+                                                                // Clear summarize layer state
+                                                                setPromptVariations([]);
+                                                                setSelectedPromptVariation(null);
+                                                                
+                                                                // Continue to questioning step
+                                                                setStep('questioning');
+                                                                
+                                                                // If no questions, auto-continue to workflow generation
+                                                                if (!data.questions || data.questions.length === 0) {
+                                                                    setTimeout(() => handleRefine(), 100);
+                                                                } else {
+                                                                    scrollToStep(step2Ref, 300);
+                                                                }
+                                                            } catch (err: any) {
+                                                                console.error(err);
+                                                                toast({ 
+                                                                    title: 'Analysis Failed', 
+                                                                    description: err.message, 
+                                                                    variant: 'destructive' 
+                                                                });
+                                                                setStep('summarize'); // Go back to summarize step on error
+                                                            }
+                                                        }
+                                                    }
+                                                }}
+                                                disabled={!selectedPromptVariation}
+                                                className="flex-1 bg-indigo-600 hover:bg-indigo-500"
+                                                size="lg"
+                                            >
+                                                Proceed to Analysis <ArrowRight className="ml-2 h-5 w-5" />
+                                            </Button>
+                                            <Button
+                                                onClick={() => {
+                                                    // User wants to re-enter prompt
+                                                    setPrompt('');
+                                                    setStep('idle');
+                                                    setPromptVariations([]);
+                                                    setSelectedPromptVariation(null);
+                                                    setOriginalPrompt('');
+                                                }}
+                                                variant="outline"
+                                                size="lg"
+                                            >
+                                                Re-enter Prompt
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </div>
+                    )}
+
                     {/* STEP 2: Questions */}
-                    {step !== 'idle' && analysis && (
+                    {/* Summary Container with Prompt Variations OR Analysis Summary */}
+                    {step !== 'idle' && step !== 'analyzing' && (promptVariations.length > 0 || analysis) && (
                         <div ref={step2Ref} className="scroll-mt-6">
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }} 
@@ -2537,86 +2875,137 @@ export function AutonomousAgentWizard() {
                                 <div className="h-1 w-full bg-gradient-to-r from-indigo-500 to-purple-500" />
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2 text-indigo-400">
-                                        <Layers className="h-5 w-5" /> Summary
+                                        <Layers className="h-5 w-5" /> 
+                                        {promptVariations.length > 0 ? 'Select Your Intent' : 'Summary'}
                                     </CardTitle>
+                                    {promptVariations.length > 0 && (
+                                        <CardDescription className="text-muted-foreground">
+                                            We've generated {promptVariations.length} refined versions of your prompt. Select the one that best matches your intent.
+                                        </CardDescription>
+                                    )}
                                 </CardHeader>
-                                <CardContent>
-                                    <p className="text-foreground leading-relaxed text-lg">{analysis.summary}</p>
-                                </CardContent>
-                            </Card>
-
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-semibold flex items-center gap-2 text-amber-400">
-                                    <AlertCircle className="h-5 w-5" />
-                                    Clarifying Questions
-                                </h3>
-                                <div className="grid gap-4">
-                                    {analysis.questions.map((q, index) => (
-                                        <Card key={`question-${index}-${q.id}`} className="hover:border-border transition-colors">
-                                            <CardHeader className="pb-3">
-                                                <CardTitle className="text-base">{q.text}</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <RadioGroup
-                                                    value={answers[q.id] || ''}
-                                                    onValueChange={(val) => {
-                                                        setAnswers(prev => ({ ...prev, [q.id]: val }));
-                                                    }}
-                                                    className="grid grid-cols-1 md:grid-cols-2 gap-3"
-                                                    name={`question-${q.id}`}
-                                                >
-                                                    {q.options.map((opt, index) => {
-                                                        const optionLabel = String.fromCharCode(65 + index); // A, B, C, D...
-                                                        const optionId = `${q.id}-opt-${index}`;
-                                                        const isSelected = answers[q.id] === opt;
-                                                        
+                                <CardContent className="space-y-4">
+                                    {/* Show Prompt Variations if available */}
+                                    {promptVariations.length > 0 ? (
+                                        <>
+                                            {originalPrompt && (
+                                                <div className="p-3 bg-muted/50 rounded-lg border border-border mb-4">
+                                                    <p className="text-sm font-medium text-muted-foreground mb-1">Original Prompt:</p>
+                                                    <p className="text-sm text-foreground">{originalPrompt}</p>
+                                                </div>
+                                            )}
+                                            
+                                            <div className="grid gap-3">
+                                                {promptVariations.map((variation, index) => {
+                                                    const isSelected = selectedPromptVariation === variation.id;
                                                         return (
-                                                            <div 
-                                                                key={optionId}
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    e.stopPropagation();
-                                                                    setAnswers(prev => ({ ...prev, [q.id]: opt }));
-                                                                }}
-                                                                className={`group flex items-start space-x-3 border-2 p-4 rounded-lg transition-all cursor-pointer ${
+                                                        <Card
+                                                            key={variation.id}
+                                                            className={`cursor-pointer transition-all ${
                                                                     isSelected 
                                                                         ? 'border-indigo-500 bg-indigo-500/10 shadow-md' 
-                                                                        : 'border-border hover:bg-muted hover:border-indigo-300'
+                                                                    : 'border-border hover:bg-muted/50 hover:border-indigo-300'
                                                                 }`}
-                                                            >
-                                                                <RadioGroupItem 
-                                                                    value={opt} 
-                                                                    id={optionId} 
-                                                                    className="text-indigo-500 mt-0.5"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                    }}
-                                                                />
+                                                            onClick={() => {
+                                                                setSelectedPromptVariation(variation.id);
+                                                                // Don't auto-continue - user must click "Continue Building"
+                                                            }}
+                                                        >
+                                                            <CardContent className="p-4">
+                                                                <div className="flex items-start gap-3">
+                                                                    <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0 ${
+                                                                        isSelected
+                                                                            ? 'bg-indigo-500 text-white'
+                                                                            : 'bg-indigo-500/20 text-indigo-400'
+                                                                    }`}>
+                                                                        {index + 1}
+                                                                    </div>
                                                                 <div className="flex-1 min-w-0">
-                                                                    <Label 
-                                                                        htmlFor={optionId} 
-                                                                        className="cursor-pointer flex items-start gap-2 w-full"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                        }}
-                                                                    >
-                                                                        <span className="font-semibold text-indigo-500 shrink-0">{optionLabel}.</span>
-                                                                        <span className="flex-1">{opt}</span>
-                                                                    </Label>
+                                                                        <p className="text-sm text-foreground leading-relaxed">
+                                                                            {variation.prompt}
+                                                                        </p>
+                                                                        {variation.matchedKeywords && variation.matchedKeywords.length > 0 && (
+                                                                            <div className="flex flex-wrap gap-1.5 mt-2">
+                                                                                {variation.matchedKeywords.slice(0, 4).map((keyword) => (
+                                                                                    <span
+                                                                                        key={keyword}
+                                                                                        className="px-1.5 py-0.5 text-xs bg-indigo-500/10 text-indigo-400 rounded"
+                                                                                    >
+                                                                                        {keyword}
+                                                                                    </span>
+                                                                                ))}
+                                                                                {variation.matchedKeywords.length > 4 && (
+                                                                                    <span className="px-1.5 py-0.5 text-xs text-muted-foreground">
+                                                                                        +{variation.matchedKeywords.length - 4}
+                                                                                    </span>
+                                                                                )}
                                                                 </div>
+                                                                        )}
                                                             </div>
-                                                        );
-                                                    })}
-                                                </RadioGroup>
+                                                                    {isSelected && (
+                                                                        <CheckCircle2 className="h-5 w-5 text-indigo-500 flex-shrink-0 mt-0.5" />
+                                                                    )}
+                                                                </div>
                                             </CardContent>
                                         </Card>
-                                    ))}
-                                </div>
+                                                    );
+                                                })}
                             </div>
 
-                            <Button onClick={handleRefine} className="self-end bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 px-8 py-6 text-lg" size="lg">
-                                Submit Answers <ArrowRight className="ml-2 h-5 w-5" />
+                                            <div className="flex items-center justify-between pt-4 border-t border-border">
+                                                <Button
+                                                    onClick={() => {
+                                                        // User wants to re-enter prompt
+                                                        setPrompt('');
+                                                        setPromptVariations([]);
+                                                        setSelectedPromptVariation(null);
+                                                        setOriginalPrompt('');
+                                                        setIsSummarizeLayerProcessing(false);
+                                                        setStep('idle');
+                                                    }}
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-xs text-muted-foreground"
+                                                >
+                                                    Re-enter prompt
                             </Button>
+                                                <Button
+                                                    onClick={() => {
+                                                        if (selectedPromptVariation) {
+                                                            const selectedVariation = promptVariations.find(v => v.id === selectedPromptVariation);
+                                                            if (selectedVariation) {
+                                                                handleProceedWithSelectedPrompt(selectedVariation);
+                                                            }
+                                                        }
+                                                    }}
+                                                    disabled={!selectedPromptVariation}
+                                                    className="bg-indigo-600 hover:bg-indigo-500"
+                                                    size="lg"
+                                                >
+                                                    Continue Building <ArrowRight className="ml-2 h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        /* Show Analysis Summary if no variations */
+                                        <>
+                                            <p className="text-foreground leading-relaxed text-lg">{analysis?.summary}</p>
+                                            {/* Auto-continue if no questions */}
+                                            {analysis && (!analysis.questions || analysis.questions.length === 0) && (
+                                                <div className="pt-4 border-t border-border">
+                                                    <Button
+                                                        onClick={() => handleRefine()}
+                                                        className="w-full bg-indigo-600 hover:bg-indigo-500"
+                                                        size="lg"
+                                                    >
+                                                        Continue Building <ArrowRight className="ml-2 h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </motion.div>
                     </div>
                     )}

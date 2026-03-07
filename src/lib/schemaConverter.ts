@@ -49,24 +49,49 @@ export function convertSchemaToConfigField(
   const keyLower = fieldKey.toLowerCase();
   const isEmailLikeField = keyLower.includes('email') || keyLower.includes('recipient');
 
-  // Prefer explicit UI options from backend (systematic UI contract)
-  let options: { label: string; value: string }[] | undefined = fieldSchema.ui?.options;
-  if (options && options.length > 0) {
-    frontendType = 'select';
-  } else if (!isEmailLikeField && fieldSchema.examples && fieldSchema.examples.length > 0) {
-    // Fallback: infer select options from string examples (legacy behavior)
-    const stringExamples = fieldSchema.examples
-      .filter(ex => typeof ex === 'string')
-      .map(ex => String(ex))
-      .filter(ex => ex.trim().length > 0);
-    if (stringExamples.length > 0 && stringExamples.length <= 20) {
-      options = stringExamples.map(ex => ({
-        label: String(ex).charAt(0).toUpperCase() + String(ex).slice(1).replace(/([A-Z])/g, ' $1').trim(),
-        value: String(ex),
-      }));
+  // ✅ WORLD-CLASS: Identify fields that MUST be text input (user-provided values)
+  // These should NEVER be dropdowns, even if they have examples or options
+  // This matches the credential section logic for consistency
+  const isUserProvidedTextField = 
+    keyLower.includes('url') || // webhookUrl, apiUrl, baseUrl, endpoint, etc.
+    keyLower.includes('endpoint') ||
+    (keyLower.includes('api') && (keyLower.includes('key') || keyLower.includes('token') || keyLower.includes('secret'))) || // apiKey, api_key, apiToken, apiSecret
+    keyLower.includes('spreadsheet') || // spreadsheetId
+    (keyLower.includes('table') && keyLower.includes('name')) || // tableName
+    (keyLower.includes('file') && keyLower.includes('name')) || // fileName
+    (keyLower.includes('database') && keyLower.includes('name')) || // databaseName
+    (keyLower.includes('sheet') && keyLower.includes('id')) || // sheetId
+    (keyLower.includes('id') && !keyLower.includes('credential')) || // Any ID field (but not credentialId)
+    keyLower.includes('secret') || // secret keys
+    keyLower.includes('password') || // password fields
+    keyLower.includes('token') || // access tokens
+    keyLower.includes('auth'); // authentication fields
+
+  // ✅ WORLD-CLASS: Only use dropdowns for operation/resource fields with explicit options
+  // Examples are just hints for users, not selectable dropdown options
+  let options: { label: string; value: string }[] | undefined = undefined;
+
+  // Force text input for user-provided fields (URLs, IDs, API keys, etc.)
+  if (isUserProvidedTextField) {
+    frontendType = 'text';
+    // Don't set options for these fields - they're user-provided text inputs
+  } else if (fieldSchema.ui?.options && fieldSchema.ui.options.length > 0) {
+    // Check if this is an operation/resource field (should be dropdown)
+    const isOperationOrResourceField = 
+      keyLower.includes('operation') ||
+      keyLower.includes('resource') ||
+      keyLower.includes('action');
+    
+    if (isOperationOrResourceField) {
       frontendType = 'select';
+      options = fieldSchema.ui.options;
+    } else {
+      // For non-operation/resource fields with options, still use text input
+      // Options might be examples, not actual selectable values
+      frontendType = 'text';
     }
   }
+  // Note: We no longer convert examples to dropdowns - examples are just hints
 
   // Backend widget hints (e.g., multi_email)
   if (fieldSchema.ui?.widget === 'multi_email') {
@@ -194,7 +219,22 @@ export function validateNodeInputsAgainstSchema(
           break;
         case 'object':
         case 'json':
-          if (typeof value !== 'object' || Array.isArray(value)) {
+          // ✅ UNIVERSAL FIX: Handle JSON strings from textarea inputs
+          // Users type JSON in textarea, which is stored as string
+          // Try to parse JSON string before validation
+          let parsedValue = value;
+          if (typeof value === 'string' && value.trim() !== '') {
+            try {
+              parsedValue = JSON.parse(value);
+            } catch (parseError) {
+              // If JSON parse fails, it's invalid JSON
+              errors.push({ field: fieldKey, message: `${fieldKey} must be valid JSON` });
+              break; // Don't continue validation if JSON is invalid
+            }
+          }
+          
+          // Now validate the parsed value
+          if (typeof parsedValue !== 'object' || parsedValue === null || Array.isArray(parsedValue)) {
             errors.push({ field: fieldKey, message: `${fieldKey} must be an object` });
           }
           break;

@@ -272,10 +272,31 @@ function WorkflowCanvasInner() {
     }
   };
 
+  // ✅ PERMANENT FIX: Create stable dependency keys that only change when content actually changes
+  // These keys are memoized and only recalculate when edges/nodes content changes (not just reference)
+  const edgesKey = useMemo(() => {
+    if (edges.length === 0) return '';
+    return edges.map(e => `${e.id}:${e.source}:${e.target}`).sort().join('|');
+  }, [edges]);
+
+  const nodesKey = useMemo(() => {
+    if (nodes.length === 0) return '';
+    return nodes.map(n => `${n.id}:${n.data?.executionStatus || 'idle'}`).sort().join('|');
+  }, [nodes]);
+
+  const selectedEdgeId = selectedEdge?.id || '';
+
   // Add edge styling based on execution status (green for success, red for error)
   // MANDATORY: Ensure all edges are visible and properly rendered
+  // ✅ PERMANENT FIX: Guard against race condition and excessive re-rendering
   const styledEdges = useMemo(() => {
-    console.log(`[EdgeRender] Rendering ${edges.length} edges for ${nodes.length} nodes`);
+    // ✅ CRITICAL FIX: Don't render edges if nodes are empty (race condition prevention)
+    if (nodes.length === 0) {
+      return [];
+    }
+
+    // ✅ PERMANENT FIX: Removed excessive logging - only log in dev mode when actually needed
+    // Logging removed to prevent console spam - edges will render correctly without logs
 
     const validEdges = edges.map((edge) => {
       const sourceNode = nodes.find(n => n.id === edge.source);
@@ -316,11 +337,13 @@ function WorkflowCanvasInner() {
         normalizedTargetHandle = targetNodeType === 'ai_agent' ? 'userInput' : 'input';
       }
 
-      // Log edge normalization for debugging
-      if (edge.sourceHandle !== normalizedSourceHandle || edge.targetHandle !== normalizedTargetHandle) {
-        console.log(`[EdgeRender] Normalized handles for edge ${edge.id}:`);
-        console.log(`  Source: "${edge.sourceHandle || 'none'}" → "${normalizedSourceHandle}" (node: ${sourceNodeType})`);
-        console.log(`  Target: "${edge.targetHandle || 'none'}" → "${normalizedTargetHandle}" (node: ${targetNodeType})`);
+      // ✅ PERMANENT FIX: Only log normalization in development and limit frequency
+      if (process.env.NODE_ENV === 'development' && Math.random() < 0.1) {
+        if (edge.sourceHandle !== normalizedSourceHandle || edge.targetHandle !== normalizedTargetHandle) {
+          console.log(`[EdgeRender] Normalized handles for edge ${edge.id}:`);
+          console.log(`  Source: "${edge.sourceHandle || 'none'}" → "${normalizedSourceHandle}" (node: ${sourceNodeType})`);
+          console.log(`  Target: "${edge.targetHandle || 'none'}" → "${normalizedTargetHandle}" (node: ${targetNodeType})`);
+        }
       }
 
       // Check if edge is selected
@@ -401,9 +424,14 @@ function WorkflowCanvasInner() {
     });
 
     // MANDATORY: Return all edges (don't filter out any)
-    console.log(`[EdgeRender] Returning ${validEdges.length} styled edges`);
     return validEdges;
-  }, [edges, nodes, selectedEdge]);
+  }, [
+    // ✅ PERMANENT FIX: Use stable dependency keys that only change when content actually changes
+    // These keys are memoized separately and only change when edges/nodes content changes
+    edgesKey,
+    nodesKey,
+    selectedEdgeId
+  ]);
 
   // Generate a key based on node IDs to force re-render when workflow changes
   // This ensures React Flow resets completely when switching workflows
