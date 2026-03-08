@@ -12,10 +12,11 @@ export const workflowAPI = {
     const isConnected = await testConnection();
     
     if (!isConnected) {
+      const backendUrl = api.getBaseUrl();
       throw new Error(
-        'Backend server is not reachable. ' +
-        'Please ensure the backend is running on http://localhost:3001. ' +
-        'Start it with: cd worker && npm run dev'
+        `Backend server is not reachable at ${backendUrl}. ` +
+        'Please ensure the backend is running and accessible. ' +
+        'Check your VITE_API_URL environment variable in .env file.'
       );
     }
     
@@ -49,12 +50,13 @@ export const workflowAPI = {
       // Enhanced error messages
       if (error.message?.includes('Failed to fetch') || 
           error.message?.includes('ERR_CONNECTION_REFUSED')) {
+        const backendUrl = api.getBaseUrl();
         throw new Error(
-          'Cannot connect to backend API. ' +
+          `Cannot connect to backend API at ${backendUrl}. ` +
           'Make sure: \n' +
-          '1. Backend server is running (npm run dev in worker folder)\n' +
-          '2. Backend is accessible at http://localhost:3001\n' +
-          '3. No firewall is blocking port 3001\n' +
+          '1. Backend server is running and accessible\n' +
+          `2. Backend URL is correct: ${backendUrl}\n` +
+          '3. Check your VITE_API_URL in .env file\n' +
           '4. Check browser console for CORS errors'
         );
       }

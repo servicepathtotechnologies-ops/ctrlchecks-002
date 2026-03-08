@@ -39,15 +39,37 @@ const ensureProtocol = (url: string): string => {
     return `http://${url}`;
 };
 
+// Get API URL - prioritize environment variable, only use localhost if explicitly in local dev AND env var not set
+const getApiUrl = (): string => {
+    // First, try to get from environment variable (highest priority)
+    const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_PUBLIC_BASE_URL;
+    
+    if (envUrl) {
+        return ensureProtocol(envUrl);
+    }
+    
+    // Only use localhost fallback if:
+    // 1. We're in development mode
+    // 2. AND the env var is truly not set (not just empty string)
+    // 3. AND we're running on localhost (not production domain)
+    if (isDevelopment && window.location.hostname === 'localhost') {
+        console.warn('⚠️  VITE_API_URL not set. Using localhost:3001 for local development.');
+        return 'http://localhost:3001';
+    }
+    
+    // Production or env var should be set
+    if (!isDevelopment) {
+        console.error('❌ VITE_API_URL is required in production but not set!');
+    }
+    
+    return '';
+};
+
 export const ENDPOINTS = {
     // Chichu Chatbot & Worker Service
-    // REQUIRED: VITE_API_URL or VITE_PUBLIC_BASE_URL must be set in production
-    // Development fallback: http://localhost:3001
-    itemBackend: ensureProtocol(
-        import.meta.env.VITE_API_URL || 
-        import.meta.env.VITE_PUBLIC_BASE_URL || 
-        (isDevelopment ? 'http://localhost:3001' : '')
-    ),
+    // REQUIRED: VITE_API_URL or VITE_PUBLIC_BASE_URL must be set
+    // Development fallback: http://localhost:3001 (only if running on localhost)
+    itemBackend: getApiUrl(),
 
     // Text/Image/Audio Processors - FastAPI Service
     // REQUIRED: VITE_OLLAMA_BASE_URL must be set in production (Vite only exposes VITE_ prefixed vars)

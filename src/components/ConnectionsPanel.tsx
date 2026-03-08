@@ -9,6 +9,7 @@ import { CheckCircle, AlertCircle, Plug, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import ZohoConnectionStatus from './ZohoConnectionStatus';
 
 export default function ConnectionsPanel() {
@@ -382,7 +383,7 @@ export default function ConnectionsPanel() {
         throw new Error('No authentication token');
       }
 
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const backendUrl = getBackendUrl();
       const response = await fetch(`${backendUrl}/api/connections/github/disconnect`, {
         method: 'POST',
         headers: {
@@ -462,7 +463,7 @@ export default function ConnectionsPanel() {
         throw new Error('No authentication token');
       }
 
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const backendUrl = getBackendUrl();
       const response = await fetch(`${backendUrl}/api/connections/facebook/disconnect`, {
         method: 'POST',
         headers: {
@@ -505,7 +506,7 @@ export default function ConnectionsPanel() {
     setIsNotionConnecting(true);
 
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const backendUrl = getBackendUrl();
       const redirectUrl = `${window.location.origin}/auth/notion/callback`;
       
       window.location.href = `${backendUrl}/api/oauth/notion/authorize?redirect_uri=${encodeURIComponent(redirectUrl)}`;
@@ -560,7 +561,7 @@ export default function ConnectionsPanel() {
     setIsTwitterConnecting(true);
 
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const backendUrl = getBackendUrl();
       const redirectUrl = `${window.location.origin}/auth/twitter/callback`;
       
       window.location.href = `${backendUrl}/api/oauth/twitter/authorize?redirect_uri=${encodeURIComponent(redirectUrl)}`;

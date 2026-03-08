@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { CheckCircle, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 
 interface ZohoConnectionStatusProps {
@@ -70,7 +71,7 @@ export default function ZohoConnectionStatus({
       try {
         const authToken = (await supabase.auth.getSession()).data.session?.access_token;
         if (authToken) {
-          const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+          const backendUrl = getBackendUrl();
           const resp = await fetch(`${backendUrl}/api/connections/zoho/status`, {
             headers: {
               Authorization: `Bearer ${authToken}`,

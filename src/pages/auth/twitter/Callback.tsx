@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -47,7 +48,7 @@ export default function TwitterAuthCallback() {
         setStatus('Exchanging authorization code for access token...');
 
         // Exchange code for token via backend
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const backendUrl = getBackendUrl();
         const redirectUri = `${window.location.origin}/auth/twitter/callback`;
         
         const response = await fetch(`${backendUrl}/api/oauth/twitter/callback`, {

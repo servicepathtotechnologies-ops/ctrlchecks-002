@@ -3,10 +3,37 @@
  * Handles connection testing, error recovery, and CORS issues
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-                     import.meta.env.VITE_PUBLIC_BASE_URL || 
-                     import.meta.env.VITE_OLLAMA_BASE_URL || 
-                     'http://localhost:3001';
+// Get API URL - prioritize environment variable
+const getApiBaseUrl = (): string => {
+    // First priority: VITE_API_URL
+    if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+    }
+    
+    // Second priority: VITE_PUBLIC_BASE_URL
+    if (import.meta.env.VITE_PUBLIC_BASE_URL) {
+        return import.meta.env.VITE_PUBLIC_BASE_URL;
+    }
+    
+    // Third priority: VITE_OLLAMA_BASE_URL (not ideal, but better than localhost)
+    if (import.meta.env.VITE_OLLAMA_BASE_URL) {
+        console.warn('⚠️  Using VITE_OLLAMA_BASE_URL as API URL. Set VITE_API_URL instead.');
+        return import.meta.env.VITE_OLLAMA_BASE_URL;
+    }
+    
+    // Only use localhost if we're in development AND running on localhost
+    const isLocalDev = import.meta.env.DEV || import.meta.env.MODE === 'development';
+    if (isLocalDev && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        console.warn('⚠️  VITE_API_URL not set. Using localhost:3001 for local development.');
+        return 'http://localhost:3001';
+    }
+    
+    // Production should have env var set
+    console.error('❌ VITE_API_URL is required but not set!');
+    return '';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 class APIClient {
   private baseUrl: string;
@@ -18,9 +45,15 @@ class APIClient {
     this.baseUrl = baseUrl || API_BASE_URL;
     
     // Validate URL
-    if (!this.baseUrl.startsWith('http')) {
+    if (!this.baseUrl || !this.baseUrl.startsWith('http')) {
       console.error(`❌ Invalid API URL: ${this.baseUrl}. Must start with http:// or https://`);
-      this.baseUrl = 'http://localhost:3001'; // Fallback
+      // Only use localhost fallback if we're actually on localhost
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        console.warn('⚠️  Using localhost:3001 as fallback (local development only)');
+        this.baseUrl = 'http://localhost:3001';
+      } else {
+        throw new Error(`Invalid API URL: ${this.baseUrl}. Set VITE_API_URL in your .env file.`);
+      }
     }
     
     console.log(`🌐 API Client initialized with base URL: ${this.baseUrl}`);

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface NotionConnectionStatusProps {
@@ -90,7 +91,7 @@ export default function NotionConnectionStatus({
 
     try {
       // Notion OAuth uses a custom flow - redirect to backend OAuth endpoint
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const backendUrl = getBackendUrl();
       const redirectUrl = `${window.location.origin}/auth/notion/callback`;
       
       // Redirect to backend OAuth initiation endpoint

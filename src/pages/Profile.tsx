@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { getBackendUrl } from "@/lib/api/getBackendUrl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -297,7 +298,7 @@ export default function Profile() {
         });
         if (error) throw error;
       } else if (service === 'notion') {
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const backendUrl = getBackendUrl();
         const redirectUrl = `${window.location.origin}/auth/notion/callback`;
         window.location.href = `${backendUrl}/api/oauth/notion/authorize?redirect_uri=${encodeURIComponent(redirectUrl)}`;
         return;
@@ -339,7 +340,7 @@ export default function Profile() {
         if (!authToken) {
           throw new Error('No authentication token');
         }
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const backendUrl = getBackendUrl();
         const response = await fetch(`${backendUrl}/api/connections/${service}/disconnect`, {
           method: 'POST',
           headers: {

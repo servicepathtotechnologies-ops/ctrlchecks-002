@@ -9,6 +9,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
 import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,7 @@ export default function GitHubAuthCallback() {
         }
 
         // Call backend API to save token (with encryption)
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const backendUrl = getBackendUrl();
         const response = await fetch(`${backendUrl}/api/social-tokens`, {
           method: 'POST',
           headers: {
