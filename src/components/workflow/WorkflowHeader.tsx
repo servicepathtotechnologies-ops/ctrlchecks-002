@@ -44,11 +44,22 @@ export default function WorkflowHeader({
 
   // Check if schedule is active on mount and when workflowId changes
   useEffect(() => {
-    if (workflowId && workflowId !== 'new') {
-      setIsScheduleActive(workflowScheduler.isScheduled(workflowId));
-    } else {
-      setIsScheduleActive(false);
-    }
+    const checkSchedule = () => {
+      if (workflowId && workflowId !== 'new') {
+        setIsScheduleActive(workflowScheduler.isScheduled(workflowId));
+      } else {
+        setIsScheduleActive(false);
+      }
+    };
+    
+    checkSchedule();
+    
+    // Also check when schedule is updated
+    window.addEventListener('schedule-updated', checkSchedule);
+    
+    return () => {
+      window.removeEventListener('schedule-updated', checkSchedule);
+    };
   }, [workflowId]);
 
   const handleImportClick = () => {

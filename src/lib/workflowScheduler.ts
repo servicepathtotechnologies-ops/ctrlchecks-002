@@ -15,8 +15,50 @@ class WorkflowScheduler {
   private initialized = false;
   private startingWorkflows: Set<string> = new Set(); // Track workflows being started to prevent duplicates
   private executingWorkflows: Set<string> = new Set(); // Execution lock to prevent parallel executions
+  private firstRunTimeouts: Set<string> = new Set(); // Track workflows with first-run timeouts (not intervals yet)
 
-  // Convert cron to interval in milliseconds
+  // Calculate milliseconds until next scheduled time for time-based cron (e.g., "49 10 * * *")
+  private calculateDelayUntilNextTime(cron: string): number | null {
+    const parts = cron.trim().split(/\s+/);
+    if (parts.length !== 5) return null;
+
+    const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+
+    // Only handle daily schedules for now (dayOfMonth, month, dayOfWeek are all *)
+    if (dayOfMonth !== '*' || month !== '*' || dayOfWeek !== '*') {
+      return null; // Not a simple daily schedule
+    }
+
+    // Check if hour and minute are simple numbers (not ranges or wildcards)
+    const hourMatch = hour.match(/^(\d+)$/);
+    const minuteMatch = minute.match(/^(\d+)$/);
+
+    if (!hourMatch || !minuteMatch) {
+      return null; // Not a simple time-based schedule
+    }
+
+    const scheduledHour = parseInt(hourMatch[1], 10);
+    const scheduledMinute = parseInt(minuteMatch[1], 10);
+
+    if (scheduledHour < 0 || scheduledHour > 23 || scheduledMinute < 0 || scheduledMinute > 59) {
+      return null;
+    }
+
+    // Calculate next scheduled time
+    const now = new Date();
+    const scheduledTime = new Date();
+    scheduledTime.setHours(scheduledHour, scheduledMinute, 0, 0);
+
+    // If scheduled time has passed today, schedule for tomorrow
+    if (scheduledTime <= now) {
+      scheduledTime.setDate(scheduledTime.getDate() + 1);
+    }
+
+    const delayMs = scheduledTime.getTime() - now.getTime();
+    return delayMs > 0 ? delayMs : null;
+  }
+
+  // Convert cron to interval in milliseconds (for interval-based schedules)
   private cronToIntervalMs(cron: string): number | null {
     const parts = cron.split(' ');
     if (parts.length !== 5) return null;
@@ -171,9 +213,51 @@ class WorkflowScheduler {
       return;
     }
 
+    // Try time-based schedule first (e.g., "49 10 * * *")
+    const delayUntilNextTime = this.calculateDelayUntilNextTime(cronExpression);
+    
+    if (delayUntilNextTime !== null) {
+      // Time-based schedule (daily at specific time)
+      const scheduledTime = new Date(Date.now() + delayUntilNextTime);
+      console.log(`[Scheduler] ⏰ Scheduling workflow ${workflowId} for ${scheduledTime.toLocaleString()} (cron: ${cronExpression})`);
+      
+      // Store workflow info
+      this.activeWorkflows.set(workflowId, {
+        workflowId,
+        cronExpression,
+        intervalMs: 24 * 60 * 60 * 1000, // 24 hours for daily schedule
+        interval: 24,
+        unit: 'hours',
+      });
+
+      // Schedule first execution at the calculated time
+      const firstTimeout = setTimeout(() => {
+        this.executeWorkflow(workflowId);
+        
+        // After first execution, set up daily recurring execution
+        const dailyInterval = 24 * 60 * 60 * 1000; // 24 hours
+        const recurringTimer = setInterval(() => {
+          this.executeWorkflow(workflowId);
+        }, dailyInterval);
+        
+        // Remove from first-run tracking and store the interval timer
+        this.firstRunTimeouts.delete(workflowId);
+        this.schedulers.set(workflowId, recurringTimer);
+        console.log(`[Scheduler] ✅ Recurring daily schedule started for workflow ${workflowId}`);
+      }, delayUntilNextTime);
+
+      // Store the timeout temporarily (will be replaced by interval after first run)
+      // Track it as a first-run timeout for proper cleanup
+      this.firstRunTimeouts.add(workflowId);
+      this.schedulers.set(workflowId, firstTimeout);
+      
+      return;
+    }
+
+    // Fall back to interval-based schedule (e.g., "*/15 * * * *", "0 */2 * * *")
     const intervalMs = this.cronToIntervalMs(cronExpression);
     if (!intervalMs) {
-      console.error(`[Scheduler] ❌ Invalid cron expression for workflow ${workflowId}: ${cronExpression}`);
+      console.error(`[Scheduler] ❌ Invalid cron expression for workflow ${workflowId}: ${cronExpression}. Only daily time-based (e.g., "49 10 * * *") or interval-based (e.g., "*/15 * * * *") schedules are supported.`);
       return;
     }
 
@@ -192,7 +276,8 @@ class WorkflowScheduler {
       unit: interval.unit,
     });
 
-    // Execute immediately (first run)
+    // For interval-based schedules, execute immediately (first run)
+    // This is expected behavior for interval-based schedules
     this.executeWorkflow(workflowId);
 
     // Set up recurring execution
@@ -201,7 +286,7 @@ class WorkflowScheduler {
     }, intervalMs);
 
     this.schedulers.set(workflowId, timer);
-    console.log(`[Scheduler] ✅ Started for workflow ${workflowId}: cron="${cronExpression}", interval=${interval.value} ${interval.unit}, ms=${intervalMs}`);
+    console.log(`[Scheduler] ✅ Started interval-based schedule for workflow ${workflowId}: cron="${cronExpression}", interval=${interval.value} ${interval.unit}, ms=${intervalMs}`);
     console.log(`[Scheduler] 📊 Active schedulers:`, this.getAllActiveSchedulers());
   }
 
@@ -209,7 +294,13 @@ class WorkflowScheduler {
   stop(workflowId: string): void {
     const timer = this.schedulers.get(workflowId);
     if (timer) {
-      clearInterval(timer);
+      // Clear both setTimeout and setInterval based on tracking
+      if (this.firstRunTimeouts.has(workflowId)) {
+        clearTimeout(timer);
+        this.firstRunTimeouts.delete(workflowId);
+      } else {
+        clearInterval(timer);
+      }
       // Clear the timer reference immediately
       this.schedulers.delete(workflowId);
       const workflow = this.activeWorkflows.get(workflowId);
@@ -222,6 +313,8 @@ class WorkflowScheduler {
         this.activeWorkflows.delete(workflowId);
         console.log(`[Scheduler] Cleaned up workflow ${workflowId} from activeWorkflows${workflow ? ` (was: ${workflow.interval} ${workflow.unit})` : ''}`);
       }
+      // Also clean up first-run tracking if it exists
+      this.firstRunTimeouts.delete(workflowId);
     }
   }
 
@@ -229,13 +322,19 @@ class WorkflowScheduler {
   stopAll(): void {
     console.log(`[Scheduler] Stopping all schedulers (${this.schedulers.size} active)`);
     this.schedulers.forEach((timer, workflowId) => {
-      clearInterval(timer);
+      // Clear timeout or interval based on tracking
+      if (this.firstRunTimeouts.has(workflowId)) {
+        clearTimeout(timer);
+      } else {
+        clearInterval(timer);
+      }
       console.log(`[Scheduler] Stopped scheduler for workflow ${workflowId}`);
     });
     this.schedulers.clear();
     this.activeWorkflows.clear();
     this.startingWorkflows.clear();
     this.executingWorkflows.clear(); // Clear execution locks
+    this.firstRunTimeouts.clear(); // Clear first-run tracking
     console.log('[Scheduler] ✅ All schedulers stopped');
   }
 

@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import NodeUsageCard from './NodeUsageCard';
 import GoogleSheetsSettings from './GoogleSheetsSettings';
 import FormNodeSettings from './FormNodeSettings';
+import ScheduleTrigger from './ScheduleTrigger';
 import FacebookConnectionStatus from '@/components/FacebookConnectionStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { ENDPOINTS } from '@/config/endpoints';
@@ -36,6 +37,7 @@ import { useExpressionDropStore } from '@/stores/expressionDropStore';
 import { resolveExpression, detectExpressionType } from '@/lib/expressionResolver';
 import { InputGuideLink } from './InputGuideLink';
 import ConditionBuilder, { ConditionRule } from './ConditionBuilder';
+import { workflowScheduler } from '@/lib/workflowScheduler';
 
 // Droppable field wrapper component - MUST be outside PropertiesPanel to avoid hook violations
 interface DroppableFieldWrapperProps {
@@ -1406,6 +1408,99 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
                             config={selectedNode.data.config}
                             onConfigChange={(newConfig) => {
                               updateNodeConfig(selectedNode.id, newConfig);
+                            }}
+                          />
+                        </div>
+                      ) : selectedNode.data.type === 'schedule' ? (
+                        <div className="space-y-4">
+                          <h3 className="text-xs font-medium uppercase text-muted-foreground/70 tracking-wide">
+                            Configuration
+                          </h3>
+                          <ScheduleTrigger
+                            defaultCron={(selectedNode.data.config?.cron as string) || '0 9 * * *'}
+                            defaultTimezone={(selectedNode.data.config?.timezone as string) || 'Asia/Kolkata'}
+                            onChange={async (schedule) => {
+                              // Update node config
+                              updateNodeConfig(selectedNode.id, {
+                                cron: schedule.cronExpression,
+                                timezone: schedule.timezone,
+                              });
+                              
+                              // Save to workflows table and start scheduler (if workflow is saved)
+                              if (!workflowId || workflowId === 'new') {
+                                toast({
+                                  title: 'Save workflow first',
+                                  description: 'Please save the workflow before activating the schedule. The schedule will be activated automatically after saving.',
+                                  duration: 5000,
+                                });
+                                return;
+                              }
+                              
+                              if (workflowId && workflowId !== 'new') {
+                                try {
+                                  // Save cron_expression to workflows table (required by scheduler)
+                                  const { error: updateError } = await supabase
+                                    .from('workflows')
+                                    .update({
+                                      cron_expression: schedule.cronExpression,
+                                    })
+                                    .eq('id', workflowId);
+                                  
+                                  if (updateError) {
+                                    console.error('[ScheduleTrigger] Error saving cron to workflows table:', updateError);
+                                    toast({
+                                      title: 'Warning',
+                                      description: 'Schedule saved to node config but failed to save to workflow. Scheduler may not start.',
+                                      variant: 'destructive',
+                                    });
+                                  } else {
+                                    // Start/restart the scheduler with new cron expression
+                                    workflowScheduler.stop(workflowId);
+                                    // Small delay to ensure cleanup completes
+                                    await new Promise(resolve => setTimeout(resolve, 100));
+                                    workflowScheduler.start(workflowId, schedule.cronExpression);
+                                    
+                                    console.log(`[ScheduleTrigger] ✅ Started scheduler for workflow ${workflowId} with cron: ${schedule.cronExpression}`);
+                                    
+                                    // Calculate next scheduled time for user feedback
+                                    const parts = schedule.cronExpression.trim().split(/\s+/);
+                                    let nextRunInfo = '';
+                                    if (parts.length === 5) {
+                                      const [minute, hour] = parts;
+                                      const hourMatch = hour.match(/^(\d+)$/);
+                                      const minuteMatch = minute.match(/^(\d+)$/);
+                                      if (hourMatch && minuteMatch) {
+                                        const scheduledHour = parseInt(hourMatch[1], 10);
+                                        const scheduledMinute = parseInt(minuteMatch[1], 10);
+                                        const now = new Date();
+                                        const scheduledTime = new Date();
+                                        scheduledTime.setHours(scheduledHour, scheduledMinute, 0, 0);
+                                        if (scheduledTime <= now) {
+                                          scheduledTime.setDate(scheduledTime.getDate() + 1);
+                                        }
+                                        nextRunInfo = ` Next run: ${scheduledTime.toLocaleString()}`;
+                                      }
+                                    }
+                                    
+                                    toast({
+                                      title: 'Schedule saved',
+                                      description: `Workflow will run automatically according to the schedule (${schedule.cronExpression}).${nextRunInfo}`,
+                                      duration: 7000,
+                                    });
+                                    
+                                    // Trigger a page refresh to update schedule status in header
+                                    // This will cause WorkflowHeader to re-check isScheduled
+                                    window.dispatchEvent(new Event('schedule-updated'));
+                                  }
+                                } catch (error) {
+                                  console.error('[ScheduleTrigger] Error starting scheduler:', error);
+                                  toast({
+                                    title: 'Error',
+                                    description: 'Failed to start scheduler. Please try again.',
+                                    variant: 'destructive',
+                                  });
+                                }
+                              }
                             }}
                           />
                         </div>

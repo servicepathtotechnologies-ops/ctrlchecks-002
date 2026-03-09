@@ -49,7 +49,10 @@ export const supabase = createClient<Database>(
 if (typeof window !== 'undefined') {
   // Listen for WebSocket errors and handle them gracefully
   const originalError = console.error;
+  const originalWarn = console.warn;
+  
   const wsErrorPattern = /WebSocket.*failed|WebSocket.*closed|realtime.*error/i;
+  const clockSkewPattern = /Session as retrieved from URL was issued in the future|clock.*skew/i;
   
   // Override console.error to catch WebSocket errors
   const wsErrorHandler = (...args: any[]) => {
@@ -63,9 +66,26 @@ if (typeof window !== 'undefined') {
     originalError(...args);
   };
   
+  // Override console.warn to suppress clock skew warnings (non-critical)
+  const warnHandler = (...args: any[]) => {
+    const warnMessage = args.join(' ');
+    if (clockSkewPattern.test(warnMessage)) {
+      // Suppress clock skew warning - it's non-critical and authentication still works
+      // User can fix by syncing their system clock
+      if (import.meta.env.DEV) {
+        console.debug('[Supabase] Clock skew detected (non-critical). Sync your system clock to remove this warning.');
+      }
+      return; // Don't log the warning
+    }
+    originalWarn(...args);
+  };
+  
   // Only override in development to avoid production issues
   if (import.meta.env.DEV) {
+    console.error = wsErrorHandler;
+    console.warn = warnHandler;
     // Store original for potential restoration
     (window as any).__originalConsoleError = originalError;
+    (window as any).__originalConsoleWarn = originalWarn;
   }
 }

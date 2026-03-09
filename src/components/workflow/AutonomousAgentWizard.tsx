@@ -212,6 +212,7 @@ export function AutonomousAgentWizard() {
         id: string;
         prompt: string;
         matchedKeywords: string[];
+        keywords?: string[]; // ✅ NEW: Extracted node type keywords (e.g., ["ai_chat_model", "linkedin", "schedule"])
         confidence: number;
         reasoning: string;
     }>>([]);
@@ -2729,6 +2730,26 @@ export function AutonomousAgentWizard() {
                                                             <p className="text-foreground leading-relaxed mb-3">
                                                                 {variation.prompt}
                                                             </p>
+                                                            {/* Display extracted node type keywords (primary) */}
+                                                            {variation.keywords && variation.keywords.length > 0 && (
+                                                                <div className="flex flex-wrap gap-2 mb-2">
+                                                                    <span className="text-xs text-muted-foreground font-semibold">Node Types:</span>
+                                                                    {variation.keywords.slice(0, 5).map((keyword) => (
+                                                                        <span
+                                                                            key={keyword}
+                                                                            className="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded border border-green-500/30"
+                                                                        >
+                                                                            {keyword}
+                                                                        </span>
+                                                                    ))}
+                                                                    {variation.keywords.length > 5 && (
+                                                                        <span className="px-2 py-1 text-xs text-muted-foreground">
+                                                                            +{variation.keywords.length - 5} more
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            {/* Display matched keywords (secondary) */}
                                                             {variation.matchedKeywords && variation.matchedKeywords.length > 0 && (
                                                                 <div className="flex flex-wrap gap-2 mb-3">
                                                                     {variation.matchedKeywords.slice(0, 5).map((keyword) => (
@@ -2924,22 +2945,24 @@ export function AutonomousAgentWizard() {
                                                                         <p className="text-sm text-foreground leading-relaxed">
                                                                             {variation.prompt}
                                                                         </p>
-                                                                        {variation.matchedKeywords && variation.matchedKeywords.length > 0 && (
+                                                                        {/* Display extracted node type keywords (for display) */}
+                                                                        {variation.keywords && variation.keywords.length > 0 && (
                                                                             <div className="flex flex-wrap gap-1.5 mt-2">
-                                                                                {variation.matchedKeywords.slice(0, 4).map((keyword) => (
+                                                                                <span className="text-xs text-muted-foreground font-semibold mr-1">Nodes:</span>
+                                                                                {variation.keywords.slice(0, 6).map((keyword) => (
                                                                                     <span
                                                                                         key={keyword}
-                                                                                        className="px-1.5 py-0.5 text-xs bg-indigo-500/10 text-indigo-400 rounded"
+                                                                                        className="px-1.5 py-0.5 text-xs bg-green-500/10 text-green-400 rounded border border-green-500/20"
                                                                                     >
                                                                                         {keyword}
                                                                                     </span>
                                                                                 ))}
-                                                                                {variation.matchedKeywords.length > 4 && (
+                                                                                {variation.keywords.length > 6 && (
                                                                                     <span className="px-1.5 py-0.5 text-xs text-muted-foreground">
-                                                                                        +{variation.matchedKeywords.length - 4}
+                                                                                        +{variation.keywords.length - 6}
                                                                                     </span>
                                                                                 )}
-                                                                </div>
+                                                                            </div>
                                                                         )}
                                                             </div>
                                                                     {isSelected && (
