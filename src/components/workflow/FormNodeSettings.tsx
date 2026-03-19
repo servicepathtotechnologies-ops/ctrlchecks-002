@@ -60,13 +60,14 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
   const handleRemoveField = useCallback((fieldId: string) => {
     onConfigChange({
       ...config,
-      fields: config.fields.filter(f => f.id !== fieldId),
+      fields: config.fields.filter((f, i) => (f.id || f.key || f.name || `field-${i}`) !== fieldId),
     });
   }, [config, onConfigChange]);
 
   const handleFieldChange = useCallback((fieldId: string, key: keyof FormField, value: any) => {
-    const updatedFields = config.fields.map(field => {
-      if (field.id === fieldId) {
+    const updatedFields = config.fields.map((field, i) => {
+      const stableId = field.id || field.key || field.name || `field-${i}`;
+      if (stableId === fieldId) {
         const updated = { ...field, [key]: value };
         if (key === 'label') {
           updated.name = labelToName(value);
@@ -150,28 +151,30 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
               No fields yet. Click "Add Field" to get started.
             </p>
           ) : (
-            config.fields.map((field) => (
-              <div key={field.id} className="space-y-3 p-3 border rounded-md bg-background">
+            config.fields.map((field, index) => {
+              const fieldKey = field.id || field.key || field.name || `field-${index}`;
+              return (
+              <div key={fieldKey} className="space-y-3 p-3 border rounded-md bg-background">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label htmlFor={`label-${field.id}`} className="text-xs">Label</Label>
+                        <Label htmlFor={`label-${fieldKey}`} className="text-xs">Label</Label>
                         <Input
-                          id={`label-${field.id}`}
+                          id={`label-${fieldKey}`}
                           value={field.label}
-                          onChange={(e) => handleFieldChange(field.id, 'label', e.target.value)}
+                          onChange={(e) => handleFieldChange(fieldKey, 'label', e.target.value)}
                           placeholder="Field Label"
                           className="h-8 text-sm"
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor={`type-${field.id}`} className="text-xs">Type</Label>
+                        <Label htmlFor={`type-${fieldKey}`} className="text-xs">Type</Label>
                         <Select
                           value={field.type}
-                          onValueChange={(value) => handleFieldChange(field.id, 'type', value)}
+                          onValueChange={(value) => handleFieldChange(fieldKey, 'type', value)}
                         >
-                          <SelectTrigger id={`type-${field.id}`} className="h-8 text-sm">
+                          <SelectTrigger id={`type-${fieldKey}`} className="h-8 text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -186,11 +189,11 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor={`name-${field.id}`} className="text-xs">Internal Name</Label>
-                      <Input
-                        id={`name-${field.id}`}
+<Label htmlFor={`name-${fieldKey}`} className="text-xs">Internal Name</Label>
+                        <Input
+                        id={`name-${fieldKey}`}
                         value={field.name}
-                        onChange={(e) => handleFieldChange(field.id, 'name', e.target.value)}
+                        onChange={(e) => handleFieldChange(fieldKey, 'name', e.target.value)}
                         placeholder="field_name"
                         className="h-8 text-sm font-mono"
                       />
@@ -198,11 +201,11 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
 
                     {(field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'textarea') && (
                       <div className="space-y-1">
-                        <Label htmlFor={`placeholder-${field.id}`} className="text-xs">Placeholder</Label>
+                        <Label htmlFor={`placeholder-${fieldKey}`} className="text-xs">Placeholder</Label>
                         <Input
-                          id={`placeholder-${field.id}`}
+                          id={`placeholder-${fieldKey}`}
                           value={field.placeholder || ''}
-                          onChange={(e) => handleFieldChange(field.id, 'placeholder', e.target.value)}
+                          onChange={(e) => handleFieldChange(fieldKey, 'placeholder', e.target.value)}
                           placeholder="Enter placeholder text"
                           className="h-8 text-sm"
                         />
@@ -224,7 +227,7 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
                               }
                               return { label: trimmed, value: trimmed };
                             }).filter(opt => opt.label);
-                            handleFieldChange(field.id, 'options', options);
+                            handleFieldChange(fieldKey, 'options', options);
                           }}
                           placeholder="Option 1, Option 2, Option 3"
                           className="h-8 text-sm"
@@ -235,10 +238,10 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
                     <div className="flex items-center gap-2">
                       <Switch
                         checked={field.required}
-                        onCheckedChange={(checked) => handleFieldChange(field.id, 'required', checked)}
-                        id={`required-${field.id}`}
+                        onCheckedChange={(checked) => handleFieldChange(fieldKey, 'required', checked)}
+                        id={`required-${fieldKey}`}
                       />
-                      <Label htmlFor={`required-${field.id}`} className="text-xs cursor-pointer">
+                      <Label htmlFor={`required-${fieldKey}`} className="text-xs cursor-pointer">
                         Required
                       </Label>
                     </div>
@@ -248,14 +251,15 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleRemoveField(field.id)}
+                    onClick={() => handleRemoveField(fieldKey)}
                     className="h-8 w-8 text-destructive hover:text-destructive"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-            ))
+            );
+            })
           )}
         </div>
       </div>

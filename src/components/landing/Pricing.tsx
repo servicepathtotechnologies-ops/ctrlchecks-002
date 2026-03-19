@@ -9,13 +9,13 @@ const plans = [
     name: "Free",
     price: "$0",
     period: "forever",
-    description: "Perfect for trying out CtrlChecks",
+    description: "Explore CtrlChecks AI-OS during beta",
     features: [
       "5 workflows",
       "100 executions/month",
       "5 AI credits/month",
       "Community support",
-      "Basic integrations",
+      "Core integrations",
     ],
     cta: "Get Started",
     popular: false,
@@ -24,7 +24,7 @@ const plans = [
     name: "Pro",
     price: "$29",
     period: "/month",
-    description: "For individuals and small teams",
+    description: "Individuals & teams shipping automations",
     features: [
       "Unlimited workflows",
       "10,000 executions/month",
@@ -42,7 +42,7 @@ const plans = [
     name: "Enterprise",
     price: "Custom",
     period: "",
-    description: "For large organizations",
+    description: "Governed rollouts & private deployments",
     features: [
       "Everything in Pro",
       "Unlimited executions",
@@ -50,9 +50,9 @@ const plans = [
       "24/7 dedicated support",
       "SSO & SAML",
       "Custom integrations",
-      "SLA guarantee",
-      "On-premise deployment",
-      "Audit logs",
+      "SLA options",
+      "Self-hosted & private cloud",
+      "Audit-friendly logging",
     ],
     cta: "Contact Sales",
     popular: false,
@@ -61,9 +61,8 @@ const plans = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className="py-20 sm:py-32">
+    <section id="pricing" className="py-20 sm:py-32" aria-labelledby="pricing-heading">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -71,15 +70,22 @@ export function Pricing() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-4 py-1 text-sm font-medium text-primary">
+            <Sparkles className="h-4 w-4" />
+            Pricing during beta
+          </div>
+          <h2
+            id="pricing-heading"
+            className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
+          >
             Simple, transparent <span className="text-gradient">pricing</span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Start free and scale as you grow. No hidden fees.
+            Start free while we finalize enterprise programs. Limits and bundles may adjust as
+            we incorporate beta feedback — early partners get grandfathering where possible.
           </p>
         </motion.div>
 
-        {/* Pricing Cards */}
         <div className="mt-16 grid gap-8 lg:grid-cols-3">
           {plans.map((plan, index) => (
             <motion.div
@@ -90,9 +96,7 @@ export function Pricing() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className={cn(
                 "relative rounded-2xl border bg-card p-8",
-                plan.popular
-                  ? "border-primary shadow-xl shadow-primary/10"
-                  : "border-border"
+                plan.popular ? "border-primary shadow-xl shadow-primary/10" : "border-border"
               )}
             >
               {plan.popular && (
@@ -110,9 +114,7 @@ export function Pricing() {
                   <span className="text-4xl font-bold">{plan.price}</span>
                   <span className="text-muted-foreground">{plan.period}</span>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {plan.description}
-                </p>
+                <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
               </div>
 
               <ul className="mt-8 space-y-3">
@@ -131,9 +133,7 @@ export function Pricing() {
                   asChild
                   className={cn(
                     "w-full",
-                    plan.popular
-                      ? "gradient-primary text-primary-foreground hover:opacity-90"
-                      : ""
+                    plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""
                   )}
                   variant={plan.popular ? "default" : "outline"}
                 >

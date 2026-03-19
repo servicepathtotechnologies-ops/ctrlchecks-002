@@ -2449,6 +2449,19 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     ],
   },
   {
+    type: 'discord',
+    label: 'Discord',
+    category: 'output',
+    icon: 'MessageCircle',
+    description: 'Send messages to Discord channels or users via Discord Bot API',
+    defaultConfig: {},
+    configFields: [
+      { key: 'channelId', label: 'Channel ID', type: 'text', placeholder: '123456789012345678', required: true, helpText: 'Discord channel ID where the message will be sent. To get channel ID: 1) Enable Developer Mode in Discord 2) Right-click on the channel 3) Click "Copy ID"' },
+      { key: 'message', label: 'Message', type: 'textarea', placeholder: 'Hello from CtrlChecks!', required: true, helpText: 'Message content to send to Discord. Supports Discord markdown formatting (**bold**, *italic*, `code`, ||spoiler||). Can include template variables like {{input}}' },
+      { key: 'botToken', label: 'Bot Token', type: 'password', placeholder: 'Bot token (stored as credential)', required: false, helpText: 'Discord bot token for authentication. This is stored securely as a credential. To get bot token: 1) Go to Discord Developer Portal 2) Select your application 3) Go to Bot section 4) Click "Reset Token" or "Copy" to get token' },
+    ],
+  },
+  {
     type: 'discord_webhook',
     label: 'Discord Webhook',
     category: 'output',

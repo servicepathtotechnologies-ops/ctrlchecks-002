@@ -548,6 +548,24 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
             }
 
             // Step 4: Last resort - use generic http_request
+            // ✅ FIX 5: Only convert to http_request if node type is truly unknown
+            // If node type matches a known pattern (e.g., "discord"), preserve it
+            const knownNodePatterns = ['discord', 'slack', 'telegram', 'gmail', 'sheets', 'hubspot', 'salesforce', 'zoho'];
+            const isKnownPattern = knownNodePatterns.some(pattern => nodeType.toLowerCase().includes(pattern));
+            
+            if (isKnownPattern) {
+                // ✅ FIX 5: Don't convert known node types to http_request
+                // Instead, try to find a close match or preserve the original type
+                console.warn(`[WorkflowValidation] ⚠️  Node type "${nodeType}" not found in NODE_TYPES but matches known pattern. Preserving type.`);
+                if (node.data) {
+                    node.data.type = nodeType;
+                } else {
+                    node.data = { type: nodeType };
+                }
+                resolvedNodes.push({ nodeId: node.id, originalType: nodeType, resolvedType: nodeType, method: 'pattern_preserve' });
+                return node;
+            }
+            
             // Get node definition to update icon, category, and label
             const httpRequestDefinition = NODE_TYPES.find((d: any) => d.type === 'http_request');
             const preservedLabel = node.data?.label || node.label;

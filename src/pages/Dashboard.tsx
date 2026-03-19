@@ -186,8 +186,9 @@ export default function Dashboard() {
               // PostgREST returns 406 for empty result sets with RLS enabled
               const { count: execCount, error: countError } = await supabase
                 .from('executions')
-                .select('*', { count: 'exact', head: true })
-                .eq('workflow_id', workflow.id);
+                .select('id', { count: 'exact' })
+                .eq('workflow_id', workflow.id)
+                .limit(0);
 
               // Handle errors gracefully
               if (countError) {
@@ -250,21 +251,24 @@ export default function Dashboard() {
       // Total workflows
       const { count: totalCount } = await supabase
         .from('workflows')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact' })
+        .limit(0);
 
       // Executions today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const { count: todayCount } = await supabase
         .from('executions')
-        .select('*', { count: 'exact', head: true })
-        .gte('started_at', today.toISOString());
+        .select('id', { count: 'exact' })
+        .gte('started_at', today.toISOString())
+        .limit(0);
 
       // Active workflows
       const { count: activeCount } = await supabase
         .from('workflows')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
+        .select('id', { count: 'exact' })
+        .eq('status', 'active')
+        .limit(0);
 
       setStats({
         total: totalCount || 0,
@@ -283,11 +287,11 @@ export default function Dashboard() {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       loadWorkflows();
       loadStats();
     }
-  }, [user, loadWorkflows, loadStats]);
+  }, [user?.id, loadWorkflows, loadStats]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

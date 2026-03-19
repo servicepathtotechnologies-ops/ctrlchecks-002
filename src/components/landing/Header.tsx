@@ -12,27 +12,26 @@ export function Header() {
   const { user } = useAuth();
 
   const navItems = [
-    { name: "Features", href: "#features" },
-    { name: "How it Works", href: "#how-it-works" },
+    { name: "Platform", href: "#features" },
+    { name: "How it works", href: "#how-it-works" },
+    { name: "Security", href: "#security" },
+    { name: "Developers", href: "#open-core" },
+    { name: "Why CtrlChecks", href: "#advantage" },
     { name: "Pricing", href: "#pricing" },
-    { name: "Testimonials", href: "#testimonials" },
   ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-strong">
-      <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="container mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center">
-              <img src="/favicon.ico" alt="logo" className="h-full w-full" />
+              <img src="/favicon.ico" alt="" className="h-full w-full" />
             </div>
-            <span className="text-xl font-bold">CtrlChecks
-            </span>
+            <span className="text-xl font-bold">CtrlChecks</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:gap-8">
+          <div className="hidden lg:flex lg:items-center lg:gap-6">
             {navItems.map((item) => (
               <a
                 key={item.name}
@@ -44,13 +43,13 @@ export function Header() {
             ))}
           </div>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex md:items-center md:gap-4">
+          <div className="hidden lg:flex lg:items-center lg:gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
               className="rounded-full"
+              aria-label={theme === "light" ? "Dark mode" : "Light mode"}
             >
               {theme === "light" ? (
                 <Moon className="h-5 w-5" />
@@ -58,7 +57,7 @@ export function Header() {
                 <Sun className="h-5 w-5" />
               )}
             </Button>
-            
+
             {user ? (
               <Button asChild>
                 <Link to="/dashboard">Dashboard</Link>
@@ -69,19 +68,19 @@ export function Header() {
                   <Link to="/signin">Sign In</Link>
                 </Button>
                 <Button asChild className="gradient-primary text-primary-foreground hover:opacity-90">
-                  <Link to="/signup">Get Started</Link>
+                  <Link to="/signup">Join beta</Link>
                 </Button>
               </>
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
               className="rounded-full"
+              aria-label={theme === "light" ? "Dark mode" : "Light mode"}
             >
               {theme === "light" ? (
                 <Moon className="h-5 w-5" />
@@ -93,24 +92,21 @@ export function Header() {
               variant="ghost"
               size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-expanded={mobileMenuOpen}
+              aria-label="Menu"
             >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden"
+              className="lg:hidden"
             >
               <div className="space-y-1 pb-4 pt-2">
                 {navItems.map((item) => (
@@ -134,7 +130,7 @@ export function Header() {
                         <Link to="/signin">Sign In</Link>
                       </Button>
                       <Button asChild className="gradient-primary text-primary-foreground">
-                        <Link to="/signup">Get Started</Link>
+                        <Link to="/signup">Join beta</Link>
                       </Button>
                     </>
                   )}

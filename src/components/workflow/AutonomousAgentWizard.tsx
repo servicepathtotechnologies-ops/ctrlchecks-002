@@ -131,7 +131,7 @@ const ensureStateForBlueprint = (
     // No action needed
 };
 
-type WizardStep = 'idle' | 'analyzing' | 'summarize' | 'questioning' | 'refining' | 'confirmation' | 'workflow-confirmation' | 'credentials' | 'building' | 'executing' | 'complete';
+type WizardStep = 'idle' | 'analyzing' | 'summarize' | 'questioning' | 'refining' | 'confirmation' | 'workflow-confirmation' | 'credentials' | 'configure' | 'building' | 'executing' | 'complete';
 
 interface AgentQuestion {
     id: string;
@@ -196,6 +196,30 @@ export function AutonomousAgentWizard() {
     const [credentialValues, setCredentialValues] = useState<Record<string, string>>({});
     const [inputValues, setInputValues] = useState<Record<string, string>>({});
     const [showCredentialStep, setShowCredentialStep] = useState(false);
+    // Configure step state
+    const [missingItems, setMissingItems] = useState<{
+        credentials: Array<{
+            provider: string;
+            type: string;
+            nodes: string[];
+            displayName: string;
+            satisfied?: boolean;
+        }>;
+        inputs: Array<{
+            nodeId: string;
+            nodeType: string;
+            nodeLabel: string;
+            fieldName: string;
+            description: string;
+            fieldType: string;
+            required: boolean;
+            examples?: any[];
+        }>;
+    } | null>(null);
+    const [configureCredentials, setConfigureCredentials] = useState<Record<string, Record<string, any>>>({});
+    const [configureInputs, setConfigureInputs] = useState<Array<{ nodeId: string; fieldName: string; value: any }>>([]);
+    const [isConfiguring, setIsConfiguring] = useState(false);
+    const [workflowReady, setWorkflowReady] = useState(false);
     // ✅ STEP-BY-STEP: Track current question index for wizard flow
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [allQuestions, setAllQuestions] = useState<any[]>([]);
@@ -215,6 +239,9 @@ export function AutonomousAgentWizard() {
         keywords?: string[]; // ✅ NEW: Extracted node type keywords (e.g., ["ai_chat_model", "linkedin", "schedule"])
         confidence: number;
         reasoning: string;
+        // Optional style from Smart Planner variant normalizer:
+        // "simple" | "medium" | "advanced" | "alternative"
+        style?: 'simple' | 'medium' | 'advanced' | 'alternative';
     }>>([]);
     const [selectedPromptVariation, setSelectedPromptVariation] = useState<string | null>(null);
     const [originalPrompt, setOriginalPrompt] = useState<string>('');
@@ -231,6 +258,18 @@ export function AutonomousAgentWizard() {
     } | null>(null);
     // Auto-execution state
     const [executionId, setExecutionId] = useState<string | null>(null);
+    // Track selected variation metadata so we can send it to the backend
+    const [selectedVariationMeta, setSelectedVariationMeta] = useState<{
+        id: string;
+        prompt: string;
+        keywords?: string[];
+        matchedKeywords?: string[];
+        // Structured metadata coming from summarize layer / Gemini contract
+        title?: string;
+        strategy?: 'registry_minimal' | 'registry_extended' | 'keyword_minimal' | 'keyword_extended';
+        nodes?: string[];
+        requiredNodeTypes?: string[];
+    } | null>(null);
     const [executionStatus, setExecutionStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
     const [executionResult, setExecutionResult] = useState<any>(null);
     const [executionError, setExecutionError] = useState<string | null>(null);
@@ -254,6 +293,39 @@ export function AutonomousAgentWizard() {
     const step2Ref = useRef<HTMLDivElement>(null);
     const step3Ref = useRef<HTMLDivElement>(null);
     const step4Ref = useRef<HTMLDivElement>(null);
+
+    // Fetch missing items when entering Configure step
+    useEffect(() => {
+        if (step === 'configure' && generatedWorkflowId && !missingItems) {
+            const fetchMissingItems = async () => {
+                try {
+                    console.log(`[Configure] Fetching missing items for workflow ${generatedWorkflowId}`);
+                    const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${generatedWorkflowId}/missing-items`, {
+                        headers: {
+                            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
+                        },
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch missing items');
+                    }
+                    
+                    const data = await response.json();
+                    setMissingItems(data);
+                    console.log(`[Configure] Found ${data.credentials?.length || 0} missing credential(s) and ${data.inputs?.length || 0} missing input(s)`);
+                } catch (error: any) {
+                    console.error('[Configure] Error fetching missing items:', error);
+                    toast({
+                        title: 'Error',
+                        description: 'Failed to load configuration requirements: ' + (error.message || 'Unknown error'),
+                        variant: 'destructive',
+                    });
+                }
+            };
+            
+            fetchMissingItems();
+        }
+    }, [step, generatedWorkflowId, missingItems]);
 
     // Debug: Log when requiredCredentials changes
     useEffect(() => {
@@ -754,17 +826,28 @@ export function AutonomousAgentWizard() {
         return finalCredentials;
     };
 
-    // Handle proceeding with selected prompt variation (auto-continue)
     // Handle proceeding with selected prompt variation - DIRECTLY to workflow generation (skip analysis)
-    const handleProceedWithSelectedPrompt = async (variation: { id: string; prompt: string; matchedKeywords: string[]; confidence: number; reasoning: string }) => {
+    const handleProceedWithSelectedPrompt = async (variation: {
+        id: string;
+        prompt: string;
+        matchedKeywords: string[];
+        confidence: number;
+        reasoning: string;
+        keywords?: string[];
+    }) => {
         if (!variation) return;
 
         console.log('[Frontend] Proceeding with selected prompt variation, going directly to workflow generation');
         console.log('[Frontend] Selected prompt variation:', variation.prompt);
         
-        // ✅ CRITICAL: Store selected prompt variation
-        // DO NOT update prompt state yet - only update when "Continue Building" is clicked
+        // ✅ CRITICAL: Store selected prompt variation (including node keywords) for backend
         const selectedPrompt = variation.prompt;
+        setSelectedVariationMeta({
+            id: variation.id,
+            prompt: variation.prompt,
+            keywords: variation.keywords,
+            matchedKeywords: variation.matchedKeywords,
+        });
         
         // Clear summarize layer state
         setPromptVariations([]);
@@ -1041,18 +1124,10 @@ export function AutonomousAgentWizard() {
                                 setNodes(normalized.nodes as any[]);
                                 setEdges(normalized.edges as any[]);
                                 setProgress(100);
-                                setIsComplete(true);
-                                setStep('complete');
                                 console.log('✅ Workflow saved successfully with ID:', savedWorkflow.id);
                                 
-                                // If credentials are needed, show them after workflow is saved
-                                if (detectedCredentials.length > 0) {
-                                    toast({
-                                        title: 'Workflow Created',
-                                        description: `Workflow created! Please provide ${detectedCredentials.length} credential(s) to run it.`,
-                                    });
-                                    setStep('credentials');
-                                }
+                                // Go to Configure step to collect missing credentials and inputs
+                                setStep('configure');
                                 return;
                             }
                         } catch (saveErr: any) {
@@ -1940,7 +2015,22 @@ export function AutonomousAgentWizard() {
                 body: JSON.stringify({
                     prompt: finalPrompt,
                     mode: 'create',
-                    config: config
+                    config: config,
+                    originalPrompt: originalPrompt || finalPrompt, // Preserve user's raw prompt for resolution (selected variation + original intent)
+                    // ✅ Pass selected variation + variant contract (registry vs keyword) for 100% semantics
+                    selectedVariationId: selectedVariationMeta?.id || null,
+                    selectedStructuredPrompt: finalPrompt,
+                    registryTags: selectedVariationMeta?.keywords || [],
+                    mandatoryNodeTypes: (selectedVariationMeta?.nodes && selectedVariationMeta.nodes.length > 0)
+                        ? selectedVariationMeta.nodes
+                        : (selectedVariationMeta?.keywords || []),
+                    selectedVariant: selectedVariationMeta
+                        ? {
+                            strategy: selectedVariationMeta.strategy ?? undefined,
+                            nodes: selectedVariationMeta.nodes ?? selectedVariationMeta.keywords ?? undefined,
+                            requiredNodeTypes: selectedVariationMeta.requiredNodeTypes ?? selectedVariationMeta.nodes ?? selectedVariationMeta.keywords ?? undefined,
+                          }
+                        : undefined,
                 })
             });
 
@@ -2293,7 +2383,38 @@ export function AutonomousAgentWizard() {
                                         workflowSaved = true;
                                         console.log('Workflow saved successfully with ID:', savedWorkflow.id);
                                         
-                                        // Redirect directly to the workflow page, skipping the executing page
+                                        // ✅ ENHANCED: Check for missing items before redirecting
+                                        try {
+                                            const { data: { session } } = await supabase.auth.getSession();
+                                            const missingItemsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/missing-items`, {
+                                                headers: {
+                                                    'Authorization': `Bearer ${session?.access_token || ''}`,
+                                                },
+                                            });
+                                            
+                                            if (missingItemsResponse.ok) {
+                                                const missingItemsData = await missingItemsResponse.json();
+                                                const hasMissingCredentials = missingItemsData.credentials && 
+                                                    missingItemsData.credentials.filter((c: any) => !c.satisfied).length > 0;
+                                                const hasMissingInputs = missingItemsData.inputs && missingItemsData.inputs.length > 0;
+                                                
+                                                if (hasMissingCredentials || hasMissingInputs) {
+                                                    console.log(`[Configure] Found missing items - ${missingItemsData.credentials?.filter((c: any) => !c.satisfied).length || 0} credential(s), ${missingItemsData.inputs?.length || 0} input(s)`);
+                                                    setMissingItems(missingItemsData);
+                                                    setStep('configure');
+                                                    toast({
+                                                        title: 'Configuration Required',
+                                                        description: 'Please provide missing credentials and inputs to complete workflow setup.',
+                                                    });
+                                                    return; // Don't redirect, show configure step
+                                                }
+                                            }
+                                        } catch (missingItemsError: any) {
+                                            console.warn('[Configure] Failed to fetch missing items (non-blocking):', missingItemsError.message);
+                                            // Continue to redirect even if missing items check fails
+                                        }
+                                        
+                                        // No missing items - redirect directly to the workflow page
                                         toast({
                                             title: 'Workflow Created',
                                             description: 'Your workflow has been created successfully!',
@@ -2711,7 +2832,19 @@ export function AutonomousAgentWizard() {
                                                                 ? 'border-indigo-500 bg-indigo-500/10 shadow-lg'
                                                                 : 'border-border hover:bg-muted/50'
                                                         }`}
-                                                        onClick={() => setSelectedPromptVariation(variation.id)}
+                                                        onClick={() => {
+                                                            setSelectedPromptVariation(variation.id);
+                                                            setSelectedVariationMeta({
+                                                                id: variation.id,
+                                                                prompt: variation.prompt,
+                                                                keywords: variation.keywords,
+                                                                matchedKeywords: variation.matchedKeywords,
+                                                                title: (variation as any).title,
+                                                                strategy: (variation as any).strategy,
+                                                                nodes: (variation as any).nodes,
+                                                                requiredNodeTypes: (variation as any).requiredNodeTypes,
+                                                            });
+                                                        }}
                                                     >
                                             <CardHeader className="pb-3">
                                                             <div className="flex items-start justify-between">
@@ -2719,8 +2852,20 @@ export function AutonomousAgentWizard() {
                                                                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 text-xs font-bold">
                                                                         {index + 1}
                                                                     </span>
-                                                                    Option {index + 1}
+                                                                    {variation.title || `Option ${index + 1}`}
                                                                 </CardTitle>
+                                                                {variation.style && (
+                                                                    <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+                                                                        {variation.style}
+                                                                    </Badge>
+                                                                )}
+                                                                {(variation as any).strategy && (
+                                                                    <Badge variant="secondary" className="text-[10px]">
+                                                                        {((variation as any).strategy === 'registry_minimal' || (variation as any).strategy === 'keyword_minimal')
+                                                                            ? 'Exact intent'
+                                                                            : 'Extended'}
+                                                                    </Badge>
+                                                                )}
                                                                 {isSelected && (
                                                                     <CheckCircle2 className="h-5 w-5 text-indigo-500" />
                                                                 )}
@@ -2730,13 +2875,26 @@ export function AutonomousAgentWizard() {
                                                             <p className="text-foreground leading-relaxed mb-3">
                                                                 {variation.prompt}
                                                             </p>
-                                                            {/* Display extracted node type keywords (primary) */}
+                                                            {Array.isArray(variation.nodes) && variation.nodes.length > 0 && (
+                                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                                    {variation.nodes.map((nodeType) => (
+                                                                        <Badge
+                                                                            key={nodeType}
+                                                                            variant="outline"
+                                                                            className="text-[10px] font-mono"
+                                                                        >
+                                                                            {nodeType}
+                                                                        </Badge>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                                {/* Display extracted node type keywords (primary) */}
                                                             {variation.keywords && variation.keywords.length > 0 && (
                                                                 <div className="flex flex-wrap gap-2 mb-2">
                                                                     <span className="text-xs text-muted-foreground font-semibold">Node Types:</span>
-                                                                    {variation.keywords.slice(0, 5).map((keyword) => (
+                                                                    {variation.keywords.slice(0, 5).map((keyword, keywordIndex) => (
                                                                         <span
-                                                                            key={keyword}
+                                                                            key={`${variation.id}:${keyword}:${keywordIndex}`}
                                                                             className="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded border border-green-500/30"
                                                                         >
                                                                             {keyword}
@@ -2752,9 +2910,9 @@ export function AutonomousAgentWizard() {
                                                             {/* Display matched keywords (secondary) */}
                                                             {variation.matchedKeywords && variation.matchedKeywords.length > 0 && (
                                                                 <div className="flex flex-wrap gap-2 mb-3">
-                                                                    {variation.matchedKeywords.slice(0, 5).map((keyword) => (
+                                                                    {variation.matchedKeywords.slice(0, 5).map((keyword, keywordIndex) => (
                                                                         <span
-                                                                            key={keyword}
+                                                                                key={`${variation.id}:matched:${keyword}:${keywordIndex}`}
                                                                             className="px-2 py-1 text-xs bg-indigo-500/20 text-indigo-400 rounded"
                                                                         >
                                                                             {keyword}
@@ -2949,9 +3107,9 @@ export function AutonomousAgentWizard() {
                                                                         {variation.keywords && variation.keywords.length > 0 && (
                                                                             <div className="flex flex-wrap gap-1.5 mt-2">
                                                                                 <span className="text-xs text-muted-foreground font-semibold mr-1">Nodes:</span>
-                                                                                {variation.keywords.slice(0, 6).map((keyword) => (
+                                                                                {variation.keywords.slice(0, 6).map((keyword, keywordIndex) => (
                                                                                     <span
-                                                                                        key={keyword}
+                                                                                        key={`${variation.id}:${keyword}:${keywordIndex}`}
                                                                                         className="px-1.5 py-0.5 text-xs bg-green-500/10 text-green-400 rounded border border-green-500/20"
                                                                                     >
                                                                                         {keyword}
@@ -4750,6 +4908,198 @@ export function AutonomousAgentWizard() {
                                 }}
                                 isLoading={isLoading}
                             />
+                        </motion.div>
+                    )}
+
+                    {/* CONFIGURE STEP: Collect Credentials & Sensitive Inputs */}
+                    {step === 'configure' && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex flex-col gap-6"
+                        >
+                            <Card className="shadow-xl overflow-hidden">
+                                <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-indigo-500" />
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-purple-400">
+                                        <Settings2 className="h-5 w-5" /> Configure Workflow
+                                    </CardTitle>
+                                    <CardDescription className="text-muted-foreground">
+                                        Please provide the required credentials and sensitive inputs to complete your workflow setup.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    {!missingItems ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                                            <span className="ml-2 text-muted-foreground">Loading configuration requirements...</span>
+                                        </div>
+                                    ) : (missingItems.credentials.filter(c => !c.satisfied).length === 0 && missingItems.inputs.length === 0) ? (
+                                        <div className="text-center py-8">
+                                            <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                                            <p className="text-lg font-semibold mb-2">All configuration complete!</p>
+                                            <p className="text-muted-foreground mb-4">Your workflow is ready to run.</p>
+                                            <Button
+                                                onClick={() => {
+                                                    setStep('complete');
+                                                }}
+                                                className="bg-indigo-600 hover:bg-indigo-500"
+                                            >
+                                                Continue <ArrowRight className="ml-2 h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Credentials Section */}
+                                            {missingItems.credentials && missingItems.credentials.filter(c => !c.satisfied).length > 0 && (
+                                                <div className="space-y-4">
+                                                    <h3 className="text-lg font-semibold">Credentials</h3>
+                                                    {missingItems.credentials
+                                                        .filter(cred => !cred.satisfied)
+                                                        .map((cred) => (
+                                                            <div key={cred.provider} className="p-4 border rounded-lg space-y-2">
+                                                                <Label>{cred.displayName}</Label>
+                                                                <Input
+                                                                    type="text"
+                                                                    placeholder={`Enter ${cred.displayName} credentials`}
+                                                                    value={configureCredentials[cred.provider]?.value || ''}
+                                                                    onChange={(e) => {
+                                                                        setConfigureCredentials({
+                                                                            ...configureCredentials,
+                                                                            [cred.provider]: { value: e.target.value },
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    Required for: {cred.nodes.join(', ')}
+                                                                </p>
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            )}
+
+                                            {/* Sensitive Inputs Section */}
+                                            {missingItems.inputs && missingItems.inputs.length > 0 && (
+                                                <div className="space-y-4">
+                                                    <h3 className="text-lg font-semibold">Sensitive Inputs</h3>
+                                                    {missingItems.inputs.map((input) => (
+                                                        <div key={`${input.nodeId}_${input.fieldName}`} className="p-4 border rounded-lg space-y-2">
+                                                            <Label>
+                                                                {input.nodeLabel} - {input.fieldName}
+                                                                {input.required && <span className="text-red-500 ml-1">*</span>}
+                                                            </Label>
+                                                            <Input
+                                                                type={input.fieldType === 'number' ? 'number' : 'text'}
+                                                                placeholder={input.description}
+                                                                value={
+                                                                    configureInputs.find(
+                                                                        i => i.nodeId === input.nodeId && i.fieldName === input.fieldName
+                                                                    )?.value || ''
+                                                                }
+                                                                onChange={(e) => {
+                                                                    const existingIndex = configureInputs.findIndex(
+                                                                        i => i.nodeId === input.nodeId && i.fieldName === input.fieldName
+                                                                    );
+                                                                    if (existingIndex >= 0) {
+                                                                        const updated = [...configureInputs];
+                                                                        updated[existingIndex] = { ...updated[existingIndex], value: e.target.value };
+                                                                        setConfigureInputs(updated);
+                                                                    } else {
+                                                                        setConfigureInputs([
+                                                                            ...configureInputs,
+                                                                            { nodeId: input.nodeId, fieldName: input.fieldName, value: e.target.value },
+                                                                        ]);
+                                                                    }
+                                                                }}
+                                                            />
+                                                            {input.examples && input.examples.length > 0 && (
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    Example: {JSON.stringify(input.examples[0])}
+                                                                </p>
+                                                            )}
+                                                            <p className="text-xs text-muted-foreground">{input.description}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {missingItems.credentials.filter(c => !c.satisfied).length === 0 && 
+                                             missingItems.inputs.length === 0 && (
+                                                <div className="text-center py-8">
+                                                    <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                                                    <p className="text-muted-foreground">All required configuration is complete!</p>
+                                                </div>
+                                            )}
+
+                                            {/* Submit Button */}
+                                            <div className="flex gap-3 pt-4">
+                                                <Button
+                                                    onClick={async () => {
+                                                        if (!generatedWorkflowId) return;
+                                                        
+                                                        setIsConfiguring(true);
+                                                        try {
+                                                            const response = await fetch(
+                                                                `${ENDPOINTS.itemBackend}/api/workflows/${generatedWorkflowId}/configure`,
+                                                                {
+                                                                    method: 'POST',
+                                                                    headers: {
+                                                                        'Content-Type': 'application/json',
+                                                                        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
+                                                                    },
+                                                                    body: JSON.stringify({
+                                                                        credentials: configureCredentials,
+                                                                        inputs: configureInputs,
+                                                                    }),
+                                                                }
+                                                            );
+
+                                                            if (!response.ok) {
+                                                                const error = await response.json();
+                                                                throw new Error(error.message || 'Configuration failed');
+                                                            }
+
+                                                            const result = await response.json();
+                                                            setWorkflowReady(true);
+                                                            toast({
+                                                                title: 'Success',
+                                                                description: 'Workflow configured successfully!',
+                                                            });
+                                                            setStep('complete');
+                                                        } catch (error: any) {
+                                                            toast({
+                                                                title: 'Error',
+                                                                description: error.message || 'Failed to configure workflow',
+                                                                variant: 'destructive',
+                                                            });
+                                                        } finally {
+                                                            setIsConfiguring(false);
+                                                        }
+                                                    }}
+                                                    disabled={isConfiguring || workflowReady}
+                                                    className="bg-indigo-600 hover:bg-indigo-500"
+                                                >
+                                                    {isConfiguring ? (
+                                                        <>
+                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                            Configuring...
+                                                        </>
+                                                    ) : workflowReady ? (
+                                                        <>
+                                                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                                                            Ready to Run
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            Configure & Continue <ArrowRight className="ml-2 h-4 w-4" />
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </motion.div>
                     )}
 

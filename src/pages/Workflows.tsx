@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -64,6 +64,7 @@ export default function Workflows() {
   const [workflowExecutions, setWorkflowExecutions] = useState<Execution[]>([]);
   const [loadingExecutions, setLoadingExecutions] = useState(false);
   const [showCreateOptions, setShowCreateOptions] = useState(false);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -71,8 +72,41 @@ export default function Workflows() {
     }
   }, [user, authLoading, navigate]);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const mapWithConcurrency = useCallback(
+    async <T, R>(
+      items: T[],
+      concurrency: number,
+      mapper: (item: T, index: number) => Promise<R>
+    ): Promise<R[]> => {
+      const results: R[] = new Array(items.length);
+      let nextIndex = 0;
+
+      const worker = async () => {
+        while (true) {
+          const currentIndex = nextIndex;
+          nextIndex += 1;
+          if (currentIndex >= items.length) return;
+          results[currentIndex] = await mapper(items[currentIndex], currentIndex);
+        }
+      };
+
+      const workers = Array.from({ length: Math.max(1, concurrency) }, worker);
+      await Promise.all(workers);
+      return results;
+    },
+    []
+  );
+
   const loadWorkflows = useCallback(async () => {
     try {
+      setLoading(true);
       // Load workflows with execution stats
       const { data: workflowsData, error: workflowsError } = await supabase
         .from('workflows')
@@ -81,9 +115,12 @@ export default function Workflows() {
 
       if (workflowsError) throw workflowsError;
 
-      // Load last execution for each workflow
-      const workflowsWithStats = await Promise.all(
-        (workflowsData || []).map(async (workflow) => {
+      // Load last execution + count for each workflow.
+      // IMPORTANT: do NOT fan out unbounded parallel requests; it can exhaust browser resources.
+      const workflowsWithStats = await mapWithConcurrency(
+        workflowsData || [],
+        4,
+        async (workflow) => {
           // Get last execution - use maybeSingle() to handle workflows with no executions
           let lastExec = null;
           try {
@@ -108,13 +145,15 @@ export default function Workflows() {
             }
           }
 
-          // Get execution count - handle 406 errors gracefully
+          // Get execution count — use GET + limit(0) instead of HEAD (head:true).
+          // Some gateways return 502 on HEAD without CORS headers; browser then reports a CORS error.
           let executionCount = 0;
           try {
             const { count, error: countError } = await supabase
               .from('executions')
-              .select('*', { count: 'exact', head: true })
-              .eq('workflow_id', workflow.id);
+              .select('id', { count: 'exact' })
+              .eq('workflow_id', workflow.id)
+              .limit(0);
 
             if (countError && !is406Error(countError)) {
               // Only log non-406 errors
@@ -135,10 +174,10 @@ export default function Workflows() {
             execution_count: executionCount,
             workflow_type: detectWorkflowType(workflow.nodes),
           };
-        })
+        }
       );
 
-      setWorkflows(workflowsWithStats);
+      if (mountedRef.current) setWorkflows(workflowsWithStats);
     } catch (error) {
       console.error('Error loading workflows:', error);
       toast({
@@ -147,15 +186,15 @@ export default function Workflows() {
         variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
-  }, []);
+  }, [mapWithConcurrency]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       loadWorkflows();
     }
-  }, [user, loadWorkflows]);
+  }, [user?.id, loadWorkflows]);
 
   const loadWorkflowExecutions = async (workflowId: string) => {
     setLoadingExecutions(true);

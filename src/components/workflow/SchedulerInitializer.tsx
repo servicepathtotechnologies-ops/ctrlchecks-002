@@ -39,7 +39,7 @@ export default function SchedulerInitializer() {
         workflowScheduler.stopAll();
       }
     };
-  }, [user, loading]);
+  }, [user?.id, loading]);
 
   return null; // This component doesn't render anything
 }

@@ -71,18 +71,13 @@ export const ENDPOINTS = {
     // Development fallback: http://localhost:3001 (only if running on localhost)
     itemBackend: getApiUrl(),
 
-    // Text/Image/Audio Processors - FastAPI Service
-    // REQUIRED: VITE_OLLAMA_BASE_URL must be set in production (Vite only exposes VITE_ prefixed vars)
-    // Development fallback: http://localhost:8000
-    processorBackend: ensureProtocol(
-        getEnvVar('VITE_OLLAMA_BASE_URL', !isDevelopment, 'http://localhost:8000')
-    ),
+    // ✅ MIGRATED: Text/Image/Audio Processors now use main API (Gemini-based)
+    // No longer need separate Ollama endpoint - all AI operations use Gemini via main API
+    processorBackend: getApiUrl(), // Use main API endpoint
 
-    // Ollama URL (optional)
-    // Development fallback: http://localhost:11434
-    ollamaBase: ensureProtocol(
-        getEnvVar('VITE_OLLAMA_BASE_URL', false, 'http://localhost:11434')
-    ),
+    // ✅ MIGRATED: Ollama removed - all AI operations use Gemini
+    // Keeping for backward compatibility but pointing to main API
+    ollamaBase: getApiUrl(), // Use main API endpoint
 
     // Backend access mode
     useDirectBackend: import.meta.env.VITE_USE_DIRECT_BACKEND === 'true' || isDevelopment || !import.meta.env.VITE_SUPABASE_URL

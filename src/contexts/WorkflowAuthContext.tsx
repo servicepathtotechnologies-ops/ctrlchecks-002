@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { ENDPOINTS } from '@/config/endpoints';
@@ -11,6 +11,16 @@ interface AuthStatus {
 interface WorkflowAuthContextType {
   authStatus: AuthStatus | null;
   isLoading: boolean;
+  /**
+   * High-level health flag for auth/back-end checks.
+   * true  => healthy
+   * false => unhealthy, but UI should continue working (non-blocking)
+   */
+  backendHealthy: boolean;
+  /**
+   * Last non-fatal error message (for optional UI display).
+   */
+  lastError?: string | null;
   refreshAuthStatus: () => Promise<void>;
 }
 
@@ -20,12 +30,18 @@ export function WorkflowAuthProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [backendHealthy, setBackendHealthy] = useState(true);
+  const [lastError, setLastError] = useState<string | null>(null);
+  // Simple debounce: only log a warning at most once every 60s
+  const lastWarningRef = useRef<number | null>(null);
 
   const checkAuthStatus = useCallback(async () => {
     try {
       if (!user) {
         setAuthStatus({ googleConnected: false, linkedinConnected: false });
         setIsLoading(false);
+        setBackendHealthy(true);
+        setLastError(null);
         return;
       }
 
@@ -34,6 +50,8 @@ export function WorkflowAuthProvider({ children }: { children: ReactNode }) {
         if (sessionError || !session?.access_token) {
           setAuthStatus({ googleConnected: false, linkedinConnected: false });
           setIsLoading(false);
+          setBackendHealthy(false);
+          setLastError(sessionError?.message || 'No active session');
           return;
         }
 
@@ -72,23 +90,38 @@ export function WorkflowAuthProvider({ children }: { children: ReactNode }) {
           clearTimeout(timeoutId);
           // Handle network errors gracefully (backend may be unavailable)
           if (fetchError.name === 'AbortError') {
-            console.warn('Auth status check timed out (backend may be slow or unavailable)');
+            const now = Date.now();
+            if (!lastWarningRef.current || now - lastWarningRef.current > 60000) {
+              console.warn('Auth status check timed out (backend may be slow or unavailable)');
+              lastWarningRef.current = now;
+            }
+            setLastError('Auth status check timed out');
           } else {
-            console.warn('Failed to fetch auth status (backend may be unavailable):', fetchError.message);
+            const now = Date.now();
+            if (!lastWarningRef.current || now - lastWarningRef.current > 60000) {
+              console.warn('Failed to fetch auth status (backend may be unavailable):', fetchError.message);
+              lastWarningRef.current = now;
+            }
+            setLastError(fetchError.message || 'Failed to fetch auth status');
           }
           setAuthStatus({ googleConnected: false, linkedinConnected: false });
+          setBackendHealthy(false);
         }
       } catch (sessionError) {
         console.warn('Error getting session:', sessionError);
         setAuthStatus({ googleConnected: false, linkedinConnected: false });
+        setBackendHealthy(false);
+        setLastError((sessionError as Error)?.message || 'Error getting session');
       }
     } catch (error) {
       console.error('Unexpected error in checkAuthStatus:', error);
       setAuthStatus({ googleConnected: false, linkedinConnected: false });
+      setBackendHealthy(false);
+      setLastError((error as Error)?.message || 'Unexpected error in auth status check');
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     checkAuthStatus();
@@ -113,6 +146,8 @@ export function WorkflowAuthProvider({ children }: { children: ReactNode }) {
       value={{
         authStatus,
         isLoading,
+        backendHealthy,
+        lastError,
         refreshAuthStatus: checkAuthStatus,
       }}
     >

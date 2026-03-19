@@ -1,59 +1,59 @@
 import { motion } from "framer-motion";
-import { MousePointerClick, Settings2, Rocket, BarChart } from "lucide-react";
+import { Target, Bot, Rocket } from "lucide-react";
 
 const steps = [
   {
-    number: "01",
-    icon: MousePointerClick,
-    title: "Drag & Drop Nodes",
+    number: "1",
+    icon: Target,
+    title: "Describe the outcome",
     description:
-      "Choose from 50+ pre-built nodes including AI models, integrations, and logic operators. Simply drag them onto your canvas.",
+      "Turn natural language into intent. You focus on the business result — the OS captures requirements and structure.",
   },
   {
-    number: "02",
-    icon: Settings2,
-    title: "Configure & Connect",
+    number: "2",
+    icon: Bot,
+    title: "Agents execute",
     description:
-      "Connect nodes together to define your workflow. Configure each node with your specific parameters and credentials.",
+      "Infrastructure builds itself: intelligent logic, orchestrated LLMs, and multi-agent paths wired for production — not demos.",
   },
   {
-    number: "03",
+    number: "3",
     icon: Rocket,
-    title: "Test & Deploy",
+    title: "Immediate value",
     description:
-      "Test your workflow with sample data. Once verified, deploy it with a single click. Set up triggers for automatic execution.",
-  },
-  {
-    number: "04",
-    icon: BarChart,
-    title: "Monitor & Iterate",
-    description:
-      "Track execution metrics, debug issues with detailed logs, and continuously improve your workflows based on performance data.",
+      "Faster innovation and instant deployment. Refine in the hybrid builder whenever you want hands-on control.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-20 sm:py-32 bg-muted/30">
+    <section
+      id="how-it-works"
+      className="py-20 sm:py-32 bg-muted/30"
+      aria-labelledby="how-heading"
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mx-auto max-w-2xl text-center"
+          className="mx-auto max-w-3xl text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-            How it <span className="text-gradient">works</span>
+          <h2
+            id="how-heading"
+            className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
+          >
+            One prompt{" "}
+            <span className="text-gradient">changes everything</span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Get started in minutes. No coding experience required.
+            The interface fades into the background. Organizations move from manual workflow
+            design to intelligent generation — with optional visual refinement at any step.
           </p>
         </motion.div>
 
-        {/* Steps */}
-        <div className="mt-16 grid gap-8 lg:grid-cols-4">
+        <div className="mt-16 grid gap-10 lg:grid-cols-3">
           {steps.map((step, index) => (
             <motion.div
               key={step.number}
@@ -63,13 +63,14 @@ export function HowItWorks() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="relative"
             >
-              {/* Connector line */}
               {index < steps.length - 1 && (
-                <div className="absolute top-12 left-1/2 hidden h-0.5 w-full bg-gradient-to-r from-primary/50 to-transparent lg:block" />
+                <div
+                  className="absolute top-12 left-1/2 hidden h-0.5 w-full bg-gradient-to-r from-primary/50 to-transparent lg:block"
+                  aria-hidden
+                />
               )}
 
               <div className="relative flex flex-col items-center text-center">
-                {/* Number badge */}
                 <div className="relative">
                   <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-border bg-card shadow-lg">
                     <step.icon className="h-10 w-10 text-primary" />

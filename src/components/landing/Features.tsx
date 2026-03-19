@@ -1,144 +1,111 @@
 import { motion } from "framer-motion";
 import {
-  Zap,
-  Brain,
-  GitBranch,
-  Database,
+  Wand2,
+  Server,
+  Network,
+  Eye,
   Shield,
-  Users,
-  Clock,
-  Code,
-  Webhook,
+  Puzzle,
+  Activity,
   Layers,
-  BarChart3,
-  Globe,
 } from "lucide-react";
 
-const features = [
+const pillars = [
   {
-    icon: Brain,
-    title: "AI-Powered Nodes",
+    icon: Wand2,
+    title: "One-prompt workflow creation",
     description:
-      "Connect to OpenAI GPT, Claude, Gemini, and more. Build intelligent workflows with state-of-the-art AI models.",
-    color: "text-accent",
-    bgColor: "bg-accent/10",
-  },
-  {
-    icon: Zap,
-    title: "Visual Workflow Builder",
-    description:
-      "Intuitive drag-and-drop interface. Build complex automations without writing a single line of code.",
+      "Describe outcomes in natural language. The OS translates intent into executable graphs — with hybrid prompt + visual editing when you need precision.",
     color: "text-primary",
     bgColor: "bg-primary/10",
   },
   {
-    icon: Webhook,
-    title: "Webhooks & Triggers",
+    icon: Server,
+    title: "Local LLMs & private inference",
     description:
-      "Start workflows from HTTP requests, schedules, or custom events. Integrate with any system.",
+      "Run with Ollama and private models so sensitive workloads can stay on your infrastructure. Cloud LLMs when you want them.",
+    color: "text-accent",
+    bgColor: "bg-accent/10",
+  },
+  {
+    icon: Network,
+    title: "Distributed, fault-tolerant engine",
+    description:
+      "Built for production: horizontal scaling, resilient workers, and an architecture designed for large-scale, real-world workloads.",
     color: "text-secondary",
     bgColor: "bg-secondary/10",
   },
   {
-    icon: GitBranch,
-    title: "Advanced Logic",
+    icon: Activity,
+    title: "Real-time tracking & auto-recovery",
     description:
-      "Conditionals, loops, switches, and error handling. Build workflows as complex as you need.",
-    color: "text-warning",
-    bgColor: "bg-warning/10",
-  },
-  {
-    icon: Database,
-    title: "Data Transformation",
-    description:
-      "Parse JSON, process CSV, format text, and more. Transform data between any formats.",
+      "Watch executions live, inspect runs, and lean on built-in recovery paths instead of brittle manual retries.",
     color: "text-success",
     bgColor: "bg-success/10",
-  },
-  {
-    icon: Shield,
-    title: "Enterprise Security",
-    description:
-      "SOC 2 compliant. End-to-end encryption. Role-based access control for teams.",
-    color: "text-destructive",
-    bgColor: "bg-destructive/10",
-  },
-  {
-    icon: Users,
-    title: "Team Collaboration",
-    description:
-      "Share workflows, collaborate in real-time, and manage permissions across your team.",
-    color: "text-primary",
-    bgColor: "bg-primary/10",
-  },
-  {
-    icon: Clock,
-    title: "Scheduled Execution",
-    description:
-      "Run workflows on a schedule with cron expressions. Automate recurring tasks effortlessly.",
-    color: "text-accent",
-    bgColor: "bg-accent/10",
-  },
-  {
-    icon: Code,
-    title: "Custom Code",
-    description:
-      "Write JavaScript functions when you need custom logic. Full flexibility when required.",
-    color: "text-secondary",
-    bgColor: "bg-secondary/10",
   },
   {
     icon: Layers,
-    title: "Version Control",
+    title: "Open core · one platform, every tool",
     description:
-      "Track changes, compare versions, and rollback anytime. Never lose your work.",
+      "Plugin-ready architecture connecting CRMs, ERPs, SaaS, and enterprise stacks — Zoho and more — without losing a unified control plane.",
     color: "text-warning",
     bgColor: "bg-warning/10",
   },
   {
-    icon: BarChart3,
-    title: "Execution Analytics",
+    icon: Eye,
+    title: "Transparency by design",
     description:
-      "Monitor performance, track success rates, and debug with detailed execution logs.",
-    color: "text-success",
-    bgColor: "bg-success/10",
-  },
-  {
-    icon: Globe,
-    title: "50+ Integrations",
-    description:
-      "Connect to popular services like Slack, Email, databases, and more out of the box.",
+      "Every graph exposes triggers, logic, branches, outputs, and error handling so autonomy never means a black box.",
     color: "text-destructive",
     bgColor: "bg-destructive/10",
+  },
+  {
+    icon: Shield,
+    title: "Enterprise-ready security",
+    description:
+      "Security is foundational: isolated credentials, compliance-ready patterns, and standardized workflows for governed teams.",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
+  },
+  {
+    icon: Puzzle,
+    title: "SDKs, APIs & agent templates",
+    description:
+      "Extend the OS with developer tooling, integration frameworks, and reusable agent patterns for consistent delivery across regions and teams.",
+    color: "text-accent",
+    bgColor: "bg-accent/10",
   },
 ];
 
 export function Features() {
   return (
-    <section id="features" className="py-20 sm:py-32">
+    <section id="features" className="py-20 sm:py-32" aria-labelledby="features-heading">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mx-auto max-w-2xl text-center"
+          className="mx-auto max-w-3xl text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-            Everything you need to{" "}
-            <span className="text-gradient">automate</span>
+          <h2
+            id="features-heading"
+            className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
+          >
+            Platform with a{" "}
+            <span className="text-gradient">difference</span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            A complete toolkit for building, managing, and scaling your workflow automations
+            Everything in CtrlChecks AI-OS is built around autonomous execution, transparent
+            graphs, and extensibility — rather than adding isolated AI steps on top of existing
+            tools.
           </p>
         </motion.div>
 
-        {/* Features Grid */}
         <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {features.map((feature, index) => (
+          {pillars.map((pillar, index) => (
             <motion.div
-              key={feature.title}
+              key={pillar.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -146,14 +113,12 @@ export function Features() {
               className="group relative rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg"
             >
               <div
-                className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${feature.bgColor}`}
+                className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${pillar.bgColor}`}
               >
-                <feature.icon className={`h-6 w-6 ${feature.color}`} />
+                <pillar.icon className={`h-6 w-6 ${pillar.color}`} />
               </div>
-              <h3 className="mt-4 text-lg font-semibold">{feature.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {feature.description}
-              </p>
+              <h3 className="mt-4 text-lg font-semibold">{pillar.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{pillar.description}</p>
             </motion.div>
           ))}
         </div>

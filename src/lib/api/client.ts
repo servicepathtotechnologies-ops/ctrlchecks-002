@@ -15,11 +15,8 @@ const getApiBaseUrl = (): string => {
         return import.meta.env.VITE_PUBLIC_BASE_URL;
     }
     
-    // Third priority: VITE_OLLAMA_BASE_URL (not ideal, but better than localhost)
-    if (import.meta.env.VITE_OLLAMA_BASE_URL) {
-        console.warn('⚠️  Using VITE_OLLAMA_BASE_URL as API URL. Set VITE_API_URL instead.');
-        return import.meta.env.VITE_OLLAMA_BASE_URL;
-    }
+    // ✅ MIGRATED: VITE_OLLAMA_BASE_URL removed - all AI operations use Gemini via main API
+    // No longer needed as fallback
     
     // Only use localhost if we're in development AND running on localhost
     const isLocalDev = import.meta.env.DEV || import.meta.env.MODE === 'development';

@@ -16,6 +16,8 @@ class WorkflowScheduler {
   private startingWorkflows: Set<string> = new Set(); // Track workflows being started to prevent duplicates
   private executingWorkflows: Set<string> = new Set(); // Execution lock to prevent parallel executions
   private firstRunTimeouts: Set<string> = new Set(); // Track workflows with first-run timeouts (not intervals yet)
+  // High-level health flag so UI can degrade scheduling-only features gracefully
+  private schedulerHealthy = true;
 
   // Calculate milliseconds until next scheduled time for time-based cron (e.g., "49 10 * * *")
   private calculateDelayUntilNextTime(cron: string): number | null {
@@ -161,11 +163,14 @@ class WorkflowScheduler {
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Execution failed' }));
         console.error(`[Scheduler] ❌ Error executing scheduled workflow ${workflowId}:`, error);
+        this.schedulerHealthy = false;
       } else {
         console.log(`[Scheduler] ✅ Successfully executed workflow ${workflowId}`);
+        this.schedulerHealthy = true;
       }
     } catch (error) {
       console.error(`[Scheduler] ❌ Error invoking execute-workflow for ${workflowId}:`, error);
+      this.schedulerHealthy = false;
     } finally {
       // Release execution lock after a delay to prevent rapid re-execution
       // This ensures the workflow has time to complete before allowing another execution
@@ -203,6 +208,14 @@ class WorkflowScheduler {
       this.startInternal(workflowId, cronExpression);
       this.startingWorkflows.delete(workflowId);
     }
+  }
+
+  /**
+   * Simple health accessor so UI can decide to degrade scheduling-only features
+   * without blocking core workflow building when backend/Supabase are unavailable.
+   */
+  isHealthy(): boolean {
+    return this.schedulerHealthy;
   }
 
   // Internal method to start scheduler (called after cleanup)

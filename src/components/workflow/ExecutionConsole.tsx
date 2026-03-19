@@ -371,7 +371,8 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
         <div className="space-y-0">
           {validLogs.map((log: any, i: number) => (
             <ExecutionLogBlock
-              key={log.nodeId || i}
+              // Use a stable, per-log key to avoid React duplicate key warnings
+              key={log.id || `${log.executionId || 'exec'}-${log.nodeId || 'node'}-${log.sequence ?? i}`}
               log={{
                 nodeId: log.nodeId || `node-${i}`,
                 nodeName: log.nodeName || log.nodeId || `Node ${i + 1}`,

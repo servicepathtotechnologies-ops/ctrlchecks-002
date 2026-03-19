@@ -3,6 +3,24 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext } from "@/lib/auth-context";
 
+/**
+ * Avoid re-renders when Supabase emits the same logical session/user with new object references
+ * (e.g. duplicate SIGNED_IN, INITIAL_SESSION + SIGNED_IN). Prevents full-app "refresh" loops.
+ */
+function mergeSession(prev: Session | null, next: Session | null): Session | null {
+    if (!next) return null;
+    if (prev && prev.access_token === next.access_token && prev.expires_at === next.expires_at) {
+        return prev;
+    }
+    return next;
+}
+
+function mergeUser(prev: User | null, next: User | null): User | null {
+    if (!next) return null;
+    if (prev && prev.id === next.id) return prev;
+    return next;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<Session | null>(null);
@@ -12,17 +30,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Set up auth state listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
-                console.log('Auth state changed:', event, session?.user?.email);
-                setSession(session);
-                setUser(session?.user ?? null);
+                if (import.meta.env.DEV) {
+                    console.log('Auth state changed:', event, session?.user?.email);
+                }
+                setSession((prev) => mergeSession(prev, session));
+                setUser((prev) => mergeUser(prev, session?.user ?? null));
                 setLoading(false);
             }
         );
 
         // Check for existing session
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
+            setSession((prev) => mergeSession(prev, session));
+            setUser((prev) => mergeUser(prev, session?.user ?? null));
             setLoading(false);
         });
 

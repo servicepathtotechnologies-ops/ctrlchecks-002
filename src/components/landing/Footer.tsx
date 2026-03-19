@@ -3,11 +3,11 @@ import { Github, Twitter, Linkedin, Youtube } from "lucide-react";
 
 const footerLinks = {
   Product: [
-    { name: "Features", href: "#features" },
+    { name: "Platform", href: "#features" },
+    { name: "How it works", href: "#how-it-works" },
+    { name: "Why CtrlChecks", href: "#advantage" },
     { name: "Pricing", href: "#pricing" },
-    { name: "Integrations", href: "#" },
-    { name: "Changelog", href: "#" },
-    { name: "Roadmap", href: "#" },
+    { name: "Early access", href: "#early-access" },
   ],
   Resources: [
     { name: "Documentation", href: "#" },
@@ -24,10 +24,10 @@ const footerLinks = {
     { name: "Contact", href: "#" },
   ],
   Legal: [
-    { name: "Privacy Policy", href: "#" },
+    { name: "Privacy Policy", href: "/privacy" },
     { name: "Terms of Service", href: "#" },
     { name: "Cookie Policy", href: "#" },
-    { name: "Security", href: "#" },
+    { name: "Security", href: "#security" },
     { name: "GDPR", href: "#" },
   ],
 };
@@ -44,17 +44,25 @@ export function Footer() {
     <footer className="border-t border-border bg-muted/30">
       <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid gap-8 lg:grid-cols-6">
-          {/* Brand */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center">
-                <img src="/favicon.ico" alt="logo" className="h-full w-full" />
+                <img src="/favicon.ico" alt="" className="h-full w-full" />
               </div>
-              <span className="text-xl font-bold">CtrlChecks</span>
+              <span className="text-xl font-bold">CtrlChecks AI-OS</span>
             </Link>
-            <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-              AI-powered workflow automation platform. Build, deploy, and scale
-              your automations with ease.
+            <p className="mt-4 max-w-sm text-sm text-muted-foreground">
+              Autonomous AI automation operating system — intent, intelligence, and execution
+              in one platform. Open core, hybrid prompt + visual workflows, enterprise-ready
+              security.{" "}
+              <a
+                href="https://ctrlchecks.ai"
+                className="font-medium text-primary underline-offset-4 hover:underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                ctrlchecks.ai
+              </a>
             </p>
             <div className="mt-6 flex gap-4">
               {socialLinks.map((social) => (
@@ -70,7 +78,6 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Links */}
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category}>
               <h3 className="font-semibold">{category}</h3>
@@ -90,18 +97,17 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Bottom */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} CtrlChecks. All rights reserved.
           </p>
-          <div className="flex gap-6">
-            <a
-              href="#"
+          <div className="flex flex-wrap justify-center gap-6">
+            <Link
+              to="/privacy"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               Privacy
-            </a>
+            </Link>
             <a
               href="#"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
