@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === "production";
 
   return {
+    test: {
+      globals: true,
+      environment: "node",
+      include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    },
     server: {
       host: "::",
       port: 8080,
@@ -17,7 +22,7 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:3001',
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/api/, '/api'),
+          rewrite: (pathname) => pathname.replace(/^\/api/, '/api'),
           configure: (proxy, _options) => {
             proxy.on('error', (err, _req, _res) => {
               console.log('Proxy error:', err);

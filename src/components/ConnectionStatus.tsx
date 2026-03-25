@@ -9,10 +9,10 @@ import { workflowAPI } from '@/lib/api/workflowAPI';
 // Connection status component - currently disabled (returns null)
 // Keeping the component structure for potential future use
 
-type ConnectionStatus = 'checking' | 'connected' | 'disconnected';
+type BackendConnectionStatus = 'checking' | 'connected' | 'disconnected';
 
 export function ConnectionStatus() {
-  const [backendStatus, setBackendStatus] = useState<ConnectionStatus>('checking');
+  const [backendStatus, setBackendStatus] = useState<BackendConnectionStatus>('checking');
   const [backendInfo, setBackendInfo] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   

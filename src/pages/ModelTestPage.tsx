@@ -1,5 +1,4 @@
-import { useParams } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Mistral7BTestComponent from '@/components/model-testing/text-models/mistral-7b/TestComponent';

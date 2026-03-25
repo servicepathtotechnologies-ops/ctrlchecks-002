@@ -19,8 +19,8 @@ import ScheduleTrigger from './ScheduleTrigger';
 import FacebookConnectionStatus from '@/components/FacebookConnectionStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { ENDPOINTS } from '@/config/endpoints';
-import { Copy, ExternalLink, Bot, Send, Loader2, Sparkles } from 'lucide-react';
 import {
+  Copy, ExternalLink, Bot, Send, Loader2, Sparkles,
   Trash2, X, Play, Webhook, Clock, Globe, Brain, Gem, Link,
   GitBranch, GitMerge, Repeat, Timer, ShieldAlert, Code, Braces, Table,
   Type, Combine, Mail, MessageSquare, Database, Box, FileText, Heart,
@@ -38,6 +38,8 @@ import { resolveExpression, detectExpressionType } from '@/lib/expressionResolve
 import { InputGuideLink } from './InputGuideLink';
 import ConditionBuilder, { ConditionRule } from './ConditionBuilder';
 import { workflowScheduler } from '@/lib/workflowScheduler';
+import { resolveEffectiveFieldFillMode, supportsRuntimeAI } from '@/lib/fillMode';
+import { collectUpstreamFieldHints } from '@/lib/upstreamFieldHints';
 
 // Droppable field wrapper component - MUST be outside PropertiesPanel to avoid hook violations
 interface DroppableFieldWrapperProps {
@@ -84,6 +86,10 @@ interface PropertiesPanelProps {
   onClose?: () => void;
   debugMode?: boolean;
   debugInputData?: unknown;
+  lastResolvedInputs?: Record<
+    string,
+    Record<string, { value: unknown; source?: 'runtime_ai' | 'static_config'; executionId: string; startedAt: string }>
+  >;
 }
 
 interface Message {
@@ -95,7 +101,12 @@ interface Message {
 
 type ViewMode = 'properties' | 'ai-editor';
 
-export default function PropertiesPanel({ onClose, debugMode = false, debugInputData }: PropertiesPanelProps) {
+export default function PropertiesPanel({
+  onClose,
+  debugMode = false,
+  debugInputData,
+  lastResolvedInputs = {},
+}: PropertiesPanelProps) {
   const { selectedNode, selectNode, updateNodeConfig, deleteSelectedNode, workflowId, nodes, edges, setNodes, setEdges } = useWorkflowStore();
   const { toast } = useToast();
   const { pendingExpression, clearPendingExpression } = useExpressionDropStore();
@@ -119,10 +130,30 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
   const [schemaLoading, setSchemaLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
+  const buildRuntimeAwareValidationErrors = useCallback(
+    (schema: NodeDefinition, config: Record<string, unknown>) => {
+      const validation = validateNodeInputsAgainstSchema(schema, config);
+      if (validation.valid) return {};
+      const backendInputSchema = (schema.inputSchema || {}) as Record<string, any>;
+      const errorsMap: Record<string, string> = {};
+      validation.errors.forEach((err) => {
+        const effectiveMode = resolveEffectiveFieldFillMode(err.field, backendInputSchema, config);
+        const runtimeSupported = supportsRuntimeAI(err.field, backendInputSchema);
+        if (effectiveMode === 'runtime_ai' && runtimeSupported) return;
+        errorsMap[err.field] = err.message;
+      });
+      return errorsMap;
+    },
+    []
+  );
+
   // If/Else editor mode: allow either modern ConditionBuilder or raw JSON editing
   const [ifElseConditionsEditorMode, setIfElseConditionsEditorMode] = useState<'builder' | 'json'>('builder');
   const [ifElseConditionsJsonText, setIfElseConditionsJsonText] = useState<string>('');
   const [ifElseConditionsJsonError, setIfElseConditionsJsonError] = useState<string | null>(null);
+
+  /** Switch-only: inline hint when cases/expression are incomplete */
+  const [switchConfigHint, setSwitchConfigHint] = useState<string | null>(null);
 
   // AI Editor state
   const [aiMessages, setAiMessages] = useState<Message[]>([
@@ -180,13 +211,8 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
           
           // Validate current inputs against schema
           const currentInputs = selectedNode.data.config || {};
-          const validation = validateNodeInputsAgainstSchema(schema, currentInputs);
-          
-          if (!validation.valid) {
-            const errorsMap: Record<string, string> = {};
-            validation.errors.forEach(err => {
-              errorsMap[err.field] = err.message;
-            });
+          const errorsMap = buildRuntimeAwareValidationErrors(schema, currentInputs);
+          if (Object.keys(errorsMap).length > 0) {
             setValidationErrors(errorsMap);
             console.log(`[PropertiesPanel] ⚠️ Validation errors for ${nodeType}:`, errorsMap);
           } else {
@@ -214,18 +240,13 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
     if (!selectedNode || !backendSchema) return;
 
     const currentInputs = selectedNode.data.config || {};
-    const validation = validateNodeInputsAgainstSchema(backendSchema, currentInputs);
-    
-    if (!validation.valid) {
-      const errorsMap: Record<string, string> = {};
-      validation.errors.forEach(err => {
-        errorsMap[err.field] = err.message;
-      });
+    const errorsMap = buildRuntimeAwareValidationErrors(backendSchema, currentInputs);
+    if (Object.keys(errorsMap).length > 0) {
       setValidationErrors(errorsMap);
     } else {
       setValidationErrors({});
     }
-  }, [selectedNode?.data.config, backendSchema]);
+  }, [selectedNode?.data.config, backendSchema, buildRuntimeAwareValidationErrors]);
 
   // Auto-scroll AI messages
   useEffect(() => {
@@ -604,20 +625,12 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
   const availableFieldsForConditions = useMemo(() => {
     if (!selectedNodeId) return [];
 
-    const fields: string[] = [];
     const prevNodes = nodes.filter(n => {
       const nodeEdges = edges.filter(e => e.target === selectedNodeId);
       return nodeEdges.some(e => e.source === n.id);
     });
 
-    prevNodes.forEach(node => {
-      if (node.data?.type === 'manual_trigger') {
-        fields.push('input.age', 'input.name', 'input.email');
-      }
-      // Add more field extraction logic as needed
-    });
-
-    return fields;
+    return collectUpstreamFieldHints(prevNodes);
   }, [nodes, edges, selectedNodeId]);
 
   // Keep If/Else JSON editor in sync with selected node
@@ -632,6 +645,31 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
     setIfElseConditionsJsonText(text);
     setIfElseConditionsJsonError(null);
   }, [selectedNode?.id, selectedNode?.data?.type]);
+
+  useEffect(() => {
+    if (!selectedNode || selectedNode.data?.type !== 'switch') {
+      setSwitchConfigHint(null);
+      return;
+    }
+    const cfg = selectedNode.data?.config || {};
+    const cases = (cfg as { cases?: unknown }).cases;
+    const arr = Array.isArray(cases) ? cases : [];
+    const expr =
+      typeof (cfg as { expression?: unknown }).expression === 'string'
+        ? String((cfg as { expression: string }).expression).trim()
+        : '';
+    if (arr.length === 0) {
+      setSwitchConfigHint(
+        'Add at least one case. Each case value becomes a branch output; the expression must evaluate to exactly one case value.'
+      );
+    } else if (!expr) {
+      setSwitchConfigHint(
+        'Set an expression (e.g. {{$json.response}}) that resolves to one of the case values.'
+      );
+    } else {
+      setSwitchConfigHint(null);
+    }
+  }, [selectedNode?.id, selectedNode?.data?.type, selectedNode?.data?.config]);
 
   // Stop event propagation to prevent ReactFlow from stealing focus
   const handleInputMouseDown = (e: React.MouseEvent) => {
@@ -845,47 +883,15 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
 
   const renderField = (field: ConfigField) => {
     const value = (selectedNode.data.config || {})[field.key] ?? field.defaultValue ?? '';
+    const runtimeValueMeta = lastResolvedInputs?.[selectedNode.id]?.[field.key];
+    const config = (selectedNode.data.config || {}) as Record<string, unknown>;
+    const backendInputSchema = (backendSchema?.inputSchema || {}) as Record<string, any>;
+    const effectiveFillMode = resolveEffectiveFieldFillMode(field.key, backendInputSchema, config);
+    const runtimeSupported = supportsRuntimeAI(field.key, backendInputSchema);
 
-    // ✅ CORE ARCH REFACTOR (FRONTEND): UNIVERSAL AI-MANAGED FIELD DETECTION
-    // AI Input Resolver generates inputs dynamically at runtime for ALL nodes.
-    // UI should indicate that AI will generate them dynamically and prevent manual JSON mapping.
-    const nodeType = selectedNode.data.type || '';
-    const fieldKeyLower = field.key.toLowerCase();
-    
-    // Determine if field is AI-managed based on node type and field name
-    const isAIManagedField = (() => {
-      // Communication nodes (Gmail, Slack, Discord, etc.) - message content fields
-      if (nodeType.includes('gmail') || nodeType.includes('email') || 
-          nodeType.includes('slack') || nodeType.includes('discord') ||
-          nodeType.includes('telegram') || nodeType.includes('teams') ||
-          nodeType.includes('whatsapp') || nodeType.includes('twilio')) {
-        const messageFields = ['to', 'subject', 'body', 'message', 'text', 'content', 'recipient', 'cc', 'bcc'];
-        return messageFields.includes(fieldKeyLower) && field.type !== 'json';
-      }
-      
-      // AI nodes - user input and prompt fields
-      if (nodeType.includes('ai_agent') || nodeType.includes('ai_chat') || 
-          nodeType.includes('ai_service') || nodeType.includes('llm') ||
-          nodeType.includes('openai') || nodeType.includes('claude') ||
-          nodeType.includes('gemini') || nodeType.includes('chat_model')) {
-        const aiFields = ['userinput', 'user_input', 'prompt', 'message', 'input', 'query'];
-        return aiFields.includes(fieldKeyLower) && field.type !== 'json';
-      }
-      
-      // Error handler nodes - error message fields
-      if (nodeType.includes('error') || nodeType.includes('error_handler')) {
-        const errorFields = ['message', 'error_message', 'notification'];
-        return errorFields.includes(fieldKeyLower) && field.type !== 'json';
-      }
-      
-      // Log output nodes - log message fields
-      if (nodeType.includes('log_output') || nodeType.includes('log')) {
-        const logFields = ['message', 'log_message', 'output'];
-        return logFields.includes(fieldKeyLower) && field.type !== 'json';
-      }
-      
-      return false;
-    })();
+    // Registry-driven UI behavior: only runtime_ai fields with runtime support
+    // should be shown as AI-managed in the properties panel.
+    const isAIManagedField = effectiveFillMode === 'runtime_ai' && runtimeSupported;
 
     // Check if value is an expression and resolve it in debug mode
     const isExpression = typeof value === 'string' && value.startsWith('{{$json.');
@@ -898,8 +904,18 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
 
     // If this is an AI-managed field, show read-only message instead of editable control
     if (isAIManagedField) {
+      const isEmptyConfig =
+        value === undefined ||
+        value === null ||
+        (typeof value === 'string' && value.trim() === '') ||
+        (typeof value === 'object' && !Array.isArray(value) && Object.keys(value as object).length === 0);
       return (
-        <div className="text-xs text-muted-foreground border border-dashed border-border/60 rounded px-3 py-2 bg-muted/40">
+        <div
+          className="text-xs text-muted-foreground border border-dashed border-border/60 rounded px-3 py-2 bg-muted/40"
+          role="status"
+          aria-label="AI-managed field, empty until execution"
+          data-testid="ai-managed-field"
+        >
           <p className="font-medium text-foreground/80">
             Filled automatically by AI at runtime
           </p>
@@ -907,6 +923,26 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
             This field will be generated dynamically from previous node output and your workflow
             intent. You don&apos;t need to configure it manually.
           </p>
+          {isEmptyConfig && (
+            <p className="mt-2 text-[10px] text-muted-foreground/90 italic">
+              No value is stored in the workflow; it stays empty until execution.
+            </p>
+          )}
+          {runtimeValueMeta && (
+            <div className="mt-2 p-2 rounded border border-border/50 bg-background/60">
+              <p className="text-[11px] text-foreground/80 font-medium">
+                Last runtime value (read-only)
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {new Date(runtimeValueMeta.startedAt).toLocaleString()} • {runtimeValueMeta.source === 'runtime_ai' ? 'AI runtime' : 'Static config'}
+              </p>
+              <pre className="mt-1 max-h-28 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] whitespace-pre-wrap break-words">
+                {typeof runtimeValueMeta.value === 'string'
+                  ? runtimeValueMeta.value
+                  : JSON.stringify(runtimeValueMeta.value, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       );
     }
@@ -1027,7 +1063,7 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
           </DroppableFieldWrapper>
         );
 
-      case 'select':
+      case 'select': {
         // ✅ CORE ARCH REFACTOR: Filter out JSON/template options from dropdowns
         // AI Input Resolver will handle JSON-based mapping at runtime.
         const isJsonOption = (opt: any) => {
@@ -1055,29 +1091,46 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
         }
         
         // Show dropdown only if non-JSON options exist
+        const activeContextHints =
+          field.contextHints?.filter((h) => String(value ?? '') === h.whenValue) ?? [];
         return (
-          <Select
-            value={value as string}
-            onValueChange={(val) => handleConfigChange(field.key, val)}
-          >
-            <SelectTrigger
-              id={field.key}
-              className="h-8 text-xs border-border/60 focus:ring-1 focus:ring-ring/50"
+          <div className="space-y-2">
+            <Select
+              value={value as string}
+              onValueChange={(val) => handleConfigChange(field.key, val)}
             >
-              <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {nonJsonOptions
-                // ✅ Radix Select forbids empty-string item values
-                .filter((option: any) => String(option.value ?? '').trim().length > 0)
-                .map((option: any) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label || option.value}
-                  </SelectItem>
+              <SelectTrigger
+                id={field.key}
+                className="h-8 text-xs border-border/60 focus:ring-1 focus:ring-ring/50"
+              >
+                <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {nonJsonOptions
+                  // ✅ Radix Select forbids empty-string item values
+                  .filter((option: any) => String(option.value ?? '').trim().length > 0)
+                  .map((option: any) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label || option.value}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {activeContextHints.length > 0 && (
+              <div className="space-y-1.5" role="note">
+                {activeContextHints.map((h) => (
+                  <p
+                    key={h.whenValue}
+                    className="text-xs text-muted-foreground/90 leading-relaxed border border-border/50 rounded-md px-2.5 py-2 bg-muted/30"
+                  >
+                    {h.message}
+                  </p>
                 ))}
-            </SelectContent>
-          </Select>
+              </div>
+            )}
+          </div>
         );
+      }
 
       case 'boolean':
         return (
@@ -1509,14 +1562,29 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
                           <h3 className="text-xs font-medium uppercase text-muted-foreground/70 tracking-wide">
                             Configuration
                           </h3>
+                          {selectedNode.data.type === 'switch' && switchConfigHint && (
+                            <div
+                              role="status"
+                              className="text-xs text-amber-700 dark:text-amber-300 border border-amber-500/40 rounded-md px-3 py-2 bg-amber-500/5"
+                            >
+                              {switchConfigHint}
+                            </div>
+                          )}
                           {nodeDefinition.configFields.map((field) => {
-                            // ✅ Systematic UI: conditional visibility based on backend schema ui.requiredIf
+                            // ✅ Systematic UI: visibleIf (optional), then requiredIf (hide + required when true)
                             let effectiveRequired = field.required;
                             if (backendSchema) {
                               const ui = (backendSchema.inputSchema as any)?.[field.key]?.ui;
+                              const currentConfig = selectedNode.data.config || {};
+                              const visibleIf =
+                                (ui?.visibleIf as { field: string; equals: unknown } | undefined) ||
+                                (field.visibleIf as { field: string; equals: unknown } | undefined);
+                              if (visibleIf) {
+                                const visOk = (currentConfig as any)?.[visibleIf.field] === visibleIf.equals;
+                                if (!visOk) return null;
+                              }
                               const requiredIf = ui?.requiredIf as { field: string; equals: any } | undefined;
                               if (requiredIf) {
-                                const currentConfig = selectedNode.data.config || {};
                                 const conditionMet = (currentConfig as any)?.[requiredIf.field] === requiredIf.equals;
                                 if (!conditionMet) {
                                   return null;
@@ -1638,7 +1706,7 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
                                               setIfElseConditionsJsonError('Invalid JSON (fix syntax to apply).');
                                             }
                                           }}
-                                          placeholder={`[\n  { \"expression\": \"{{$json.items.length}} > 0\" }\n]`}
+                                          placeholder={`[\n  { "expression": "{{$json.items.length}} > 0" }\n]`}
                                           className="min-h-[120px] font-mono text-xs border-border/60 focus-visible:ring-1 focus-visible:ring-ring/50"
                                           onMouseDown={handleInputMouseDown}
                                           onFocus={(e) => e.stopPropagation()}
@@ -1677,6 +1745,9 @@ export default function PropertiesPanel({ onClose, debugMode = false, debugInput
                                         nodeType={selectedNode.data.type}
                                         placeholder={field.placeholder}
                                         helpText={effectiveHelpText}
+                                        helpCategory={field.helpCategory}
+                                        docsUrl={field.docsUrl}
+                                        exampleValue={field.exampleValue}
                                       />
                                     )}
                                   </div>

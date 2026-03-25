@@ -61,9 +61,10 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
   // Parse Switch cases to create output handles
   // This will automatically update when data.config.cases changes
   let switchCases: Array<{ value: string; label?: string }> = [];
-  if (isSwitchNode && data.config?.cases) {
+  const switchCasesRaw = data.config?.cases ?? data.config?.rules;
+  if (isSwitchNode && switchCasesRaw) {
     try {
-      const casesConfig = data.config.cases;
+      const casesConfig = switchCasesRaw;
       if (typeof casesConfig === 'string') {
         switchCases = JSON.parse(casesConfig);
       } else if (Array.isArray(casesConfig)) {

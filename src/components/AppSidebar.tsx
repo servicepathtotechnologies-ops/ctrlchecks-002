@@ -204,7 +204,6 @@ export function AppSidebar() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );

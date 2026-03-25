@@ -120,11 +120,11 @@ export default function GitHubAuthCallback() {
 
       // 2. Setup listener for the eventual sign in (PKCE flow)
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event: AuthChangeEvent, session: Session | null) => {
+        async (event: AuthChangeEvent, nextSession: Session | null) => {
           console.log(`Auth Callback Event: ${event}`);
 
           if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            await processSession(session);
+            await processSession(nextSession);
           }
         }
       );

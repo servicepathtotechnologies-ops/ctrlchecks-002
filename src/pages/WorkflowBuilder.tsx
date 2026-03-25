@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useRef } from 'react';
+import { useEffect, useCallback, useState, useRef, Suspense, lazy } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useWorkflowStore, WorkflowNode } from '@/stores/workflowStore';
@@ -10,16 +10,22 @@ import { Copy, ExternalLink, ChevronRight, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NodeTypeDefinition } from '@/components/workflow/nodeTypes';
 import WorkflowHeader from '@/components/workflow/WorkflowHeader';
-import NodeLibrary from '@/components/workflow/NodeLibrary';
-import WorkflowCanvas from '@/components/workflow/WorkflowCanvas';
-import PropertiesPanel from '@/components/workflow/PropertiesPanel';
-import ExecutionConsole from '@/components/workflow/ExecutionConsole';
-import DebugPanel from '@/components/workflow/debug/DebugPanel';
 import { useDebugStore } from '@/stores/debugStore';
 import { Edge } from '@xyflow/react';
 import { Json } from '@/integrations/supabase/types';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
-import { normalizeBackendWorkflow, validateNodeTypesRegistered } from '@/lib/node-type-normalizer';
+import { enforceFrontendRenderContract, normalizeBackendWorkflow, validateNodeTypesRegistered } from '@/lib/node-type-normalizer';
+
+const NodeLibrary = lazy(() => import('@/components/workflow/NodeLibrary'));
+const WorkflowCanvas = lazy(() => import('@/components/workflow/WorkflowCanvas'));
+const PropertiesPanel = lazy(() => import('@/components/workflow/PropertiesPanel'));
+const ExecutionConsole = lazy(() => import('@/components/workflow/ExecutionConsole'));
+const DebugPanel = lazy(() => import('@/components/workflow/debug/DebugPanel'));
+
+type LastResolvedInputsMap = Record<
+  string,
+  Record<string, { value: unknown; source?: 'runtime_ai' | 'static_config'; executionId: string; startedAt: string }>
+>;
 
 export default function WorkflowBuilder() {
   const { id } = useParams();
@@ -32,6 +38,7 @@ export default function WorkflowBuilder() {
   const [consoleExpanded, setConsoleExpanded] = useState(false);
   const [nodeLibraryOpen, setNodeLibraryOpen] = useState(true);
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
+  const [lastResolvedInputs, setLastResolvedInputs] = useState<LastResolvedInputsMap>({});
   const { debugNodeId } = useDebugStore();
   const hasAutoRun = useRef(false); // Track if we've already auto-run for this workflow load
   const {
@@ -114,8 +121,14 @@ export default function WorkflowBuilder() {
           );
         }
         
-        // Step 3: Validate all node types are registered in React Flow
-        const typeValidation = validateNodeTypesRegistered(normalized.nodes);
+        // Step 3: Enforce render contract to avoid runtime type/handle drift
+        const contracted = enforceFrontendRenderContract({
+          nodes: normalized.nodes as any[],
+          edges: normalized.edges as any[],
+        });
+
+        // Step 4: Validate all node types are registered in React Flow
+        const typeValidation = validateNodeTypesRegistered(contracted.nodes);
         if (!typeValidation.valid) {
           console.warn('[WorkflowBuilder] ⚠️  Some node types are not registered:', typeValidation.missingTypes);
           console.warn('[WorkflowBuilder]   These nodes may not render correctly. Please register them in WorkflowCanvas.tsx');
@@ -125,9 +138,9 @@ export default function WorkflowBuilder() {
         }
 
         // CRITICAL: Validate edges before setting
-        const validEdges = normalized.edges.filter(edge => {
-          const sourceExists = normalized.nodes.some(n => n.id === edge.source);
-          const targetExists = normalized.nodes.some(n => n.id === edge.target);
+        const validEdges = contracted.edges.filter(edge => {
+          const sourceExists = contracted.nodes.some(n => n.id === edge.source);
+          const targetExists = contracted.nodes.some(n => n.id === edge.target);
           
           if (!sourceExists || !targetExists) {
             console.warn(`[EdgeValidation] Removing invalid edge on load: ${edge.source}->${edge.target}`);
@@ -136,11 +149,11 @@ export default function WorkflowBuilder() {
           return true;
         });
 
-        console.log(`[EdgeDebug] Loaded ${validEdges.length} valid edges from ${normalized.edges.length} total edges`);
-        console.log(`[EdgeDebug] Loaded ${normalized.nodes.length} nodes`);
+        console.log(`[EdgeDebug] Loaded ${validEdges.length} valid edges from ${contracted.edges.length} total edges`);
+        console.log(`[EdgeDebug] Loaded ${contracted.nodes.length} nodes`);
 
         // CRITICAL: Set nodes and edges atomically to prevent partial state
-        setNodes(normalized.nodes);
+        setNodes(contracted.nodes);
         setEdges(validEdges);
         setIsDirty(false);
         
@@ -167,6 +180,25 @@ export default function WorkflowBuilder() {
     }
   }, [setWorkflowId, setWorkflowName, setNodes, setEdges, setIsDirty, resetWorkflow]);
 
+  const loadLastResolvedInputs = useCallback(async (workflowId: string) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/last-resolved-inputs`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionData?.session?.access_token
+            ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+            : {}),
+        },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      setLastResolvedInputs(data?.values || {});
+    } catch (error) {
+      console.warn('[WorkflowBuilder] Failed to load last resolved inputs:', error);
+    }
+  }, []);
+
   // Load workflow if editing - only reset for new workflows
   // CRITICAL: This effect must run whenever the route ID changes
   useEffect(() => {
@@ -181,10 +213,12 @@ export default function WorkflowBuilder() {
       if (currentWorkflowId !== id) {
         loadWorkflow(id);
       }
+      loadLastResolvedInputs(id);
     } else if (id === 'new') {
       resetWorkflow();
+      setLastResolvedInputs({});
     }
-  }, [id, user, loadWorkflow, resetWorkflow]);
+  }, [id, user, loadWorkflow, resetWorkflow, loadLastResolvedInputs]);
 
   // Auto-run workflow if autoRun parameter is present (for AI-generated workflows)
   // Note: This useEffect is moved after handleRun definition to avoid initialization order issues
@@ -293,7 +327,7 @@ export default function WorkflowBuilder() {
       // ✅ CRITICAL: After saving, automatically attach inputs and set status to ready_for_execution
       if (savedWorkflowId) {
         try {
-          const { data: sessionData } = await supabase.auth.getSession();
+          const { data: currentSessionData } = await supabase.auth.getSession();
           
           // Extract inputs from current nodes
           const inputsToAttach: Record<string, Record<string, any>> = {};
@@ -328,8 +362,8 @@ export default function WorkflowBuilder() {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                ...(sessionData?.session?.access_token
-                  ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+                ...(currentSessionData?.session?.access_token
+                  ? { Authorization: `Bearer ${currentSessionData.session.access_token}` }
                   : {}),
               },
               body: JSON.stringify({
@@ -363,19 +397,19 @@ export default function WorkflowBuilder() {
             console.log('[handleSave] No inputs to attach, checking if workflow can be set to ready');
             
             // Try to set status directly to ready_for_execution
-            const { data: sessionData } = await supabase.auth.getSession();
+            const { data: currentSessionDataForCheck } = await supabase.auth.getSession();
             const checkCredsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflowId}`, {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
-                ...(sessionData?.session?.access_token
-                  ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+                ...(currentSessionDataForCheck?.session?.access_token
+                  ? { Authorization: `Bearer ${currentSessionDataForCheck.session.access_token}` }
                   : {}),
               },
             });
             
             if (checkCredsResponse.ok) {
-              const workflowData = await checkCredsResponse.json();
+              await checkCredsResponse.json();
               // If workflow has no credential requirements, we could set it to ready_for_execution
               // But for now, let execute-workflow handle the status update
             }
@@ -424,10 +458,14 @@ export default function WorkflowBuilder() {
         nodes: workflowData.nodes || [],
         edges: workflowData.edges || []
       });
+      const contracted = enforceFrontendRenderContract({
+        nodes: normalized.nodes,
+        edges: normalized.edges,
+      });
 
       // Set nodes and edges atomically
-      setNodes(normalized.nodes);
-      setEdges(normalized.edges);
+      setNodes(contracted.nodes);
+      setEdges(contracted.edges);
       setIsDirty(true);
 
       toast({
@@ -1048,66 +1086,78 @@ export default function WorkflowBuilder() {
         isRunning={isRunning}
         onImport={handleImportWorkflow}
       />
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Panel - Node Library */}
-          {nodeLibraryOpen ? (
-            <div className="relative w-72 overflow-hidden border-r border-border/60">
-              <NodeLibrary
-                onDragStart={onDragStart}
-                onClose={() => setNodeLibraryOpen(false)}
-              />
+      <Suspense
+        fallback={
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <p className="text-muted-foreground">Loading workflow editor...</p>
             </div>
-          ) : (
-            <button
-              onClick={() => setNodeLibraryOpen(true)}
-              className={cn(
-                "w-8 flex items-center justify-center border-r border-border/60",
-                "hover:bg-muted/30 transition-colors duration-150",
-                "group"
-              )}
-              title="Open Node Library"
-              aria-label="Open Node Library"
-            >
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-foreground/60 transition-colors duration-150" />
-            </button>
-          )}
-
-          {/* Central Canvas Area */}
-          <div className="flex-1 relative w-full h-full" style={{ minWidth: 0, minHeight: 0 }}>
-            <WorkflowCanvas />
           </div>
+        }
+      >
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left Panel - Node Library */}
+            {nodeLibraryOpen ? (
+              <div className="relative w-72 overflow-hidden border-r border-border/60">
+                <NodeLibrary
+                  onDragStart={onDragStart}
+                  onClose={() => setNodeLibraryOpen(false)}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setNodeLibraryOpen(true)}
+                className={cn(
+                  "w-8 flex items-center justify-center border-r border-border/60",
+                  "hover:bg-muted/30 transition-colors duration-150",
+                  "group"
+                )}
+                title="Open Node Library"
+                aria-label="Open Node Library"
+              >
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-foreground/60 transition-colors duration-150" />
+              </button>
+            )}
 
-          {/* Right Panel - Properties */}
-          {propertiesPanelOpen ? (
-            <div className="relative overflow-hidden border-l border-border/60">
-              <PropertiesPanel
-                onClose={() => setPropertiesPanelOpen(false)}
-              />
+            {/* Central Canvas Area */}
+            <div className="flex-1 relative w-full h-full" style={{ minWidth: 0, minHeight: 0 }}>
+              <WorkflowCanvas />
             </div>
-          ) : (
-            <button
-              onClick={() => setPropertiesPanelOpen(true)}
-              className={cn(
-                "w-8 flex items-center justify-center border-l border-border/60",
-                "hover:bg-muted/30 transition-colors duration-150",
-                "group"
-              )}
-              title="Open Properties Panel"
-              aria-label="Open Properties Panel"
-            >
-              <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-foreground/60 transition-colors duration-150" />
-            </button>
-          )}
-        </div>
-        <ExecutionConsole
-          isExpanded={consoleExpanded}
-          onToggle={() => setConsoleExpanded(!consoleExpanded)}
-        />
-      </div>
 
-      {/* Debug Panel Overlay */}
-      {debugNodeId && <DebugPanel />}
+            {/* Right Panel - Properties */}
+            {propertiesPanelOpen ? (
+              <div className="relative overflow-hidden border-l border-border/60">
+                <PropertiesPanel
+                  onClose={() => setPropertiesPanelOpen(false)}
+                  lastResolvedInputs={lastResolvedInputs}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setPropertiesPanelOpen(true)}
+                className={cn(
+                  "w-8 flex items-center justify-center border-l border-border/60",
+                  "hover:bg-muted/30 transition-colors duration-150",
+                  "group"
+                )}
+                title="Open Properties Panel"
+                aria-label="Open Properties Panel"
+              >
+                <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-foreground/60 transition-colors duration-150" />
+              </button>
+            )}
+          </div>
+          <ExecutionConsole
+            isExpanded={consoleExpanded}
+            onToggle={() => setConsoleExpanded(!consoleExpanded)}
+          />
+        </div>
+
+        {/* Debug Panel Overlay */}
+        {debugNodeId && <DebugPanel />}
+      </Suspense>
     </div>
   );
 }

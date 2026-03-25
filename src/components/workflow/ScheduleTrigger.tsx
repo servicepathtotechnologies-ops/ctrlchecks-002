@@ -87,12 +87,12 @@ const getTimezoneOffset = (timezone: string): string => {
   try {
     const now = new Date();
     // Try shortOffset first
-    let formatter = new Intl.DateTimeFormat('en', {
+    const formatter = new Intl.DateTimeFormat('en', {
       timeZone: timezone,
       timeZoneName: 'shortOffset',
     });
-    let parts = formatter.formatToParts(now);
-    let offsetPart = parts.find((part) => part.type === 'timeZoneName');
+    const parts = formatter.formatToParts(now);
+    const offsetPart = parts.find((part) => part.type === 'timeZoneName');
     
     if (offsetPart?.value) {
       return offsetPart.value;

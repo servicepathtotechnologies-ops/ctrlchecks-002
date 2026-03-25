@@ -30,6 +30,8 @@ interface ExecutionConsoleProps {
   onToggle: () => void;
 }
 
+type ResolvedInputSource = 'runtime_ai' | 'static_config';
+
 export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionConsoleProps) {
   const { workflowId, updateNodeStatus, resetWorkflow, resetAllNodeStatuses, nodes } = useWorkflowStore();
   const [executions, setExecutions] = useState<Execution[]>([]);
@@ -383,6 +385,8 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
                 input: log.input,
                 output: log.output,
                 error: log.error,
+                resolvedInputs: log.resolvedInputs,
+                resolvedInputSources: log.resolvedInputSources as Record<string, ResolvedInputSource> | undefined,
               }}
               index={i}
               totalNodes={validLogs.length}

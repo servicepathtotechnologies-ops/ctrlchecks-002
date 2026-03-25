@@ -43,7 +43,8 @@ export const ALLOWED_TRANSITIONS: Record<WorkflowGenerationState, WorkflowGenera
     WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING, // ✅ FIXED: Can skip confirmation and go directly to building
   ],
   [WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED]: [
-    WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING, // BUILDING - required transition
+    WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION, // Plan / refine path: collect credentials before build
+    WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING,
   ],
   [WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION]: [WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING],
   [WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING]: [
@@ -241,9 +242,9 @@ export class WorkflowGenerationStateManager {
       return { success: true };
     } catch (error) {
       // Even error handling can fail - log and return
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`[StateManager] ❌ Critical: Failed to transition to error state: ${errorMessage}`);
-      return { success: false, error: `Critical state machine error: ${errorMessage}` };
+      const criticalErrorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[StateManager] ❌ Critical: Failed to transition to error state: ${criticalErrorMessage}`);
+      return { success: false, error: `Critical state machine error: ${criticalErrorMessage}` };
     }
   }
 
@@ -310,17 +311,35 @@ export class WorkflowGenerationStateManager {
   }
 
   /**
+   * Update the confirmed understanding text when already past confirmation (STATE_3/4),
+   * e.g. user edited the structured plan and continues again.
+   */
+  updateConfirmedUnderstanding(text: string): { success: boolean; error?: string } {
+    const t = text?.trim();
+    if (!t) {
+      return { success: false, error: 'Cannot update understanding: empty text' };
+    }
+    const cs = this.executionState.current_state;
+    if (
+      cs === WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED ||
+      cs === WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION
+    ) {
+      this.executionState.final_understanding = t;
+      return { success: true };
+    }
+    return {
+      success: false,
+      error: `Cannot update understanding from state ${cs}`,
+    };
+  }
+
+  /**
    * Set required credentials (STATE_4)
    */
   setRequiredCredentials(credentials: string[]): void {
     this.executionState.credentials_required = credentials;
-    // Transition to credential collection if we're in a state that allows it
-    if (this.executionState.current_state === WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED) {
-      this.transitionTo(WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION, 'Credentials required identified');
-    } else if (this.executionState.current_state === WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING) {
-      // If credentials are detected during building, go back to credential collection
-      this.transitionTo(WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION, 'Credentials required detected during building');
-    }
+    // Keep credential requirements recorded, but do not force a pre-build credential stage.
+    // Credential collection is handled in the post-build configuration flow.
   }
 
   /**
@@ -357,19 +376,8 @@ export class WorkflowGenerationStateManager {
       };
     }
 
-    // Execution guard: Must have credentials if required
-    if (this.executionState.credentials_required.length > 0) {
-      const missingCredentials = this.executionState.credentials_required.filter(
-        cred => !this.executionState.credentials_provided[cred] && 
-                !this.executionState.credentials_provided[cred.toLowerCase().replace(/_/g, '_')]
-      );
-      if (missingCredentials.length > 0) {
-        return { 
-          success: false, 
-          error: `Cannot build workflow: Missing required credentials: ${missingCredentials.join(', ')}` 
-        };
-      }
-    }
+    // Do not block build on credential availability.
+    // Credentials are collected once in the post-build configuration stage.
 
     // Ensure we're in a valid state to start building
     const currentState = this.executionState.current_state;
@@ -859,7 +867,10 @@ export function mapWizardStepToState(step: string): WorkflowGenerationState {
     'questioning': WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE,
     'refining': WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE,
     'confirmation': WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED,
+    'field-ownership': WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED,
+    'plan-credentials': WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION,
     'credentials': WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION,
+    'configuration': WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION,
     'building': WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING,
     'complete': WorkflowGenerationState.STATE_7_WORKFLOW_READY,
   };

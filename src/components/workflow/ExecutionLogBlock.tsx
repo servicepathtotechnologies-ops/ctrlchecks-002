@@ -24,6 +24,8 @@ interface ExecutionLog {
   input?: unknown;
   output?: unknown;
   error?: string;
+  resolvedInputs?: Record<string, unknown>;
+  resolvedInputSources?: Record<string, 'runtime_ai' | 'static_config'>;
 }
 
 interface ExecutionLogBlockProps {
@@ -106,6 +108,7 @@ const countModifiedFields = (input: unknown, output: unknown): number => {
 export default function ExecutionLogBlock({ log, index, totalNodes, isLast = false }: ExecutionLogBlockProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [inputExpanded, setInputExpanded] = useState(true);
+  const [resolvedInputsExpanded, setResolvedInputsExpanded] = useState(true);
   const [outputExpanded, setOutputExpanded] = useState(true);
 
   const NodeIcon = getNodeIcon(log.nodeType, log.nodeName);
@@ -288,6 +291,65 @@ export default function ExecutionLogBlock({ log, index, totalNodes, isLast = fal
                     <CollapsibleContent>
                       <pre className="json-viewer p-3 rounded-md bg-muted/30 border border-border/50 text-xs font-mono overflow-x-auto max-h-60 overflow-y-auto">
                         {JSON.stringify(log.input, null, 2)}
+                      </pre>
+                    </CollapsibleContent>
+                  </div>
+                </Collapsible>
+              )}
+
+              {/* Resolved Inputs Section */}
+              {log.resolvedInputs && Object.keys(log.resolvedInputs).length > 0 && (
+                <Collapsible open={resolvedInputsExpanded} onOpenChange={setResolvedInputsExpanded}>
+                  <div className="input-output-section border-l-4 border-violet-500 pl-4">
+                    <CollapsibleTrigger asChild>
+                      <div className="section-header flex items-center justify-between mb-2 cursor-pointer hover:opacity-80">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-semibold text-muted-foreground">🤖 RESOLVED INPUTS (READ-ONLY)</h4>
+                          <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                            {Object.keys(log.resolvedInputs).length} fields
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(JSON.stringify(log.resolvedInputs, null, 2), 'Resolved inputs');
+                            }}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            Copy
+                          </Button>
+                          {resolvedInputsExpanded ? (
+                            <ChevronUp className="h-3 w-3" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3" />
+                          )}
+                        </div>
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      {log.resolvedInputSources && Object.keys(log.resolvedInputSources).length > 0 && (
+                        <div className="mb-2 flex flex-wrap gap-1.5">
+                          {Object.entries(log.resolvedInputSources).map(([field, source]) => (
+                            <span
+                              key={field}
+                              className={cn(
+                                "px-2 py-0.5 rounded-full text-xs border",
+                                source === 'runtime_ai'
+                                  ? "bg-violet-500/10 text-violet-600 border-violet-500/20"
+                                  : "bg-slate-500/10 text-slate-600 border-slate-500/20"
+                              )}
+                            >
+                              {field}: {source === 'runtime_ai' ? 'AI runtime' : 'Static config'}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <pre className="json-viewer p-3 rounded-md bg-muted/30 border border-border/50 text-xs font-mono overflow-x-auto max-h-60 overflow-y-auto">
+                        {JSON.stringify(log.resolvedInputs, null, 2)}
                       </pre>
                     </CollapsibleContent>
                   </div>

@@ -15,8 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { User, Mail, Linkedin, LogOut, CheckCircle2, XCircle, RefreshCw, AlertCircle, Github, Facebook } from 'lucide-react';
-import { X } from 'lucide-react';
+import { User, Mail, Linkedin, LogOut, CheckCircle2, XCircle, RefreshCw, AlertCircle, Github, Facebook, X } from 'lucide-react';
 
 interface ProfileSettingsModalProps {
   open: boolean;

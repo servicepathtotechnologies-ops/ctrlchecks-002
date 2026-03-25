@@ -12,16 +12,24 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useWorkflowStore, NodeData } from '@/stores/workflowStore';
-import { NodeTypeDefinition } from './nodeTypes';
+import { NODE_TYPES, NodeTypeDefinition } from './nodeTypes';
 import WorkflowNode from './WorkflowNode';
 import FormTriggerNode from './FormTriggerNode';
 
-const nodeTypes = {
-  custom: WorkflowNode,
-  form: FormTriggerNode,
-  manual_trigger: WorkflowNode,
-  set_variable: WorkflowNode,
-};
+// Universal node type registration:
+// Register all semantic node types to WorkflowNode so ReactFlow never falls back
+// to "default" when a semantic type leaks through load/normalize paths.
+const nodeTypes = (() => {
+  const dynamicTypes = NODE_TYPES.reduce<Record<string, any>>((acc, def) => {
+    acc[def.type] = WorkflowNode;
+    return acc;
+  }, {});
+  return {
+    custom: WorkflowNode,
+    ...dynamicTypes,
+    form: FormTriggerNode,
+  };
+})();
 
 // Edge types - register custom edge types to prevent React Flow warnings
 // React Flow requires edge types to be registered if they're used in edges
@@ -449,7 +457,7 @@ function WorkflowCanvasInner() {
 
     let hasOverlaps = false;
     const adjustedNodes = nodes.map((node, index) => {
-      let newPosition = { ...node.position };
+      const newPosition = { ...node.position };
 
       // Check for overlaps with other nodes
       // Only detect actual overlaps (nodes touching or overlapping), not just close nodes

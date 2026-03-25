@@ -156,7 +156,7 @@ export default function RealtimeExecutionVisualizer({
         }
         break;
 
-      case 'NODE_UPDATE':
+      case 'NODE_UPDATE': {
         const nodeUpdate = message.data as NodeUpdate;
         setNodeStates(prev => {
           const updated = new Map(prev);
@@ -170,6 +170,7 @@ export default function RealtimeExecutionVisualizer({
         // Callback
         onNodeUpdate?.(nodeUpdate.nodeId, nodeUpdate.status);
         break;
+      }
 
       case 'PONG':
         // Heartbeat response

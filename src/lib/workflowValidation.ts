@@ -256,6 +256,40 @@ export function validateWorkflow(nodes: Node[], edges: Edge[]): WorkflowValidati
         }
     });
 
+    // 2b. Non-merge nodes with mixed branch (true/false/case_*) and main-like incoming edges
+    const incomingByTargetId = new Map<string, Edge[]>();
+    edges.forEach(e => {
+        if (!incomingByTargetId.has(e.target)) incomingByTargetId.set(e.target, []);
+        incomingByTargetId.get(e.target)!.push(e);
+    });
+    incomingByTargetId.forEach((ins, targetId) => {
+        if (ins.length < 2) return;
+        const targetNode = nodes.find(n => n.id === targetId);
+        if (!targetNode) return;
+        const nt = String((targetNode.data as { type?: string })?.type || '');
+        if (nt === 'merge' || nt === 'merge_data') return;
+        const uniqueSources = new Set(ins.map(i => i.source));
+        if (uniqueSources.size < 2) return;
+        const edgeTypes = ins.map(i =>
+            String(i.type || (i as { sourceHandle?: string }).sourceHandle || 'main').toLowerCase()
+        );
+        const hasExplicitBranch = edgeTypes.some(
+            t => t === 'true' || t === 'false' || t.startsWith('case_')
+        );
+        const hasMainLike = edgeTypes.some(t => {
+            const x = t || 'main';
+            return x === 'main' || x === 'default';
+        });
+        if (hasExplicitBranch && hasMainLike) {
+            errors.push({
+                nodeId: targetId,
+                message:
+                    'Possible cross-branch wiring (branch and main inputs on the same node). Use a Merge node to combine paths.',
+                severity: 'warning',
+            });
+        }
+    });
+
     // 3. Loop Detection (Simple Cycle Check)
     // (Optional - BFS/DFS to detect cycles if loops aren't allowed)
 
@@ -568,7 +602,8 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
             
             // Get node definition to update icon, category, and label
             const httpRequestDefinition = NODE_TYPES.find((d: any) => d.type === 'http_request');
-            const preservedLabel = node.data?.label || node.label;
+            // Distinct name from inner blocks — avoids TDZ with other `preservedLabel` in this map callback
+            const preservedLabelHttpFallback = node.data?.label || node.label;
             
             if (node.data) {
                 node.data.type = 'http_request';
@@ -577,7 +612,7 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
                     node.data.icon = httpRequestDefinition.icon;
                     node.data.category = httpRequestDefinition.category;
                     // Preserve existing label if it exists, otherwise use definition label
-                    if (!preservedLabel) {
+                    if (!preservedLabelHttpFallback) {
                         node.data.label = httpRequestDefinition.label;
                     }
                 }
@@ -587,7 +622,7 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
                     ...(httpRequestDefinition ? {
                         icon: httpRequestDefinition.icon,
                         category: httpRequestDefinition.category,
-                        label: preservedLabel || httpRequestDefinition.label
+                        label: preservedLabelHttpFallback || httpRequestDefinition.label
                     } : {})
                 };
             }
@@ -602,7 +637,7 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
             if (needsNormalization) {
                 const definition = NODE_TYPES.find((d: any) => d.type === nodeType);
                 // Preserve existing label if it exists (from AI generation)
-                const preservedLabel = node.data?.label || node.label;
+                const preservedNodeLabel = node.data?.label || node.label;
 
                 if (definition) {
                     // ✅ CRITICAL: Preserve config from node before spreading node.data
@@ -611,7 +646,7 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
                         ...node,
                         type: 'custom',
                         data: {
-                            label: preservedLabel || definition.label, // Use preserved label if available
+                            label: preservedNodeLabel || definition.label, // Use preserved label if available
                             type: definition.type,
                             category: definition.category,
                             icon: definition.icon,
@@ -1140,7 +1175,7 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
                 const hasFailureTerminal = terminals.some((n: any) => getType(n) === 'stop_and_error');
                 const hasSuccessTerminal = terminals.some((n: any) => getType(n) !== 'stop_and_error');
 
-                const nodeIds = new Set<string>(nodes.map((n: any) => n.id));
+                const allNodeIds = new Set<string>(nodes.map((n: any) => n.id));
                 const edgeIds = new Set<string>(edges.map((e: any) => e.id).filter(Boolean));
                 const pairKeys = new Set<string>(edges.map((e: any) => `${e.source}::${e.target}::${e.sourceHandle || ''}::${e.targetHandle || ''}`));
 
@@ -1158,7 +1193,7 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
 
                     successLog = {
                         ...existingLog,
-                        id: generateUniqueId('node_log_success', nodeIds),
+                        id: generateUniqueId('node_log_success', allNodeIds),
                         position: { x: basePos.x, y: basePos.y - 80 },
                         data: {
                             ...baseData,
@@ -1174,7 +1209,7 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
 
                     failureLog = {
                         ...existingLog,
-                        id: generateUniqueId('node_log_failure', nodeIds),
+                        id: generateUniqueId('node_log_failure', allNodeIds),
                         position: { x: basePos.x, y: basePos.y + 80 },
                         data: {
                             ...baseData,
@@ -1215,5 +1250,46 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
         console.warn('[WorkflowValidation] log_output placement fix failed (non-fatal):', err);
     }
 
-    return { nodes, edges, explanation: data.explanation };
+    // Final universal contract gate for canvas rendering:
+    // - ReactFlow render type must be registered (custom/form/manual_trigger/set_variable)
+    // - semantic node type remains in data.type
+    // - branch/source handles and target handles get safe defaults
+    const toRenderType = (semanticType: string): string => {
+        const t = (semanticType || '').toLowerCase();
+        if (t === 'form') return 'form';
+        if (t === 'manual_trigger') return 'manual_trigger';
+        if (t === 'set_variable') return 'set_variable';
+        return 'custom';
+    };
+
+    const normalizedNodes = nodes.map((node: any) => {
+        const semanticType = String(node?.data?.type || node?.type || 'unknown');
+        const renderType = toRenderType(semanticType);
+        return {
+            ...node,
+            type: renderType,
+            data: {
+                ...(node?.data || {}),
+                type: semanticType,
+            },
+        };
+    });
+
+    const nodeByIdFinal = new Map<string, any>(normalizedNodes.map((n: any) => [n.id, n]));
+    const normalizedEdges = edges.map((edge: any) => {
+        const src = nodeByIdFinal.get(edge.source);
+        const srcSemantic = String(src?.data?.type || src?.type || '').toLowerCase();
+        const sourceHandle =
+            edge.sourceHandle ||
+            edge.sourceOutput ||
+            (srcSemantic === 'if_else' ? 'true' : 'output');
+        const targetHandle = edge.targetHandle || edge.targetInput || 'input';
+        return {
+            ...edge,
+            sourceHandle,
+            targetHandle,
+        };
+    });
+
+    return { nodes: normalizedNodes, edges: normalizedEdges, explanation: data.explanation };
 }

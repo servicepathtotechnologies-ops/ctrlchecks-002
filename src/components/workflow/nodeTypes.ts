@@ -28,6 +28,13 @@ export interface ConfigField {
   required?: boolean;
   defaultValue?: unknown;
   helpText?: string;
+  helpCategory?: string;
+  docsUrl?: string;
+  exampleValue?: string;
+  /** Schema-driven notes under selects when value matches */
+  contextHints?: Array<{ whenValue: string; message: string }>;
+  /** Show only when condition matches (optional fields; does not imply required). */
+  visibleIf?: { field: string; equals: unknown };
 }
 
 export const NODE_CATEGORIES: { id: NodeCategory; label: string; color: string }[] = [
@@ -1064,7 +1071,8 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
           { label: 'Extract from sheet', value: 'extract_from_sheet' },
         ],
         required: true,
-        helpText: 'How should recipient email(s) be determined?',
+        helpText:
+          'Manual: type addresses in Recipient emails. Extract from sheet: use row data from a Google Sheets node before Gmail—do not enter spreadsheet ID here.',
       },
       {
         key: 'recipientEmails',
@@ -1072,7 +1080,8 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         type: 'textarea',
         placeholder: 'a@x.com, b@y.com',
         required: false,
-        helpText: 'Recipient email address(es) for manual entry (comma-separated). Required when Recipient Source is manual_entry.',
+        helpText:
+          'Manual mode only: comma-separated To addresses. Hidden when Extract from sheet is selected. Prefer this field over To for multiple recipients.',
       },
       {
         key: 'to',
@@ -1080,7 +1089,8 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         type: 'text',
         placeholder: 'recipient@example.com',
         required: false,
-        helpText: 'Optional. If omitted, the system resolves recipients using recipientSource/intent/upstream data.',
+        helpText:
+          'Optional legacy single recipient or template. Prefer Recipient emails for manual lists. If empty, recipients come from recipientSource, prompt, or upstream data.',
       },
       { 
         key: 'subject', 

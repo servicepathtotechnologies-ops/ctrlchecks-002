@@ -85,7 +85,8 @@ function generateFriendlyLabel(value: string, fieldKey: string): string {
 export function convertSchemaToConfigField(
   fieldKey: string,
   fieldSchema: InputFieldSchema,
-  requiredInputs: string[]
+  requiredInputs: string[],
+  nodeType?: string
 ): ConfigField {
   // Determine if field is required
   const isRequired = requiredInputs.includes(fieldKey);
@@ -228,16 +229,39 @@ export function convertSchemaToConfigField(
     frontendType = 'textarea';
   }
 
+  let friendlyLabel =
+    fieldKey.charAt(0).toUpperCase() + fieldKey.slice(1).replace(/([A-Z])/g, ' $1').trim();
+  if (nodeType === 'google_gmail') {
+    const gmailLabels: Record<string, string> = {
+      spreadsheetId: 'Spreadsheet ID (fallback)',
+      sheetName: 'Sheet name',
+      range: 'Range (optional)',
+      useAiRecipientMapping: 'Scan all cells for emails',
+    };
+    if (gmailLabels[fieldKey]) friendlyLabel = gmailLabels[fieldKey];
+  }
+
+  // Short placeholder for selects — full description stays in helpText / tooltips (avoids “filled with lorem” UX).
+  const placeholderText =
+    frontendType === 'select'
+      ? `Select ${friendlyLabel}`
+      : fieldSchema.description || undefined;
+
   // Create ConfigField
   const configField: ConfigField = {
     key: fieldKey,
-    label: fieldKey.charAt(0).toUpperCase() + fieldKey.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+    label: friendlyLabel,
     type: frontendType,
     required: isRequired,
     defaultValue: fieldSchema.default,
-    placeholder: fieldSchema.description || undefined,
+    placeholder: placeholderText,
     helpText: fieldSchema.description || undefined,
     options,
+    helpCategory: fieldSchema.helpCategory,
+    docsUrl: fieldSchema.docsUrl,
+    exampleValue: fieldSchema.exampleValue,
+    contextHints: fieldSchema.ui?.contextHints,
+    visibleIf: fieldSchema.ui?.visibleIf,
   };
 
   return configField;
@@ -256,7 +280,8 @@ export function convertNodeDefinitionToConfigFields(
     const configField = convertSchemaToConfigField(
       fieldKey,
       fieldSchema,
-      nodeDefinition.requiredInputs
+      nodeDefinition.requiredInputs,
+      nodeDefinition.type
     );
     configFields.push(configField);
   }
@@ -348,7 +373,7 @@ export function validateNodeInputsAgainstSchema(
           }
           break;
         case 'object':
-        case 'json':
+        case 'json': {
           // ✅ UNIVERSAL FIX: Handle JSON strings from textarea inputs
           // Users type JSON in textarea, which is stored as string
           // Try to parse JSON string before validation
@@ -368,6 +393,7 @@ export function validateNodeInputsAgainstSchema(
             errors.push({ field: fieldKey, message: `${fieldKey} must be an object` });
           }
           break;
+        }
       }
     }
   }

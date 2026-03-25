@@ -27,6 +27,8 @@ interface ExecutionLog {
   input?: unknown;
   output?: unknown;
   error?: string;
+  resolvedInputs?: Record<string, unknown>;
+  resolvedInputSources?: Record<string, 'runtime_ai' | 'static_config'>;
 }
 
 export default function ExecutionDetail() {
@@ -260,6 +262,8 @@ export default function ExecutionDetail() {
                       input: log.input,
                       output: log.output,
                       error: log.error,
+                      resolvedInputs: log.resolvedInputs,
+                      resolvedInputSources: log.resolvedInputSources,
                     }}
                     index={index}
                     totalNodes={logs.length}

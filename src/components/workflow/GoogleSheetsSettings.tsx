@@ -47,6 +47,7 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
             fieldLabel="Operation"
             fieldType="select"
             nodeType="google_sheets"
+            helpCategory="operation_select"
           />
         </div>
       </div>
@@ -71,6 +72,8 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
             fieldLabel="Spreadsheet ID"
             fieldType="text"
             nodeType="google_sheets"
+            helpCategory="spreadsheet_id"
+            docsUrl="https://docs.google.com/spreadsheets"
           />
         </div>
       </div>
@@ -112,9 +115,10 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
           </p>
           <InputGuideLink
             fieldKey="range"
-            fieldLabel="Range"
+            fieldLabel="Range (A1 notation)"
             fieldType="text"
             nodeType="google_sheets"
+            helpText={`How to get Range: Step 1) Open the sheet and click the top-left cell of the data you want (for example A1). Step 2) Hold Shift and click the bottom-right cell (for example D100) — the Name Box shows the range like A1:D100. Step 3) You can also type A1 notation directly: columns as letters, rows as numbers, use colon for a rectangle (A1:D100), or a single cell (B2). Step 4) Leave empty only if the node documentation says the whole used range will be read automatically. See Google Sheets A1 notation in API docs: https://developers.google.com/sheets/api/guides/concepts#a1_notation`}
           />
         </div>
       </div>
@@ -143,6 +147,7 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
                 fieldLabel="Output Format"
                 fieldType="select"
                 nodeType="google_sheets"
+                helpCategory="resource_select"
               />
             </div>
           </div>
@@ -167,6 +172,7 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
                 fieldLabel="Read Direction"
                 fieldType="select"
                 nodeType="google_sheets"
+                helpCategory="resource_select"
               />
             </div>
           </div>
@@ -209,6 +215,7 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
               fieldLabel="Data to Write (JSON)"
               fieldType="json"
               nodeType="google_sheets"
+              helpCategory="json_payload"
             />
           </div>
         </div>

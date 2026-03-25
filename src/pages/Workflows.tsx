@@ -24,7 +24,7 @@ import { toast } from '@/hooks/use-toast';
 import { Tables, Json } from '@/integrations/supabase/types';
 import { is406Error } from '@/lib/utils';
 
-type Workflow = Tables<'workflows'> & {
+type WorkflowRecord = Tables<'workflows'> & {
   last_execution?: { started_at: string; status: string } | null;
   execution_count?: number;
   workflow_type?: 'chatbot' | 'agent' | 'automation';
@@ -57,10 +57,10 @@ const detectWorkflowType = (nodes: Json): 'chatbot' | 'agent' | 'automation' => 
 export default function Workflows() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [workflows, setWorkflows] = useState<WorkflowRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowRecord | null>(null);
   const [workflowExecutions, setWorkflowExecutions] = useState<Execution[]>([]);
   const [loadingExecutions, setLoadingExecutions] = useState(false);
   const [showCreateOptions, setShowCreateOptions] = useState(false);
@@ -79,105 +79,82 @@ export default function Workflows() {
     };
   }, []);
 
-  const mapWithConcurrency = useCallback(
-    async <T, R>(
-      items: T[],
-      concurrency: number,
-      mapper: (item: T, index: number) => Promise<R>
-    ): Promise<R[]> => {
-      const results: R[] = new Array(items.length);
-      let nextIndex = 0;
-
-      const worker = async () => {
-        while (true) {
-          const currentIndex = nextIndex;
-          nextIndex += 1;
-          if (currentIndex >= items.length) return;
-          results[currentIndex] = await mapper(items[currentIndex], currentIndex);
-        }
-      };
-
-      const workers = Array.from({ length: Math.max(1, concurrency) }, worker);
-      await Promise.all(workers);
-      return results;
-    },
-    []
-  );
-
   const loadWorkflows = useCallback(async () => {
     try {
       setLoading(true);
-      // Load workflows with execution stats
+      // Phase 1: Load workflows fast and render immediately
       const { data: workflowsData, error: workflowsError } = await supabase
         .from('workflows')
         .select('*')
         .order('updated_at', { ascending: false });
 
       if (workflowsError) throw workflowsError;
+      const baseWorkflows = (workflowsData || []).map((workflow) => ({
+        ...workflow,
+        last_execution: null,
+        execution_count: 0,
+        workflow_type: detectWorkflowType(workflow.nodes),
+      }));
+      if (mountedRef.current) {
+        setWorkflows(baseWorkflows);
+        setLoading(false);
+      }
 
-      // Load last execution + count for each workflow.
-      // IMPORTANT: do NOT fan out unbounded parallel requests; it can exhaust browser resources.
-      const workflowsWithStats = await mapWithConcurrency(
-        workflowsData || [],
-        4,
-        async (workflow) => {
-          // Get last execution - use maybeSingle() to handle workflows with no executions
-          let lastExec = null;
-          try {
-            const { data, error: execError } = await supabase
-              .from('executions')
-              .select('started_at, status')
-              .eq('workflow_id', workflow.id)
-              .order('started_at', { ascending: false })
-              .limit(1)
-              .maybeSingle();
+      // Phase 2: Batch load execution stats in one query (avoids 2*N requests)
+      const workflowIds = baseWorkflows.map((w) => w.id);
+      if (workflowIds.length === 0) return;
 
-            if (execError && !is406Error(execError)) {
-              // Only log non-406 errors (406 is expected when no executions exist)
-              console.warn(`Error loading execution for workflow ${workflow.id}:`, execError);
-            } else {
-              lastExec = data || null;
-            }
-          } catch (execErr: any) {
-            // Handle unexpected errors
-            if (!is406Error(execErr)) {
-              console.warn(`Unexpected error loading execution for workflow ${workflow.id}:`, execErr);
-            }
+      const CHUNK_SIZE = 100;
+      const executionRows: any[] = [];
+      for (let i = 0; i < workflowIds.length; i += CHUNK_SIZE) {
+        const idChunk = workflowIds.slice(i, i + CHUNK_SIZE);
+        const { data: executionsData, error: executionsError } = await supabase
+          .from('executions')
+          .select('workflow_id, started_at, status')
+          .in('workflow_id', idChunk)
+          .order('started_at', { ascending: false })
+          .limit(10000);
+
+        if (executionsError) {
+          if (!is406Error(executionsError)) {
+            console.warn('Error loading execution stats batch:', executionsError);
           }
-
-          // Get execution count — use GET + limit(0) instead of HEAD (head:true).
-          // Some gateways return 502 on HEAD without CORS headers; browser then reports a CORS error.
-          let executionCount = 0;
-          try {
-            const { count, error: countError } = await supabase
-              .from('executions')
-              .select('id', { count: 'exact' })
-              .eq('workflow_id', workflow.id)
-              .limit(0);
-
-            if (countError && !is406Error(countError)) {
-              // Only log non-406 errors
-              console.warn(`Error loading execution count for workflow ${workflow.id}:`, countError);
-            } else {
-              executionCount = count || 0;
-            }
-          } catch (countErr: any) {
-            // Handle unexpected errors
-            if (!is406Error(countErr)) {
-              console.warn(`Unexpected error loading execution count for workflow ${workflow.id}:`, countErr);
-            }
-          }
-
-          return {
-            ...workflow,
-            last_execution: lastExec,
-            execution_count: executionCount,
-            workflow_type: detectWorkflowType(workflow.nodes),
-          };
+          continue;
         }
-      );
+        if (Array.isArray(executionsData) && executionsData.length > 0) {
+          executionRows.push(...executionsData);
+        }
+      }
 
-      if (mountedRef.current) setWorkflows(workflowsWithStats);
+      const statsByWorkflow = new Map<string, { execution_count: number; last_execution: { started_at: string; status: string } | null }>();
+      for (const exec of executionRows) {
+        const workflowId = (exec as any).workflow_id as string;
+        const startedAt = (exec as any).started_at as string;
+        const status = (exec as any).status as string;
+        const existing = statsByWorkflow.get(workflowId);
+        if (!existing) {
+          statsByWorkflow.set(workflowId, {
+            execution_count: 1,
+            last_execution: { started_at: startedAt, status },
+          });
+        } else {
+          existing.execution_count += 1;
+        }
+      }
+
+      if (mountedRef.current) {
+        setWorkflows((prev) =>
+          prev.map((workflow) => {
+            const stats = statsByWorkflow.get(workflow.id);
+            if (!stats) return workflow;
+            return {
+              ...workflow,
+              execution_count: stats.execution_count,
+              last_execution: stats.last_execution,
+            };
+          })
+        );
+      }
     } catch (error) {
       console.error('Error loading workflows:', error);
       toast({
@@ -188,7 +165,7 @@ export default function Workflows() {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [mapWithConcurrency]);
+  }, []);
 
   useEffect(() => {
     if (user?.id) {
@@ -208,12 +185,12 @@ export default function Workflows() {
 
       if (error) {
         // Handle 406 errors gracefully (expected when no executions exist)
-        const is406Error = error.code === 'PGRST116' ||
+        const isNotAcceptable = error.code === 'PGRST116' ||
           error.message?.includes('406') ||
           (error as any).status === 406 ||
           (error as any).statusCode === 406;
 
-        if (is406Error) {
+        if (isNotAcceptable) {
           setWorkflowExecutions([]);
           return;
         }

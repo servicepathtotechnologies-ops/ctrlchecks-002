@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/config/endpoints';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
     Bot, ArrowRight, AlertCircle,
     Settings2, CheckCircle2, Play, RefreshCw, Layers, Sparkles, Loader2, Check, Sun, Moon, Brain
@@ -25,6 +25,11 @@ import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';
 import { WorkflowConfirmationStep } from './WorkflowConfirmationStep';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
 import { generateFieldGuide } from './guideGenerator';
+import { resolveEffectiveFieldFillMode, resolveWizardFieldFillMode } from '@/lib/fillMode';
+import { snapshotConfigFieldToString } from '@/lib/wizard-config-snapshot';
+import { nodeSchemaService, type NodeDefinition } from '@/services/nodeSchemaService';
+import { normalizeSelectValue } from '@/lib/wizard-field-utils';
+import { filterCredentialQuestionsForStep } from '@/lib/filter-credential-questions';
 import { 
     WorkflowGenerationStateManager, 
     WorkflowGenerationState,
@@ -63,58 +68,12 @@ const ensureStateForBlueprint = (
         // After confirmation, we'll be in STATE_3_UNDERSTANDING_CONFIRMED, so continue below
     }
     
-    // STATE_3_UNDERSTANDING_CONFIRMED → STATE_4_CREDENTIAL_COLLECTION (if credentials needed) → STATE_5_WORKFLOW_BUILDING
+    // STATE_3_UNDERSTANDING_CONFIRMED → STATE_5_WORKFLOW_BUILDING
     if (currentState === WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED) {
-        // Check if credentials are required
-        const credsRequired = requiredCredentials || executionState.credentials_required || [];
-        const hasRequiredCreds = credsRequired.length > 0;
-        
-        if (hasRequiredCreds) {
-            // Credentials are required - MUST go through STATE_4_CREDENTIAL_COLLECTION first
-            // Ensure required credentials are set (this will transition to STATE_4 if we're in STATE_3)
-            if (executionState.credentials_required.length === 0) {
-                stateManager.setRequiredCredentials(credsRequired);
-            }
-            
-            // Re-check state after setRequiredCredentials (should now be STATE_4)
-            const newState = stateManager.getCurrentState();
-            const newExecutionState = stateManager.getExecutionState();
-            
-            // Check if credentials have been provided
-            const missingCreds = credsRequired.filter(cred => {
-                const normalizedCred = cred.toLowerCase().replace(/_/g, '_');
-                return !newExecutionState.credentials_provided[cred] && 
-                       !newExecutionState.credentials_provided[normalizedCred];
-            });
-            
-            if (missingCreds.length > 0) {
-                // Credentials are required but not provided - cannot proceed
-                console.error('[StateManager] Cannot build: Missing required credentials:', missingCreds);
-                throw new Error(`Cannot build workflow: Missing required credentials: ${missingCreds.join(', ')}`);
-            }
-            
-            // Credentials are provided - now we can transition to STATE_5
-            // If we're in STATE_4, transition to building
-            if (newState === WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION) {
-                const buildResult = stateManager.startBuilding();
-                if (!buildResult.success) {
-                    console.error('[StateManager] Failed to start building:', buildResult.error);
-                    throw new Error(buildResult.error || 'Failed to start building workflow');
-                }
-            } else if (newState === WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING) {
-                // Already in building state, nothing to do
-            } else {
-                // Unexpected state
-                console.error('[StateManager] Unexpected state after credential check:', newState);
-                throw new Error(`Unexpected state: ${newState}`);
-            }
-        } else {
-            // No credentials needed - can go directly to STATE_5_WORKFLOW_BUILDING
-            const buildResult = stateManager.startBuilding();
-            if (!buildResult.success) {
-                console.error('[StateManager] Failed to start building:', buildResult.error);
-                throw new Error(buildResult.error || 'Failed to start building workflow');
-            }
+        const buildResult = stateManager.startBuilding();
+        if (!buildResult.success) {
+            console.error('[StateManager] Failed to start building:', buildResult.error);
+            throw new Error(buildResult.error || 'Failed to start building workflow');
         }
     }
     
@@ -131,7 +90,22 @@ const ensureStateForBlueprint = (
     // No action needed
 };
 
-type WizardStep = 'idle' | 'analyzing' | 'summarize' | 'questioning' | 'refining' | 'confirmation' | 'workflow-confirmation' | 'credentials' | 'configure' | 'building' | 'executing' | 'complete';
+/** True when backend pipeline contract is satisfied: safe to persist and open builder. */
+function isPipelineContractReady(data: { phase?: string; success?: boolean } | null | undefined): boolean {
+    return data?.phase === 'ready' && data.success !== false;
+}
+
+/** Helper text for Field Ownership locked rows (from worker `ownershipLockReason`). */
+const OWNERSHIP_LOCK_REASON_COPY: Record<string, string> = {
+    structural: 'Fixed schema structure; not switchable here.',
+    runtime_ai_default: 'Default is AI at runtime for this field.',
+    ai_filled: 'Already filled by AI at build time.',
+    vault_or_oauth: 'Use the Credentials step to connect accounts or secrets.',
+    manual_only: 'Manual only.',
+    no_runtime_ai: 'AI runtime is not supported for this field.',
+};
+
+type WizardStep = 'idle' | 'analyzing' | 'summarize' | 'questioning' | 'refining' | 'confirmation' | 'workflow-confirmation' | 'field-ownership' | 'plan-credentials' | 'credentials' | 'configure' | 'configuration' | 'building' | 'executing' | 'complete';
 
 interface AgentQuestion {
     id: string;
@@ -184,7 +158,81 @@ interface RefinementResult {
     }>;
 }
 
+/** Mirrors selectedVariationMeta shape in AutonomousAgentWizard */
+type WizardSelectedVariationMeta = {
+    id: string;
+    prompt: string;
+    keywords?: string[];
+    matchedKeywords?: string[];
+    title?: string;
+    strategy?: 'registry_minimal' | 'registry_extended' | 'keyword_minimal' | 'keyword_extended';
+    nodes?: string[];
+    requiredNodeTypes?: string[];
+} | null;
+
+/**
+ * Single source of truth for POST /api/generate-workflow (mode: create).
+ * Must match for streaming and non-streaming fallback so plan-driven create is not dropped.
+ */
+function buildGenerateWorkflowCreateBody(params: {
+    finalPrompt: string;
+    originalPrompt: string;
+    config: Record<string, unknown>;
+    planRegistryTags: string[];
+    planMandatoryNodeTypes: string[];
+    planNodeHints: string[];
+    selectedVariationMeta: WizardSelectedVariationMeta;
+}): Record<string, unknown> {
+    const {
+        finalPrompt,
+        originalPrompt,
+        config,
+        planRegistryTags,
+        planMandatoryNodeTypes,
+        planNodeHints,
+        selectedVariationMeta,
+    } = params;
+
+    const chain = planNodeHints.filter((x) => typeof x === 'string' && x.trim().length > 0);
+
+    return {
+        prompt: finalPrompt,
+        mode: 'create',
+        config,
+        originalPrompt: originalPrompt || finalPrompt,
+        selectedVariationId: selectedVariationMeta?.id ?? null,
+        selectedStructuredPrompt: finalPrompt,
+        confirmedStructuredPrompt: finalPrompt,
+        registryTags:
+            planRegistryTags.length > 0 ? planRegistryTags : selectedVariationMeta?.keywords || [],
+        mandatoryNodeTypes:
+            planMandatoryNodeTypes.length > 0
+                ? planMandatoryNodeTypes
+                : selectedVariationMeta?.nodes && selectedVariationMeta.nodes.length > 0
+                  ? selectedVariationMeta.nodes
+                  : selectedVariationMeta?.keywords || [],
+        planProposedNodeChain: chain.length > 0 ? chain : undefined,
+        planMandatoryNodeTypes: planMandatoryNodeTypes.length > 0 ? planMandatoryNodeTypes : undefined,
+        planRegistryTags: planRegistryTags.length > 0 ? planRegistryTags : undefined,
+        selectedVariant: selectedVariationMeta
+            ? {
+                  strategy: selectedVariationMeta.strategy ?? undefined,
+                  nodes: selectedVariationMeta.nodes ?? selectedVariationMeta.keywords ?? undefined,
+                  requiredNodeTypes:
+                      selectedVariationMeta.requiredNodeTypes ??
+                      selectedVariationMeta.nodes ??
+                      selectedVariationMeta.keywords ??
+                      undefined,
+              }
+            : undefined,
+    };
+}
+
 export function AutonomousAgentWizard() {
+    type LastResolvedInputsMap = Record<
+        string,
+        Record<string, { value: unknown; source?: 'runtime_ai' | 'static_config'; executionId: string; startedAt: string }>
+    >;
     const [step, setStep] = useState<WizardStep>('idle');
     const [prompt, setPrompt] = useState('');
     const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
@@ -195,6 +243,8 @@ export function AutonomousAgentWizard() {
     const [requiredCredentials, setRequiredCredentials] = useState<string[]>([]);
     const [credentialValues, setCredentialValues] = useState<Record<string, string>>({});
     const [inputValues, setInputValues] = useState<Record<string, string>>({});
+    // Per-field fill mode selections: mode_<nodeId>_<fieldName> -> 'manual_static' | 'runtime_ai' | 'buildtime_ai_once'
+    const [fillModeValues, setFillModeValues] = useState<Record<string, string>>({});
     const [showCredentialStep, setShowCredentialStep] = useState(false);
     // Configure step state
     const [missingItems, setMissingItems] = useState<{
@@ -222,39 +272,39 @@ export function AutonomousAgentWizard() {
     const [workflowReady, setWorkflowReady] = useState(false);
     // ✅ STEP-BY-STEP: Track current question index for wizard flow
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [credentialQuestionIndex, setCredentialQuestionIndex] = useState(0);
     const [allQuestions, setAllQuestions] = useState<any[]>([]);
+    const [nodeDefinitionsByType, setNodeDefinitionsByType] = useState<Record<string, NodeDefinition>>({});
     const [buildingLogs, setBuildingLogs] = useState<string[]>([]);
     const [generatedWorkflowId, setGeneratedWorkflowId] = useState<string | null>(null);
+    const [lastResolvedInputs, setLastResolvedInputs] = useState<LastResolvedInputsMap>({});
     const [progress, setProgress] = useState(0);
     const [currentPhase, setCurrentPhase] = useState<string>('');
     const [isComplete, setIsComplete] = useState(false);
     const [buildStartTime, setBuildStartTime] = useState<number | null>(null);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [cognitiveTextIndex, setCognitiveTextIndex] = useState(0);
-    // Summarize Layer: Prompt variations
-    const [promptVariations, setPromptVariations] = useState<Array<{
-        id: string;
-        prompt: string;
-        matchedKeywords: string[];
-        keywords?: string[]; // ✅ NEW: Extracted node type keywords (e.g., ["ai_chat_model", "linkedin", "schedule"])
-        confidence: number;
-        reasoning: string;
-        // Optional style from Smart Planner variant normalizer:
-        // "simple" | "medium" | "advanced" | "alternative"
-        style?: 'simple' | 'medium' | 'advanced' | 'alternative';
-    }>>([]);
-    const [selectedPromptVariation, setSelectedPromptVariation] = useState<string | null>(null);
     const [originalPrompt, setOriginalPrompt] = useState<string>('');
     const [isSummarizeLayerProcessing, setIsSummarizeLayerProcessing] = useState<boolean>(false);
     const [circleTextIndex, setCircleTextIndex] = useState(0);
     const [workflowUnderstandingConfirmed, setWorkflowUnderstandingConfirmed] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [confirmationData, setConfirmationData] = useState<{
+        workflowId: string;
+        workflowExplanation?: string;
+        confidenceScore?: number;
+        workflow: { nodes: any[]; edges: any[] };
+    } | null>(null);
     const [pendingWorkflowData, setPendingWorkflowData] = useState<{ 
         nodes: any[], 
         edges: any[], 
         update: any,
         discoveredInputs?: any[],
         discoveredCredentials?: any[],
-        comprehensiveQuestions?: any[]
+        comprehensiveQuestions?: any[],
+        unifiedReadiness?: any,
+        /** Per-node credential resolution rows from generate-workflow (required_missing / resolved_connected / not_required). */
+        credentialStatuses?: any[]
     } | null>(null);
     // Auto-execution state
     const [executionId, setExecutionId] = useState<string | null>(null);
@@ -270,6 +320,18 @@ export function AutonomousAgentWizard() {
         nodes?: string[];
         requiredNodeTypes?: string[];
     } | null>(null);
+    /** Single structured plan (replaces multi-variant selection) */
+    const [hasWorkflowPlan, setHasWorkflowPlan] = useState(false);
+    const [planSummary, setPlanSummary] = useState('');
+    const [planNodeHints, setPlanNodeHints] = useState<string[]>([]);
+    const [planNodeReasons, setPlanNodeReasons] = useState<Record<string, string>>({});
+    const [planBranchingOverview, setPlanBranchingOverview] = useState('');
+    const [planMandatoryNodeTypes, setPlanMandatoryNodeTypes] = useState<string[]>([]);
+    const [planRegistryTags, setPlanRegistryTags] = useState<string[]>([]);
+    /** Pre-build credential questions from plan_credentials API (missing non-OAuth creds) */
+    const [planCredentialQuestions, setPlanCredentialQuestions] = useState<
+        Array<{ id: string; label: string; type?: string; required?: boolean; placeholder?: string }>
+    >([]);
     const [executionStatus, setExecutionStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
     const [executionResult, setExecutionResult] = useState<any>(null);
     const [executionError, setExecutionError] = useState<string | null>(null);
@@ -346,6 +408,30 @@ export function AutonomousAgentWizard() {
         }
     }, [generatedWorkflowId]);
 
+    // Load last runtime-resolved inputs for preview in configuration questions
+    useEffect(() => {
+        const loadLastResolvedInputs = async () => {
+            if (!generatedWorkflowId) return;
+            try {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${generatedWorkflowId}/last-resolved-inputs`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(sessionData?.session?.access_token
+                            ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+                            : {}),
+                    },
+                });
+                if (!response.ok) return;
+                const data = await response.json();
+                setLastResolvedInputs(data?.values || {});
+            } catch (error) {
+                console.warn('[Wizard] Failed to load last resolved inputs:', error);
+            }
+        };
+        loadLastResolvedInputs();
+    }, [generatedWorkflowId, step]);
+
     // ✅ Handle OAuth callback return - restore workflow state after OAuth connection
     useEffect(() => {
         const checkOAuthReturn = async () => {
@@ -361,7 +447,7 @@ export function AutonomousAgentWizard() {
                     // Check if Google OAuth is now connected
                     const { data: { user } } = await supabase.auth.getUser();
                     if (user) {
-                        const { data: tokenData } = await supabase
+                        const { data: tokenData } = await (supabase as any)
                             .from('google_oauth_tokens')
                             .select('access_token, refresh_token, expires_at')
                             .eq('user_id', user.id)
@@ -493,6 +579,153 @@ export function AutonomousAgentWizard() {
         }
     }, [currentQuestionIndex, allQuestions.length]);
 
+    const credentialQuestions = useMemo(
+        () =>
+            allQuestions.filter(
+                (q: any) =>
+                    (q.category === 'credential' || q.ownershipClass === 'credential') &&
+                    (q as any).isVaultCredential
+            ),
+        [allQuestions]
+    );
+    /** Credentials step: only rows that match backend missing resolution (see unified-readiness). */
+    const credentialQuestionsForStep = useMemo(
+        () =>
+            filterCredentialQuestionsForStep({
+                questions: credentialQuestions as Record<string, unknown>[],
+                credentialStatuses: pendingWorkflowData?.credentialStatuses ?? null,
+                unifiedCredentialsMissing:
+                    (pendingWorkflowData?.unifiedReadiness?.credentials?.missing as
+                        | Record<string, unknown>[]
+                        | undefined) ?? null,
+                discoveredCredentials: pendingWorkflowData?.discoveredCredentials ?? null,
+            }) as any[],
+        [credentialQuestions, pendingWorkflowData]
+    );
+    /** Full registry-backed list for Field Ownership: no credential/ownershipClass exclusion (locked rows use ownershipUiMode from worker). */
+    const ownershipQuestions = useMemo(
+        () =>
+            allQuestions.filter(
+                (q: any) =>
+                    !(String(q.nodeType || '').toLowerCase() === 'log_output' && String(q.fieldName || '').toLowerCase() === 'level')
+            ),
+        [allQuestions]
+    );
+    const manualConfigurationQuestions = useMemo(
+        () =>
+            ownershipQuestions
+                .filter((q: any) => {
+                    if (q.ownershipUiMode === 'locked') return false;
+                    const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
+                    const effective = resolveWizardFieldFillMode(
+                        fillModeValues[modeKey],
+                        q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
+                    );
+                    const supportsRuntime = !!q.supportsRuntimeAI;
+                    if (!supportsRuntime) return true;
+                    return effective !== 'runtime_ai';
+                })
+                .sort((a: any, b: any) => {
+                    // Structural questions first so users define graph semantics before value-level fields.
+                    const aStructural = a.ownershipClass === 'structural' ? 0 : 1;
+                    const bStructural = b.ownershipClass === 'structural' ? 0 : 1;
+                    if (aStructural !== bStructural) return aStructural - bStructural;
+                    const aOrder = a.askOrder ?? 999;
+                    const bOrder = b.askOrder ?? 999;
+                    if (aOrder !== bOrder) return aOrder - bOrder;
+                    return String(a.label || a.fieldName || '').localeCompare(
+                        String(b.label || b.fieldName || '')
+                    );
+                }),
+        [ownershipQuestions, fillModeValues]
+    );
+    const ownershipByNode = useMemo(() => {
+        const grouped = new Map<string, { nodeLabel: string; nodeType: string; fields: any[] }>();
+        ownershipQuestions.forEach((q: any) => {
+            const key = q.nodeId || `${q.nodeLabel}:${q.nodeType}`;
+            if (!grouped.has(key)) {
+                grouped.set(key, {
+                    nodeLabel: q.nodeLabel || q.nodeType || 'Node',
+                    nodeType: q.nodeType || 'node',
+                    fields: [],
+                });
+            }
+            grouped.get(key)!.fields.push(q);
+        });
+        return Array.from(grouped.entries()).map(([nodeId, value]) => ({ nodeId, ...value }));
+    }, [ownershipQuestions]);
+
+    const configSeedKey = useMemo(() => {
+        if (!pendingWorkflowData?.nodes?.length) return '';
+        return (pendingWorkflowData.nodes as any[])
+            .map((n) => `${n.id}:${JSON.stringify(n.data?.config || {})}`)
+            .join('|');
+    }, [pendingWorkflowData?.nodes]);
+
+    const questionSeedSignature = useMemo(
+        () => allQuestions.map((q: any) => `${q.id}:${q.nodeId}:${q.fieldName}`).join('|'),
+        [allQuestions]
+    );
+
+    /** Seed fill modes and input text from graph + question.defaultValue so User can edit AI-generated config. */
+    useEffect(() => {
+        if (!pendingWorkflowData?.nodes?.length) return;
+        const nodes = pendingWorkflowData.nodes as any[];
+
+        setFillModeValues((prev) => {
+            const next = { ...prev };
+            let changed = false;
+            for (const n of nodes) {
+                const cfg = (n.data?.config || {}) as Record<string, any>;
+                const fm = cfg._fillMode;
+                if (fm && typeof fm === 'object') {
+                    for (const [field, mode] of Object.entries(fm)) {
+                        if (field === '_fillMode') continue;
+                        const key = `mode_${n.id}_${field}`;
+                        if (next[key] === undefined && typeof mode === 'string' && mode.trim()) {
+                            next[key] = mode;
+                            changed = true;
+                        }
+                    }
+                }
+            }
+            return changed ? next : prev;
+        });
+
+        setInputValues((prev) => {
+            const next = { ...prev };
+            let changed = false;
+            for (const q of allQuestions) {
+                const id = (q as any)?.id;
+                if (!id) continue;
+                if (next[id] !== undefined && String(next[id]).trim() !== '') continue;
+                let str = typeof (q as any)?.defaultValue === 'string' ? (q as any).defaultValue : '';
+                if (!str.trim()) {
+                    const node = nodes.find((x: any) => x.id === (q as any).nodeId);
+                    const raw = node?.data?.config?.[(q as any).fieldName];
+                    if (raw !== undefined && raw !== null && String(raw).trim() !== '') {
+                        str = snapshotConfigFieldToString(raw) ?? '';
+                    }
+                }
+                if (str && str.trim()) {
+                    next[id] = str;
+                    changed = true;
+                }
+            }
+            return changed ? next : prev;
+        });
+    }, [configSeedKey, questionSeedSignature, pendingWorkflowData?.nodes?.length]);
+
+    /** Allow configuration step while workflow is still being finalized (not only phase === ready). */
+    const configurationPhaseUnlocked = useMemo(() => {
+        const u = pendingWorkflowData?.update;
+        if (!u) return true;
+        const p = String(u.phase || '').toLowerCase();
+        const s = String(u.status || '').toLowerCase();
+        if (p === 'ready' || s === 'ready') return true;
+        return ['configuring_inputs', 'configuring_credentials', 'ready_for_execution', 'draft'].includes(p);
+    }, [pendingWorkflowData?.update]);
+
     // Timer for building step
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
@@ -525,6 +758,22 @@ export function AutonomousAgentWizard() {
             return () => clearInterval(interval);
         }
     }, [step, isComplete]);
+
+    useEffect(() => {
+        const loadNodeDefinitions = async () => {
+            try {
+                const defs = await nodeSchemaService.fetchAllSchemas();
+                const byType = defs.reduce((acc: Record<string, NodeDefinition>, def: NodeDefinition) => {
+                    acc[def.type] = def;
+                    return acc;
+                }, {});
+                setNodeDefinitionsByType(byType);
+            } catch (err) {
+                console.warn('[Wizard] Failed to load node definitions for ownership grid:', err);
+            }
+        };
+        loadNodeDefinitions();
+    }, []);
 
     // Circle loader text rotation (every 1.2s)
     const circleTexts = ['Thinking', 'Analyzing', 'Building', 'Optimizing'];
@@ -587,7 +836,7 @@ export function AutonomousAgentWizard() {
         scrollImmediately(step2Ref);
         setStep('analyzing');
         setIsSummarizeLayerProcessing(true); // Track that we're processing summarize layer
-        setPromptVariations([]); // Clear previous variations
+        setHasWorkflowPlan(false);
 
         try {
             console.log('Submitting workflow prompt:', prompt);
@@ -606,18 +855,106 @@ export function AutonomousAgentWizard() {
             }
 
             const data = await response.json();
+
+            /** Build node chip list from clarification payload when summarize phase is missing (legacy / errors). */
+            const extractNodeHintsFromAnalyzePayload = (payload: any): string[] => {
+                const detected = payload?.nodeOptionsDetected;
+                if (!Array.isArray(detected)) return [];
+                const hints = new Set<string>();
+                for (const group of detected) {
+                    for (const opt of group?.options || []) {
+                        if (opt?.nodeType) hints.add(opt.nodeType);
+                    }
+                }
+                return Array.from(hints);
+            };
+
+            const orderPlanHints = (hints: string[]): string[] => {
+                const rest = hints.filter((n) => n !== 'manual_trigger' && n !== 'log_output');
+                return ['manual_trigger', ...rest, 'log_output'].filter((n, i, a) => a.indexOf(n) === i);
+            };
             
-            // Check if this is a summarize layer response (prompt variations)
-            if (data.phase === 'summarize' && data.promptVariations) {
-                console.log('[Frontend] Summarize layer - received prompt variations');
-                setPromptVariations(data.promptVariations);
+            // Single structured plan from summarize layer
+            if (data.phase === 'summarize' && data.workflowIntentPlan) {
+                const p = data.workflowIntentPlan;
+                console.log('[Frontend] Summarize layer - received workflowIntentPlan');
+                setPlanSummary(p.structuredSummary || '');
+                setPlanNodeHints(Array.isArray(p.proposedNodeChain) ? p.proposedNodeChain : []);
+                setPlanNodeReasons(
+                    p.nodeInclusionReasons && typeof p.nodeInclusionReasons === 'object'
+                        ? (p.nodeInclusionReasons as Record<string, string>)
+                        : {}
+                );
+                setPlanBranchingOverview(typeof p.branchingOverview === 'string' ? p.branchingOverview : '');
+                setPlanMandatoryNodeTypes(
+                    Array.isArray(data.mandatoryNodeTypes) && data.mandatoryNodeTypes.length > 0
+                        ? data.mandatoryNodeTypes
+                        : (p.mandatoryNodeTypes || [])
+                );
+                setPlanRegistryTags(
+                    Array.isArray(data.registryTags) && data.registryTags.length > 0
+                        ? data.registryTags
+                        : (p.registryTags || [])
+                );
                 setOriginalPrompt(data.originalPrompt || prompt);
-                setIsSummarizeLayerProcessing(false); // Summarize layer complete
-                setStep('questioning'); // Show summary container with variations
+                setHasWorkflowPlan(true);
+                setSelectedVariationMeta({
+                    id: 'structured-plan',
+                    prompt: p.structuredSummary || '',
+                    keywords: p.proposedNodeChain,
+                    matchedKeywords: data.matchedKeywords,
+                    nodes: p.proposedNodeChain,
+                    requiredNodeTypes: data.mandatoryNodeTypes || p.mandatoryNodeTypes,
+                });
+                setIsSummarizeLayerProcessing(false);
+                setStep('questioning');
                 scrollToStep(step2Ref, 300);
-                return; // Return to show variations in summary container
+                return;
             }
-            
+
+            // Clarification-only fallback (no workflowIntentPlan): show the same structured plan card, not legacy "Summary"
+            const clarQuestions = Array.isArray(data.questions) ? data.questions : [];
+            if (
+                clarQuestions.length === 0 &&
+                !data.workflowIntentPlan &&
+                (data.phase === 'clarification' || data.summary != null || data.analysis != null)
+            ) {
+                const summaryText =
+                    (typeof data.summary === 'string' && data.summary.trim()) ||
+                    (data.analysis?.detectedWorkflowType != null
+                        ? String(data.analysis.detectedWorkflowType)
+                        : '') ||
+                    prompt;
+                const rawHints = extractNodeHintsFromAnalyzePayload(data);
+                const hints = rawHints.length ? orderPlanHints(rawHints) : ['manual_trigger', 'log_output'];
+                setPlanSummary(summaryText);
+                setPlanNodeHints(hints);
+                setPlanNodeReasons({});
+                setPlanBranchingOverview('');
+                setPlanMandatoryNodeTypes(Array.isArray(data.mandatoryNodeTypes) ? data.mandatoryNodeTypes : hints);
+                setPlanRegistryTags(Array.isArray(data.registryTags) ? data.registryTags : []);
+                setOriginalPrompt(prompt);
+                setHasWorkflowPlan(true);
+                setSelectedVariationMeta({
+                    id: 'structured-plan-fallback',
+                    prompt: summaryText,
+                    keywords: hints,
+                    matchedKeywords: data.matchedKeywords,
+                    nodes: hints,
+                    requiredNodeTypes: data.mandatoryNodeTypes || hints,
+                });
+                setAnalysis({
+                    summary: summaryText,
+                    questions: [],
+                    clarifiedPromptPreview: data.enhancedPrompt || summaryText,
+                    predictedStepCount: data.analysis?.estimatedNodeCount ?? hints.length,
+                } as AnalysisResult);
+                setIsSummarizeLayerProcessing(false);
+                setStep('questioning');
+                scrollToStep(step2Ref, 300);
+                return;
+            }
+
             // Normal analysis response - summarize layer was skipped or completed
             setIsSummarizeLayerProcessing(false);
             
@@ -645,6 +982,212 @@ export function AutonomousAgentWizard() {
         }
     };
 
+    /** Re-run single-plan summarize from the current edited plan text (or original prompt). */
+    const handleRegeneratePlan = async () => {
+        const text = (planSummary.trim() || prompt.trim());
+        if (!text) return;
+        setStep('analyzing');
+        setIsSummarizeLayerProcessing(true);
+        try {
+            const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: text, mode: 'analyze' }),
+            });
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ error: 'Regenerate failed' }));
+                throw new Error(error.error || error.message || 'Regenerate failed');
+            }
+            const data = await response.json();
+            if (data.phase === 'summarize' && data.workflowIntentPlan) {
+                const p = data.workflowIntentPlan;
+                setPlanSummary(p.structuredSummary || '');
+                setPlanNodeHints(Array.isArray(p.proposedNodeChain) ? p.proposedNodeChain : []);
+                setPlanNodeReasons(
+                    p.nodeInclusionReasons && typeof p.nodeInclusionReasons === 'object'
+                        ? (p.nodeInclusionReasons as Record<string, string>)
+                        : {}
+                );
+                setPlanBranchingOverview(typeof p.branchingOverview === 'string' ? p.branchingOverview : '');
+                setPlanMandatoryNodeTypes(
+                    Array.isArray(data.mandatoryNodeTypes) && data.mandatoryNodeTypes.length > 0
+                        ? data.mandatoryNodeTypes
+                        : (p.mandatoryNodeTypes || [])
+                );
+                setPlanRegistryTags(
+                    Array.isArray(data.registryTags) && data.registryTags.length > 0
+                        ? data.registryTags
+                        : (p.registryTags || [])
+                );
+                setOriginalPrompt(data.originalPrompt || text);
+                setHasWorkflowPlan(true);
+                setSelectedVariationMeta({
+                    id: 'structured-plan',
+                    prompt: p.structuredSummary || '',
+                    keywords: p.proposedNodeChain,
+                    matchedKeywords: data.matchedKeywords,
+                    nodes: p.proposedNodeChain,
+                    requiredNodeTypes: data.mandatoryNodeTypes || p.mandatoryNodeTypes,
+                });
+            }
+            setStep('questioning');
+            toast({ title: 'Plan updated', description: 'Structured workflow plan was regenerated.' });
+        } catch (e: any) {
+            toast({ title: 'Regenerate failed', description: e?.message || 'Unknown error', variant: 'destructive' });
+            setStep('questioning');
+        } finally {
+            setIsSummarizeLayerProcessing(false);
+        }
+    };
+
+    /**
+     * Structured plan is the single source of truth: confirm it in the FSM and start generation (no analyze→refine loop).
+     */
+    const handleConfirmPlanAndAnalyze = async () => {
+        if (!planSummary.trim()) {
+            toast({ title: 'Empty plan', description: 'Add a structured plan or regenerate.', variant: 'destructive' });
+            return;
+        }
+        const mainPrompt = planSummary.trim();
+        setPrompt(mainPrompt);
+        setStep('analyzing');
+        setIsSummarizeLayerProcessing(true);
+
+        const confirmStructuredPlanForBuild = (): boolean => {
+            let cs = stateManager.getCurrentState();
+            if (cs === WorkflowGenerationState.STATE_1_USER_PROMPT_RECEIVED) {
+                stateManager.setClarifyingQuestions([]);
+            }
+            cs = stateManager.getCurrentState();
+            if (cs === WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE) {
+                return stateManager.confirmUnderstanding(mainPrompt).success;
+            }
+            if (
+                cs === WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED ||
+                cs === WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION
+            ) {
+                return stateManager.updateConfirmedUnderstanding(mainPrompt).success;
+            }
+            return false;
+        };
+
+        try {
+            if (!confirmStructuredPlanForBuild()) {
+                toast({
+                    title: 'Could not confirm plan',
+                    description: 'Try “Start over” and run Analyze again, then continue.',
+                    variant: 'destructive',
+                });
+                setHasWorkflowPlan(true);
+                setStep('questioning');
+                return;
+            }
+
+            setRefinement({
+                refinedPrompt: mainPrompt,
+                systemPrompt: mainPrompt,
+                requirements: {},
+            });
+            setWorkflowUnderstandingConfirmed(true);
+            setAnalysis({
+                summary: mainPrompt,
+                questions: [],
+                clarifiedPromptPreview: mainPrompt,
+                predictedStepCount: planNodeHints.length || 3,
+            } as AnalysisResult);
+            setHasWorkflowPlan(true);
+
+            const { data: { session } } = await supabase.auth.getSession();
+            const chain = planNodeHints.filter((x) => typeof x === 'string' && x.trim().length > 0);
+            if (chain.length === 0) {
+                toast({
+                    title: 'No node chain',
+                    description: 'Regenerate the plan to get a proposed node chain, then continue.',
+                    variant: 'destructive',
+                });
+                setStep('questioning');
+                return;
+            }
+
+            const preflightRes = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                },
+                body: JSON.stringify({
+                    prompt: mainPrompt,
+                    mode: 'plan_credentials',
+                    planProposedNodeChain: chain,
+                    confirmedStructuredPrompt: mainPrompt,
+                }),
+            });
+
+            const preflightJson = await preflightRes.json().catch(() => ({}));
+            if (!preflightRes.ok || !preflightJson.success) {
+                const canonicalizationIssues = Array.isArray(preflightJson?.diagnostics?.canonicalization)
+                    ? preflightJson.diagnostics.canonicalization.filter((c: any) => c?.status === 'rejected')
+                    : [];
+                const canonicalizationHint =
+                    canonicalizationIssues.length > 0
+                        ? canonicalizationIssues
+                              .slice(0, 3)
+                              .map((c: any) => `${c.input}${c.normalized ? `→${c.normalized}` : ''}`)
+                              .join(', ')
+                        : '';
+                const msg =
+                    canonicalizationHint
+                        ? `Non-canonical node types in plan: ${canonicalizationHint}`
+                        : (
+                    preflightJson.errors?.join?.('; ') ||
+                    preflightJson.error ||
+                    preflightJson.message ||
+                    'Credential preflight failed'
+                        );
+                toast({
+                    title: 'Plan credential check failed',
+                    description: typeof msg === 'string' ? msg : 'Could not analyze credentials for this plan.',
+                    variant: 'destructive',
+                });
+                setStep('questioning');
+                return;
+            }
+
+            const missing: Array<{ vaultKey?: string; displayName?: string; type?: string }> =
+                Array.isArray(preflightJson.missingCredentials) ? preflightJson.missingCredentials : [];
+
+            // Record preflight findings but defer collection to single post-build config flow.
+            if (missing.length === 0) {
+                stateManager.setRequiredCredentials([]);
+                setPlanCredentialQuestions([]);
+            } else {
+                const questions = missing.map((c) => {
+                    const id = String(c.vaultKey || c.displayName || '').trim() || `cred_${Math.random().toString(36).slice(2)}`;
+                    return {
+                        id,
+                        label: c.displayName || c.vaultKey || 'Credential',
+                        type: c.type === 'api_key' ? 'password' : 'text',
+                        required: true,
+                        placeholder: `Enter ${c.displayName || c.vaultKey || 'value'}`,
+                    };
+                });
+                stateManager.setRequiredCredentials(questions.map((q) => q.id));
+                setPlanCredentialQuestions(questions);
+            }
+            await handleBuild(mainPrompt);
+        } catch (e: any) {
+            toast({
+                title: 'Could not start workflow',
+                description: e?.message || 'Unknown error',
+                variant: 'destructive',
+            });
+            setHasWorkflowPlan(true);
+            setStep('questioning');
+        } finally {
+            setIsSummarizeLayerProcessing(false);
+        }
+    };
+
     // Normalize credential names to avoid duplicates (e.g., SLACK_TOKEN vs SLACK_BOT_TOKEN)
     const normalizeCredentialName = (name: string): string => {
         const upper = name.toUpperCase();
@@ -660,7 +1203,7 @@ export function AutonomousAgentWizard() {
     };
     
     // Identify required credentials from requirements and answers
-    const identifyRequiredCredentials = (requirements: any, answers: Record<string, string>): string[] => {
+    const identifyRequiredCredentials = (requirements: any, answerMap: Record<string, string>): string[] => {
         const credentials: string[] = [];
         
         // CRITICAL: Add null safety check
@@ -670,8 +1213,8 @@ export function AutonomousAgentWizard() {
         }
         
         // Extract selected services from answers
-        const answerValues = Object.values(answers).map(v => String(v).toLowerCase());
-        const answerTexts = Object.values(answers).join(' ').toLowerCase();
+        const answerValues = Object.values(answerMap).map(v => String(v).toLowerCase());
+        const answerTexts = Object.values(answerMap).join(' ').toLowerCase();
         const promptText = prompt.toLowerCase();
         
         console.log('🔍 [Frontend] Identifying credentials:', { 
@@ -826,110 +1369,43 @@ export function AutonomousAgentWizard() {
         return finalCredentials;
     };
 
-    // Handle proceeding with selected prompt variation - DIRECTLY to workflow generation (skip analysis)
-    const handleProceedWithSelectedPrompt = async (variation: {
-        id: string;
-        prompt: string;
-        matchedKeywords: string[];
-        confidence: number;
-        reasoning: string;
-        keywords?: string[];
-    }) => {
-        if (!variation) return;
-
-        console.log('[Frontend] Proceeding with selected prompt variation, going directly to workflow generation');
-        console.log('[Frontend] Selected prompt variation:', variation.prompt);
-        
-        // ✅ CRITICAL: Store selected prompt variation (including node keywords) for backend
-        const selectedPrompt = variation.prompt;
-        setSelectedVariationMeta({
-            id: variation.id,
-            prompt: variation.prompt,
-            keywords: variation.keywords,
-            matchedKeywords: variation.matchedKeywords,
-        });
-        
-        // Clear summarize layer state
-        setPromptVariations([]);
-        setSelectedPromptVariation(null);
-        setOriginalPrompt('');
-        setIsSummarizeLayerProcessing(false);
-        
-        // ✅ CRITICAL: Update prompt state NOW (when "Continue Building" is clicked)
-        // This updates the input field to show the selected prompt
-        setPrompt(selectedPrompt);
-        
-        // Set analysis with the selected prompt
-        setAnalysis({
-            summary: selectedPrompt,
-            questions: [], // No questions - go directly to generation
-            clarifiedPromptPreview: selectedPrompt,
-            predictedStepCount: 3, // Default estimate
-        } as AnalysisResult);
-        
-        // Set empty answers
-        setAnswers({});
-        stateManager.setClarifyingQuestions([]);
-        stateManager.setClarifyingAnswers({});
-        
-        // ✅ CRITICAL: Confirm understanding with selected prompt variation
-        // This ensures the state manager knows we're ready to build
-        const confirmResult = stateManager.confirmUnderstanding(selectedPrompt);
-        if (!confirmResult.success) {
-            console.warn('[Frontend] Understanding confirmation warning:', confirmResult.error);
-        }
-        
-        // ✅ CRITICAL: Set refinement object with selected prompt
-        // This ensures the selected variation prompt is available in state
-        setRefinement({
-            refinedPrompt: selectedPrompt, // ✅ This is the selected variation prompt
-            systemPrompt: selectedPrompt,
-            requirements: {},
-        });
-        
-        // ✅ CRITICAL: Skip refine mode entirely - go directly to workflow generation
-        // After selecting a prompt variation, we don't need to refine again
-        setStep('building');
-        
-        // ✅ CRITICAL: Pass selected prompt DIRECTLY to handleBuild to avoid async state issues
-        // This ensures the selected variation is used, not the original prompt
-        setTimeout(() => {
-            handleBuild(selectedPrompt); // Pass selected prompt explicitly
-        }, 100);
-    };
-
-    const handleRefine = async (explicitPrompt?: string) => {
+    const handleRefine = async (explicitPrompt?: string, analysisSnapshot?: AnalysisResult | null) => {
+        const effectiveAnalysis = analysisSnapshot ?? analysis;
         // Execution Flow Architecture (STEP-2): Validate state transition
         // Allow transition if questions are empty (auto-continue scenario) or if in correct state
         // Also allow if coming from summarize layer (step is 'refining' or 'questioning' with no questions)
-        const currentState = mapWizardStepToState(step);
-        const hasQuestions = analysis?.questions && analysis.questions.length > 0;
-        const isFromSummarizeLayer = (step === 'refining' || step === 'questioning') && (!hasQuestions || promptVariations.length === 0);
-        
-        if (hasQuestions && currentState !== WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE && !isFromSummarizeLayer) {
-            toast({
-                title: 'Invalid State',
-                description: 'Cannot refine: Must complete clarification first',
-                variant: 'destructive',
-            });
-            return;
+        // When analysisSnapshot is passed (structured plan → proceed), skip this gate — user already confirmed intent
+        if (!analysisSnapshot) {
+            const currentState = mapWizardStepToState(step);
+            const hasQuestions = effectiveAnalysis?.questions && effectiveAnalysis.questions.length > 0;
+            const isFromSummarizeLayer =
+                (step === 'refining' || step === 'questioning') && (!hasQuestions || hasWorkflowPlan);
+
+            if (hasQuestions && currentState !== WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE && !isFromSummarizeLayer) {
+                toast({
+                    title: 'Invalid State',
+                    description: 'Cannot refine: Must complete clarification first',
+                    variant: 'destructive',
+                });
+                return;
+            }
         }
-        
+
         // ✅ CRITICAL: Use explicit prompt if provided (from selected variation), otherwise use state prompt
         const promptToUse = explicitPrompt || prompt;
-        
+
         console.log('[Frontend] Using prompt for refinement:', promptToUse);
         console.log('[Frontend] Prompt source:', explicitPrompt ? 'selected variation (explicit)' : 'state (prompt)');
-        
+
         // Update answers in state manager
         stateManager.setClarifyingAnswers(answers);
-        
+
         // Scroll immediately BEFORE state change - no waiting
         scrollImmediately(step3Ref);
         setStep('refining');
-        const fa = analysis?.questions?.map(q => ({
+        const fa = effectiveAnalysis?.questions?.map(q => ({
             question: q.text,
-            answer: answers[q.id]
+            answer: answers[q.id],
         })) || [];
 
         try {
@@ -995,8 +1471,8 @@ export function AutonomousAgentWizard() {
                 }
                 
                 // Ensure we're in the right state before confirming understanding
-                const currentState = mapWizardStepToState(step);
-                if (currentState !== WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE) {
+                const currentWizardState = mapWizardStepToState(step);
+                if (currentWizardState !== WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE) {
                     // Force transition to clarification active state first
                     console.log('⚠️ Not in CLARIFICATION_ACTIVE state, attempting to fix state...');
                     // Try to set clarifying answers to get into the right state
@@ -1206,8 +1682,8 @@ export function AutonomousAgentWizard() {
                 
                 // ✅ CRITICAL: Use refined prompt from backend, or fallback to current prompt state
                 // The refined prompt should be the selected variation prompt that was sent
-                const promptToUse = data.refinedPrompt || prompt;
-                console.log('[Frontend] Using prompt for workflow generation:', promptToUse);
+                const selectedPromptForBuild = data.refinedPrompt || prompt;
+                console.log('[Frontend] Using prompt for workflow generation:', selectedPromptForBuild);
                 
                 // Update prompt state with refined prompt if available
                 if (data.refinedPrompt) {
@@ -1227,6 +1703,7 @@ export function AutonomousAgentWizard() {
         } catch (err: any) {
             console.error(err);
             toast({ title: 'Refinement Failed', description: err.message, variant: 'destructive' });
+            setHasWorkflowPlan(true);
             setStep('questioning');
         }
     };
@@ -1270,7 +1747,7 @@ export function AutonomousAgentWizard() {
             const possibilities: string[] = [];
             
             // Remove common prefixes/suffixes
-            let base = credLower
+            const base = credLower
                 .replace(/^(slack_|discord_|google_|smtp_|database_|api_)/, '')
                 .replace(/(_url|_token|_key|_secret|_password|_id)$/, '');
             
@@ -1337,7 +1814,7 @@ export function AutonomousAgentWizard() {
                 const possibleFieldNames = getPossibleFieldNames(credName);
                 for (const fieldName of possibleFieldNames) {
                     // Check exact match
-                    if (nodeConfig.hasOwnProperty(fieldName)) {
+                    if (Object.prototype.hasOwnProperty.call(nodeConfig, fieldName)) {
                         nodeConfig[fieldName] = value;
                         updated = true;
                         injected = true;
@@ -1651,9 +2128,13 @@ export function AutonomousAgentWizard() {
                     
                     // ✅ STEP 1: Attach inputs first (if any)
                     let inputsResult: any = null;
-                    if (Object.keys(inputValues).length > 0) {
+                    const combinedInputs: Record<string, string> = {
+                        ...inputValues,
+                        ...fillModeValues,
+                    };
+                    if (Object.keys(combinedInputs).length > 0) {
                         console.log('📋 Attaching node inputs...');
-                        console.log('📋 Input values:', inputValues);
+                        console.log('📋 Input values:', combinedInputs);
                         
                         const inputsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/attach-inputs`, {
                             method: 'POST',
@@ -1664,7 +2145,7 @@ export function AutonomousAgentWizard() {
                             body: JSON.stringify({
                                 // ✅ COMPREHENSIVE: Send answers using question IDs (cred_*, op_*, config_*, resource_*)
                                 // inputValues already uses question IDs (input.id) as keys when available
-                                inputs: inputValues, // Format: { "cred_nodeId_fieldName": "value", "op_nodeId_fieldName": "value", etc. }
+                                inputs: combinedInputs, // Format: { "cred_nodeId_fieldName": "value", "op_nodeId_fieldName": "value", "mode_nodeId_fieldName": "fillMode", etc. }
                             }),
                         });
                         
@@ -1684,44 +2165,67 @@ export function AutonomousAgentWizard() {
                         console.log('ℹ️ No inputs to attach');
                     }
                     
-                    // ✅ STEP 2: Attach credentials (if any) - NON-BLOCKING
-                    // If credential attachment fails, log warning but continue to workflow page
+                    // ✅ STEP 2: Attach credentials in same continuation cycle (blocking on validation errors)
                     let credentialsResult: any = null;
-                    // ✅ CRITICAL: Always send credentials object (even if empty) to avoid 400 errors
-                    const credentialsToSend = credentialValues && typeof credentialValues === 'object' ? credentialValues : {};
+                    const inputPhase = String(inputsResult?.phase || '').toLowerCase();
+                    const shouldAttachCredentialsNow =
+                        inputPhase === 'configuring_credentials' || inputPhase === 'ready_for_execution';
+                    // Send credentials object (possibly empty) so backend can revalidate readiness deterministically.
+                    const credentialsToSend: Record<string, any> = {};
+                    if (credentialValues && typeof credentialValues === 'object') {
+                        // Canonical path: map question-id keyed values to vault keys expected by backend.
+                        credentialQuestionsForStep.forEach((q: any) => {
+                            const qid = String(q?.id || '').trim();
+                            if (!qid) return;
+                            const raw =
+                                credentialValues[qid] ??
+                                credentialValues[String(q?.fieldName || '').trim()] ??
+                                credentialValues[String(q?.credential?.vaultKey || '').trim()] ??
+                                credentialValues[String(q?.credential?.credentialId || '').trim()];
+                            if (raw === undefined || raw === null || String(raw).trim() === '') return;
+                            const key =
+                                String(q?.credential?.vaultKey || '').trim() ||
+                                String(q?.credential?.credentialId || '').trim() ||
+                                String(q?.fieldName || '').trim();
+                            if (!key) return;
+                            credentialsToSend[key] = raw;
+                        });
+                        // Backward-compatible fallback: include direct credential keys if user/config populated them.
+                        Object.entries(credentialValues).forEach(([key, value]) => {
+                            const k = String(key || '').trim();
+                            if (!k || k.startsWith('cred_') || k.startsWith('config_') || k.startsWith('mode_')) return;
+                            if (value === undefined || value === null || String(value).trim() === '') return;
+                            if (!(k in credentialsToSend)) credentialsToSend[k] = value;
+                        });
+                    }
                     
-                    if (Object.keys(credentialsToSend).length > 0) {
-                        console.log('🔑 Attaching credentials...');
-                        try {
-                            const credentialsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/attach-credentials`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${session?.access_token || ''}`,
-                                },
-                                body: JSON.stringify({
-                                    credentials: credentialsToSend,
-                                }),
-                            });
-                            
-                            if (!credentialsResponse.ok) {
-                                const error = await credentialsResponse.json().catch(() => ({ error: 'Unknown error' }));
-                                // ✅ NON-BLOCKING: Log warning but don't throw - user can attach credentials later in workflow builder
-                                console.warn('⚠️ Credential attachment failed (non-blocking):', error.code || error.message || error.error || 'Unknown error');
-                                console.log('💡 User can attach credentials later in the workflow builder');
-                                // Don't throw - continue to workflow page
-                            } else {
-                                credentialsResult = await credentialsResponse.json();
-                                console.log('✅ Credentials attached successfully');
-                            }
-                        } catch (credError: any) {
-                            // ✅ NON-BLOCKING: Catch any network/parsing errors and continue
-                            console.warn('⚠️ Credential attachment error (non-blocking):', credError?.message || 'Unknown error');
-                            console.log('💡 User can attach credentials later in the workflow builder');
-                            // Don't throw - continue to workflow page
-                        }
+                    if (!shouldAttachCredentialsNow) {
+                        console.log(`ℹ️ Skipping credential attachment for phase "${inputPhase}" (inputs still pending)`);
                     } else {
-                        console.log('ℹ️ No credentials to attach (empty object)');
+                        console.log('🔑 Attaching credentials...');
+                        const credentialsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/attach-credentials`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${session?.access_token || ''}`,
+                            },
+                            body: JSON.stringify({
+                                credentials: credentialsToSend,
+                            }),
+                        });
+
+                        if (!credentialsResponse.ok) {
+                            const error = await credentialsResponse.json().catch(() => ({ error: 'Unknown error' }));
+                            const rejected = Array.isArray(error?.details?.rejectedKeys) ? error.details.rejectedKeys.join(', ') : '';
+                            const allowed = Array.isArray(error?.details?.allowedCredentialKeys) ? error.details.allowedCredentialKeys.join(', ') : '';
+                            const base = error?.message || error?.error || error?.code || 'Credential attachment failed';
+                            const errText = rejected
+                                ? `${base}${rejected ? ` Rejected keys: ${rejected}.` : ''}${allowed ? ` Allowed keys: ${allowed}.` : ''}`
+                                : base;
+                            throw new Error(errText);
+                        }
+                        credentialsResult = await credentialsResponse.json();
+                        console.log('✅ Credentials attached successfully');
                     }
                     
                     // ✅ CRITICAL: Always redirect even when no inputs or credentials are required
@@ -1803,9 +2307,13 @@ export function AutonomousAgentWizard() {
                     setProgress(100);
                     setIsComplete(true);
                     
+                    const finalPhase = (finalWorkflow?.phase || '').toString();
+                    const readyForExecution = finalPhase === 'ready_for_execution';
                     toast({
-                        title: 'Workflow Created',
-                        description: 'Your workflow has been created and configured!',
+                        title: readyForExecution ? 'Workflow Ready' : 'Workflow Created',
+                        description: !readyForExecution
+                            ? 'Workflow saved. Some credentials are still required before run.'
+                            : 'Your workflow has been created and configured!',
                     });
                     
                     // ✅ CRITICAL: Always redirect to workflow view after successful configuration
@@ -1816,29 +2324,13 @@ export function AutonomousAgentWizard() {
                 }
             } catch (err: any) {
                 console.error('Error saving workflow with configuration:', err);
-                
-                // ✅ CRITICAL: Even if credential attachment fails, redirect to workflow page
-                // User can attach credentials later in the workflow builder
-                if (savedWorkflow?.id) {
-                    console.log('⚠️ Configuration had errors, but workflow was saved. Redirecting to workflow page...');
-                    toast({
-                        title: 'Workflow Created',
-                        description: 'Workflow created! You can configure credentials in the workflow builder.',
-                    });
-                    
-                    // Still redirect to workflow page - user can fix issues there
-                    // Avoid intermediate navigation that looks like a "reload"/flicker
-                    navigate(`/workflow/${savedWorkflow.id}`, { replace: true });
-                    return;
-                }
-                
-                // Only show error and stay in modal if workflow wasn't saved
+
+                // Keep user on the unified setup page when configuration/credential submission fails.
                 toast({
                     title: 'Error',
                     description: 'Failed to save workflow: ' + (err.message || 'Unknown error'),
                     variant: 'destructive',
                 });
-                // Stay in modal - don't reset wizard
                 return;
             }
         }
@@ -2003,7 +2495,26 @@ export function AutonomousAgentWizard() {
             if (!finalPrompt || !finalPrompt.trim()) {
                 throw new Error('Prompt is required. Please provide a workflow description.');
             }
-            
+
+            if (hasWorkflowPlan) {
+                const chainForPlan = planNodeHints.filter((x) => typeof x === 'string' && x.trim().length > 0);
+                if (chainForPlan.length === 0) {
+                    throw new Error(
+                        'Structured workflow plan has no proposed node chain. Regenerate the plan or fix the node list before building.'
+                    );
+                }
+            }
+
+            const createWorkflowBody = buildGenerateWorkflowCreateBody({
+                finalPrompt,
+                originalPrompt: originalPrompt || finalPrompt,
+                config,
+                planRegistryTags,
+                planMandatoryNodeTypes,
+                planNodeHints,
+                selectedVariationMeta,
+            });
+
             // Use streaming mode to get real-time progress
             const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
                 method: 'POST',
@@ -2012,26 +2523,7 @@ export function AutonomousAgentWizard() {
                     'Authorization': `Bearer ${session?.access_token || ''}`,
                     'x-stream-progress': 'true',
                 },
-                body: JSON.stringify({
-                    prompt: finalPrompt,
-                    mode: 'create',
-                    config: config,
-                    originalPrompt: originalPrompt || finalPrompt, // Preserve user's raw prompt for resolution (selected variation + original intent)
-                    // ✅ Pass selected variation + variant contract (registry vs keyword) for 100% semantics
-                    selectedVariationId: selectedVariationMeta?.id || null,
-                    selectedStructuredPrompt: finalPrompt,
-                    registryTags: selectedVariationMeta?.keywords || [],
-                    mandatoryNodeTypes: (selectedVariationMeta?.nodes && selectedVariationMeta.nodes.length > 0)
-                        ? selectedVariationMeta.nodes
-                        : (selectedVariationMeta?.keywords || []),
-                    selectedVariant: selectedVariationMeta
-                        ? {
-                            strategy: selectedVariationMeta.strategy ?? undefined,
-                            nodes: selectedVariationMeta.nodes ?? selectedVariationMeta.keywords ?? undefined,
-                            requiredNodeTypes: selectedVariationMeta.requiredNodeTypes ?? selectedVariationMeta.nodes ?? selectedVariationMeta.keywords ?? undefined,
-                          }
-                        : undefined,
-                })
+                body: JSON.stringify(createWorkflowBody),
             });
 
             if (!response.ok) {
@@ -2044,6 +2536,273 @@ export function AutonomousAgentWizard() {
             let buffer = '';
             let finalData: any = null;
             let workflowSaved = false; // Track if workflow has been saved
+
+            /** Opens field-ownership / credential wizard when backend returns ready or configuring_inputs with questions. */
+            const applyUnifiedWizardFromGenerateUpdate = (update: any): boolean => {
+                const n = update.nodes || update.workflow?.nodes;
+                const e = update.edges || update.workflow?.edges;
+                const phaseStr = String(update.phase || update.status || '');
+                const unifiedReadiness = update.unifiedReadiness || null;
+                const discoveredInputs = update.discoveredInputs || [];
+                const discoveredCreds = update.discoveredCredentials || [];
+                const comprehensiveQuestions = update.comprehensiveQuestions || [];
+                const structuralBlueprint = update.structuralBlueprint || null;
+                const blueprintOverview = String(structuralBlueprint?.overviewText || '').trim();
+                const requiredCreds = discoveredCreds;
+                const readinessBlocking = Array.isArray(unifiedReadiness?.blockingReasons)
+                    ? unifiedReadiness.blockingReasons
+                    : [];
+                const needsUnifiedWizard =
+                    ((discoveredInputs.length > 0 ||
+                        comprehensiveQuestions.length > 0 ||
+                        requiredCreds.length > 0 ||
+                        readinessBlocking.length > 0) &&
+                    (n?.length > 0 || e?.length > 0));
+
+                if (
+                    !needsUnifiedWizard ||
+                    (phaseStr !== 'ready' && phaseStr !== 'configuring_inputs')
+                ) {
+                    return false;
+                }
+
+                if (phaseStr === 'configuring_inputs') {
+                    const errs = update.structuralDiagnostics?.errors || [];
+                    if (errs.length) {
+                        toast({
+                            title: 'Structural setup required',
+                            description: errs.slice(0, 4).join('; '),
+                            variant: 'destructive',
+                        });
+                    }
+                    setProgress(95);
+                    setIsComplete(false);
+                    setBuildingLogs((prev) => [
+                        ...prev,
+                        blueprintOverview ? `Blueprint: ${blueprintOverview}` : '',
+                        'Complete required fields and credentials before opening the workflow.',
+                    ].filter(Boolean));
+                } else {
+                    setProgress(100);
+                    setIsComplete(true);
+                    setBuildingLogs((prev) => [
+                        ...prev,
+                        'Workflow Generated Successfully!',
+                        blueprintOverview ? `Blueprint: ${blueprintOverview}` : '',
+                    ].filter(Boolean));
+                }
+
+                const workflowNodes = n || [];
+                const workflowEdges = e || [];
+                if (workflowNodes.length > 0 || workflowEdges.length > 0) {
+                    setPendingWorkflowData({
+                        nodes: workflowNodes,
+                        edges: workflowEdges,
+                        update,
+                        discoveredInputs,
+                        discoveredCredentials: discoveredCreds,
+                        comprehensiveQuestions,
+                        unifiedReadiness,
+                        credentialStatuses: update.credentialStatuses,
+                    });
+
+                    let combinedQuestions: any[] = [];
+                    const nonOAuthDiscoveredCreds = Array.isArray(discoveredCreds)
+                        ? discoveredCreds.filter((cred: any) => {
+                            const isOAuth = cred.type === 'oauth';
+                            const isGoogleOAuth =
+                                (cred.provider?.toLowerCase() === 'google' && cred.type === 'oauth') ||
+                                (cred.vaultKey?.toLowerCase() === 'google' && cred.type === 'oauth');
+                            return !isOAuth && !isGoogleOAuth;
+                        })
+                        : [];
+                    const discoveredCredByNodeId = new Map<string, any>();
+                    nonOAuthDiscoveredCreds.forEach((cred: any) => {
+                        const nodeIds = Array.isArray(cred.nodeIds) ? cred.nodeIds : [];
+                        nodeIds.forEach((nid: string) => {
+                            if (nid && !discoveredCredByNodeId.has(nid)) discoveredCredByNodeId.set(nid, cred);
+                        });
+                    });
+
+                    if (
+                        comprehensiveQuestions &&
+                        Array.isArray(comprehensiveQuestions) &&
+                        comprehensiveQuestions.length > 0
+                    ) {
+                        console.log(
+                            `[Frontend] Using ${comprehensiveQuestions.length} comprehensive questions from backend`
+                        );
+                        combinedQuestions = comprehensiveQuestions.map((q: any) => {
+                            const isCredentialQ = q.category === 'credential' || q.ownershipClass === 'credential';
+                            const matchedCred = isCredentialQ ? discoveredCredByNodeId.get(q.nodeId) : undefined;
+                            const canonicalFieldName =
+                                (matchedCred?.vaultKey || matchedCred?.credentialId || q.fieldName || '').trim() ||
+                                q.fieldName;
+                            return {
+                                ...q,
+                                questionType: isCredentialQ ? 'credential' : (q.category || 'input'),
+                                id: q.id || `${q.nodeId}_${canonicalFieldName}`,
+                                fieldName: canonicalFieldName,
+                                label: q.text || q.label || `${q.nodeLabel} - ${canonicalFieldName}`,
+                                credential: matchedCred || q.credential,
+                                isVaultCredential: isCredentialQ,
+                            };
+                        });
+
+                        if (nonOAuthDiscoveredCreds.length > 0) {
+                            nonOAuthDiscoveredCreds.forEach((cred: any, idx: number) => {
+                                    combinedQuestions.push({
+                                        questionType: 'credential',
+                                        id: `cred_${cred.vaultKey || cred.credentialId || idx}`,
+                                        nodeId: cred.nodeIds?.[0] || '',
+                                        nodeType: cred.nodeTypes?.[0] || '',
+                                        nodeLabel:
+                                            cred.provider || cred.displayName || 'Credential',
+                                        fieldName:
+                                            cred.vaultKey || cred.credentialId || 'credential',
+                                        label:
+                                            cred.displayName ||
+                                            cred.vaultKey
+                                                ?.replace(/_/g, ' ')
+                                                .replace(/\b\w/g, (l: string) => l.toUpperCase()) ||
+                                            'Credential',
+                                        type: 'text',
+                                        category: 'credential',
+                                        required: cred.required !== false,
+                                        askOrder: 0,
+                                        placeholder: `Enter ${cred.displayName || cred.vaultKey || 'credential'}`,
+                                        description: `Credential required for ${cred.provider || 'service'}`,
+                                        credential: cred,
+                                        isVaultCredential: true,
+                                    });
+                                });
+                        }
+                    } else {
+                        console.log(
+                            `[Frontend] Comprehensive questions not available, combining discoveredInputs + discoveredCredentials`
+                        );
+                        if (discoveredInputs && Array.isArray(discoveredInputs)) {
+                            discoveredInputs.forEach((input: any) => {
+                                combinedQuestions.push({
+                                    ...input,
+                                    questionType: 'input',
+                                    id: input.id || `${input.nodeId}_${input.fieldName}`,
+                                    isVaultCredential: false,
+                                });
+                            });
+                        }
+                        if (nonOAuthDiscoveredCreds.length > 0) {
+                            nonOAuthDiscoveredCreds.forEach((cred: any, idx: number) => {
+                                    combinedQuestions.push({
+                                        questionType: 'credential',
+                                        id: `cred_${cred.vaultKey || cred.credentialId || idx}`,
+                                        nodeId: cred.nodeIds?.[0] || '',
+                                        nodeType: cred.nodeTypes?.[0] || '',
+                                        nodeLabel:
+                                            cred.provider || cred.displayName || 'Credential',
+                                        fieldName:
+                                            cred.vaultKey || cred.credentialId || 'credential',
+                                        label:
+                                            cred.displayName ||
+                                            cred.vaultKey
+                                                ?.replace(/_/g, ' ')
+                                                .replace(/\b\w/g, (l: string) => l.toUpperCase()) ||
+                                            'Credential',
+                                        type: 'text',
+                                        category: 'credential',
+                                        required: cred.required !== false,
+                                        askOrder: 0,
+                                        placeholder: `Enter ${cred.displayName || cred.vaultKey || 'credential'}`,
+                                        description: `Credential required for ${cred.provider || 'service'}`,
+                                        credential: cred,
+                                        isVaultCredential: true,
+                                    });
+                                });
+                        }
+                        combinedQuestions.sort((a, b) => {
+                            const orderA = a.askOrder ?? 999;
+                            const orderB = b.askOrder ?? 999;
+                            if (orderA !== orderB) return orderA - orderB;
+                            const categoryOrder: Record<string, number> = {
+                                credential: 0,
+                                resource: 1,
+                                operation: 2,
+                                configuration: 3,
+                            };
+                            const catA = categoryOrder[a.category] ?? 999;
+                            const catB = categoryOrder[b.category] ?? 999;
+                            return catA - catB;
+                        });
+                    }
+
+                    // Deduplicate to prevent duplicate credential prompts from mixed sources.
+                    const dedupe = new Map<string, any>();
+                    combinedQuestions.forEach((q: any) => {
+                        const isCredentialQ = q.questionType === 'credential' || q.category === 'credential' || q.isVaultCredential;
+                        const key = isCredentialQ
+                            ? `cred:${q.nodeId || 'global'}:${String(q.credential?.vaultKey || q.credential?.credentialId || q.fieldName || '').toLowerCase()}`
+                            : `field:${q.nodeId || 'global'}:${String(q.fieldName || '').toLowerCase()}`;
+                        const existing = dedupe.get(key);
+                        if (!existing) {
+                            dedupe.set(key, q);
+                            return;
+                        }
+                        // Prefer questions backed by discovered credential contract.
+                        const existingScore = existing?.credential?.vaultKey ? 1 : 0;
+                        const nextScore = q?.credential?.vaultKey ? 1 : 0;
+                        if (nextScore > existingScore) {
+                            dedupe.set(key, q);
+                        }
+                    });
+                    combinedQuestions = Array.from(dedupe.values());
+
+                    console.log(
+                        `[Frontend] Combined ${combinedQuestions.length} questions for step-by-step wizard`
+                    );
+                    if (combinedQuestions.length === 0) {
+                        const diag = update?.diagnostics || {};
+                        const runtimeOwnedCount = Array.isArray(diag.runtimeOwnedFields)
+                            ? diag.runtimeOwnedFields.length
+                            : 0;
+                        const canonicalIssueCount = Array.isArray(diag.canonicalizationIssues)
+                            ? diag.canonicalizationIssues.length
+                            : 0;
+                        if (runtimeOwnedCount > 0 || canonicalIssueCount > 0) {
+                            toast({
+                                title: 'No manual questions required',
+                                description: `Runtime-owned fields: ${runtimeOwnedCount}. Canonicalization issues: ${canonicalIssueCount}.`,
+                            });
+                        } else if (readinessBlocking.length > 0) {
+                            toast({
+                                title: 'Workflow requires setup',
+                                description: readinessBlocking.map((b: any) => b?.message || b?.code).join('; '),
+                                variant: 'destructive',
+                            });
+                        }
+                    }
+                    setAllQuestions(combinedQuestions);
+                    setCurrentQuestionIndex(0);
+                    setCredentialQuestionIndex(0);
+                }
+
+                setRequiredCredentials(
+                    requiredCreds.map((c: any) => c.vaultKey || c.credentialId)
+                );
+                setShowCredentialStep(true);
+                setStep('field-ownership');
+                setBuildingLogs((prev) =>
+                    [
+                        ...prev,
+                        discoveredInputs.length > 0
+                            ? `📋 ${discoveredInputs.length} input(s) required`
+                            : '',
+                        requiredCreds.length > 0
+                            ? `🔑 ${requiredCreds.length} credential(s) required`
+                            : '',
+                    ].filter(Boolean)
+                );
+                return true;
+            };
 
             // Start fallback progress if streaming doesn't provide updates
             startFallbackProgress();
@@ -2060,10 +2819,24 @@ export function AutonomousAgentWizard() {
                     for (const line of lines) {
                         if (!line.trim()) continue;
 
+                        let update: any;
                         try {
-                            const update = JSON.parse(line);
-                            console.log('Received update:', update);
-                            
+                            update = JSON.parse(line);
+                        } catch {
+                            console.warn('Failed to parse progress update:', line);
+                            continue;
+                        }
+
+                        console.log('Received update:', update);
+
+                        if (update.status === 'error') {
+                            throw new Error(
+                                typeof update.error === 'string'
+                                    ? update.error
+                                    : 'Workflow generation failed'
+                            );
+                        }
+
                             // Log structure for debugging
                             if (update.success || update.workflow) {
                                 console.log('Completion detected - Structure:', {
@@ -2112,14 +2885,13 @@ export function AutonomousAgentWizard() {
                             const edges = update.edges || update.workflow?.edges;
                             const hasNodes = nodes && Array.isArray(nodes) && nodes.length > 0;
                             const hasEdges = edges && Array.isArray(edges);
-                            // ✅ PRODUCTION: Only mark completed when phase === 'ready' (generation complete)
-                            const isCompleted = (update.status === 'completed' || update.status === 'success' || update.success === true || (hasNodes && hasEdges)) 
-                                && update.phase === 'ready';
-                            
-                            // ✅ PRODUCTION: Only check credentials AFTER generation completes (phase === "ready")
-                            // Do NOT check credentials during building phase - wait for completion
-                            
-                            if (isCompleted) {
+                            /** Terminal payload from stream: generation finished (ready OR configuring_inputs / structural gate). */
+                            const isStreamTerminal =
+                                hasNodes &&
+                                (update.status === 'completed' ||
+                                    update.status === 'success');
+
+                            if (isStreamTerminal) {
                                 // Stop fallback progress
                                 stopFallbackProgress();
 
@@ -2130,13 +2902,8 @@ export function AutonomousAgentWizard() {
                                     finalData.nodes = update.workflow.nodes;
                                     finalData.edges = update.workflow.edges;
                                 }
-                                
-                                setProgress(100);
-                                setIsComplete(true);
-                                setBuildingLogs(prev => [...prev, 'Workflow Generated Successfully!']);
 
                                 // ✅ CHECK FOR CONFIRMATION REQUIREMENT
-                                // If workflow requires confirmation, show confirmation step
                                 if (update.waitingForConfirmation && update.workflowId) {
                                     console.log('[AutonomousAgentWizard] Workflow requires confirmation');
                                     setConfirmationData({
@@ -2149,161 +2916,34 @@ export function AutonomousAgentWizard() {
                                         },
                                     });
                                     setStep('workflow-confirmation');
-                                    return; // Stop here, wait for user confirmation
+                                    return;
                                 }
 
-                                // ✅ PRODUCTION FLOW: Unified configuration modal when phase === "ready"
-                                // Show both discoveredInputs and discoveredCredentials in single modal
-                                // ✅ CRITICAL: discoveredCredentials only contains MISSING credentials
-                                // OAuth credentials already connected (via header bar) are NOT included
-                                const phase = update.phase || update.status;
-                                const discoveredInputs = update.discoveredInputs || [];
-                                const discoveredCreds = update.discoveredCredentials || []; // Already filtered to only missing
-                                const comprehensiveQuestions = update.comprehensiveQuestions || []; // ✅ Use comprehensive questions from backend
-                                const requiredCreds = discoveredCreds; // All discovered credentials are missing (already filtered by backend)
-                                
-                                // ✅ PRODUCTION: Only show unified modal when phase === "ready" and workflow graph exists
-                                // Show modal if there are inputs OR missing credentials (not already connected)
-                                if (phase === 'ready' && (discoveredInputs.length > 0 || comprehensiveQuestions.length > 0 || requiredCreds.length > 0) && (nodes?.length > 0 || edges?.length > 0)) {
-                                    // Store workflow data for later saving after inputs/credentials are attached
-                                    const workflowNodes = nodes || [];
-                                    const workflowEdges = edges || [];
-                                    if (workflowNodes.length > 0 || workflowEdges.length > 0) {
-                                        setPendingWorkflowData({ 
-                                            nodes: workflowNodes, 
-                                            edges: workflowEdges, 
-                                            update,
-                                            discoveredInputs,
-                                            discoveredCredentials: discoveredCreds,
-                                            comprehensiveQuestions: comprehensiveQuestions
-                                        });
-                                        
-                                        // ✅ STEP-BY-STEP: Use comprehensiveQuestions from backend (has all questions sorted by askOrder)
-                                        // If not available, fall back to combining discoveredInputs + discoveredCredentials
-                                        let combinedQuestions: any[] = [];
-                                        
-                                        if (comprehensiveQuestions && Array.isArray(comprehensiveQuestions) && comprehensiveQuestions.length > 0) {
-                                            // ✅ Use comprehensive questions directly (already sorted by askOrder from backend)
-                                            console.log(`[Frontend] Using ${comprehensiveQuestions.length} comprehensive questions from backend`);
-                                            combinedQuestions = comprehensiveQuestions.map((q: any) => ({
-                                                ...q,
-                                                questionType: q.category || 'input',
-                                                id: q.id || `${q.nodeId}_${q.fieldName}`,
-                                                label: q.text || q.label || `${q.nodeLabel} - ${q.fieldName}`,
-                                                // Comprehensive questions are per-node (apply via attach-inputs)
-                                                isVaultCredential: false,
-                                            }));
-                                            
-                                            // ✅ IMPORTANT: Still append discovered missing credentials (vault-level) so attach-credentials works
-                                            if (discoveredCreds && Array.isArray(discoveredCreds)) {
-                                                discoveredCreds
-                                                    .filter((cred: any) => {
-                                                        const isOAuth = cred.type === 'oauth';
-                                                        const isGoogleOAuth = (cred.provider?.toLowerCase() === 'google' && cred.type === 'oauth') ||
-                                                                              (cred.vaultKey?.toLowerCase() === 'google' && cred.type === 'oauth');
-                                                        return !isOAuth && !isGoogleOAuth;
-                                                    })
-                                                    .forEach((cred: any, idx: number) => {
-                                                        combinedQuestions.push({
-                                                            questionType: 'credential',
-                                                            id: `cred_${cred.vaultKey || cred.credentialId || idx}`,
-                                                            nodeId: cred.nodeIds?.[0] || '',
-                                                            nodeType: cred.nodeTypes?.[0] || '',
-                                                            nodeLabel: cred.provider || cred.displayName || 'Credential',
-                                                            fieldName: cred.vaultKey || cred.credentialId || 'credential',
-                                                            label: cred.displayName || cred.vaultKey?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Credential',
-                                                            type: 'text',
-                                                            category: 'credential',
-                                                            required: cred.required !== false,
-                                                            askOrder: 0, // Credentials come first
-                                                            placeholder: `Enter ${cred.displayName || cred.vaultKey || 'credential'}`,
-                                                            description: `Credential required for ${cred.provider || 'service'}`,
-                                                            credential: cred,
-                                                            // Vault credentials are global (apply via attach-credentials)
-                                                            isVaultCredential: true,
-                                                        });
-                                                    });
-                                            }
-                                        } else {
-                                            // Fallback: Combine discoveredInputs + discoveredCredentials
-                                            console.log(`[Frontend] Comprehensive questions not available, combining discoveredInputs + discoveredCredentials`);
-                                            
-                                            // Add discoveredInputs (already sorted by askOrder from backend)
-                                            if (discoveredInputs && Array.isArray(discoveredInputs)) {
-                                                discoveredInputs.forEach((input: any) => {
-                                                    combinedQuestions.push({
-                                                        ...input,
-                                                        questionType: 'input',
-                                                        id: input.id || `${input.nodeId}_${input.fieldName}`,
-                                                        isVaultCredential: false,
-                                                    });
-                                                });
-                                            }
-                                            
-                                            // Add discoveredCredentials (non-OAuth only, as text inputs)
-                                            if (discoveredCreds && Array.isArray(discoveredCreds)) {
-                                                discoveredCreds
-                                                    .filter((cred: any) => {
-                                                        // Filter out OAuth and Google OAuth
-                                                        const isOAuth = cred.type === 'oauth';
-                                                        const isGoogleOAuth = (cred.provider?.toLowerCase() === 'google' && cred.type === 'oauth') ||
-                                                                              (cred.vaultKey?.toLowerCase() === 'google' && cred.type === 'oauth');
-                                                        return !isOAuth && !isGoogleOAuth;
-                                                    })
-                                                    .forEach((cred: any, idx: number) => {
-                                                        combinedQuestions.push({
-                                                            questionType: 'credential',
-                                                            id: `cred_${cred.vaultKey || cred.credentialId || idx}`,
-                                                            nodeId: cred.nodeIds?.[0] || '',
-                                                            nodeType: cred.nodeTypes?.[0] || '',
-                                                            nodeLabel: cred.provider || cred.displayName || 'Credential',
-                                                            fieldName: cred.vaultKey || cred.credentialId || 'credential',
-                                                            label: cred.displayName || cred.vaultKey?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Credential',
-                                                            type: 'text',
-                                                            category: 'credential',
-                                                            required: cred.required !== false,
-                                                            askOrder: 0, // Credentials come first
-                                                            placeholder: `Enter ${cred.displayName || cred.vaultKey || 'credential'}`,
-                                                            description: `Credential required for ${cred.provider || 'service'}`,
-                                                            credential: cred, // Store original credential object
-                                                            isVaultCredential: true,
-                                                        });
-                                                    });
-                                            }
-                                            
-                                            // Sort all questions by askOrder (0 = credentials, 1 = resources, 2 = operations, 3+ = config)
-                                            combinedQuestions.sort((a, b) => {
-                                                const orderA = a.askOrder ?? 999;
-                                                const orderB = b.askOrder ?? 999;
-                                                if (orderA !== orderB) return orderA - orderB;
-                                                // If same askOrder, sort by category: credential < operation < configuration
-                                                const categoryOrder: Record<string, number> = { credential: 0, resource: 1, operation: 2, configuration: 3 };
-                                                const catA = categoryOrder[a.category] ?? 999;
-                                                const catB = categoryOrder[b.category] ?? 999;
-                                                return catA - catB;
-                                            });
-                                        }
-                                        
-                                        console.log(`[Frontend] Combined ${combinedQuestions.length} questions for step-by-step wizard`);
-                                        setAllQuestions(combinedQuestions);
-                                        setCurrentQuestionIndex(0); // Start with first question
-                                    }
-                                    
-                                    // Show unified configuration modal ONLY after generation completes
-                                    setRequiredCredentials(requiredCreds.map((c: any) => c.vaultKey || c.credentialId));
-                                    setShowCredentialStep(true);
-                                    setStep('configuration'); // Use 'configuration' step for unified modal
-                                    setBuildingLogs(prev => [...prev, 
-                                        discoveredInputs.length > 0 ? `📋 ${discoveredInputs.length} input(s) required` : '',
-                                        requiredCreds.length > 0 ? `🔑 ${requiredCreds.length} credential(s) required` : ''
-                                    ].filter(Boolean));
-                                    return; // Don't save yet, wait for inputs and credentials
+                                const contractReady = isPipelineContractReady(update);
+
+                                if (applyUnifiedWizardFromGenerateUpdate(update)) {
+                                    return;
                                 }
-                                
-                                // ✅ PRODUCTION: If phase !== "ready", do NOT show configuration
-                                if (phase !== 'ready' && phase !== 'completed') {
-                                    console.log(`[Frontend] Phase is "${phase}", not "ready" - skipping configuration UI`);
+
+                                if (!contractReady) {
+                                    const errs = update.structuralDiagnostics?.errors || [];
+                                    toast({
+                                        title: 'Workflow incomplete',
+                                        description:
+                                            errs[0] ||
+                                            'Structural validation did not pass. Edit the plan or retry generation.',
+                                        variant: 'destructive',
+                                    });
+                                    setProgress(95);
+                                    setIsComplete(false);
+                                    setStep('building');
+                                    return;
                                 }
+
+                                // contractReady (phase ready, success) and no unified wizard questions — save
+                                setProgress(100);
+                                setIsComplete(true);
+                                setBuildingLogs((prev) => [...prev, 'Workflow Generated Successfully!']);
 
                                 // No credentials needed - save workflow immediately
                                 try {
@@ -2385,10 +3025,10 @@ export function AutonomousAgentWizard() {
                                         
                                         // ✅ ENHANCED: Check for missing items before redirecting
                                         try {
-                                            const { data: { session } } = await supabase.auth.getSession();
+                                            const { data: { session: currentSession } } = await supabase.auth.getSession();
                                             const missingItemsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/missing-items`, {
                                                 headers: {
-                                                    'Authorization': `Bearer ${session?.access_token || ''}`,
+                                                    'Authorization': `Bearer ${currentSession?.access_token || ''}`,
                                                 },
                                             });
                                             
@@ -2443,15 +3083,6 @@ export function AutonomousAgentWizard() {
                                 }
                                 return;
                             }
-
-                            // Handle errors
-                            if (update.status === 'error') {
-                                throw new Error(update.error || 'Workflow generation failed');
-                            }
-                        } catch (parseErr) {
-                            // Skip malformed JSON lines (might be partial data)
-                            console.warn('Failed to parse progress update:', line);
-                        }
                     }
                 }
             }
@@ -2459,32 +3090,52 @@ export function AutonomousAgentWizard() {
             // If we didn't get completion via stream, check if we have final data
             // (Backend might send final workflow data without explicit completion status)
             if (!finalData) {
-                // Fallback: If streaming didn't work, use regular invoke
-                // Use the same finalPrompt determined earlier
-                const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
+                // Fallback: non-streaming create must use the same body as streaming (plan-driven fields included)
+                const generateResponse = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${session?.access_token || ''}`,
                     },
-                    body: JSON.stringify({
-                        prompt: finalPrompt,
-                        mode: 'create',
-                        config: requirementValues
-                    })
+                    body: JSON.stringify(createWorkflowBody),
                 });
 
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({ error: 'Failed to generate workflow' }));
+                if (!generateResponse.ok) {
+                    const error = await generateResponse.json().catch(() => ({ error: 'Failed to generate workflow' }));
                     throw new Error(error.error || error.message || 'Failed to generate workflow');
                 }
 
-                finalData = await response.json();
+                finalData = await generateResponse.json();
 
-                // Show progress completion immediately
+                if (finalData.workflow && !finalData.nodes) {
+                    finalData.nodes = finalData.workflow.nodes;
+                    finalData.edges = finalData.workflow.edges;
+                }
+
+                stopFallbackProgress();
+
+                if (applyUnifiedWizardFromGenerateUpdate(finalData)) {
+                    return;
+                }
+
+                if (!isPipelineContractReady(finalData)) {
+                    const errs = finalData.structuralDiagnostics?.errors || [];
+                    toast({
+                        title: 'Workflow incomplete',
+                        description:
+                            errs[0] ||
+                            'Structural validation did not pass. Edit the plan or retry generation.',
+                        variant: 'destructive',
+                    });
+                    setProgress(95);
+                    setIsComplete(false);
+                    setStep('building');
+                    return;
+                }
+
                 setProgress(100);
                 setIsComplete(true);
-                setBuildingLogs(prev => [...prev, 'Workflow Generated Successfully!']);
+                setBuildingLogs((prev) => [...prev, 'Workflow Generated Successfully!']);
             }
 
             // Save workflow to database (if not already saved in streaming completion)
@@ -2492,7 +3143,13 @@ export function AutonomousAgentWizard() {
             const workflowNodes = finalData?.nodes || finalData?.workflow?.nodes;
             const workflowEdges = finalData?.edges || finalData?.workflow?.edges;
             
-            if (finalData && workflowNodes && workflowEdges && !workflowSaved) {
+            if (
+                finalData &&
+                workflowNodes &&
+                workflowEdges &&
+                !workflowSaved &&
+                isPipelineContractReady(finalData)
+            ) {
                 try {
                     const { data: { user } } = await supabase.auth.getUser();
                     const normalized = validateAndFixWorkflow({ nodes: workflowNodes, edges: workflowEdges });
@@ -2550,23 +3207,36 @@ export function AutonomousAgentWizard() {
                 });
             }
 
-            // Stop fallback progress and show completion when 100% is reached
+            // Stop fallback progress; only mark 100% when contract is satisfied or workflow already saved
             stopFallbackProgress();
-            setProgress(100);
-            setIsComplete(true);
+            if (workflowSaved) {
+                setProgress(100);
+                setIsComplete(true);
+            } else if (finalData && isPipelineContractReady(finalData)) {
+                setProgress(100);
+                setIsComplete(true);
+            } else if (finalData) {
+                setProgress(95);
+                setIsComplete(false);
+            }
             
             // Only set to complete if we have a saved workflow, otherwise stay in building
             if (workflowSaved && generatedWorkflowId) {
                 setStep('complete');
             } else if (finalData && (finalData.nodes || finalData.workflow?.nodes)) {
                 // We have workflow data, try to save it one more time
-                const workflowNodes = finalData.nodes || finalData.workflow?.nodes;
-                const workflowEdges = finalData.edges || finalData.workflow?.edges;
+                const retryWorkflowNodes = finalData.nodes || finalData.workflow?.nodes;
+                const retryWorkflowEdges = finalData.edges || finalData.workflow?.edges;
                 
-                if (workflowNodes && workflowEdges && !workflowSaved) {
+                if (
+                    retryWorkflowNodes &&
+                    retryWorkflowEdges &&
+                    !workflowSaved &&
+                    isPipelineContractReady(finalData)
+                ) {
                     try {
                         const { data: { user } } = await supabase.auth.getUser();
-                        const normalized = validateAndFixWorkflow({ nodes: workflowNodes, edges: workflowEdges });
+                        const normalized = validateAndFixWorkflow({ nodes: retryWorkflowNodes, edges: retryWorkflowEdges });
 
                         const workflowData = {
                             name: (analysis?.summary && typeof analysis.summary === 'string') 
@@ -2647,23 +3317,53 @@ export function AutonomousAgentWizard() {
             
             // Don't go back to confirmation if we're already past that step
             // Instead, show error but stay on current step or go to a safe state
-            if (step === 'building' || step === 'credentials') {
+            if (step === 'building' || step === 'credentials' || step === 'plan-credentials') {
                 toast({ 
                     title: 'Build Failed', 
                     description: err.message || 'Failed to generate workflow. Please try again.', 
                     variant: 'destructive' 
                 });
-                // Go back to confirmation step so user can retry
-                setStep('confirmation');
+                setStep(hasWorkflowPlan ? 'questioning' : 'confirmation');
             } else {
                 toast({ 
                     title: 'Error', 
                     description: err.message || 'An error occurred. Please try again.', 
                     variant: 'destructive' 
                 });
-                setStep('confirmation');
+                setStep(hasWorkflowPlan ? 'questioning' : 'confirmation');
             }
         }
+    };
+
+    const applyOwnershipToAll = (mode: 'manual_static' | 'runtime_ai') => {
+        const updates: Record<string, string> = {};
+        ownershipQuestions.forEach((q: any) => {
+            if (q.ownershipUiMode === 'locked') return;
+            if (mode === 'runtime_ai' && !q.supportsRuntimeAI) {
+                updates[`mode_${q.nodeId}_${q.fieldName}`] = q.fillModeDefault || 'manual_static';
+            } else {
+                updates[`mode_${q.nodeId}_${q.fieldName}`] = mode;
+            }
+        });
+        setFillModeValues((prev) => ({ ...prev, ...updates }));
+    };
+    const resetOwnershipToAIRecommendations = () => {
+        const updates: Record<string, string> = {};
+        ownershipQuestions.forEach((q: any) => {
+            if (q.ownershipUiMode === 'locked') return;
+            updates[`mode_${q.nodeId}_${q.fieldName}`] = q.fillModeDefault || 'manual_static';
+        });
+        setFillModeValues((prev) => ({ ...prev, ...updates }));
+    };
+
+    const proceedFromOwnershipStage = () => {
+        if (credentialQuestionsForStep.length > 0) {
+            setCredentialQuestionIndex(0);
+            setStep('credentials');
+            return;
+        }
+        setCurrentQuestionIndex(0);
+        setStep('configuration');
     };
 
     const reset = () => {
@@ -2683,6 +3383,7 @@ export function AutonomousAgentWizard() {
         setBuildStartTime(null);
         setElapsedTime(0);
         setWorkflowUnderstandingConfirmed(false);
+        setPlanCredentialQuestions([]);
         // Scroll back to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -2783,7 +3484,7 @@ export function AutonomousAgentWizard() {
                                 ))}
                             </div>
 
-                            {/* Prompt variations will show in Summary Container below */}
+                            {/* Structured plan appears in the summary section below after analysis */}
                         </motion.div>
                     </div>
 
@@ -2791,248 +3492,59 @@ export function AutonomousAgentWizard() {
                     {step === 'analyzing' && (
                         <GlassBlurLoader 
                             text={isSummarizeLayerProcessing ? "Refining Your Intent..." : "Analyzing Requirements..."}
-                            description={isSummarizeLayerProcessing ? "Understanding your prompt, matching keywords, and generating refined variations..." : "Decomposing your request into logical steps and identifying necessary integrations."}
+                            description={isSummarizeLayerProcessing ? "Building a single structured workflow plan from your prompt..." : "Decomposing your request into logical steps and identifying necessary integrations."}
                         />
                     )}
 
-                    {/* Legacy: Separate Summarize Step (kept for fallback, but should not be used) */}
-                    {step === 'summarize' && promptVariations.length > 0 && (
-                        <div ref={step2Ref} className="scroll-mt-6">
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }} 
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex flex-col gap-6"
-                            >
-                            <Card className="shadow-xl overflow-hidden">
-                                    <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-indigo-500" />
-                                <CardHeader>
-                                        <CardTitle className="flex items-center gap-2 text-purple-400">
-                                            <Layers className="h-5 w-5" /> Select Your Intent
-                                    </CardTitle>
-                                        <CardDescription className="text-muted-foreground">
-                                            We've generated {promptVariations.length} refined versions of your prompt. Select the one that best matches your intent.
+                    {step === 'plan-credentials' && (
+                        <div className="scroll-mt-6">
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                                <Card className="border-amber-500/30 shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="text-amber-400 flex items-center gap-2">
+                                            <AlertCircle className="h-5 w-5" /> Credentials before build
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Your structured plan needs the following credentials. Google OAuth services use the account connected in the app header — enter API keys or other secrets here.
                                         </CardDescription>
-                                </CardHeader>
+                                    </CardHeader>
                                     <CardContent className="space-y-4">
-                                        {originalPrompt && (
-                                            <div className="p-3 bg-muted/50 rounded-lg border border-border">
-                                                <p className="text-sm font-medium text-muted-foreground mb-1">Original Prompt:</p>
-                                                <p className="text-sm text-foreground">{originalPrompt}</p>
-                                            </div>
-                                        )}
-                                        
-                                <div className="grid gap-4">
-                                            {promptVariations.map((variation, index) => {
-                                                const isSelected = selectedPromptVariation === variation.id;
-                                                return (
-                                                    <Card
-                                                        key={variation.id}
-                                                        className={`cursor-pointer transition-all hover:border-indigo-500/50 ${
-                                                            isSelected
-                                                                ? 'border-indigo-500 bg-indigo-500/10 shadow-lg'
-                                                                : 'border-border hover:bg-muted/50'
-                                                        }`}
-                                                        onClick={() => {
-                                                            setSelectedPromptVariation(variation.id);
-                                                            setSelectedVariationMeta({
-                                                                id: variation.id,
-                                                                prompt: variation.prompt,
-                                                                keywords: variation.keywords,
-                                                                matchedKeywords: variation.matchedKeywords,
-                                                                title: (variation as any).title,
-                                                                strategy: (variation as any).strategy,
-                                                                nodes: (variation as any).nodes,
-                                                                requiredNodeTypes: (variation as any).requiredNodeTypes,
-                                                            });
-                                                        }}
-                                                    >
-                                            <CardHeader className="pb-3">
-                                                            <div className="flex items-start justify-between">
-                                                                <CardTitle className="text-base flex items-center gap-2">
-                                                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 text-xs font-bold">
-                                                                        {index + 1}
-                                                                    </span>
-                                                                    {variation.title || `Option ${index + 1}`}
-                                                                </CardTitle>
-                                                                {variation.style && (
-                                                                    <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
-                                                                        {variation.style}
-                                                                    </Badge>
-                                                                )}
-                                                                {(variation as any).strategy && (
-                                                                    <Badge variant="secondary" className="text-[10px]">
-                                                                        {((variation as any).strategy === 'registry_minimal' || (variation as any).strategy === 'keyword_minimal')
-                                                                            ? 'Exact intent'
-                                                                            : 'Extended'}
-                                                                    </Badge>
-                                                                )}
-                                                                {isSelected && (
-                                                                    <CheckCircle2 className="h-5 w-5 text-indigo-500" />
-                                                                )}
-                                                            </div>
-                                            </CardHeader>
-                                            <CardContent>
-                                                            <p className="text-foreground leading-relaxed mb-3">
-                                                                {variation.prompt}
-                                                            </p>
-                                                            {Array.isArray(variation.nodes) && variation.nodes.length > 0 && (
-                                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                                    {variation.nodes.map((nodeType) => (
-                                                                        <Badge
-                                                                            key={nodeType}
-                                                                            variant="outline"
-                                                                            className="text-[10px] font-mono"
-                                                                        >
-                                                                            {nodeType}
-                                                                        </Badge>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                                {/* Display extracted node type keywords (primary) */}
-                                                            {variation.keywords && variation.keywords.length > 0 && (
-                                                                <div className="flex flex-wrap gap-2 mb-2">
-                                                                    <span className="text-xs text-muted-foreground font-semibold">Node Types:</span>
-                                                                    {variation.keywords.slice(0, 5).map((keyword, keywordIndex) => (
-                                                                        <span
-                                                                            key={`${variation.id}:${keyword}:${keywordIndex}`}
-                                                                            className="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded border border-green-500/30"
-                                                                        >
-                                                                            {keyword}
-                                                                        </span>
-                                                                    ))}
-                                                                    {variation.keywords.length > 5 && (
-                                                                        <span className="px-2 py-1 text-xs text-muted-foreground">
-                                                                            +{variation.keywords.length - 5} more
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                            {/* Display matched keywords (secondary) */}
-                                                            {variation.matchedKeywords && variation.matchedKeywords.length > 0 && (
-                                                                <div className="flex flex-wrap gap-2 mb-3">
-                                                                    {variation.matchedKeywords.slice(0, 5).map((keyword, keywordIndex) => (
-                                                                        <span
-                                                                                key={`${variation.id}:matched:${keyword}:${keywordIndex}`}
-                                                                            className="px-2 py-1 text-xs bg-indigo-500/20 text-indigo-400 rounded"
-                                                                        >
-                                                                            {keyword}
-                                                                        </span>
-                                                                    ))}
-                                                                    {variation.matchedKeywords.length > 5 && (
-                                                                        <span className="px-2 py-1 text-xs text-muted-foreground">
-                                                                            +{variation.matchedKeywords.length - 5} more
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                            {variation.reasoning && (
-                                                                <p className="text-xs text-muted-foreground italic">
-                                                                    {variation.reasoning}
-                                                                </p>
-                                                            )}
-                                                        </CardContent>
-                                                    </Card>
-                                                );
-                                            })}
-                                        </div>
-
-                                        <div className="flex gap-3 pt-4">
-                                            <Button
-                                                onClick={async () => {
-                                                    if (selectedPromptVariation) {
-                                                        const selectedVariation = promptVariations.find(v => v.id === selectedPromptVariation);
-                                                        if (selectedVariation) {
-                                                            // Update prompt with selected variation
-                                                            setPrompt(selectedVariation.prompt);
-                                                            
-                                                            // Proceed to workflow analysis with selected prompt
-                                                            setIsSummarizeLayerProcessing(false); // Now analyzing, not summarizing
-                                                            setStep('analyzing');
-                                                            
-                                                            try {
-                                                                // Trigger analysis with selected prompt
-                                                                const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
-                                                                    method: 'POST',
-                                                                    headers: { 'Content-Type': 'application/json' },
-                                                                    body: JSON.stringify({
-                                                                        prompt: selectedVariation.prompt,
-                                                                        mode: 'analyze',
-                                                                        selectedPromptVariation: selectedVariation.prompt
-                                                                    })
-                                                                });
-
-                                                                if (!response.ok) {
-                                                                    const error = await response.json().catch(() => ({ error: 'Analysis failed' }));
-                                                                    const errorMessage = error.error || error.message || error.details || 'Analysis failed';
-                                                                    throw new Error(errorMessage);
-                                                                }
-
-                                                                const data = await response.json();
-                                                                
-                                                                // Check if we got another summarize response (shouldn't happen, but handle it)
-                                                                if (data.phase === 'summarize' && data.promptVariations) {
-                                                                    setPromptVariations(data.promptVariations);
-                                                                    setOriginalPrompt(data.originalPrompt || selectedVariation.prompt);
-                                                                    setStep('summarize');
-                                                                    return;
-                                                                }
-                                                                
-                                                                // Normal analysis response - proceed to workflow analysis
-                                                                setAnalysis(data);
-                                                                const initialAnswers: Record<string, string> = {};
-                                                                data.questions?.forEach((q: AgentQuestion) => {
-                                                                    if (q.options && q.options.length > 0) initialAnswers[q.id] = q.options[0];
-                                                                });
-                                                                setAnswers(initialAnswers);
-                                                                
-                                                                // Update state manager
-                                                                stateManager.setClarifyingQuestions(data.questions || []);
-                                                                stateManager.setClarifyingAnswers(initialAnswers);
-                                                                
-                                                                // Clear summarize layer state
-                                                                setPromptVariations([]);
-                                                                setSelectedPromptVariation(null);
-                                                                
-                                                                // Continue to questioning step
-                                                                setStep('questioning');
-                                                                
-                                                                // If no questions, auto-continue to workflow generation
-                                                                if (!data.questions || data.questions.length === 0) {
-                                                                    setTimeout(() => handleRefine(), 100);
-                                                                } else {
-                                                                    scrollToStep(step2Ref, 300);
-                                                                }
-                                                            } catch (err: any) {
-                                                                console.error(err);
-                                                                toast({ 
-                                                                    title: 'Analysis Failed', 
-                                                                    description: err.message, 
-                                                                    variant: 'destructive' 
-                                                                });
-                                                                setStep('summarize'); // Go back to summarize step on error
-                                                            }
+                                        {planCredentialQuestions.length > 0 ? (
+                                            planCredentialQuestions.map((q, idx) => (
+                                                <div key={q.id || idx} className="space-y-2">
+                                                    <Label>{q.label}{q.required ? ' *' : ''}</Label>
+                                                    <Input
+                                                        value={credentialValues[q.id] || ''}
+                                                        type={q.type === 'password' ? 'password' : 'text'}
+                                                        placeholder={q.placeholder || ''}
+                                                        onChange={(e) =>
+                                                            setCredentialValues((prev) => ({ ...prev, [q.id]: e.target.value }))
                                                         }
-                                                    }
+                                                    />
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground">No manual credentials required.</p>
+                                        )}
+                                        <div className="flex gap-2 pt-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => {
+                                                    setPlanCredentialQuestions([]);
+                                                    setStep('questioning');
                                                 }}
-                                                disabled={!selectedPromptVariation}
-                                                className="flex-1 bg-indigo-600 hover:bg-indigo-500"
-                                                size="lg"
                                             >
-                                                Proceed to Analysis <ArrowRight className="ml-2 h-5 w-5" />
+                                                Back to plan
                                             </Button>
                                             <Button
+                                                type="button"
+                                                className="flex-1 bg-indigo-600 hover:bg-indigo-500"
                                                 onClick={() => {
-                                                    // User wants to re-enter prompt
-                                                    setPrompt('');
-                                                    setStep('idle');
-                                                    setPromptVariations([]);
-                                                    setSelectedPromptVariation(null);
-                                                    setOriginalPrompt('');
+                                                    void handleBuild(planSummary.trim() || prompt);
                                                 }}
-                                                variant="outline"
-                                                size="lg"
                                             >
-                                                Re-enter Prompt
+                                                Build workflow
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -3041,9 +3553,8 @@ export function AutonomousAgentWizard() {
                         </div>
                     )}
 
-                    {/* STEP 2: Questions */}
-                    {/* Summary Container with Prompt Variations OR Analysis Summary */}
-                    {step !== 'idle' && step !== 'analyzing' && (promptVariations.length > 0 || analysis) && (
+                    {/* STEP 2: Plan review / clarifying questions only — hide once we move to refine+ (linear flow, no overlap) */}
+                    {step === 'questioning' && (hasWorkflowPlan || analysis) && (
                         <div ref={step2Ref} className="scroll-mt-6">
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }} 
@@ -3055,120 +3566,82 @@ export function AutonomousAgentWizard() {
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2 text-indigo-400">
                                         <Layers className="h-5 w-5" /> 
-                                        {promptVariations.length > 0 ? 'Select Your Intent' : 'Summary'}
+                                        {hasWorkflowPlan ? 'Structured workflow plan' : 'Summary'}
                                     </CardTitle>
-                                    {promptVariations.length > 0 && (
+                                    {hasWorkflowPlan && (
                                         <CardDescription className="text-muted-foreground">
-                                            We've generated {promptVariations.length} refined versions of your prompt. Select the one that best matches your intent.
+                                            Review and edit the plan below. Regenerate to refine from your edits, or continue to workflow setup when the intent matches what you want to build.
                                         </CardDescription>
                                     )}
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    {/* Show Prompt Variations if available */}
-                                    {promptVariations.length > 0 ? (
+                                    {hasWorkflowPlan ? (
                                         <>
                                             {originalPrompt && (
-                                                <div className="p-3 bg-muted/50 rounded-lg border border-border mb-4">
-                                                    <p className="text-sm font-medium text-muted-foreground mb-1">Original Prompt:</p>
-                                                    <p className="text-sm text-foreground">{originalPrompt}</p>
+                                                <div className="p-3 bg-muted/50 rounded-lg border border-border mb-2">
+                                                    <p className="text-sm font-medium text-muted-foreground mb-1">Original prompt</p>
+                                                    <p className="text-sm text-foreground whitespace-pre-wrap">{originalPrompt}</p>
                                                 </div>
                                             )}
-                                            
-                                            <div className="grid gap-3">
-                                                {promptVariations.map((variation, index) => {
-                                                    const isSelected = selectedPromptVariation === variation.id;
-                                                        return (
-                                                        <Card
-                                                            key={variation.id}
-                                                            className={`cursor-pointer transition-all ${
-                                                                    isSelected 
-                                                                        ? 'border-indigo-500 bg-indigo-500/10 shadow-md' 
-                                                                    : 'border-border hover:bg-muted/50 hover:border-indigo-300'
-                                                                }`}
-                                                            onClick={() => {
-                                                                setSelectedPromptVariation(variation.id);
-                                                                // Don't auto-continue - user must click "Continue Building"
-                                                            }}
-                                                        >
-                                                            <CardContent className="p-4">
-                                                                <div className="flex items-start gap-3">
-                                                                    <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0 ${
-                                                                        isSelected
-                                                                            ? 'bg-indigo-500 text-white'
-                                                                            : 'bg-indigo-500/20 text-indigo-400'
-                                                                    }`}>
-                                                                        {index + 1}
-                                                                    </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                        <p className="text-sm text-foreground leading-relaxed">
-                                                                            {variation.prompt}
-                                                                        </p>
-                                                                        {/* Display extracted node type keywords (for display) */}
-                                                                        {variation.keywords && variation.keywords.length > 0 && (
-                                                                            <div className="flex flex-wrap gap-1.5 mt-2">
-                                                                                <span className="text-xs text-muted-foreground font-semibold mr-1">Nodes:</span>
-                                                                                {variation.keywords.slice(0, 6).map((keyword, keywordIndex) => (
-                                                                                    <span
-                                                                                        key={`${variation.id}:${keyword}:${keywordIndex}`}
-                                                                                        className="px-1.5 py-0.5 text-xs bg-green-500/10 text-green-400 rounded border border-green-500/20"
-                                                                                    >
-                                                                                        {keyword}
-                                                                                    </span>
-                                                                                ))}
-                                                                                {variation.keywords.length > 6 && (
-                                                                                    <span className="px-1.5 py-0.5 text-xs text-muted-foreground">
-                                                                                        +{variation.keywords.length - 6}
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                        )}
-                                                            </div>
-                                                                    {isSelected && (
-                                                                        <CheckCircle2 className="h-5 w-5 text-indigo-500 flex-shrink-0 mt-0.5" />
-                                                                    )}
-                                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                                    );
-                                                })}
-                            </div>
-
-                                            <div className="flex items-center justify-between pt-4 border-t border-border">
+                                            <Label className="text-sm font-medium">Structured plan (editable)</Label>
+                                            <Textarea
+                                                className="min-h-[220px] text-sm leading-relaxed"
+                                                value={planSummary}
+                                                onChange={(e) => setPlanSummary(e.target.value)}
+                                            />
+                                            {planNodeHints.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 pt-2">
+                                                    <span className="text-xs text-muted-foreground font-semibold w-full">Proposed node chain</span>
+                                                    {planNodeHints.map((n) => (
+                                                        <Badge key={n} variant="outline" className="font-mono text-[10px]">
+                                                            {n}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {planNodeHints.length > 0 && (
+                                                <div className="p-3 rounded-lg border border-border bg-muted/20 text-sm whitespace-pre-wrap">
+                                                    <span className="font-medium text-muted-foreground">Node inclusion rationale</span>
+                                                    <div className="mt-1 space-y-1">
+                                                        {planNodeHints.map((n) => (
+                                                            <p key={`reason_${n}`} className="text-xs">
+                                                                <span className="font-mono">{n}</span>: {planNodeReasons[n] || 'included by canonical chain policy'}
+                                                            </p>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {planBranchingOverview ? (
+                                                <div className="p-3 rounded-lg border border-border bg-muted/20 text-sm whitespace-pre-wrap">
+                                                    <span className="font-medium text-muted-foreground">Branching</span>
+                                                    <p className="mt-1">{planBranchingOverview}</p>
+                                                </div>
+                                            ) : null}
+                                            <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
+                                                <Button type="button" variant="outline" onClick={handleRegeneratePlan} disabled={isSummarizeLayerProcessing}>
+                                                    <RefreshCw className="mr-2 h-4 w-4" /> Regenerate plan
+                                                </Button>
+                                                <Button type="button" className="bg-indigo-600 hover:bg-indigo-500" onClick={handleConfirmPlanAndAnalyze}>
+                                                    Continue to workflow setup <ArrowRight className="ml-2 h-4 w-4" />
+                                                </Button>
                                                 <Button
-                                                    onClick={() => {
-                                                        // User wants to re-enter prompt
-                                                        setPrompt('');
-                                                        setPromptVariations([]);
-                                                        setSelectedPromptVariation(null);
-                                                        setOriginalPrompt('');
-                                                        setIsSummarizeLayerProcessing(false);
-                                                        setStep('idle');
-                                                    }}
+                                                    type="button"
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="text-xs text-muted-foreground"
-                                                >
-                                                    Re-enter prompt
-                            </Button>
-                                                <Button
                                                     onClick={() => {
-                                                        if (selectedPromptVariation) {
-                                                            const selectedVariation = promptVariations.find(v => v.id === selectedPromptVariation);
-                                                            if (selectedVariation) {
-                                                                handleProceedWithSelectedPrompt(selectedVariation);
-                                                            }
-                                                        }
+                                                        setHasWorkflowPlan(false);
+                                                        setPlanSummary('');
+                                                        setPlanNodeHints([]);
+                                                        setPlanNodeReasons({});
+                                                        setPrompt('');
+                                                        setStep('idle');
                                                     }}
-                                                    disabled={!selectedPromptVariation}
-                                                    className="bg-indigo-600 hover:bg-indigo-500"
-                                                    size="lg"
                                                 >
-                                                    Continue Building <ArrowRight className="ml-2 h-4 w-4" />
+                                                    Start over
                                                 </Button>
                                             </div>
                                         </>
                                     ) : (
-                                        /* Show Analysis Summary if no variations */
                                         <>
                                             <p className="text-foreground leading-relaxed text-lg">{analysis?.summary}</p>
                                             {/* Auto-continue if no questions */}
@@ -3282,66 +3755,88 @@ export function AutonomousAgentWizard() {
                                             </div>
                                         </div>
 
-                                        {/* Confirmation Buttons */}
-                                        <div className="flex gap-3 pt-2">
-                                            <Button
-                                                onClick={() => {
-                                                    // ✅ FIXED: Confirm understanding in state manager before proceeding
-                                                    const finalUnderstanding = refinement?.refinedPrompt || refinement?.systemPrompt || prompt;
-                                                    
-                                                    if (!finalUnderstanding || finalUnderstanding.trim() === '') {
-                                                        toast({
-                                                            title: 'Error',
-                                                            description: 'Cannot confirm: No understanding text available.',
-                                                            variant: 'destructive',
-                                                        });
-                                                        return;
-                                                    }
-                                                    
-                                                    // Confirm understanding in state manager
-                                                    const confirmResult = stateManager.confirmUnderstanding(finalUnderstanding);
-                                                    
-                                                    if (!confirmResult.success) {
-                                                        toast({
-                                                            title: 'Confirmation Failed',
-                                                            description: confirmResult.error || 'Failed to confirm understanding.',
-                                                            variant: 'destructive',
-                                                        });
-                                                        return;
-                                                    }
-                                                    
-                                                    // User explicitly confirmed - proceed to next step
-                                                    setWorkflowUnderstandingConfirmed(true);
-                                                    
-                                                    toast({
-                                                        title: 'Understanding Confirmed',
-                                                        description: 'You can now proceed to build the workflow.',
-                                                    });
-                                                    
-                                                    // If credentials needed, show credentials step
-                                                    if (requiredCredentials.length > 0) {
-                                                        setTimeout(() => scrollToStep(step4Ref, 300), 200);
-                                                    }
-                                                }}
-                                                className="flex-1 bg-green-600 hover:bg-green-500"
-                                                size="lg"
-                                            >
-                                                <CheckCircle2 className="h-4 w-4 mr-2" />
-                                                Yes, this is correct
-                                            </Button>
-                                            <Button
-                                                onClick={() => {
-                                                    setStep('questioning');
-                                                    setWorkflowUnderstandingConfirmed(false);
-                                                    scrollToStep(step2Ref, 300);
-                                                }}
-                                                variant="outline"
-                                                size="lg"
-                                            >
-                                                <Settings2 className="h-4 w-4 mr-2" />
-                                                Edit / Go Back
-                                            </Button>
-                                        </div>
+                                        {/* Confirmation Buttons — only in FSM states that allow confirmUnderstanding (STATE_1 / STATE_2).
+                                            After STATE_3+ or building, the same card can stay visible when scrolling; hide buttons to avoid duplicate confirm + toast error. */}
+                                        {(() => {
+                                            const fsm = stateManager.getCurrentState();
+                                            const canConfirmHere =
+                                                fsm === WorkflowGenerationState.STATE_1_USER_PROMPT_RECEIVED ||
+                                                fsm === WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE;
+                                            if (!canConfirmHere) {
+                                                return (
+                                                    <p className="text-sm text-muted-foreground pt-2 border-t border-border/60 mt-2">
+                                                        This plan was already confirmed or building has started. Use the steps below
+                                                        (field ownership, credentials, configuration) — you do not need to confirm
+                                                        again.
+                                                    </p>
+                                                );
+                                            }
+                                            return (
+                                                <div className="flex gap-3 pt-2">
+                                                    <Button
+                                                        onClick={() => {
+                                                            const finalUnderstanding =
+                                                                refinement?.refinedPrompt ||
+                                                                refinement?.systemPrompt ||
+                                                                prompt;
+
+                                                            if (!finalUnderstanding || finalUnderstanding.trim() === '') {
+                                                                toast({
+                                                                    title: 'Error',
+                                                                    description:
+                                                                        'Cannot confirm: No understanding text available.',
+                                                                    variant: 'destructive',
+                                                                });
+                                                                return;
+                                                            }
+
+                                                            const confirmResult =
+                                                                stateManager.confirmUnderstanding(finalUnderstanding);
+
+                                                            if (!confirmResult.success) {
+                                                                toast({
+                                                                    title: 'Confirmation Failed',
+                                                                    description:
+                                                                        confirmResult.error ||
+                                                                        'Failed to confirm understanding.',
+                                                                    variant: 'destructive',
+                                                                });
+                                                                return;
+                                                            }
+
+                                                            setWorkflowUnderstandingConfirmed(true);
+
+                                                            toast({
+                                                                title: 'Understanding Confirmed',
+                                                                description:
+                                                                    'You can now proceed to build the workflow.',
+                                                            });
+
+                                                            if (requiredCredentials.length > 0) {
+                                                                setTimeout(() => scrollToStep(step4Ref, 300), 200);
+                                                            }
+                                                        }}
+                                                        className="flex-1 bg-green-600 hover:bg-green-500"
+                                                        size="lg"
+                                                    >
+                                                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                                                        Yes, this is correct
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => {
+                                                            setStep('questioning');
+                                                            setWorkflowUnderstandingConfirmed(false);
+                                                            scrollToStep(step2Ref, 300);
+                                                        }}
+                                                        variant="outline"
+                                                        size="lg"
+                                                    >
+                                                        <Settings2 className="h-4 w-4 mr-2" />
+                                                        Edit / Go Back
+                                                    </Button>
+                                                </div>
+                                            );
+                                        })()}
                                     </CardContent>
                                 </Card>
                             </motion.div>
@@ -3478,12 +3973,364 @@ export function AutonomousAgentWizard() {
                         </div>
                     )}
 
-                    {/* ✅ PRODUCTION: Unified Configuration Modal (ONLY after phase === "ready") */}
-                    {/* Shows both discoveredInputs and discoveredCredentials in single modal */}
+                    {step === 'field-ownership' && pendingWorkflowData && (
+                        <div className="scroll-mt-6">
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                                <Card className="border-amber-500/30 shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="text-amber-400 flex items-center gap-2">
+                                            <AlertCircle className="h-5 w-5" /> Field Ownership
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Choose who provides each field where applicable. Locked fields are fixed, AI-filled, or configured in the Credentials step.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {false && (() => {
+                                            const blueprint = (pendingWorkflowData as any)?.update?.structuralBlueprint;
+                                            if (!blueprint) return null;
+                                            const nodeNarratives = Array.isArray(blueprint.nodeNarratives)
+                                                ? blueprint.nodeNarratives
+                                                : [];
+                                            const branchNarratives = Array.isArray(blueprint.branchNarratives)
+                                                ? blueprint.branchNarratives
+                                                : [];
+                                            const terminalObservability = Array.isArray(
+                                                blueprint.terminalObservability
+                                            )
+                                                ? blueprint.terminalObservability
+                                                : [];
+                                            return (
+                                                <div className="rounded border border-indigo-400/30 bg-indigo-500/5 p-4 space-y-3">
+                                                    <p className="text-sm font-semibold text-indigo-300">
+                                                        Workflow Blueprint
+                                                    </p>
+                                                    {blueprint.overviewText ? (
+                                                        <p className="text-sm text-muted-foreground">
+                                                            {blueprint.overviewText}
+                                                        </p>
+                                                    ) : null}
+                                                    {nodeNarratives.length > 0 ? (
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs font-semibold text-muted-foreground">
+                                                                Node-by-node behavior
+                                                            </p>
+                                                            {nodeNarratives.map((n: any, idx: number) => (
+                                                                <p key={`${n.nodeId || idx}`} className="text-xs">
+                                                                    - {n.text}
+                                                                </p>
+                                                            ))}
+                                                        </div>
+                                                    ) : null}
+                                                    {branchNarratives.length > 0 ? (
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs font-semibold text-muted-foreground">
+                                                                Branch behavior
+                                                            </p>
+                                                            {branchNarratives.map((text: string, idx: number) => (
+                                                                <p key={`branch_${idx}`} className="text-xs">
+                                                                    - {text}
+                                                                </p>
+                                                            ))}
+                                                        </div>
+                                                    ) : null}
+                                                    {terminalObservability.length > 0 ? (
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs font-semibold text-muted-foreground">
+                                                                Output observability
+                                                            </p>
+                                                            {terminalObservability.map((text: string, idx: number) => (
+                                                                <p key={`terminal_${idx}`} className="text-xs">
+                                                                    - {text}
+                                                                </p>
+                                                            ))}
+                                                        </div>
+                                                    ) : null}
+                                                </div>
+                                            );
+                                        })()}
+                                        <div className="flex flex-wrap gap-2">
+                                            <Button type="button" variant="outline" onClick={() => applyOwnershipToAll('manual_static')}>
+                                                Convert All To User
+                                            </Button>
+                                            <Button type="button" variant="outline" onClick={() => applyOwnershipToAll('runtime_ai')}>
+                                                Convert All Eligible To AI Runtime
+                                            </Button>
+                                            <Button type="button" variant="outline" onClick={resetOwnershipToAIRecommendations}>
+                                                Reset To AI Recommendations
+                                            </Button>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {ownershipByNode.map((group) => {
+                                                const totals = group.fields.reduce(
+                                                    (acc, question: any) => {
+                                                        if (question.ownershipUiMode === 'locked') {
+                                                            acc.locked += 1;
+                                                            return acc;
+                                                        }
+                                                        const modeKey = `mode_${question.nodeId}_${question.fieldName}`;
+                                                        const selectedMode = resolveWizardFieldFillMode(
+                                                            fillModeValues[modeKey],
+                                                            question.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
+                                                        );
+                                                        if (selectedMode === 'runtime_ai') acc.ai += 1;
+                                                        else acc.user += 1;
+                                                        return acc;
+                                                    },
+                                                    { user: 0, ai: 0, locked: 0 }
+                                                );
+                                                return (
+                                                    <div key={group.nodeId} className="rounded border border-border/60 p-3 space-y-3">
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <div>
+                                                                <p className="text-sm font-semibold">{group.nodeLabel}</p>
+                                                                <p className="text-xs text-muted-foreground">{group.nodeType}</p>
+                                                            </div>
+                                                            <Badge variant="outline" className="text-xs">
+                                                                User {totals.user} | AI {totals.ai}
+                                                                {totals.locked > 0 ? ` | Locked ${totals.locked}` : ''}
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                                                        {group.fields.map((question: any, idx: number) => {
+                                                            const modeKey = `mode_${question.nodeId}_${question.fieldName}`;
+                                                            const selectedMode = resolveWizardFieldFillMode(
+                                                                fillModeValues[modeKey],
+                                                                question.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
+                                                            );
+                                                            const locked = question.ownershipUiMode === 'locked';
+                                                            const aiDisabled = locked;
+                                                            const userDisabled = locked;
+                                                            const lockHint =
+                                                                locked && question.ownershipLockReason
+                                                                    ? OWNERSHIP_LOCK_REASON_COPY[String(question.ownershipLockReason)] ||
+                                                                      String(question.ownershipLockReason)
+                                                                    : null;
+                                                            return (
+                                                                <div key={`${question.id || idx}`} className="rounded border border-border/40 p-3">
+                                                                    <div className="flex items-start justify-between gap-3">
+                                                                        <div>
+                                                                            <p className="text-sm font-medium">{question.fieldName}</p>
+                                                                            <p className="text-xs text-muted-foreground">
+                                                                                {lockHint ||
+                                                                                    (String(question.ownershipClass || '') === 'structural' && !locked
+                                                                                        ? 'Structural field: choose User to edit static values before run, or AI Runtime when supported. Save may adjust mode to match policy.'
+                                                                                        : null) ||
+                                                                                    question.description ||
+                                                                                    'Select ownership for this field'}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Button
+                                                                                type="button"
+                                                                                size="sm"
+                                                                                variant={selectedMode === 'manual_static' ? 'default' : 'outline'}
+                                                                                disabled={userDisabled}
+                                                                                onClick={() =>
+                                                                                    setFillModeValues((prev) => ({
+                                                                                        ...prev,
+                                                                                        [modeKey]: 'manual_static',
+                                                                                    }))
+                                                                                }
+                                                                            >
+                                                                                User
+                                                                            </Button>
+                                                                            <Button
+                                                                                type="button"
+                                                                                size="sm"
+                                                                                variant={selectedMode === 'runtime_ai' ? 'default' : 'outline'}
+                                                                                disabled={aiDisabled}
+                                                                                onClick={() =>
+                                                                                    setFillModeValues((prev) => ({
+                                                                                        ...prev,
+                                                                                        [modeKey]: 'runtime_ai',
+                                                                                    }))
+                                                                                }
+                                                                            >
+                                                                                AI Runtime
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+                                                                    {locked && question.aiFilledAtBuildTime ? (
+                                                                        <div className="mt-2 rounded border border-muted p-2">
+                                                                            <p className="text-[11px] text-muted-foreground">
+                                                                                Value was set at generation; this row stays locked for this field type.
+                                                                            </p>
+                                                                        </div>
+                                                                    ) : null}
+                                                                    {!locked && selectedMode === 'runtime_ai' && (
+                                                                        <div className="mt-2 rounded border border-amber-300/40 bg-amber-500/10 p-2">
+                                                                            <p className="text-xs text-amber-200 font-medium">Filled automatically by AI at runtime</p>
+                                                                            <p className="text-[11px] text-amber-100/80">
+                                                                                This field will be generated dynamically from previous node output and workflow intent.
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+                                                                    {!locked &&
+                                                                        selectedMode === 'manual_static' &&
+                                                                        String(question.defaultValue || '').trim().length > 0 && (
+                                                                            <div className="mt-2 rounded border border-emerald-500/25 bg-emerald-500/5 p-2">
+                                                                                <p className="text-[11px] text-muted-foreground mb-1">
+                                                                                    Current value in workflow (edit on Configuration step)
+                                                                                </p>
+                                                                                <pre className="text-[11px] whitespace-pre-wrap break-words max-h-28 overflow-auto font-mono text-left">
+                                                                                    {String(question.defaultValue)}
+                                                                                </pre>
+                                                                            </div>
+                                                                        )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <Button type="button" className="w-full" onClick={proceedFromOwnershipStage}>
+                                            Proceed To Credentials
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </div>
+                    )}
+
+                    {step === 'credentials' && pendingWorkflowData && (
+                        <div className="scroll-mt-6">
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                                <Card className="border-amber-500/30 shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="text-amber-400 flex items-center gap-2">
+                                            <AlertCircle className="h-5 w-5" /> Credentials Required
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Provide only credentials that remain required after ownership selection.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {Array.isArray((pendingWorkflowData as any)?.unifiedReadiness?.blockingReasons) &&
+                                            (pendingWorkflowData as any).unifiedReadiness.blockingReasons.length > 0 && (
+                                            <div className="rounded border border-amber-500/30 bg-amber-500/10 p-3">
+                                                <p className="text-xs font-semibold text-amber-300 mb-2">Readiness blockers</p>
+                                                <div className="space-y-1">
+                                                    {(pendingWorkflowData as any).unifiedReadiness.blockingReasons.map((reason: any, idx: number) => (
+                                                        <p key={`${reason?.code || 'reason'}-${idx}`} className="text-xs text-amber-100">
+                                                            {reason?.message || reason?.code}
+                                                            {typeof reason?.count === 'number' ? ` (${reason.count})` : ''}
+                                                        </p>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {((pendingWorkflowData as any)?.unifiedReadiness?.summary) && (
+                                            <div className="rounded border border-border/60 p-3 space-y-1 text-xs text-muted-foreground">
+                                                <p><span className="font-semibold">Structural:</span> unresolved fields require manual confirmation before run.</p>
+                                                <p><span className="font-semibold">Value ownership:</span> fields marked runtime AI are not asked in this step.</p>
+                                                <p><span className="font-semibold">Credentials:</span> only missing required credentials are requested here.</p>
+                                            </div>
+                                        )}
+                                        {Array.isArray((pendingWorkflowData as any)?.credentialStatuses) &&
+                                            (pendingWorkflowData as any).credentialStatuses.length > 0 && (
+                                            <div className="rounded border border-border/60 p-3 space-y-2">
+                                                <p className="text-xs font-semibold text-muted-foreground">
+                                                    Credential status by node
+                                                </p>
+                                                <div className="space-y-1 max-h-44 overflow-auto pr-1">
+                                                    {(pendingWorkflowData as any).credentialStatuses.map((row: any, idx: number) => (
+                                                        <div
+                                                            key={`${row.nodeId}-${row.credentialId}-${idx}`}
+                                                            className="grid grid-cols-12 gap-2 text-xs rounded border border-border/40 px-2 py-1"
+                                                        >
+                                                            <span className="col-span-4 truncate">{row.nodeLabel || row.nodeId}</span>
+                                                            <span className="col-span-4 truncate text-muted-foreground">{row.displayName}</span>
+                                                            <span className="col-span-4 text-right">
+                                                                {row.status === 'required_missing'
+                                                                    ? 'required_missing'
+                                                                    : row.status === 'resolved_connected'
+                                                                    ? 'resolved_connected'
+                                                                    : 'not_required'}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {credentialQuestionsForStep.length > 0 ? credentialQuestionsForStep.map((q: any, idx: number) => {
+                                            const useSelect = q.type === 'select' || (q.options && q.options.length > 0);
+                                            return (
+                                            <div key={q.id || idx} className="space-y-2">
+                                                <Label>{q.label || q.fieldName}{q.required ? ' *' : ''}</Label>
+                                                {q?.credential?.satisfied === true && (
+                                                    <p className="text-xs text-muted-foreground">already satisfied</p>
+                                                )}
+                                                {q?.required && q?.credential?.satisfied !== true && (
+                                                    <p className="text-xs text-amber-200">required missing</p>
+                                                )}
+                                                {useSelect ? (
+                                                    <Select
+                                                        value={
+                                                            q.options && q.options.length > 0
+                                                                ? normalizeSelectValue(
+                                                                      credentialValues[q.id],
+                                                                      q.defaultValue,
+                                                                      q.options
+                                                                  )
+                                                                : String(credentialValues[q.id] ?? q.defaultValue ?? '')
+                                                        }
+                                                        onValueChange={(value) => {
+                                                            setCredentialValues((prev) => ({ ...prev, [q.id]: value }));
+                                                        }}
+                                                    >
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder={q.placeholder || `Select ${q.fieldName}`} />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {q.options && q.options.length > 0 ? (
+                                                                q.options.map((option: any, optIdx: number) => {
+                                                                    const optionValue = typeof option === 'string' ? option : option.value;
+                                                                    const optionLabel = typeof option === 'string' ? option : (option.label || option.value);
+                                                                    if (String(optionValue ?? '').trim().length === 0) return null;
+                                                                    return (
+                                                                        <SelectItem key={optIdx} value={String(optionValue)}>
+                                                                            {optionLabel}
+                                                                        </SelectItem>
+                                                                    );
+                                                                })
+                                                            ) : (
+                                                                <div className="px-2 py-1 text-sm text-muted-foreground">No options available</div>
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                ) : (
+                                                <Input
+                                                    value={credentialValues[q.id] ?? ''}
+                                                    type={q.type === 'password' ? 'password' : 'text'}
+                                                    placeholder={q.placeholder || `Enter ${q.fieldName}`}
+                                                    onChange={(e) => setCredentialValues((prev) => ({ ...prev, [q.id]: e.target.value }))}
+                                                />
+                                                )}
+                                            </div>
+                                            );
+                                        }) : (
+                                            <p className="text-sm text-muted-foreground">No credentials required. You can continue.</p>
+                                        )}
+                                        <div className="flex gap-2">
+                                            <Button type="button" variant="outline" onClick={() => setStep('field-ownership')}>Back</Button>
+                                            <Button type="button" className="flex-1" onClick={() => { setCurrentQuestionIndex(0); setStep('configuration'); }}>
+                                                Continue To Inputs
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </div>
+                    )}
+
+                    {/* Unified configuration: show during setup phases (e.g. configuring_inputs) and when ready */}
                     {step === 'configuration' && 
                      pendingWorkflowData && 
                      pendingWorkflowData.nodes?.length > 0 &&
-                     (pendingWorkflowData.update?.phase === 'ready' || pendingWorkflowData.update?.status === 'ready') && (
+                     configurationPhaseUnlocked && (
                         <div className="scroll-mt-6">
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
@@ -3500,13 +4347,13 @@ export function AutonomousAgentWizard() {
                                     </CardHeader>
                                     <CardContent className="space-y-6">
                                         {/* ✅ STEP-BY-STEP: Show one question at a time */}
-                                        {allQuestions.length > 0 && currentQuestionIndex < allQuestions.length ? (
+                                        {manualConfigurationQuestions.length > 0 && currentQuestionIndex < manualConfigurationQuestions.length ? (
                                             <div className="space-y-4" id={`question-container-${currentQuestionIndex}`}>
                                                 {/* Progress indicator */}
                                                 <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                                                    <span>Question {currentQuestionIndex + 1} of {allQuestions.length}</span>
+                                                    <span>Question {currentQuestionIndex + 1} of {manualConfigurationQuestions.length}</span>
                                                     <div className="flex gap-1">
-                                                        {allQuestions.map((_, idx) => (
+                                                        {manualConfigurationQuestions.map((_, idx) => (
                                                             <div
                                                                 key={idx}
                                                                 className={`h-2 w-2 rounded-full ${
@@ -3523,10 +4370,44 @@ export function AutonomousAgentWizard() {
                                                 
                                                 {/* Current Question */}
                                                 {(() => {
-                                                    const question = allQuestions[currentQuestionIndex];
+                                                    const question = manualConfigurationQuestions[currentQuestionIndex];
                                                     const questionKey = question.id;
                                                     const questionLabel = question.label || `${question.nodeLabel} - ${question.fieldName}`;
-                                                    
+                                                    const isInputDisabled = false;
+                                                    const isManualRequired = question.required;
+                                                    const runtimeValueMeta = lastResolvedInputs?.[question.nodeId]?.[question.fieldName];
+                                                    const isCredVaultQ =
+                                                        question.category === 'credential' && (question as any).isVaultCredential;
+                                                    const rawSelectAnswer = isCredVaultQ ? credentialValues[questionKey] : inputValues[questionKey];
+                                                    const selectControlledValue =
+                                                        question.options && question.options.length > 0
+                                                            ? normalizeSelectValue(
+                                                                  rawSelectAnswer,
+                                                                  question.defaultValue,
+                                                                  question.options
+                                                              )
+                                                            : (() => {
+                                                                  if (rawSelectAnswer !== undefined && rawSelectAnswer !== null && String(rawSelectAnswer) !== '') {
+                                                                      return String(rawSelectAnswer);
+                                                                  }
+                                                                  if (
+                                                                      question.defaultValue !== undefined &&
+                                                                      question.defaultValue !== null &&
+                                                                      String(question.defaultValue) !== ''
+                                                                  ) {
+                                                                      return String(question.defaultValue);
+                                                                  }
+                                                                  return '';
+                                                              })();
+                                                    const rawTextAnswer = isCredVaultQ
+                                                        ? credentialValues[questionKey]
+                                                        : inputValues[questionKey];
+                                                    const textControlledValue =
+                                                        rawTextAnswer !== undefined && rawTextAnswer !== null
+                                                            ? String(rawTextAnswer)
+                                                            : question.defaultValue !== undefined && question.defaultValue !== null
+                                                              ? String(question.defaultValue)
+                                                              : '';
                                                     return (
                                                         <div className="space-y-4">
                                                             <div>
@@ -3557,14 +4438,12 @@ export function AutonomousAgentWizard() {
                                                             {/* Render input based on type */}
                                                             {question.type === 'select' || (question.options && question.options.length > 0) ? (
                                                                 <Select
-                                                                    value={
-                                                                        (question.category === 'credential' && (question as any).isVaultCredential
-                                                                            ? (credentialValues[questionKey] || '')
-                                                                            : (inputValues[questionKey] || '')
-                                                                        ) || question.defaultValue || ''
-                                                                    }
+                                                                    value={selectControlledValue}
                                                                     onValueChange={(value) => {
-                                                                        if (question.category === 'credential' && (question as any).isVaultCredential) {
+                                                                        if (isInputDisabled) {
+                                                                            return;
+                                                                        }
+                                                                        if (isCredVaultQ) {
                                                                             setCredentialValues({
                                                                                 ...credentialValues,
                                                                                 [questionKey]: value,
@@ -3591,7 +4470,7 @@ export function AutonomousAgentWizard() {
                                                                                     return null;
                                                                                 }
                                                                                 return (
-                                                                                    <SelectItem key={optIdx} value={optionValue}>
+                                                                                    <SelectItem key={optIdx} value={String(optionValue)}>
                                                                                         {optionLabel}
                                                                                     </SelectItem>
                                                                                 );
@@ -3606,16 +4485,18 @@ export function AutonomousAgentWizard() {
                                                             ) : question.type === 'textarea' || question.fieldType === 'textarea' || question.type === 'json' ? (
                                                                 <Textarea
                                                                     id={`question-${currentQuestionIndex}`}
-                                                                    placeholder={question.description || question.placeholder || `Enter ${question.fieldName}`}
-                                                                    className="w-full font-mono text-sm min-h-[120px]"
-                                                                    value={
-                                                                        (question.category === 'credential' && (question as any).isVaultCredential
-                                                                            ? (credentialValues[questionKey] || '')
-                                                                            : (inputValues[questionKey] || '')
-                                                                        ) || question.defaultValue || ''
+                                                                    placeholder={
+                                                                        isInputDisabled
+                                                                            ? 'This value will be filled automatically at runtime by AI.'
+                                                                            : (question.description || question.placeholder || `Enter ${question.fieldName}`)
                                                                     }
+                                                                    className="w-full font-mono text-sm min-h-[120px]"
+                                                                    value={textControlledValue}
                                                                     onChange={(e) => {
-                                                                        if (question.category === 'credential' && (question as any).isVaultCredential) {
+                                                                        if (isInputDisabled) {
+                                                                            return;
+                                                                        }
+                                                                        if (isCredVaultQ) {
                                                                             setCredentialValues({
                                                                                 ...credentialValues,
                                                                                 [questionKey]: e.target.value,
@@ -3632,16 +4513,18 @@ export function AutonomousAgentWizard() {
                                                                 <Input
                                                                     id={`question-${currentQuestionIndex}`}
                                                                     type={question.type === 'number' ? 'number' : (question.type === 'password' ? 'password' : 'text')}
-                                                                    placeholder={question.description || question.placeholder || `Enter ${question.fieldName}`}
-                                                                    className="w-full"
-                                                                    value={
-                                                                        (question.category === 'credential' && (question as any).isVaultCredential
-                                                                            ? (credentialValues[questionKey] || '')
-                                                                            : (inputValues[questionKey] || '')
-                                                                        ) || question.defaultValue || ''
+                                                                    placeholder={
+                                                                        isInputDisabled
+                                                                            ? 'This value will be filled automatically at runtime by AI.'
+                                                                            : (question.description || question.placeholder || `Enter ${question.fieldName}`)
                                                                     }
+                                                                    className="w-full"
+                                                                    value={textControlledValue}
                                                                     onChange={(e) => {
-                                                                        if (question.category === 'credential' && (question as any).isVaultCredential) {
+                                                                        if (isInputDisabled) {
+                                                                            return;
+                                                                        }
+                                                                        if (isCredVaultQ) {
                                                                             setCredentialValues({
                                                                                 ...credentialValues,
                                                                                 [questionKey]: e.target.value,
@@ -3656,6 +4539,17 @@ export function AutonomousAgentWizard() {
                                                                 />
                                                             )}
                                                             
+                                                            {runtimeValueMeta && (
+                                                                <div className="rounded border border-border/60 bg-muted/30 p-2">
+                                                                    <p className="text-xs font-medium text-foreground/80">Last runtime value (read-only)</p>
+                                                                    <pre className="mt-1 max-h-24 overflow-auto text-[10px] font-mono whitespace-pre-wrap break-words">
+                                                                        {typeof runtimeValueMeta.value === 'string'
+                                                                            ? runtimeValueMeta.value
+                                                                            : JSON.stringify(runtimeValueMeta.value, null, 2)}
+                                                                    </pre>
+                                                                </div>
+                                                            )}
+
                                                             {question.example && (
                                                                 <p className="text-xs text-muted-foreground italic">
                                                                     Example: {typeof question.example === 'string' ? question.example : JSON.stringify(question.example)}
@@ -3694,12 +4588,12 @@ export function AutonomousAgentWizard() {
                                                                 <Button
                                                                     type="button"
                                                                     onClick={() => {
-                                                                        // Validate required field
+                                                                        // Validate required field (only when manual input is required)
                                                                         const currentValue = (question.category === 'credential' && (question as any).isVaultCredential
                                                                             ? credentialValues[questionKey]
                                                                             : inputValues[questionKey]
                                                                         ) || '';
-                                                                        if (question.required && !String(currentValue).trim()) {
+                                                                        if (isManualRequired && !String(currentValue).trim()) {
                                                                             toast({
                                                                                 title: 'Required Field',
                                                                                 description: `Please provide a value for ${questionLabel}`,
@@ -3709,7 +4603,7 @@ export function AutonomousAgentWizard() {
                                                                         }
                                                                         
                                                                         // Move to next question with smooth scroll
-                                                                        if (currentQuestionIndex < allQuestions.length - 1) {
+                                                                        if (currentQuestionIndex < manualConfigurationQuestions.length - 1) {
                                                                             const nextIndex = currentQuestionIndex + 1;
                                                                             setCurrentQuestionIndex(nextIndex);
                                                                             // Smooth scroll to next question
@@ -3728,7 +4622,7 @@ export function AutonomousAgentWizard() {
                                                                             }, 100);
                                                                         } else {
                                                                             // Last question - move to completion screen
-                                                                            setCurrentQuestionIndex(allQuestions.length);
+                                                                            setCurrentQuestionIndex(manualConfigurationQuestions.length);
                                                                             // Scroll to completion screen
                                                                             setTimeout(() => {
                                                                                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3736,7 +4630,7 @@ export function AutonomousAgentWizard() {
                                                                         }
                                                                     }}
                                                                     disabled={(() => {
-                                                                        if (!question.required) return false;
+                                                                        if (!isManualRequired) return false;
                                                                         const currentValue = (question.category === 'credential' && (question as any).isVaultCredential
                                                                             ? credentialValues[questionKey]
                                                                             : inputValues[questionKey]
@@ -3744,24 +4638,24 @@ export function AutonomousAgentWizard() {
                                                                         return !String(currentValue).trim();
                                                                     })()}
                                                                 >
-                                                                    {currentQuestionIndex < allQuestions.length - 1 ? 'Next' : 'Continue Building'}
+                                                                    {currentQuestionIndex < manualConfigurationQuestions.length - 1 ? 'Next' : 'Continue Building'}
                                                                 </Button>
                                                             </div>
                                                         </div>
                                                     );
                                                 })()}
                                             </div>
-                                        ) : allQuestions.length > 0 && currentQuestionIndex >= allQuestions.length ? (
+                                        ) : manualConfigurationQuestions.length > 0 && currentQuestionIndex >= manualConfigurationQuestions.length ? (
                                             /* All questions answered - Show Continue Building button */
                                             <div className="space-y-4 text-center">
                                                 <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
                                                 <h3 className="text-lg font-semibold">All Questions Answered</h3>
                                                 <p className="text-sm text-muted-foreground">
-                                                    You've completed all {allQuestions.length} configuration questions.
+                                                    You've completed all {manualConfigurationQuestions.length} configuration questions.
                                                 </p>
                                                 <Button
                                                     type="button"
-                                                    onClick={handleBuild}
+                                                    onClick={() => { void handleBuild(); }}
                                                     className="w-full"
                                                 >
                                                     <Check className="h-4 w-4 mr-2" />
@@ -3820,7 +4714,15 @@ export function AutonomousAgentWizard() {
                                                                 </div>
                                                             ) : (input.type === 'select' || (input.options && input.options.length > 0)) ? (
                                                                 <Select
-                                                                    value={inputValues[inputKey] || input.defaultValue || ''}
+                                                                    value={
+                                                                        nonJsonOptions.length > 0
+                                                                            ? normalizeSelectValue(
+                                                                                  inputValues[inputKey],
+                                                                                  input.defaultValue,
+                                                                                  nonJsonOptions
+                                                                              )
+                                                                            : String(inputValues[inputKey] ?? input.defaultValue ?? '')
+                                                                    }
                                                                     onValueChange={(value) => {
                                                                         setInputValues({
                                                                             ...inputValues,
@@ -3842,7 +4744,7 @@ export function AutonomousAgentWizard() {
                                                                                     return null;
                                                                                 }
                                                                                 return (
-                                                                                    <SelectItem key={optIdx} value={optionValue}>
+                                                                                    <SelectItem key={optIdx} value={String(optionValue)}>
                                                                                         {optionLabel}
                                                                                     </SelectItem>
                                                                                 );
@@ -3996,10 +4898,6 @@ export function AutonomousAgentWizard() {
                                                                                         description: `OAuth connection for ${provider} is not yet implemented. Please connect via settings.`,
                                                                                     });
                                                                                     return;
-                                                                                }
-
-                                                                                if (error) {
-                                                                                    throw error;
                                                                                 }
 
                                                                                 toast({
@@ -4187,7 +5085,7 @@ export function AutonomousAgentWizard() {
                                         The agent has all necessary information to build your workflow.
                                     </p>
                                 </div>
-                                <Button onClick={handleBuild} className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-xl shadow-indigo-500/25 transition-all hover:scale-[1.02]">
+                                <Button onClick={() => { void handleBuild(); }} className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-xl shadow-indigo-500/25 transition-all hover:scale-[1.02]">
                                     <Play className="mr-2 h-5 w-5 fill-current" /> Start Building Workflow
                                 </Button>
                             </div>
@@ -4814,7 +5712,7 @@ export function AutonomousAgentWizard() {
                         >
                             <WorkflowConfirmationStep
                                 workflowId={confirmationData.workflowId}
-                                workflowExplanation={confirmationData.workflowExplanation}
+                                workflowExplanation={confirmationData.workflowExplanation as any}
                                 confidenceScore={confirmationData.confidenceScore}
                                 workflow={confirmationData.workflow}
                                 onConfirm={async () => {

@@ -72,9 +72,12 @@ interface InputGuideLinkProps {
   className?: string;
   placeholder?: string;
   helpText?: string; // Add helpText prop to use field's helpText if available
+  helpCategory?: string;
+  docsUrl?: string;
+  exampleValue?: string;
 }
 
-export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, className, placeholder, helpText }: InputGuideLinkProps) {
+export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, className, placeholder, helpText, helpCategory, docsUrl, exampleValue }: InputGuideLinkProps) {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   
   // Try to get node-specific guide first
@@ -105,12 +108,17 @@ export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, clas
                            (normalizedFieldKey.includes('bot_token') || 
                             normalizedFieldKey.includes('bottoken')));
   
+  const registryMeta =
+    helpCategory && helpCategory !== 'none'
+      ? { helpCategory, docsUrl, exampleValue }
+      : undefined;
   const generatedGuide = !nodeGuide && !helpTextGuide ? generateFieldGuide(
     nodeType || '',
     fieldKey || '',
     fieldLabel || '',
     fieldType || 'text',
-    placeholder || fieldLabel || '' // Use fieldLabel as fallback if placeholder not available
+    placeholder || fieldLabel || '', // Use fieldLabel as fallback if placeholder not available
+    registryMeta
   ) : null;
   
   // Fallback to generic guide type detection

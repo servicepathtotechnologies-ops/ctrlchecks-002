@@ -88,11 +88,19 @@ export function normalizeBackendNode(backendNode: any): Node {
  * Converts sourceOutput/targetInput to sourceHandle/targetHandle
  */
 export function normalizeBackendEdge(backendEdge: any): Edge {
+  const inferredBranchHandle =
+    typeof backendEdge?.type === 'string' &&
+    (backendEdge.type === 'true' ||
+      backendEdge.type === 'false' ||
+      backendEdge.type.startsWith('case_'))
+      ? backendEdge.type
+      : undefined;
+
   const normalizedEdge: Edge = {
     id: backendEdge.id || `edge_${Date.now()}_${Math.random()}`,
     source: backendEdge.source,
     target: backendEdge.target,
-    sourceHandle: backendEdge.sourceHandle || backendEdge.sourceOutput || 'output',
+    sourceHandle: backendEdge.sourceHandle || backendEdge.sourceOutput || inferredBranchHandle || 'output',
     targetHandle: backendEdge.targetHandle || backendEdge.targetInput || 'input',
     type: backendEdge.type || 'default',
     ...(backendEdge.data ? { data: backendEdge.data } : {}),
@@ -115,6 +123,19 @@ export function normalizeBackendWorkflow(backendWorkflow: {
     nodes: normalizedNodes,
     edges: normalizedEdges,
   };
+}
+
+/**
+ * Enforce frontend render contract after any downstream workflow mutation.
+ * This is idempotent and safe to run repeatedly.
+ */
+export function enforceFrontendRenderContract(workflow: {
+  nodes: any[];
+  edges: any[];
+}): { nodes: Node[]; edges: Edge[] } {
+  const nodes = (workflow.nodes || []).map(normalizeBackendNode);
+  const edges = (workflow.edges || []).map(normalizeBackendEdge);
+  return { nodes, edges };
 }
 
 /**

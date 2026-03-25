@@ -24,7 +24,7 @@ import { Tables, Json } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
 import { is406Error } from "@/lib/utils";
 
-type Workflow = Tables<'workflows'> & {
+type WorkflowRecord = Tables<'workflows'> & {
   last_execution?: { started_at: string; status: string } | null;
   execution_count?: number;
   workflow_type?: 'chatbot' | 'agent' | 'automation';
@@ -36,7 +36,7 @@ export default function Dashboard() {
   const { theme, toggleTheme } = useTheme();
   const { authStatus } = useWorkflowAuth();
   const navigate = useNavigate();
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [workflows, setWorkflows] = useState<WorkflowRecord[]>([]);
   const [workflowsLoading, setWorkflowsLoading] = useState(true);
   const [stats, setStats] = useState({
     total: 0,

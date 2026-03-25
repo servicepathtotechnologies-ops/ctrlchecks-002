@@ -1,11 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { NODE_CATEGORIES, NODE_TYPES, NodeTypeDefinition } from './nodeTypes';
-import { cn } from '@/lib/utils';
-import { 
+import { Search, X, 
   Play, Webhook, Clock, Globe, Brain, Sparkles, Gem, Link, GitBranch, 
   GitMerge, Repeat, Timer, ShieldAlert, Code, Braces, Table, Type, 
   Combine, Send, Mail, MessageSquare, Database, Box, FileText, Heart,
@@ -15,6 +9,11 @@ import {
   Calculator, Lock, Rss, Bell, Activity, AlertCircle, Image, Target,
   Key, Shield, CreditCard, ShoppingCart, BarChart, TrendingUp, Bot
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { NODE_CATEGORIES, NODE_TYPES, NodeTypeDefinition } from './nodeTypes';
+import { cn } from '@/lib/utils';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Play, Webhook, Clock, Globe, Brain, Sparkles, Gem, Link, GitBranch,

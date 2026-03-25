@@ -14,13 +14,208 @@ export interface FieldGuide {
 /**
  * Generate a guide for any field type based on field metadata
  */
+/** Optional metadata from UnifiedNodeRegistry (serialized via /api/node-definitions). */
+export type RegistryFieldGuideMeta = {
+  helpCategory?: string;
+  docsUrl?: string;
+  exampleValue?: string;
+};
+
+function guideFromRegistryHelpCategory(
+  helpCategory: string,
+  nodeType: string,
+  fieldKey: string,
+  fieldLabel: string,
+  fieldType: string,
+  placeholder: string | undefined,
+  docsUrl: string | undefined,
+  exampleValue: string | undefined
+): FieldGuide | null {
+  const url = docsUrl;
+  const ex = exampleValue;
+  switch (helpCategory) {
+    case 'api_key':
+      return { ...generateAPIKeyGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'oauth_token':
+    case 'refresh_token':
+    case 'generic_token':
+    case 'bearer_token':
+      return { ...generateTokenGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'client_id':
+      return nodeType.includes('google')
+        ? { ...generateGoogleOAuthClientIDGuide(), ...(url ? { url } : {}) }
+        : { ...generateCredentialGuide(nodeType, fieldLabel), ...(url ? { url } : {}) };
+    case 'client_secret':
+      return nodeType.includes('google')
+        ? { ...generateGoogleOAuthSecretGuide(), ...(url ? { url } : {}) }
+        : { ...generateCredentialGuide(nodeType, fieldLabel), ...(url ? { url } : {}) };
+    case 'credential_id':
+      return {
+        title: `How to connect ${fieldLabel}?`,
+        url,
+        steps: [
+          'Step 1: Open your workspace credentials or connections screen.',
+          'Step 2: Create or select an existing connection for this integration.',
+          'Step 3: Complete OAuth or paste the stored credential as required.',
+          'Step 4: Choose the connection in this field when running the workflow.',
+        ],
+        securityWarning: true,
+      };
+    case 'spreadsheet_id':
+      return { ...generateSpreadsheetIDGuide(), ...(ex ? { example: ex } : {}) };
+    case 'document_id':
+      return {
+        title: 'How to get Google Docs document ID?',
+        url: url || 'https://docs.google.com/document',
+        steps: [
+          'Step 1: Open the document in Google Docs.',
+          'Step 2: Copy the ID from the URL: /document/d/DOCUMENT_ID/edit',
+          'Step 3: Paste the ID into this field.',
+        ],
+        example: ex,
+      };
+    case 'base_url':
+    case 'api_endpoint':
+      return { ...generateURLGuide(nodeType, fieldKey, fieldLabel), ...(url ? { url } : {}) };
+    case 'webhook_url':
+      return { ...generateWebhookURLGuide(nodeType, fieldLabel), ...(url ? { url } : {}) };
+    case 'callback_url':
+      return {
+        ...generateOAuthRedirectGuide('callback', fieldLabel),
+        ...(url ? { url } : {}),
+        ...(ex ? { example: ex } : {}),
+      };
+    case 'redirect_url':
+      return {
+        ...generateOAuthRedirectGuide('redirect', fieldLabel),
+        ...(url ? { url } : {}),
+        ...(ex ? { example: ex } : {}),
+      };
+    case 'smtp_host':
+      return generateSMTPHostGuide();
+    case 'smtp_username':
+      return generateSMTPUsernameGuide();
+    case 'smtp_password':
+      return generateSMTPPasswordGuide();
+    case 'host':
+      return generateHostGuide(fieldLabel);
+    case 'port':
+      return generatePortGuide(fieldLabel);
+    case 'database_name':
+      return generateDatabaseGuide(fieldKey, fieldLabel);
+    case 'db_password':
+      return generateCredentialGuide(nodeType, fieldLabel);
+    case 'shop_domain':
+      return generateShopDomainGuide();
+    case 'page_id':
+      return generatePageIDGuide(nodeType);
+    case 'account_id':
+      return generateAccountIDGuide(nodeType);
+    case 'sheet_name':
+      if (nodeType.includes('google_sheets')) {
+        return {
+          ...generateGoogleSheetsTabNameGuide(),
+          ...(url ? { url } : {}),
+          ...(ex ? { example: ex } : {}),
+        };
+      }
+      return {
+        title: `How to get ${fieldLabel}?`,
+        url,
+        steps: [
+          `Step 1: Open your ${nodeType.replace(/_/g, ' ')} provider dashboard or app.`,
+          'Step 2: Open the resource (sheet tab, table, or list) you need.',
+          'Step 3: Copy the tab or sheet name exactly as shown (spacing and case may matter).',
+          'Step 4: Paste it into this field.',
+        ],
+        example: ex,
+      };
+    case 'calendar_id':
+    case 'table_id':
+    case 'base_id':
+      return {
+        title: `How to get ${fieldLabel}?`,
+        url,
+        steps: [
+          `Step 1: Open your ${nodeType.replace(/_/g, ' ')} provider dashboard or app.`,
+          'Step 2: Open the resource (calendar, table, base, or sheet) you need.',
+          'Step 3: Copy the ID or name from the URL or resource settings.',
+          'Step 4: Paste it into this field exactly as shown.',
+        ],
+        example: ex,
+      };
+    case 'resource_select':
+      return {
+        title: `How to choose ${fieldLabel}?`,
+        url,
+        steps: [
+          'Step 1: This field picks which remote resource the node uses (object type, module, or dataset).',
+          'Step 2: In the provider app, confirm the resource name matches what you want to automate.',
+          'Step 3: If the list is empty, finish connecting credentials first, then refresh or reopen the workflow.',
+          'Step 4: Check the integration docs for this node if labels differ between UI and API.',
+        ],
+        example: ex,
+      };
+    case 'operation_select':
+      return {
+        title: `How to choose ${fieldLabel}?`,
+        url,
+        steps: [
+          'Step 1: Pick the operation that matches your intent (read, write, create, update, delete, send, etc.).',
+          'Step 2: After selecting, fill any required fields that appear — some operations need IDs or payloads.',
+          'Step 3: If execution fails with "forbidden" or "not allowed", your credential may lack scopes for that operation.',
+          'Step 4: See provider API docs for the exact behavior of each operation.',
+        ],
+        example: ex,
+      };
+    case 'cron_expression':
+      return generateCronGuide(fieldLabel);
+    case 'json_payload':
+      return generateJSONGuide(fieldLabel, placeholder);
+    case 'expression':
+      return generateExpressionGuide(fieldLabel);
+    case 'prompt_text':
+      return generatePromptGuide(fieldLabel);
+    case 'email_address':
+      return generateEmailGuide(fieldLabel);
+    case 'phone_number':
+      return generatePhoneGuide(fieldLabel);
+    case 'private_key':
+    case 'consumer_key':
+    case 'consumer_secret':
+    case 'webhook_secret':
+    case 'generic_credential':
+      return generateCredentialGuide(nodeType, fieldLabel);
+    default:
+      return null;
+  }
+}
+
 export function generateFieldGuide(
   nodeType: string,
   fieldKey: string,
   fieldLabel: string,
   fieldType: string,
-  placeholder?: string
+  placeholder?: string,
+  registryMeta?: RegistryFieldGuideMeta
 ): FieldGuide {
+  const hc = registryMeta?.helpCategory;
+  if (hc && hc !== 'none') {
+    const fromRegistry = guideFromRegistryHelpCategory(
+      hc,
+      nodeType,
+      fieldKey,
+      fieldLabel,
+      fieldType,
+      placeholder,
+      registryMeta.docsUrl,
+      registryMeta.exampleValue
+    );
+    if (fromRegistry) {
+      return fromRegistry;
+    }
+  }
+
   // ✅ PRODUCTION: Null-safe string operations
   const normalizedKey = fieldKey?.toLowerCase?.() ?? "";
   const normalizedLabel = fieldLabel?.toLowerCase?.() ?? "";
@@ -1277,25 +1472,57 @@ function generateContentRepositoryGuide(fieldLabel: string): FieldGuide {
   };
 }
 
+function generateGoogleSheetsTabNameGuide(): FieldGuide {
+  return {
+    title: 'How to get Google Sheets tab (sheet) name?',
+    url: 'https://docs.google.com/spreadsheets',
+    steps: [
+      'Step 1: Open the spreadsheet in Google Sheets in your browser.',
+      'Step 2: Look at the bottom of the window — each tab is a separate sheet.',
+      'Step 3: The tab label text is the sheet name (e.g. "Sheet1", "Data", "Q1").',
+      'Step 4: Double-click the tab if you need to rename it; copy the exact name including spaces and capitalization.',
+      'Step 5: Paste that name into this field. If you leave it empty, many workflows use the first tab by default.',
+      'Step 6: If your sheet was copied from a template, confirm you are not using a hidden or duplicate tab name.',
+    ],
+    example: 'Sheet1',
+  };
+}
+
+function generateOAuthRedirectGuide(kind: 'callback' | 'redirect', fieldLabel: string): FieldGuide {
+  const isCallback = kind === 'callback';
+  return {
+    title: `How to set ${fieldLabel}?`,
+    url: 'https://developers.google.com/identity/protocols/oauth2',
+    steps: [
+      `Step 1: This value is an OAuth ${isCallback ? 'callback' : 'redirect'} URL — it must match exactly what your OAuth client expects.`,
+      'Step 2: Open your provider console (e.g. Google Cloud Console → APIs & Services → Credentials, Meta for Developers, GitHub OAuth App settings, or your IdP).',
+      `Step 3: Find "${isCallback ? 'Authorized redirect URIs' : 'Redirect URLs'}" or "Callback URL" for your OAuth client.`,
+      'Step 4: Add the URL shown by this application (same scheme https/http, host, path, and trailing slash).',
+      'Step 5: Save in the provider console, then paste the same URL here if this field stores the registered value.',
+      'Step 6: Common errors: http vs https, missing path segment, or extra slash — copy-paste instead of retyping.',
+    ],
+  };
+}
+
 function generateSpreadsheetIDGuide(): FieldGuide {
   return {
     title: 'How to get Google Sheets Spreadsheet ID?',
     url: 'https://docs.google.com/spreadsheets',
     steps: [
-      'Step 1: Open your Google Sheet in a web browser',
-      'Step 2: Look at the URL in your browser address bar',
-      'Step 3: The URL format is:',
+      'Step 1: Open your Google Sheet in a web browser while logged into the Google account that owns or can access the file.',
+      'Step 2: Look at the URL in the address bar. Format:',
       '   https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit',
-      'Step 4: Copy the SPREADSHEET_ID (the long string between /d/ and /edit)',
-      'Step 5: Example:',
-      '   URL: https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit',
-      '   Spreadsheet ID: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
-      'Step 6: Paste the ID into the input field',
-      '',
-      'Example:',
-      '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
+      'Step 3: Copy SPREADSHEET_ID — the long string between /d/ and the next / (often letters, numbers, and hyphens).',
+      'Step 4: Example URL:',
+      '   https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit',
+      '   ID: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
+      'Step 5: Paste only the ID into this field (not the full URL unless the field label says otherwise).',
+      'Step 6: Sharing: the Google account used by your workflow credentials must have at least Viewer (read) or Editor (write) access to the sheet.',
+      'Step 7: If you use a Google Cloud service account, open Share in Sheets and add the service account email (from the JSON key) with the required role.',
+      'Step 8: For API access, Google Sheets API must be enabled in the same Google Cloud project as your OAuth client or service account.',
+      'Step 9: If the ID is correct but access fails, re-check OAuth scopes or service account sharing — not the ID string.',
     ],
-    example: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
+    example: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
   };
 }
 

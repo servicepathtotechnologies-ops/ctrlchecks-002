@@ -1,8 +1,12 @@
 /**
  * Node Schema Service
- * 
- * Fetches node definitions from backend API.
- * Backend is the source of truth for all node schemas.
+ *
+ * Fetches node definitions from `{itemBackend}/api/node-definitions`, which serializes
+ * UnifiedNodeRegistry (same source as execution). Use this for both:
+ * - Properties panel (`PropertiesPanel.tsx`) — schema-driven fields + validation
+ * - Autonomous wizard (`AutonomousAgentWizard.tsx`) — question generation / parity
+ *
+ * Legacy `nodeTypes.ts` / `getNodeDefinition` is a fallback when the API is unavailable.
  */
 
 import { ENDPOINTS } from '@/config/endpoints';
@@ -33,8 +37,21 @@ export interface InputFieldSchema {
   ui?: {
     options?: Array<{ label: string; value: string }>;
     requiredIf?: { field: string; equals: any };
+    visibleIf?: { field: string; equals: unknown };
     widget?: 'text' | 'textarea' | 'json' | 'multi_email';
+    contextHints?: Array<{ whenValue: string; message: string }>;
   };
+  /** From UnifiedNodeRegistry — drives "how to get it" guides in the properties panel */
+  helpCategory?: string;
+  docsUrl?: string;
+  exampleValue?: string;
+  fillMode?: {
+    default: 'manual_static' | 'runtime_ai' | 'buildtime_ai_once';
+    supportsRuntimeAI?: boolean;
+    supportsBuildtimeAI?: boolean;
+  };
+  role?: string;
+  essentialForExecution?: boolean;
 }
 
 export interface OutputFieldSchema {

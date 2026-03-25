@@ -169,8 +169,8 @@ export default function ChatTrigger() {
         }
       };
 
-      ws.onerror = (error) => {
-        console.error('[Chat] WebSocket error:', error);
+      ws.onerror = (wsError) => {
+        console.error('[Chat] WebSocket error:', wsError);
         console.error('[Chat] WebSocket readyState:', ws.readyState);
         console.error('[Chat] WebSocket URL attempted:', wsUrl);
         

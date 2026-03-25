@@ -235,7 +235,7 @@ export function UserGuide({ isOpen, onClose, guideType, customTitle, customSteps
                 }
                 
                 // Check if step starts with emoji or number (main step)
-                const isMainStep = /^[0-9]️⃣|^[➡️•]/.test(step.trim());
+                const isMainStep = /^(?:\d+\.|➡️|•)/.test(step.trim());
                 const isSubStep = step.trim().startsWith('•') || step.trim().startsWith('➡️');
                 
                 return (
