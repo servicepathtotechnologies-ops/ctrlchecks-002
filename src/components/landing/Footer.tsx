@@ -3,11 +3,15 @@ import { Github, Twitter, Linkedin, Youtube } from "lucide-react";
 
 const footerLinks = {
   Product: [
-    { name: "Platform", href: "#features" },
+    { name: "Workflow demo", href: "#demo" },
     { name: "How it works", href: "#how-it-works" },
-    { name: "Why CtrlChecks", href: "#advantage" },
-    { name: "Pricing", href: "#pricing" },
-    { name: "Early access", href: "#early-access" },
+    { name: "Trust & security", href: "#trust" },
+    { name: "Open core", href: "#open-core" },
+    { name: "Plugins & APIs", href: "#plugins-api" },
+    { name: "Industries", href: "#verticals" },
+    { name: "Why CtrlChecks", href: "#why-ctrlchecks" },
+    { name: "Beta focus", href: "#features" },
+    { name: "Subscription", href: "#subscription" },
   ],
   Resources: [
     { name: "Documentation", href: "#" },
@@ -27,7 +31,7 @@ const footerLinks = {
     { name: "Privacy Policy", href: "/privacy" },
     { name: "Terms of Service", href: "#" },
     { name: "Cookie Policy", href: "#" },
-    { name: "Security", href: "#security" },
+    { name: "Trust", href: "#trust" },
     { name: "GDPR", href: "#" },
   ],
 };
@@ -41,7 +45,7 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-muted/30">
+    <footer className="border-t border-border/40 bg-transparent">
       <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid gap-8 lg:grid-cols-6">
           <div className="lg:col-span-2">
@@ -52,16 +56,14 @@ export function Footer() {
               <span className="text-xl font-bold">CtrlChecks AI-OS</span>
             </Link>
             <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-              Autonomous AI automation operating system — intent, intelligence, and execution
-              in one platform. Open core, hybrid prompt + visual workflows, enterprise-ready
-              security.{" "}
+              AI automation OS — intent, intelligence, execution.{" "}
               <a
-                href="https://ctrlchecks.ai"
+                href="https://www.ctrlchecks.ai"
                 className="font-medium text-primary underline-offset-4 hover:underline"
                 target="_blank"
                 rel="noreferrer"
               >
-                ctrlchecks.ai
+                www.ctrlchecks.ai
               </a>
             </p>
             <div className="mt-6 flex gap-4">

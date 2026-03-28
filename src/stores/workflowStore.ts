@@ -9,6 +9,8 @@ import {
   Connection,
   addEdge,
 } from '@xyflow/react';
+import { normalizeIfElseConfig } from '@/lib/ifElseConditions';
+import { normalizeFormFieldsIdentity } from '@/lib/formFieldIdentity';
 
 export type NodeCategory = 'triggers' | 'ai' | 'logic' | 'data' | 'database' | 'storage' | 'output' | 'http_api' | 'google' | 'devops' | 'social_media' | 'crm' | 'utility' | 'productivity' | 'authentication' | 'payment' | 'ecommerce' | 'analytics';
 
@@ -202,11 +204,17 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     // Assuming this is called on blur or explicit save/change.
     const newUndoStack = [...get().undoStack, { nodes: [...nodes], edges: [...edges] }];
 
-    const updatedNodes = nodes.map((node) =>
-      node.id === nodeId
-        ? { ...node, data: { ...node.data, config: { ...node.data.config, ...config } } }
-        : node
-    );
+    const updatedNodes = nodes.map((node) => {
+      if (node.id !== nodeId) return node;
+      const mergedConfig = { ...node.data.config, ...config };
+      const finalConfig =
+        (node.data?.type || node.type) === 'if_else'
+          ? normalizeIfElseConfig(mergedConfig)
+          : (node.data?.type || node.type) === 'form' && Array.isArray((mergedConfig as any).fields)
+            ? { ...mergedConfig, fields: normalizeFormFieldsIdentity((mergedConfig as any).fields) }
+          : mergedConfig;
+      return { ...node, data: { ...node.data, config: finalConfig } };
+    });
     const selectedNode = get().selectedNode;
     const updatedSelectedNode = selectedNode?.id === nodeId
       ? updatedNodes.find(n => n.id === nodeId) || null

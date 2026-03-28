@@ -40,6 +40,7 @@ import ConditionBuilder, { ConditionRule } from './ConditionBuilder';
 import { workflowScheduler } from '@/lib/workflowScheduler';
 import { resolveEffectiveFieldFillMode, supportsRuntimeAI } from '@/lib/fillMode';
 import { collectUpstreamFieldHints } from '@/lib/upstreamFieldHints';
+import { normalizeIfElseConfig, normalizeIfElseConditions } from '@/lib/ifElseConditions';
 
 // Droppable field wrapper component - MUST be outside PropertiesPanel to avoid hook violations
 interface DroppableFieldWrapperProps {
@@ -287,8 +288,12 @@ export default function PropertiesPanel({
           };
 
           if (n.data?.config) {
+            const canonicalConfig =
+              (n.type || n.data?.type) === 'if_else'
+                ? normalizeIfElseConfig(n.data.config as Record<string, unknown>)
+                : n.data.config;
             cleanedNode.config = {};
-            for (const [key, value] of Object.entries(n.data.config)) {
+            for (const [key, value] of Object.entries(canonicalConfig)) {
               if (value !== null && value !== undefined) {
                 if (typeof value === 'object') {
                   cleanedNode.config[key] = JSON.stringify(value);
@@ -638,10 +643,8 @@ export default function PropertiesPanel({
     if (!selectedNode || selectedNode.data?.type !== 'if_else') return;
     const cfg = selectedNode.data?.config || {};
     const conditions = (cfg as any).conditions;
-    const text =
-      typeof conditions === 'string'
-        ? conditions
-        : JSON.stringify(conditions ?? [{ expression: '' }], null, 2);
+    const canonicalConditions = normalizeIfElseConditions(conditions);
+    const text = JSON.stringify(canonicalConditions, null, 2);
     setIfElseConditionsJsonText(text);
     setIfElseConditionsJsonError(null);
   }, [selectedNode?.id, selectedNode?.data?.type]);
@@ -1671,7 +1674,7 @@ export default function PropertiesPanel({
                                     {ifElseConditionsEditorMode === 'builder' ? (
                                       <ConditionBuilder
                                         key={`condition-builder-${selectedNode.id}-${field.key}`}
-                                        value={(selectedNode.data.config || {})[field.key]}
+                                        value={(selectedNode.data.config || {})[field.key] as ConditionRule[] | string | null | undefined}
                                         onChange={(conditions: ConditionRule[]) => {
                                           handleConfigChange(field.key, conditions);
                                           setIfElseConditionsJsonError(null);
@@ -1691,13 +1694,10 @@ export default function PropertiesPanel({
                                             try {
                                               const parsed = JSON.parse(nextText);
                                               if (Array.isArray(parsed)) {
-                                                handleConfigChange(field.key, parsed);
+                                                handleConfigChange(field.key, normalizeIfElseConditions(parsed));
                                                 setIfElseConditionsJsonError(null);
                                               } else if (parsed && typeof parsed === 'object') {
-                                                handleConfigChange(field.key, [parsed]);
-                                                setIfElseConditionsJsonError(null);
-                                              } else if (typeof parsed === 'string') {
-                                                handleConfigChange(field.key, [{ expression: parsed }]);
+                                                handleConfigChange(field.key, normalizeIfElseConditions([parsed]));
                                                 setIfElseConditionsJsonError(null);
                                               } else {
                                                 setIfElseConditionsJsonError('JSON must be an array of condition objects.');
@@ -1706,7 +1706,7 @@ export default function PropertiesPanel({
                                               setIfElseConditionsJsonError('Invalid JSON (fix syntax to apply).');
                                             }
                                           }}
-                                          placeholder={`[\n  { "expression": "{{$json.items.length}} > 0" }\n]`}
+                                          placeholder={`[\n  { "field": "$json.age", "operator": "greater_than", "value": 18 }\n]`}
                                           className="min-h-[120px] font-mono text-xs border-border/60 focus-visible:ring-1 focus-visible:ring-ring/50"
                                           onMouseDown={handleInputMouseDown}
                                           onFocus={(e) => e.stopPropagation()}

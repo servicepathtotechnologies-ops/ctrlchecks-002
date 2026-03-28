@@ -209,6 +209,24 @@
   .glass-strong {
     @apply bg-card/95 backdrop-blur-2xl border border-border;
   }
+
+  /**
+   * Light-mode landing: wide column (match dark-mode girth) — broad ellipses + teal→blue.
+   */
+  .landing-light-pillar-bed {
+    background:
+      radial-gradient(ellipse 48% 70% at 50% 20%, hsl(var(--primary) / 0.5) 0%, hsl(var(--primary) / 0.16) 52%, transparent 68%),
+      radial-gradient(ellipse 68% 94% at 50% 38%, hsl(var(--secondary) / 0.34) 0%, hsl(var(--secondary) / 0.09) 58%, transparent 82%),
+      radial-gradient(ellipse 82% 100% at 50% 44%, hsl(217 91% 60% / 0.12) 0%, transparent 76%),
+      radial-gradient(ellipse 100% 46% at 50% 102%, hsl(var(--secondary) / 0.17) 0%, transparent 64%),
+      linear-gradient(
+        180deg,
+        hsl(220 22% 93%) 0%,
+        hsl(0 0% 100%) 22%,
+        hsl(210 50% 99%) 55%,
+        hsl(220 28% 96%) 100%
+      );
+  }
 }
 
 /* Animation utilities */
@@ -254,6 +272,14 @@
   }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-gradient {
+    animation: none !important;
   }
 }
 

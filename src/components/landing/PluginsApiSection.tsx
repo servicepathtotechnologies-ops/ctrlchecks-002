@@ -1,83 +1,134 @@
-import { motion } from "framer-motion";
-import { Plug, CloudCog, Blocks } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { FileText, Plug } from "lucide-react";
+import {
+  cardHoverTap,
+  landingViewport,
+  springSoft,
+} from "@/components/landing/landing-motion";
+
+/** Slide 10 — product embedding & document-backed workflows (distinct from open-core dev path). */
+const tags = ["CRMs", "ERPs", "SaaS platforms", "Enterprise tools"];
+
+const rows = [
+  { title: "Scalable infrastructure" },
+  { title: "Developer-friendly APIs" },
+  { title: "Plugin SDK" },
+  { title: "Enterprise integration" },
+];
 
 export function PluginsApiSection() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section
       id="plugins-api"
-      className="py-20 sm:py-32 bg-muted/30"
+      className="py-20 sm:py-32"
       aria-labelledby="plugins-heading"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -16 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+        <div className="mx-auto max-w-3xl text-center">
+          <motion.h2
+            id="plugins-heading"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={landingViewport}
+            transition={reduceMotion ? { duration: 0.4 } : springSoft}
+            className="text-3xl font-bold tracking-tight sm:text-4xl"
           >
-            <h2
-              id="plugins-heading"
-              className="text-3xl font-bold tracking-tight sm:text-4xl"
-            >
-              Plugins & API
-            </h2>
-            <p className="mt-2 text-lg font-medium text-primary">
-              An intelligence layer behind modern software
-            </p>
-            <p className="mt-4 text-muted-foreground">
-              Embed CtrlChecks into the tools your company already runs. Generate workflows
-              internally, power them with AI agents, and let every product surface become a
-              little more autonomous.
-            </p>
-            <ul className="mt-6 flex flex-wrap gap-2">
-              {["CRMs", "ERPs", "SaaS platforms", "Enterprise tools"].map((tag) => (
-                <li
-                  key={tag}
-                  className="rounded-full border border-border bg-card px-3 py-1 text-sm font-medium"
-                >
-                  {tag}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+            Plugins & APIs
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={landingViewport}
+            transition={reduceMotion ? { duration: 0.35, delay: 0.05 } : { ...springSoft, delay: 0.06 }}
+            className="mt-3 text-lg font-medium text-primary"
+          >
+            An intelligence layer behind modern software
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={landingViewport}
+            transition={reduceMotion ? { duration: 0.35, delay: 0.1 } : { ...springSoft, delay: 0.12 }}
+            className="mt-4 text-muted-foreground"
+          >
+            Embed CtrlChecks into your product so CRMs, ERPs, and internal tools can trigger
+            workflows, sync documents, and hand off to AI agents—without exposing a separate
+            automation UI to every end user.
+          </motion.p>
+        </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 16 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="space-y-4"
-          >
-            {[
-              {
-                icon: CloudCog,
-                title: "Scalable infrastructure",
-                body: "APIs and workers that grow with traffic, tenants, and graph complexity.",
-              },
-              {
-                icon: Blocks,
-                title: "Developer-friendly APIs",
-                body: "Predictable contracts for provisioning, executing, and observing workflows.",
-              },
-              {
-                icon: Plug,
-                title: "Plugin SDK & enterprise integration",
-                body: "Ship connectors once, reuse everywhere across your stack.",
-              },
-            ].map((row) => (
-              <div
-                key={row.title}
-                className="flex gap-4 rounded-2xl border border-border bg-card p-5"
-              >
-                <row.icon className="h-6 w-6 shrink-0 text-primary" aria-hidden />
-                <div>
-                  <h3 className="font-semibold">{row.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{row.body}</p>
-                </div>
-              </div>
-            ))}
-          </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={landingViewport}
+          transition={reduceMotion ? { duration: 0.35, delay: 0.12 } : { ...springSoft, delay: 0.14 }}
+          className="mx-auto mt-8 flex max-w-xl items-start gap-3 rounded-2xl border border-border/50 bg-background/10 p-4 text-left text-sm text-muted-foreground backdrop-blur-md dark:border-white/10 dark:bg-white/5 sm:p-5"
+        >
+          <FileText className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
+          <p>
+            <span className="font-medium text-foreground">Documents &amp; data in the loop.</span>{" "}
+            Connect the systems where records and files already live; let agents generate and run
+            workflows behind your existing screens.
+          </p>
+        </motion.div>
+
+        <motion.ul
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={landingViewport}
+          className="mx-auto mt-8 flex max-w-2xl flex-wrap justify-center gap-2"
+        >
+          {tags.map((tag, i) => (
+            <motion.li
+              key={tag}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={landingViewport}
+              transition={
+                reduceMotion
+                  ? { duration: 0.25, delay: i * 0.04 }
+                  : { ...springSoft, delay: i * 0.06 }
+              }
+              whileHover={reduceMotion ? undefined : { y: -4, scale: 1.04 }}
+              className="rounded-full border border-border/50 bg-background/10 px-4 py-2 text-sm font-medium shadow-none backdrop-blur-md dark:border-white/10 dark:bg-white/5"
+            >
+              {tag}
+            </motion.li>
+          ))}
+        </motion.ul>
+
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={landingViewport}
+          transition={reduceMotion ? { duration: 0.4, delay: 0.15 } : { ...springSoft, delay: 0.2 }}
+          className="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-muted-foreground"
+        >
+          Internal workflow generation · Agent execution · Automation that keeps running ·
+          Intelligence that improves with use
+        </motion.p>
+
+        <div className="mx-auto mt-12 grid max-w-3xl gap-3 sm:grid-cols-2">
+          {rows.map((row, i) => (
+            <motion.div
+              key={row.title}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={landingViewport}
+              transition={
+                reduceMotion
+                  ? { duration: 0.3, delay: i * 0.05 }
+                  : { ...springSoft, delay: i * 0.08 }
+              }
+              {...(reduceMotion ? {} : cardHoverTap)}
+              className="flex items-center gap-3 rounded-2xl border border-border/50 bg-background/10 px-5 py-4 shadow-none backdrop-blur-md dark:border-white/10 dark:bg-white/5"
+            >
+              <Plug className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+              <span className="font-medium">{row.title}</span>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

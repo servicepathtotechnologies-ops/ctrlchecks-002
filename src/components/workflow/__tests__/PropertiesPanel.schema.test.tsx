@@ -27,7 +27,7 @@ describe('PropertiesPanel Schema Rendering', () => {
         type: 'array',
         description: 'Conditions to evaluate',
         required: true,
-        default: [{ expression: '' }],
+        default: [{ field: '$json.value', operator: 'equals', value: '' }],
       },
       combineOperation: {
         type: 'string',
@@ -46,7 +46,7 @@ describe('PropertiesPanel Schema Rendering', () => {
     incomingPorts: ['default'],
     isBranching: true,
     defaultInputs: () => ({
-      conditions: [{ expression: '' }],
+      conditions: [{ field: '$json.value', operator: 'equals', value: '' }],
       combineOperation: 'AND',
     }),
   };

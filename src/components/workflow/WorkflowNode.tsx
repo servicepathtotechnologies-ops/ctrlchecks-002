@@ -58,21 +58,43 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
   const isSwitchNode = nodeType === 'switch';
   const isAIAgentNode = nodeType === 'ai_agent';
 
+  const parseSwitchCases = (raw: unknown): Array<{ value: string; label?: string }> => {
+    if (!raw) return [];
+    let parsed: unknown = raw;
+    if (typeof parsed === 'string') {
+      const trimmed = parsed.trim();
+      if (!trimmed) return [];
+      try {
+        parsed = JSON.parse(trimmed);
+      } catch {
+        console.warn('[WorkflowNode] Invalid switch cases payload, using empty cases');
+        return [];
+      }
+    }
+    if (!Array.isArray(parsed)) return [];
+    const seen = new Set<string>();
+    const normalized: Array<{ value: string; label?: string }> = [];
+    for (const item of parsed as any[]) {
+      const valueRaw =
+        typeof item === 'string' ? item : item?.value != null ? String(item.value) : '';
+      const value = String(valueRaw || '').trim();
+      if (!value || seen.has(value)) continue;
+      seen.add(value);
+      const label =
+        typeof item === 'object' && item && typeof item.label === 'string'
+          ? item.label
+          : undefined;
+      normalized.push({ value, ...(label ? { label } : {}) });
+    }
+    return normalized;
+  };
+
   // Parse Switch cases to create output handles
   // This will automatically update when data.config.cases changes
   let switchCases: Array<{ value: string; label?: string }> = [];
   const switchCasesRaw = data.config?.cases ?? data.config?.rules;
   if (isSwitchNode && switchCasesRaw) {
-    try {
-      const casesConfig = switchCasesRaw;
-      if (typeof casesConfig === 'string') {
-        switchCases = JSON.parse(casesConfig);
-      } else if (Array.isArray(casesConfig)) {
-        switchCases = casesConfig;
-      }
-    } catch (error) {
-      console.error('Failed to parse Switch cases:', error);
-    }
+    switchCases = parseSwitchCases(switchCasesRaw);
   }
 
   // Create a key based on cases to help React identify when handles need to update

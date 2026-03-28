@@ -8,6 +8,7 @@
  */
 
 import { Node, Edge } from 'reactflow';
+import { normalizeIfElseConfig } from './ifElseConditions';
 
 export interface NormalizedGraph {
   nodes: Node[];
@@ -25,32 +26,7 @@ function normalizeIfElseNode(node: Node): Node {
   }
 
   const config = node.data?.config || {};
-  const normalizedConfig = { ...config };
-
-  // Convert old format: condition (string) -> conditions (array)
-  if (config.condition && !config.conditions) {
-    const conditionStr = typeof config.condition === 'string' ? config.condition : String(config.condition);
-    if (conditionStr.trim()) {
-      normalizedConfig.conditions = [
-        {
-          expression: conditionStr,
-        }
-      ];
-      // Keep condition for backward compatibility during execution
-      // but prioritize conditions array
-    }
-  }
-
-  // Ensure conditions is an array if it exists
-  if (normalizedConfig.conditions && !Array.isArray(normalizedConfig.conditions)) {
-    if (typeof normalizedConfig.conditions === 'string') {
-      normalizedConfig.conditions = [{ expression: normalizedConfig.conditions }];
-    } else if (typeof normalizedConfig.conditions === 'object' && normalizedConfig.conditions.expression) {
-      normalizedConfig.conditions = [normalizedConfig.conditions];
-    } else {
-      normalizedConfig.conditions = [];
-    }
-  }
+  const normalizedConfig = normalizeIfElseConfig(config as Record<string, unknown>);
 
   return {
     ...node,

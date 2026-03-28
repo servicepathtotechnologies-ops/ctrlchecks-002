@@ -868,7 +868,6 @@ export function mapWizardStepToState(step: string): WorkflowGenerationState {
     'refining': WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE,
     'confirmation': WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED,
     'field-ownership': WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED,
-    'plan-credentials': WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION,
     'credentials': WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION,
     'configuration': WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION,
     'building': WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING,

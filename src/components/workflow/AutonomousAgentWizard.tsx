@@ -1,16 +1,19 @@
 import { ENDPOINTS } from '@/config/endpoints';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
     Bot, ArrowRight, AlertCircle,
-    Settings2, CheckCircle2, Play, RefreshCw, Layers, Sparkles, Loader2, Check, Sun, Moon, Brain
+    Settings2, CheckCircle2, Play, RefreshCw, Layers, Sparkles, Loader2, Check, Sun, Moon, Brain, ChevronDown,
+    User, Lock, KeyRound,
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -25,11 +28,37 @@ import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';
 import { WorkflowConfirmationStep } from './WorkflowConfirmationStep';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
 import { generateFieldGuide } from './guideGenerator';
-import { resolveEffectiveFieldFillMode, resolveWizardFieldFillMode } from '@/lib/fillMode';
+import {
+    resolveEffectiveFieldFillMode,
+    resolveWizardFieldFillMode,
+    resolveWizardEffectiveFieldFillMode,
+    shouldAskWizardManualQuestion,
+    wizardBulkAIModeForQuestion,
+} from '@/lib/fillMode';
 import { snapshotConfigFieldToString } from '@/lib/wizard-config-snapshot';
 import { nodeSchemaService, type NodeDefinition } from '@/services/nodeSchemaService';
 import { normalizeSelectValue } from '@/lib/wizard-field-utils';
-import { filterCredentialQuestionsForStep } from '@/lib/filter-credential-questions';
+import { resolveConfigureFieldType } from '@/lib/configure-field-control';
+import {
+    filterCredentialQuestionsForStep,
+    applyCredentialStepIncludeOverrides,
+    credentialPlaneKeyFromQuestion,
+    credentialRowMustStayVisible,
+    shouldShowCredentialRowOnCredentialsStep,
+} from '@/lib/filter-credential-questions';
+import {
+    buildFieldPlaneRows,
+    explainWizardOwnershipRow,
+    findPlaneRow,
+    selectOwnershipQuestionsFromPlane,
+    selectVaultCredentialQuestionsFromPlane,
+} from '@/lib/wizard-field-plane';
+import {
+    filterStillBlockingOAuth,
+    oauthRequirementCandidates,
+    oauthRowNeedsGoogleConnect,
+} from '@/lib/wizard-oauth-credentials';
+import { buildCredentialWizardView, groupCredentialWizardRows } from '@/lib/wizard-credential-view';
 import { 
     WorkflowGenerationStateManager, 
     WorkflowGenerationState,
@@ -95,17 +124,36 @@ function isPipelineContractReady(data: { phase?: string; success?: boolean } | n
     return data?.phase === 'ready' && data.success !== false;
 }
 
-/** Helper text for Field Ownership locked rows (from worker `ownershipLockReason`). */
-const OWNERSHIP_LOCK_REASON_COPY: Record<string, string> = {
-    structural: 'Fixed schema structure; not switchable here.',
-    runtime_ai_default: 'Default is AI at runtime for this field.',
-    ai_filled: 'Already filled by AI at build time.',
-    vault_or_oauth: 'Use the Credentials step to connect accounts or secrets.',
-    manual_only: 'Manual only.',
-    no_runtime_ai: 'AI runtime is not supported for this field.',
-};
+function groupQuestionsByNode(questions: any[]) {
+    const grouped = new Map<string, { nodeLabel: string; nodeType: string; fields: any[] }>();
+    questions.forEach((q: any) => {
+        const key = q.nodeId || `${q.nodeLabel}:${q.nodeType}`;
+        if (!grouped.has(key)) {
+            grouped.set(key, {
+                nodeLabel: q.nodeLabel || q.nodeType || 'Node',
+                nodeType: q.nodeType || 'node',
+                fields: [],
+            });
+        }
+        grouped.get(key)!.fields.push(q);
+    });
+    return Array.from(grouped.entries()).map(([nodeId, value]) => ({ nodeId, ...value }));
+}
 
-type WizardStep = 'idle' | 'analyzing' | 'summarize' | 'questioning' | 'refining' | 'confirmation' | 'workflow-confirmation' | 'field-ownership' | 'plan-credentials' | 'credentials' | 'configure' | 'configuration' | 'building' | 'executing' | 'complete';
+function credentialWizardFriendlyStatus(status: string): string {
+    switch (status) {
+        case 'required_missing':
+            return 'Needs your secret';
+        case 'resolved_connected':
+            return 'Connected';
+        case 'not_required':
+            return 'Not required';
+        default:
+            return status;
+    }
+}
+
+type WizardStep = 'idle' | 'analyzing' | 'summarize' | 'questioning' | 'refining' | 'confirmation' | 'workflow-confirmation' | 'field-ownership' | 'credentials' | 'configure' | 'configuration' | 'building' | 'executing' | 'complete';
 
 interface AgentQuestion {
     id: string;
@@ -242,6 +290,8 @@ export function AutonomousAgentWizard() {
     const [requirementValues, setRequirementValues] = useState<Record<string, string>>({});
     const [requiredCredentials, setRequiredCredentials] = useState<string[]>([]);
     const [credentialValues, setCredentialValues] = useState<Record<string, string>>({});
+    /** Live check: Gmail/Drive/Sheets nodes accept user google_oauth_tokens even if statuses lag. */
+    const [googleOAuthConnectedLive, setGoogleOAuthConnectedLive] = useState(false);
     const [inputValues, setInputValues] = useState<Record<string, string>>({});
     // Per-field fill mode selections: mode_<nodeId>_<fieldName> -> 'manual_static' | 'runtime_ai' | 'buildtime_ai_once'
     const [fillModeValues, setFillModeValues] = useState<Record<string, string>>({});
@@ -254,6 +304,10 @@ export function AutonomousAgentWizard() {
             nodes: string[];
             displayName: string;
             satisfied?: boolean;
+            inputType?: 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'password' | 'json';
+            options?: Array<{ label: string; value: string }>;
+            placeholder?: string;
+            uiWidget?: 'text' | 'textarea' | 'json' | 'multi_email';
         }>;
         inputs: Array<{
             nodeId: string;
@@ -262,6 +316,10 @@ export function AutonomousAgentWizard() {
             fieldName: string;
             description: string;
             fieldType: string;
+            inputType?: 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'password' | 'json';
+            options?: Array<{ label: string; value: string }>;
+            placeholder?: string;
+            uiWidget?: 'text' | 'textarea' | 'json' | 'multi_email';
             required: boolean;
             examples?: any[];
         }>;
@@ -304,7 +362,9 @@ export function AutonomousAgentWizard() {
         comprehensiveQuestions?: any[],
         unifiedReadiness?: any,
         /** Per-node credential resolution rows from generate-workflow (required_missing / resolved_connected / not_required). */
-        credentialStatuses?: any[]
+        credentialStatuses?: any[],
+        /** Node-grouped credential rows for the Credentials step (from worker mapper or client fallback). */
+        credentialWizardView?: { rows: any[]; groups: any[] },
     } | null>(null);
     // Auto-execution state
     const [executionId, setExecutionId] = useState<string | null>(null);
@@ -325,13 +385,19 @@ export function AutonomousAgentWizard() {
     const [planSummary, setPlanSummary] = useState('');
     const [planNodeHints, setPlanNodeHints] = useState<string[]>([]);
     const [planNodeReasons, setPlanNodeReasons] = useState<Record<string, string>>({});
+    const [planOrderingConfidence, setPlanOrderingConfidence] = useState<number | null>(null);
+    const [planOrderingHopRationales, setPlanOrderingHopRationales] = useState<string[]>([]);
+    const [planRankedSelectionSummary, setPlanRankedSelectionSummary] = useState<string[]>([]);
+    const [planRepairActions, setPlanRepairActions] = useState<string[]>([]);
+    const [planSemanticWarnings, setPlanSemanticWarnings] = useState<string[]>([]);
     const [planBranchingOverview, setPlanBranchingOverview] = useState('');
     const [planMandatoryNodeTypes, setPlanMandatoryNodeTypes] = useState<string[]>([]);
     const [planRegistryTags, setPlanRegistryTags] = useState<string[]>([]);
-    /** Pre-build credential questions from plan_credentials API (missing non-OAuth creds) */
-    const [planCredentialQuestions, setPlanCredentialQuestions] = useState<
-        Array<{ id: string; label: string; type?: string; required?: boolean; placeholder?: string }>
-    >([]);
+    const [planDiagnosticsOpen, setPlanDiagnosticsOpen] = useState(false);
+    /** User toggles for unlockable credential fields (`unlock_<nodeId>_<field>` on attach-inputs). */
+    const [credentialUnlockOverrides, setCredentialUnlockOverrides] = useState<Record<string, boolean>>({});
+    /** Per plane key: force-include optional vault row on Credentials; false = hide when allowed. */
+    const [credentialStepIncludeOverrides, setCredentialStepIncludeOverrides] = useState<Record<string, boolean>>({});
     const [executionStatus, setExecutionStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
     const [executionResult, setExecutionResult] = useState<any>(null);
     const [executionError, setExecutionError] = useState<string | null>(null);
@@ -579,51 +645,418 @@ export function AutonomousAgentWizard() {
         }
     }, [currentQuestionIndex, allQuestions.length]);
 
-    const credentialQuestions = useMemo(
-        () =>
-            allQuestions.filter(
-                (q: any) =>
-                    (q.category === 'credential' || q.ownershipClass === 'credential') &&
-                    (q as any).isVaultCredential
-            ),
-        [allQuestions]
+    /** Single derived field plane: one row per question + live node config snapshot. */
+    const fieldPlaneRows = useMemo(
+        () => buildFieldPlaneRows(allQuestions, pendingWorkflowData?.nodes),
+        [allQuestions, pendingWorkflowData?.nodes]
     );
-    /** Credentials step: only rows that match backend missing resolution (see unified-readiness). */
+    const credentialQuestions = useMemo(
+        () => selectVaultCredentialQuestionsFromPlane(fieldPlaneRows),
+        [fieldPlaneRows]
+    );
+    /** Field ownership UI only: vault secrets use the Credentials step, not User/AI rows. */
+    const ownershipQuestions = useMemo(
+        () => selectOwnershipQuestionsFromPlane(fieldPlaneRows),
+        [fieldPlaneRows]
+    );
+
+    const workflowNodeIdsKey = useMemo(
+        () =>
+            [...(pendingWorkflowData?.nodes || []).map((n: any) => String(n?.id || ''))]
+                .filter(Boolean)
+                .sort()
+                .join(','),
+        [pendingWorkflowData?.nodes]
+    );
+
+    useEffect(() => {
+        setCredentialUnlockOverrides({});
+        setCredentialStepIncludeOverrides({});
+    }, [workflowNodeIdsKey]);
+
+    const serverCredentialUnlocks = useMemo(() => {
+        const m: Record<string, boolean> = {};
+        const nodes = pendingWorkflowData?.nodes;
+        if (!Array.isArray(nodes)) return m;
+        for (const node of nodes) {
+            const u = node?.data?.config?._ownershipUnlock;
+            if (!u || typeof u !== 'object') continue;
+            for (const [field, v] of Object.entries(u)) {
+                if (v === true) {
+                    m[`unlock_${node.id}_${field}`] = true;
+                }
+            }
+        }
+        return m;
+    }, [pendingWorkflowData?.nodes]);
+
+    const isCredentialUnlocked = useCallback((q: any) => {
+        const k = `unlock_${q.nodeId}_${q.fieldName}`;
+        if (Object.prototype.hasOwnProperty.call(credentialUnlockOverrides, k)) {
+            return credentialUnlockOverrides[k];
+        }
+        return !!serverCredentialUnlocks[k];
+    }, [credentialUnlockOverrides, serverCredentialUnlocks]);
+
+    const ownershipEffectiveModes = useMemo(() => {
+        const byModeKey: Record<string, 'manual_static' | 'runtime_ai' | 'buildtime_ai_once'> = {};
+        const coerced: Array<{ modeKey: string; nodeId: string; fieldName: string }> = [];
+        const rowLocked = (q: any) =>
+            q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
+        ownershipQuestions.forEach((q: any) => {
+            if (rowLocked(q)) return;
+            const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
+            const resolved = resolveWizardEffectiveFieldFillMode(
+                fillModeValues[modeKey],
+                q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined,
+                q.supportsRuntimeAI,
+                q.supportsBuildtimeAI
+            );
+            byModeKey[modeKey] = resolved.mode;
+            if (resolved.coerced) {
+                coerced.push({ modeKey, nodeId: String(q.nodeId || ''), fieldName: String(q.fieldName || '') });
+            }
+        });
+        return { byModeKey, coerced };
+    }, [ownershipQuestions, fillModeValues, isCredentialUnlocked]);
+    const isCredQuestionConfigEmpty = useCallback(
+        (q: Record<string, unknown>) => {
+            const row = findPlaneRow(
+                fieldPlaneRows,
+                String(q.nodeId || ''),
+                String(q.fieldName || '')
+            );
+            return row ? row.isEmpty : true;
+        },
+        [fieldPlaneRows]
+    );
+
+    const getCredentialQuestionEffectiveFillMode = useCallback(
+        (q: Record<string, unknown>) => {
+            const modeKey = `mode_${String(q.nodeId || '')}_${String(q.fieldName || '')}`;
+            const resolved = resolveWizardEffectiveFieldFillMode(
+                fillModeValues[modeKey] as
+                    | 'manual_static'
+                    | 'runtime_ai'
+                    | 'buildtime_ai_once'
+                    | undefined,
+                q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined,
+                (q as { supportsRuntimeAI?: boolean }).supportsRuntimeAI,
+                (q as { supportsBuildtimeAI?: boolean }).supportsBuildtimeAI
+            );
+            return ownershipEffectiveModes.byModeKey[modeKey] ?? resolved.mode;
+        },
+        [ownershipEffectiveModes.byModeKey, fillModeValues]
+    );
+
+    const getCredentialQuestionFieldPlaneRow = useCallback(
+        (q: Record<string, unknown>) => {
+            const row = findPlaneRow(
+                fieldPlaneRows,
+                String(q.nodeId || ''),
+                String(q.fieldName || '')
+            );
+            return row ? { isEmpty: row.isEmpty } : null;
+        },
+        [fieldPlaneRows]
+    );
+
+    const questionByNodeFieldKey = useMemo(() => {
+        const m = new Map<string, Record<string, unknown>>();
+        for (const aq of allQuestions) {
+            const k = `${String((aq as { nodeId?: string }).nodeId || '').trim()}::${String((aq as { fieldName?: string }).fieldName || '').trim()}`;
+            if (k.endsWith('::') || k === '::') continue;
+            if (!m.has(k)) m.set(k, aq as Record<string, unknown>);
+        }
+        return m;
+    }, [allQuestions]);
+
+    /** Strict Credentials list before per-user include/hide overrides. */
+    const credentialQuestionsStrictForStep = useMemo(() => {
+        const filtered = filterCredentialQuestionsForStep({
+            questions: credentialQuestions as Record<string, unknown>[],
+            credentialStatuses: pendingWorkflowData?.credentialStatuses ?? null,
+            unifiedCredentialsMissing:
+                (pendingWorkflowData?.unifiedReadiness?.credentials?.missing as
+                    | Record<string, unknown>[]
+                    | undefined) ?? null,
+            discoveredCredentials: pendingWorkflowData?.discoveredCredentials ?? null,
+        }) as any[];
+
+        const merged = filtered.filter((q: any) => {
+            const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
+            const resolved = resolveWizardEffectiveFieldFillMode(
+                fillModeValues[modeKey] as
+                    | 'manual_static'
+                    | 'runtime_ai'
+                    | 'buildtime_ai_once'
+                    | undefined,
+                q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined,
+                q.supportsRuntimeAI,
+                q.supportsBuildtimeAI
+            );
+            const effectiveMode = ownershipEffectiveModes.byModeKey[modeKey] ?? resolved.mode;
+            const planeRow = findPlaneRow(
+                fieldPlaneRows,
+                String(q.nodeId || ''),
+                String(q.fieldName || '')
+            );
+            return shouldShowCredentialRowOnCredentialsStep({
+                question: q,
+                effectiveMode,
+                fieldPlaneRow: planeRow ? { isEmpty: planeRow.isEmpty } : null,
+            });
+        });
+
+        const norm = (s: unknown) => String(s ?? '').trim().toLowerCase();
+        const compositeForQ = (q: any) =>
+            `${String(q.nodeId || '').trim()}::${norm(
+                q.credential?.vaultKey || q.credential?.credentialId || q.fieldName
+            )}`;
+
+        const covered = new Set(merged.map(compositeForQ));
+        const extras: any[] = [];
+        const discovered = pendingWorkflowData?.discoveredCredentials;
+        if (Array.isArray(discovered)) {
+            for (const cred of discovered) {
+                if (cred?.satisfied === true) continue;
+                const t = String(cred?.type || '').toLowerCase();
+                if (t === 'oauth') continue;
+                const vkRaw = String(cred.vaultKey || cred.credentialId || '').trim();
+                if (!vkRaw) continue;
+                const vk = vkRaw.toLowerCase();
+                const nodeIds = Array.isArray(cred.nodeIds) ? cred.nodeIds : [];
+                const primaryField =
+                    typeof cred.primaryFieldName === 'string' && cred.primaryFieldName.trim()
+                        ? cred.primaryFieldName.trim()
+                        : vk === 'slack'
+                          ? 'webhookUrl'
+                          : vkRaw;
+                for (const rawNid of nodeIds) {
+                    const nodeId = String(rawNid || '').trim();
+                    if (!nodeId) continue;
+                    const ck = `${nodeId}::${vk}`;
+                    if (covered.has(ck)) continue;
+                    covered.add(ck);
+                    const nk = `${nodeId}::${primaryField}`;
+                    const synthBase = questionByNodeFieldKey.get(nk);
+                    const synthRow: any = {
+                        questionType: 'credential',
+                        id: `cred_synth_${nodeId}_${vkRaw.replace(/\W/g, '_')}`,
+                        nodeId,
+                        nodeType: cred.nodeTypes?.[0] || '',
+                        nodeLabel: cred.displayName || cred.provider || vkRaw,
+                        fieldName: primaryField,
+                        label: cred.displayName || `Connect ${vkRaw}`,
+                        type: vk === 'slack' ? 'password' : 'text',
+                        category: 'credential',
+                        ownershipClass: 'credential',
+                        required: cred.required !== false,
+                        askOrder: 0,
+                        placeholder: `Enter ${cred.displayName || vkRaw}`,
+                        description: `Credential required for ${cred.provider || cred.displayName || 'this node'}`,
+                        credential: {
+                            vaultKey: vkRaw,
+                            credentialId: cred.credentialId || vkRaw,
+                        },
+                        isVaultCredential: true,
+                        fillModeDefault: synthBase?.fillModeDefault,
+                        supportsRuntimeAI: synthBase?.supportsRuntimeAI,
+                        supportsBuildtimeAI: synthBase?.supportsBuildtimeAI,
+                        aiFilledAtBuildTime: synthBase?.aiFilledAtBuildTime,
+                        aiUsesRuntime: synthBase?.aiUsesRuntime,
+                        aiBuildTimePending: synthBase?.aiBuildTimePending,
+                    };
+                    const modeKey = `mode_${nodeId}_${primaryField}`;
+                    const resolved = resolveWizardEffectiveFieldFillMode(
+                        fillModeValues[modeKey] as
+                            | 'manual_static'
+                            | 'runtime_ai'
+                            | 'buildtime_ai_once'
+                            | undefined,
+                        synthRow.fillModeDefault as
+                            | 'manual_static'
+                            | 'runtime_ai'
+                            | 'buildtime_ai_once'
+                            | undefined,
+                        synthRow.supportsRuntimeAI,
+                        synthRow.supportsBuildtimeAI
+                    );
+                    const effectiveMode = ownershipEffectiveModes.byModeKey[modeKey] ?? resolved.mode;
+                    const planeRow = findPlaneRow(fieldPlaneRows, nodeId, primaryField);
+                    const questionForPolicy = synthBase ? { ...synthRow, ...synthBase } : synthRow;
+                    if (
+                        !shouldShowCredentialRowOnCredentialsStep({
+                            question: questionForPolicy,
+                            effectiveMode,
+                            fieldPlaneRow: planeRow ? { isEmpty: planeRow.isEmpty } : null,
+                        })
+                    ) {
+                        continue;
+                    }
+                    extras.push(synthRow);
+                }
+            }
+        }
+
+        const all = [...merged, ...extras];
+        const dedupe = new Map<string, any>();
+        for (const q of all) {
+            const c = q.credential || {};
+            const k = `cred:${String(q.nodeId || '')}:${norm(c.vaultKey ?? c.credentialId ?? q.fieldName)}`;
+            if (!dedupe.has(k)) dedupe.set(k, q);
+        }
+        return [...dedupe.values()];
+    }, [
+        credentialQuestions,
+        pendingWorkflowData,
+        ownershipEffectiveModes,
+        fillModeValues,
+        fieldPlaneRows,
+        questionByNodeFieldKey,
+    ]);
+
+    /** Credentials step after optional include/hide overrides (required+empty vault rows cannot be hidden). */
     const credentialQuestionsForStep = useMemo(
         () =>
-            filterCredentialQuestionsForStep({
-                questions: credentialQuestions as Record<string, unknown>[],
-                credentialStatuses: pendingWorkflowData?.credentialStatuses ?? null,
-                unifiedCredentialsMissing:
-                    (pendingWorkflowData?.unifiedReadiness?.credentials?.missing as
-                        | Record<string, unknown>[]
-                        | undefined) ?? null,
-                discoveredCredentials: pendingWorkflowData?.discoveredCredentials ?? null,
+            applyCredentialStepIncludeOverrides({
+                strictFiltered: credentialQuestionsStrictForStep as Record<string, unknown>[],
+                allVaultCredentialQuestions: credentialQuestions as Record<string, unknown>[],
+                overrides: credentialStepIncludeOverrides,
+                isQuestionCredentialEmpty: isCredQuestionConfigEmpty,
+                getEffectiveFillMode: getCredentialQuestionEffectiveFillMode,
+                getFieldPlaneRow: getCredentialQuestionFieldPlaneRow,
             }) as any[],
-        [credentialQuestions, pendingWorkflowData]
+        [
+            credentialQuestionsStrictForStep,
+            credentialQuestions,
+            credentialStepIncludeOverrides,
+            isCredQuestionConfigEmpty,
+            getCredentialQuestionEffectiveFillMode,
+            getCredentialQuestionFieldPlaneRow,
+        ]
     );
-    /** Full registry-backed list for Field Ownership: no credential/ownershipClass exclusion (locked rows use ownershipUiMode from worker). */
-    const ownershipQuestions = useMemo(
+
+    const credentialStrictPlaneKeys = useMemo(
+        () => new Set(credentialQuestionsStrictForStep.map((q: any) => credentialPlaneKeyFromQuestion(q))),
+        [credentialQuestionsStrictForStep]
+    );
+
+    /** Optional vault questions not in the strict Credentials list — user can force-include. */
+    const credentialOptionalIncludeCandidates = useMemo(
         () =>
-            allQuestions.filter(
-                (q: any) =>
-                    !(String(q.nodeType || '').toLowerCase() === 'log_output' && String(q.fieldName || '').toLowerCase() === 'level')
-            ),
-        [allQuestions]
+            credentialQuestions.filter((q: any) => {
+                if (q.required !== false) return false;
+                if (credentialStrictPlaneKeys.has(credentialPlaneKeyFromQuestion(q))) return false;
+                return shouldShowCredentialRowOnCredentialsStep({
+                    question: q,
+                    effectiveMode: getCredentialQuestionEffectiveFillMode(q),
+                    fieldPlaneRow: getCredentialQuestionFieldPlaneRow(q),
+                });
+            }),
+        [
+            credentialQuestions,
+            credentialStrictPlaneKeys,
+            getCredentialQuestionEffectiveFillMode,
+            getCredentialQuestionFieldPlaneRow,
+        ]
     );
+
+    const oauthRequirementCandidatesList = useMemo(
+        () =>
+            oauthRequirementCandidates(
+                pendingWorkflowData?.discoveredCredentials,
+                pendingWorkflowData?.credentialStatuses
+            ),
+        [pendingWorkflowData?.discoveredCredentials, pendingWorkflowData?.credentialStatuses]
+    );
+
+    const blockingOAuthCredentials = useMemo(
+        () =>
+            filterStillBlockingOAuth(
+                oauthRequirementCandidatesList,
+                pendingWorkflowData?.credentialStatuses,
+                googleOAuthConnectedLive
+            ),
+        [
+            oauthRequirementCandidatesList,
+            pendingWorkflowData?.credentialStatuses,
+            googleOAuthConnectedLive,
+        ]
+    );
+
+    useEffect(() => {
+        let cancelled = false;
+        const needsGoogle = oauthRequirementCandidatesList.some((r) => oauthRowNeedsGoogleConnect(r));
+        if (!needsGoogle) {
+            setGoogleOAuthConnectedLive(false);
+            return;
+        }
+        (async () => {
+            try {
+                const {
+                    data: { user },
+                } = await supabase.auth.getUser();
+                if (!user || cancelled) {
+                    if (!cancelled) setGoogleOAuthConnectedLive(false);
+                    return;
+                }
+                const { data } = await supabase
+                    .from('google_oauth_tokens')
+                    .select('access_token')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+                if (!cancelled) setGoogleOAuthConnectedLive(!!data?.access_token);
+            } catch {
+                if (!cancelled) setGoogleOAuthConnectedLive(false);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [oauthRequirementCandidatesList, step, workflowNodeIdsKey]);
+
+    /** Resolve credential answer for wizard + attach-credentials mapping. */
+    const getCredentialAnswerForQuestion = useCallback((q: any): string => {
+        const qid = String(q?.id || '').trim();
+        if (!qid) return '';
+        const raw =
+            credentialValues[qid] ??
+            credentialValues[String(q?.fieldName || '').trim()] ??
+            credentialValues[String(q?.credential?.vaultKey || '').trim()] ??
+            credentialValues[String(q?.credential?.credentialId || '').trim()];
+        return raw === undefined || raw === null ? '' : String(raw).trim();
+    }, [credentialValues]);
+
+    /** Vault secrets filled + OAuth accounts connected (statuses or live Google token). */
+    const credentialSecretsReady = useMemo(() => {
+        const vaultOk =
+            credentialQuestionsForStep.length === 0 ||
+            credentialQuestionsForStep.every((q: any) => {
+                if (q?.credential?.satisfied === true) return true;
+                if (q?.required === false && !getCredentialAnswerForQuestion(q)) return true;
+                return getCredentialAnswerForQuestion(q).length > 0;
+            });
+        if (!vaultOk) return false;
+        return blockingOAuthCredentials.length === 0;
+    }, [credentialQuestionsForStep, getCredentialAnswerForQuestion, blockingOAuthCredentials]);
+
+    /** Manual config questions (excluding pure credential vault rows — those use credentials step). */
     const manualConfigurationQuestions = useMemo(
         () =>
             ownershipQuestions
                 .filter((q: any) => {
-                    if (q.ownershipUiMode === 'locked') return false;
                     const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
-                    const effective = resolveWizardFieldFillMode(
-                        fillModeValues[modeKey],
-                        q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
-                    );
-                    const supportsRuntime = !!q.supportsRuntimeAI;
-                    if (!supportsRuntime) return true;
-                    return effective !== 'runtime_ai';
+                    const effective =
+                        ownershipEffectiveModes.byModeKey[modeKey] ||
+                        resolveWizardFieldFillMode(
+                            fillModeValues[modeKey],
+                            q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
+                        );
+                    const rowLocked =
+                        q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
+                    const ownershipModeForAsk = rowLocked ? 'locked' : q.ownershipUiMode || 'selectable';
+                    return shouldAskWizardManualQuestion(effective, ownershipModeForAsk);
                 })
                 .sort((a: any, b: any) => {
                     // Structural questions first so users define graph semantics before value-level fields.
@@ -637,23 +1070,83 @@ export function AutonomousAgentWizard() {
                         String(b.label || b.fieldName || '')
                     );
                 }),
-        [ownershipQuestions, fillModeValues]
+        [ownershipQuestions, fillModeValues, ownershipEffectiveModes, isCredentialUnlocked]
     );
-    const ownershipByNode = useMemo(() => {
-        const grouped = new Map<string, { nodeLabel: string; nodeType: string; fields: any[] }>();
-        ownershipQuestions.forEach((q: any) => {
-            const key = q.nodeId || `${q.nodeLabel}:${q.nodeType}`;
-            if (!grouped.has(key)) {
-                grouped.set(key, {
-                    nodeLabel: q.nodeLabel || q.nodeType || 'Node',
-                    nodeType: q.nodeType || 'node',
-                    fields: [],
-                });
-            }
-            grouped.get(key)!.fields.push(q);
+
+    /** Single gate: manual answers + any required vault secrets (matches attach-credentials readiness). */
+    const configurationGateReady = useMemo(() => {
+        if (!credentialSecretsReady) return false;
+        return manualConfigurationQuestions.every((q: any) => {
+            if (!q.required) return true;
+            const key = q.id;
+            const isCredVault =
+                q.category === 'credential' && (q as any).isVaultCredential;
+            const raw = isCredVault
+                ? credentialValues[key] ??
+                  credentialValues[String(q?.credential?.vaultKey || '').trim()] ??
+                  credentialValues[String(q?.fieldName || '').trim()]
+                : inputValues[key];
+            return raw !== undefined && raw !== null && String(raw).trim() !== '';
         });
-        return Array.from(grouped.entries()).map(([nodeId, value]) => ({ nodeId, ...value }));
-    }, [ownershipQuestions]);
+    }, [
+        credentialSecretsReady,
+        manualConfigurationQuestions,
+        inputValues,
+        credentialValues,
+    ]);
+
+    const ownershipStructuralByNode = useMemo(
+        () => groupQuestionsByNode(ownershipQuestions.filter((q: any) => q.ownershipClass === 'structural')),
+        [ownershipQuestions]
+    );
+
+    const ownershipSecretsByNode = useMemo(
+        () => groupQuestionsByNode(ownershipQuestions.filter((q: any) => q.ownershipClass !== 'structural')),
+        [ownershipQuestions]
+    );
+
+    const credentialWizardDisplay = useMemo(() => {
+        const raw = pendingWorkflowData?.credentialWizardView as
+            | { rows?: any[]; groups?: any[] }
+            | undefined;
+        if (raw?.groups && Array.isArray(raw.groups) && raw.groups.length > 0) {
+            return { rows: raw.rows ?? [], groups: raw.groups };
+        }
+        if (raw?.rows && Array.isArray(raw.rows) && raw.rows.length > 0) {
+            return { rows: raw.rows, groups: groupCredentialWizardRows(raw.rows as any) };
+        }
+        const qs = pendingWorkflowData?.comprehensiveQuestions;
+        const st = pendingWorkflowData?.credentialStatuses;
+        if (Array.isArray(qs) && Array.isArray(st) && qs.length > 0) {
+            return buildCredentialWizardView(qs as any, st as any);
+        }
+        return { rows: [] as any[], groups: [] as any[] };
+    }, [pendingWorkflowData]);
+
+    /** Table rows aligned with `credentialQuestionsForStep` (same visibility as inputs / attach-credentials). */
+    const credentialWizardDisplayForStep = useMemo(() => {
+        const d = credentialWizardDisplay;
+        const baseRows =
+            Array.isArray(d.rows) && d.rows.length > 0
+                ? d.rows
+                : (d.groups || []).flatMap((g: any) => g.rows || []);
+        const allowedIds = new Set(
+            credentialQuestionsForStep.map((q: any) => String(q.id ?? ''))
+        );
+        const allowedPlane = new Set(
+            credentialQuestionsForStep.map((q: any) => credentialPlaneKeyFromQuestion(q))
+        );
+        const filtered = baseRows.filter((row: any) => {
+            if (allowedIds.has(String(row.questionId ?? ''))) return true;
+            return allowedPlane.has(
+                credentialPlaneKeyFromQuestion({
+                    nodeId: row.nodeId,
+                    fieldName: row.fieldName,
+                })
+            );
+        });
+        return { rows: filtered, groups: groupCredentialWizardRows(filtered as any) };
+    }, [credentialWizardDisplay, credentialQuestionsForStep]);
 
     const configSeedKey = useMemo(() => {
         if (!pendingWorkflowData?.nodes?.length) return '';
@@ -885,6 +1378,25 @@ export function AutonomousAgentWizard() {
                         ? (p.nodeInclusionReasons as Record<string, string>)
                         : {}
                 );
+                setPlanOrderingConfidence(
+                    typeof p?.orderingDiagnostics?.confidence === 'number'
+                        ? p.orderingDiagnostics.confidence
+                        : null
+                );
+                setPlanOrderingHopRationales(
+                    Array.isArray(p?.orderingDiagnostics?.hopRationales)
+                        ? p.orderingDiagnostics.hopRationales
+                        : []
+                );
+                setPlanRankedSelectionSummary(
+                    Array.isArray(p?.rankedSelectionDiagnostics?.kept)
+                        ? p.rankedSelectionDiagnostics.kept
+                              .slice(0, 8)
+                              .map((k: any) => `${k.nodeType} (${Math.round((k.score || 0) * 100)}%): ${k.reason || 'selected'}`)
+                        : []
+                );
+                setPlanRepairActions([]);
+                setPlanSemanticWarnings([]);
                 setPlanBranchingOverview(typeof p.branchingOverview === 'string' ? p.branchingOverview : '');
                 setPlanMandatoryNodeTypes(
                     Array.isArray(data.mandatoryNodeTypes) && data.mandatoryNodeTypes.length > 0
@@ -930,6 +1442,11 @@ export function AutonomousAgentWizard() {
                 setPlanSummary(summaryText);
                 setPlanNodeHints(hints);
                 setPlanNodeReasons({});
+                setPlanOrderingConfidence(null);
+                setPlanOrderingHopRationales([]);
+                setPlanRankedSelectionSummary([]);
+                setPlanRepairActions([]);
+                setPlanSemanticWarnings([]);
                 setPlanBranchingOverview('');
                 setPlanMandatoryNodeTypes(Array.isArray(data.mandatoryNodeTypes) ? data.mandatoryNodeTypes : hints);
                 setPlanRegistryTags(Array.isArray(data.registryTags) ? data.registryTags : []);
@@ -1008,6 +1525,25 @@ export function AutonomousAgentWizard() {
                         ? (p.nodeInclusionReasons as Record<string, string>)
                         : {}
                 );
+                setPlanOrderingConfidence(
+                    typeof p?.orderingDiagnostics?.confidence === 'number'
+                        ? p.orderingDiagnostics.confidence
+                        : null
+                );
+                setPlanOrderingHopRationales(
+                    Array.isArray(p?.orderingDiagnostics?.hopRationales)
+                        ? p.orderingDiagnostics.hopRationales
+                        : []
+                );
+                setPlanRankedSelectionSummary(
+                    Array.isArray(p?.rankedSelectionDiagnostics?.kept)
+                        ? p.rankedSelectionDiagnostics.kept
+                              .slice(0, 8)
+                              .map((k: any) => `${k.nodeType} (${Math.round((k.score || 0) * 100)}%): ${k.reason || 'selected'}`)
+                        : []
+                );
+                setPlanRepairActions([]);
+                setPlanSemanticWarnings([]);
                 setPlanBranchingOverview(typeof p.branchingOverview === 'string' ? p.branchingOverview : '');
                 setPlanMandatoryNodeTypes(
                     Array.isArray(data.mandatoryNodeTypes) && data.mandatoryNodeTypes.length > 0
@@ -1149,30 +1685,34 @@ export function AutonomousAgentWizard() {
                     description: typeof msg === 'string' ? msg : 'Could not analyze credentials for this plan.',
                     variant: 'destructive',
                 });
+                const semanticIssues = Array.isArray(preflightJson?.canonicalizationIssues)
+                    ? preflightJson.canonicalizationIssues
+                          .map((i: any) => String(i?.reason || ''))
+                          .filter((x: string) => x.startsWith('semantic_order_violation'))
+                    : [];
+                setPlanSemanticWarnings(semanticIssues);
+                setPlanRepairActions(
+                    Array.isArray(preflightJson?.semanticRepairActions) ? preflightJson.semanticRepairActions : []
+                );
                 setStep('questioning');
                 return;
             }
+            setPlanRepairActions(
+                Array.isArray(preflightJson?.semanticRepairActions) ? preflightJson.semanticRepairActions : []
+            );
 
             const missing: Array<{ vaultKey?: string; displayName?: string; type?: string }> =
                 Array.isArray(preflightJson.missingCredentials) ? preflightJson.missingCredentials : [];
 
-            // Record preflight findings but defer collection to single post-build config flow.
+            // Preflight only informs FSM; credential UI is post-build (credentials + configuration steps).
             if (missing.length === 0) {
                 stateManager.setRequiredCredentials([]);
-                setPlanCredentialQuestions([]);
             } else {
-                const questions = missing.map((c) => {
-                    const id = String(c.vaultKey || c.displayName || '').trim() || `cred_${Math.random().toString(36).slice(2)}`;
-                    return {
-                        id,
-                        label: c.displayName || c.vaultKey || 'Credential',
-                        type: c.type === 'api_key' ? 'password' : 'text',
-                        required: true,
-                        placeholder: `Enter ${c.displayName || c.vaultKey || 'value'}`,
-                    };
+                const ids = missing.map((c, i) => {
+                    const id = String(c.vaultKey || c.displayName || '').trim();
+                    return id || `plan_cred_${i}`;
                 });
-                stateManager.setRequiredCredentials(questions.map((q) => q.id));
-                setPlanCredentialQuestions(questions);
+                stateManager.setRequiredCredentials(ids);
             }
             await handleBuild(mainPrompt);
         } catch (e: any) {
@@ -2088,6 +2628,58 @@ export function AutonomousAgentWizard() {
         }
     };
 
+    const handleConnectGoogleOAuth = useCallback(async () => {
+        try {
+            const {
+                data: { user },
+                error: userError,
+            } = await supabase.auth.getUser();
+            if (userError || !user) {
+                toast({
+                    title: 'Authentication required',
+                    description: 'Please sign in first to connect Google.',
+                    variant: 'destructive',
+                });
+                return;
+            }
+            if (pendingWorkflowData) {
+                sessionStorage.setItem(
+                    'pendingWorkflowAfterOAuth',
+                    JSON.stringify({
+                        workflowId: generatedWorkflowId,
+                        step,
+                        pendingWorkflowData,
+                    })
+                );
+            }
+            const currentPath = window.location.pathname;
+            const redirectUrl = `${window.location.origin}/auth/google/callback?returnTo=${encodeURIComponent(currentPath)}`;
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: redirectUrl,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                        scope:
+                            'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/bigquery https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/contacts email profile',
+                    },
+                },
+            });
+            if (error) throw error;
+            toast({
+                title: 'Redirecting to Google…',
+                description: 'Authorize access; you will return here afterward.',
+            });
+        } catch (e: unknown) {
+            toast({
+                title: 'Google sign-in failed',
+                description: e instanceof Error ? e.message : 'Could not start OAuth',
+                variant: 'destructive',
+            });
+        }
+    }, [pendingWorkflowData, generatedWorkflowId, step, toast]);
+
     const handleBuild = async (explicitPrompt?: string) => {
         // ✅ PRODUCTION FLOW: Unified configuration submission (inputs + credentials)
         if (pendingWorkflowData && step === 'configuration') {
@@ -2128,9 +2720,22 @@ export function AutonomousAgentWizard() {
                     
                     // ✅ STEP 1: Attach inputs first (if any)
                     let inputsResult: any = null;
+                    const sanitizedModeInputs = Object.fromEntries(
+                        Object.entries(ownershipEffectiveModes.byModeKey).filter(([k, v]) => {
+                            if (!k.startsWith('mode_')) return false;
+                            return v === 'manual_static' || v === 'runtime_ai' || v === 'buildtime_ai_once';
+                        })
+                    ) as Record<string, string>;
+                    const unlockPayload: Record<string, string> = {};
+                    credentialQuestions.forEach((q: any) => {
+                        if (!q.isUnlockableCredential) return;
+                        const uk = `unlock_${q.nodeId}_${q.fieldName}`;
+                        unlockPayload[uk] = isCredentialUnlocked(q) ? 'true' : 'false';
+                    });
                     const combinedInputs: Record<string, string> = {
                         ...inputValues,
-                        ...fillModeValues,
+                        ...sanitizedModeInputs,
+                        ...unlockPayload,
                     };
                     if (Object.keys(combinedInputs).length > 0) {
                         console.log('📋 Attaching node inputs...');
@@ -2161,6 +2766,32 @@ export function AutonomousAgentWizard() {
                         
                         inputsResult = await inputsResponse.json();
                         console.log('✅ Inputs attached successfully:', inputsResult);
+                        const effectiveModesFromBackend = inputsResult?.diagnostics?.effectiveFillModes as
+                            | Record<string, string>
+                            | undefined;
+                        if (effectiveModesFromBackend && Object.keys(effectiveModesFromBackend).length > 0) {
+                            setFillModeValues((prev) => ({ ...prev, ...effectiveModesFromBackend }));
+                        }
+
+                        const iv = inputsResult?.validation;
+                        const phaseAfterInputs = String(inputsResult?.phase || '').toLowerCase();
+                        /** Backend returns invalid validation + configuring_credentials until vault secrets are attached. */
+                        const deferValidationUntilCredentials = phaseAfterInputs === 'configuring_credentials';
+                        if (
+                            iv &&
+                            iv.valid === false &&
+                            Array.isArray(iv.errors) &&
+                            iv.errors.length > 0 &&
+                            !deferValidationUntilCredentials
+                        ) {
+                            const errText = iv.errors.join('; ');
+                            toast({
+                                title: 'Workflow validation failed',
+                                description: errText,
+                                variant: 'destructive',
+                            });
+                            throw new Error(`Workflow validation failed: ${errText}`);
+                        }
                     } else {
                         console.log('ℹ️ No inputs to attach');
                     }
@@ -2201,6 +2832,27 @@ export function AutonomousAgentWizard() {
                     
                     if (!shouldAttachCredentialsNow) {
                         console.log(`ℹ️ Skipping credential attachment for phase "${inputPhase}" (inputs still pending)`);
+                    } else if (!credentialSecretsReady) {
+                        const missingLabels = credentialQuestionsForStep
+                            .filter((q: any) => {
+                                if (q?.credential?.satisfied === true) return false;
+                                if (q?.required === false && !getCredentialAnswerForQuestion(q)) return false;
+                                return !getCredentialAnswerForQuestion(q);
+                            })
+                            .map(
+                                (q: any) =>
+                                    q.label || q.text || q.fieldName || q.credential?.displayName || q.id
+                            );
+                        const msg =
+                            missingLabels.length > 0
+                                ? `Missing: ${missingLabels.join(', ')}`
+                                : 'Provide required credentials before continuing.';
+                        toast({
+                            title: 'Credentials required',
+                            description: msg,
+                            variant: 'destructive',
+                        });
+                        throw new Error(msg);
                     } else {
                         console.log('🔑 Attaching credentials...');
                         const credentialsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/attach-credentials`, {
@@ -2604,6 +3256,7 @@ export function AutonomousAgentWizard() {
                         comprehensiveQuestions,
                         unifiedReadiness,
                         credentialStatuses: update.credentialStatuses,
+                        credentialWizardView: update.credentialWizardView,
                     });
 
                     let combinedQuestions: any[] = [];
@@ -2635,16 +3288,27 @@ export function AutonomousAgentWizard() {
                         combinedQuestions = comprehensiveQuestions.map((q: any) => {
                             const isCredentialQ = q.category === 'credential' || q.ownershipClass === 'credential';
                             const matchedCred = isCredentialQ ? discoveredCredByNodeId.get(q.nodeId) : undefined;
-                            const canonicalFieldName =
-                                (matchedCred?.vaultKey || matchedCred?.credentialId || q.fieldName || '').trim() ||
-                                q.fieldName;
+                            // Keep registry field names (e.g. webhookUrl) for unlock_/mode_/cred_ attach-inputs keys.
+                            // Vault matching uses q.credential.vaultKey — do not replace fieldName with vaultKey.
+                            const fieldName = String(q.fieldName || '').trim() || 'credential';
+                            const credMeta =
+                                q.credential?.vaultKey
+                                    ? q.credential
+                                    : matchedCred
+                                      ? {
+                                            vaultKey: matchedCred.vaultKey || matchedCred.credentialId,
+                                            credentialId:
+                                                matchedCred.credentialId || matchedCred.vaultKey,
+                                            ...matchedCred,
+                                        }
+                                      : q.credential;
                             return {
                                 ...q,
                                 questionType: isCredentialQ ? 'credential' : (q.category || 'input'),
-                                id: q.id || `${q.nodeId}_${canonicalFieldName}`,
-                                fieldName: canonicalFieldName,
-                                label: q.text || q.label || `${q.nodeLabel} - ${canonicalFieldName}`,
-                                credential: matchedCred || q.credential,
+                                id: q.id || `${q.nodeId}_${fieldName}`,
+                                fieldName,
+                                label: q.text || q.label || `${q.nodeLabel} - ${fieldName}`,
+                                credential: isCredentialQ ? credMeta : q.credential,
                                 isVaultCredential: isCredentialQ,
                             };
                         });
@@ -2747,9 +3411,17 @@ export function AutonomousAgentWizard() {
                             dedupe.set(key, q);
                             return;
                         }
-                        // Prefer questions backed by discovered credential contract.
-                        const existingScore = existing?.credential?.vaultKey ? 1 : 0;
-                        const nextScore = q?.credential?.vaultKey ? 1 : 0;
+                        const scoreQuestion = (candidate: any): number => {
+                            let score = 0;
+                            if (candidate?.credential?.vaultKey) score += 100;
+                            if (candidate?.type === 'select' || (Array.isArray(candidate?.options) && candidate.options.length > 0)) score += 10;
+                            if (candidate?.type === 'textarea' || candidate?.type === 'number' || candidate?.type === 'password') score += 5;
+                            if (typeof candidate?.description === 'string' && !candidate.description.startsWith('Input field ')) score += 2;
+                            return score;
+                        };
+                        // Prefer richer schema-driven questions over generic ownership fallback rows.
+                        const existingScore = scoreQuestion(existing);
+                        const nextScore = scoreQuestion(q);
                         if (nextScore > existingScore) {
                             dedupe.set(key, q);
                         }
@@ -3317,7 +3989,7 @@ export function AutonomousAgentWizard() {
             
             // Don't go back to confirmation if we're already past that step
             // Instead, show error but stay on current step or go to a safe state
-            if (step === 'building' || step === 'credentials' || step === 'plan-credentials') {
+            if (step === 'building' || step === 'credentials') {
                 toast({ 
                     title: 'Build Failed', 
                     description: err.message || 'Failed to generate workflow. Please try again.', 
@@ -3338,9 +4010,12 @@ export function AutonomousAgentWizard() {
     const applyOwnershipToAll = (mode: 'manual_static' | 'runtime_ai') => {
         const updates: Record<string, string> = {};
         ownershipQuestions.forEach((q: any) => {
-            if (q.ownershipUiMode === 'locked') return;
-            if (mode === 'runtime_ai' && !q.supportsRuntimeAI) {
-                updates[`mode_${q.nodeId}_${q.fieldName}`] = q.fillModeDefault || 'manual_static';
+            const rowLocked =
+                q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
+            if (rowLocked) return;
+            if (mode === 'runtime_ai') {
+                const target = wizardBulkAIModeForQuestion(q.supportsRuntimeAI, q.supportsBuildtimeAI);
+                updates[`mode_${q.nodeId}_${q.fieldName}`] = target;
             } else {
                 updates[`mode_${q.nodeId}_${q.fieldName}`] = mode;
             }
@@ -3350,14 +4025,55 @@ export function AutonomousAgentWizard() {
     const resetOwnershipToAIRecommendations = () => {
         const updates: Record<string, string> = {};
         ownershipQuestions.forEach((q: any) => {
-            if (q.ownershipUiMode === 'locked') return;
-            updates[`mode_${q.nodeId}_${q.fieldName}`] = q.fillModeDefault || 'manual_static';
+            const rowLocked =
+                q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
+            if (rowLocked) return;
+            const { mode } = resolveWizardEffectiveFieldFillMode(
+                undefined,
+                q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined,
+                q.supportsRuntimeAI,
+                q.supportsBuildtimeAI
+            );
+            updates[`mode_${q.nodeId}_${q.fieldName}`] = mode;
+        });
+        setFillModeValues((prev) => ({ ...prev, ...updates }));
+    };
+
+    /** Per-node bulk fill mode (secrets section): same rules as Convert All, scoped to one node. */
+    const applyOwnershipForNode = (nodeId: string, mode: 'manual_static' | 'runtime_ai') => {
+        const updates: Record<string, string> = {};
+        ownershipQuestions.forEach((q: any) => {
+            if (String(q.nodeId || '') !== String(nodeId)) return;
+            const rowLocked =
+                q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
+            if (rowLocked) return;
+            if (mode === 'runtime_ai') {
+                const target = wizardBulkAIModeForQuestion(q.supportsRuntimeAI, q.supportsBuildtimeAI);
+                updates[`mode_${q.nodeId}_${q.fieldName}`] = target;
+            } else {
+                updates[`mode_${q.nodeId}_${q.fieldName}`] = mode;
+            }
         });
         setFillModeValues((prev) => ({ ...prev, ...updates }));
     };
 
     const proceedFromOwnershipStage = () => {
-        if (credentialQuestionsForStep.length > 0) {
+        if (ownershipEffectiveModes.coerced.length > 0) {
+            toast({
+                title: 'Some ownership selections were adjusted',
+                description:
+                    'A few fields do not support the chosen AI mode and were switched to the nearest supported option before continuing.',
+            });
+            const updates: Record<string, string> = {};
+            ownershipEffectiveModes.coerced.forEach((c) => {
+                const mode = ownershipEffectiveModes.byModeKey[c.modeKey];
+                if (mode) updates[c.modeKey] = mode;
+            });
+            if (Object.keys(updates).length > 0) {
+                setFillModeValues((prev) => ({ ...prev, ...updates }));
+            }
+        }
+        if (credentialQuestionsForStep.length > 0 || oauthRequirementCandidatesList.length > 0) {
             setCredentialQuestionIndex(0);
             setStep('credentials');
             return;
@@ -3383,7 +4099,6 @@ export function AutonomousAgentWizard() {
         setBuildStartTime(null);
         setElapsedTime(0);
         setWorkflowUnderstandingConfirmed(false);
-        setPlanCredentialQuestions([]);
         // Scroll back to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -3496,63 +4211,6 @@ export function AutonomousAgentWizard() {
                         />
                     )}
 
-                    {step === 'plan-credentials' && (
-                        <div className="scroll-mt-6">
-                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                                <Card className="border-amber-500/30 shadow-lg">
-                                    <CardHeader>
-                                        <CardTitle className="text-amber-400 flex items-center gap-2">
-                                            <AlertCircle className="h-5 w-5" /> Credentials before build
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Your structured plan needs the following credentials. Google OAuth services use the account connected in the app header — enter API keys or other secrets here.
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        {planCredentialQuestions.length > 0 ? (
-                                            planCredentialQuestions.map((q, idx) => (
-                                                <div key={q.id || idx} className="space-y-2">
-                                                    <Label>{q.label}{q.required ? ' *' : ''}</Label>
-                                                    <Input
-                                                        value={credentialValues[q.id] || ''}
-                                                        type={q.type === 'password' ? 'password' : 'text'}
-                                                        placeholder={q.placeholder || ''}
-                                                        onChange={(e) =>
-                                                            setCredentialValues((prev) => ({ ...prev, [q.id]: e.target.value }))
-                                                        }
-                                                    />
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-sm text-muted-foreground">No manual credentials required.</p>
-                                        )}
-                                        <div className="flex gap-2 pt-2">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() => {
-                                                    setPlanCredentialQuestions([]);
-                                                    setStep('questioning');
-                                                }}
-                                            >
-                                                Back to plan
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                className="flex-1 bg-indigo-600 hover:bg-indigo-500"
-                                                onClick={() => {
-                                                    void handleBuild(planSummary.trim() || prompt);
-                                                }}
-                                            >
-                                                Build workflow
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        </div>
-                    )}
-
                     {/* STEP 2: Plan review / clarifying questions only — hide once we move to refine+ (linear flow, no overlap) */}
                     {step === 'questioning' && (hasWorkflowPlan || analysis) && (
                         <div ref={step2Ref} className="scroll-mt-6">
@@ -3570,7 +4228,7 @@ export function AutonomousAgentWizard() {
                                     </CardTitle>
                                     {hasWorkflowPlan && (
                                         <CardDescription className="text-muted-foreground">
-                                            Review and edit the plan below. Regenerate to refine from your edits, or continue to workflow setup when the intent matches what you want to build.
+                                            Edit the execution plan, then continue or regenerate. Extra detail is under Diagnostics.
                                         </CardDescription>
                                     )}
                                 </CardHeader>
@@ -3578,45 +4236,111 @@ export function AutonomousAgentWizard() {
                                     {hasWorkflowPlan ? (
                                         <>
                                             {originalPrompt && (
-                                                <div className="p-3 bg-muted/50 rounded-lg border border-border mb-2">
-                                                    <p className="text-sm font-medium text-muted-foreground mb-1">Original prompt</p>
-                                                    <p className="text-sm text-foreground whitespace-pre-wrap">{originalPrompt}</p>
-                                                </div>
+                                                <Collapsible className="group mb-2">
+                                                    <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-muted/60">
+                                                        <span>Original prompt</span>
+                                                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                                                    </CollapsibleTrigger>
+                                                    <CollapsibleContent className="px-1 pt-2">
+                                                        <p className="text-sm text-foreground whitespace-pre-wrap rounded-md border border-border bg-muted/30 p-3">
+                                                            {originalPrompt}
+                                                        </p>
+                                                    </CollapsibleContent>
+                                                </Collapsible>
                                             )}
-                                            <Label className="text-sm font-medium">Structured plan (editable)</Label>
+                                            <Label className="text-sm font-medium">Execution plan (editable)</Label>
                                             <Textarea
-                                                className="min-h-[220px] text-sm leading-relaxed"
+                                                className="min-h-[180px] text-sm leading-relaxed font-mono"
                                                 value={planSummary}
                                                 onChange={(e) => setPlanSummary(e.target.value)}
+                                                spellCheck={false}
                                             />
-                                            {planNodeHints.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 pt-2">
-                                                    <span className="text-xs text-muted-foreground font-semibold w-full">Proposed node chain</span>
-                                                    {planNodeHints.map((n) => (
-                                                        <Badge key={n} variant="outline" className="font-mono text-[10px]">
-                                                            {n}
-                                                        </Badge>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            {planNodeHints.length > 0 && (
-                                                <div className="p-3 rounded-lg border border-border bg-muted/20 text-sm whitespace-pre-wrap">
-                                                    <span className="font-medium text-muted-foreground">Node inclusion rationale</span>
-                                                    <div className="mt-1 space-y-1">
-                                                        {planNodeHints.map((n) => (
-                                                            <p key={`reason_${n}`} className="text-xs">
-                                                                <span className="font-mono">{n}</span>: {planNodeReasons[n] || 'included by canonical chain policy'}
+                                            {(planNodeHints.length > 0 ||
+                                                Object.keys(planNodeReasons).length > 0 ||
+                                                planOrderingConfidence !== null ||
+                                                planOrderingHopRationales.length > 0 ||
+                                                planRankedSelectionSummary.length > 0 ||
+                                                (planBranchingOverview && planBranchingOverview.trim().length > 0)) && (
+                                                <Collapsible open={planDiagnosticsOpen} onOpenChange={setPlanDiagnosticsOpen} className="rounded-lg border border-border bg-muted/15">
+                                                    <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm font-medium text-muted-foreground hover:bg-muted/30">
+                                                        <span>Diagnostics</span>
+                                                        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${planDiagnosticsOpen ? 'rotate-180' : ''}`} />
+                                                    </CollapsibleTrigger>
+                                                    <CollapsibleContent className="space-y-3 border-t border-border px-3 py-3 text-sm">
+                                                        {planNodeHints.length > 0 && (
+                                                            <div className="space-y-1.5">
+                                                                <span className="text-xs font-semibold text-muted-foreground">Nodes</span>
+                                                                {planNodeHints.map((n) => (
+                                                                    <div key={n} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs">
+                                                                        <Badge variant="outline" className="font-mono text-[10px] shrink-0">
+                                                                            {n}
+                                                                        </Badge>
+                                                                        <span className="text-muted-foreground">
+                                                                            {planNodeReasons[n] || 'canonical chain policy'}
+                                                                        </span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {planOrderingConfidence !== null && (
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Ordering confidence:{' '}
+                                                                <span className="font-medium text-foreground">
+                                                                    {Math.round(planOrderingConfidence * 100)}%
+                                                                </span>
                                                             </p>
+                                                        )}
+                                                        {planOrderingHopRationales.length > 0 && (
+                                                            <div className="space-y-1">
+                                                                <span className="text-xs font-semibold text-muted-foreground">
+                                                                    Edges (matches Execution plan above)
+                                                                </span>
+                                                                {planOrderingHopRationales.map((r, idx) => (
+                                                                    <p key={`hop_${idx}`} className="text-xs font-mono text-muted-foreground">
+                                                                        {r}
+                                                                    </p>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {planRankedSelectionSummary.length > 0 && (
+                                                            <div className="space-y-1">
+                                                                <span className="text-xs font-semibold text-muted-foreground">Ranking (from prompt)</span>
+                                                                {planRankedSelectionSummary.map((r, idx) => (
+                                                                    <p key={`rank_${idx}`} className="text-xs text-muted-foreground">
+                                                                        {r}
+                                                                    </p>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {planBranchingOverview && planBranchingOverview.trim().length > 0 ? (
+                                                            <p className="text-xs text-muted-foreground">
+                                                                <span className="font-semibold">Branching note: </span>
+                                                                {planBranchingOverview}
+                                                            </p>
+                                                        ) : null}
+                                                    </CollapsibleContent>
+                                                </Collapsible>
+                                            )}
+                                            {planRepairActions.length > 0 && (
+                                                <div className="p-3 rounded-lg border border-border bg-muted/20 text-sm whitespace-pre-wrap">
+                                                    <span className="font-medium text-muted-foreground">Repair actions applied</span>
+                                                    <div className="mt-1 space-y-1">
+                                                        {planRepairActions.map((a, idx) => (
+                                                            <p key={`repair_${idx}`} className="text-xs">{a}</p>
                                                         ))}
                                                     </div>
                                                 </div>
                                             )}
-                                            {planBranchingOverview ? (
-                                                <div className="p-3 rounded-lg border border-border bg-muted/20 text-sm whitespace-pre-wrap">
-                                                    <span className="font-medium text-muted-foreground">Branching</span>
-                                                    <p className="mt-1">{planBranchingOverview}</p>
+                                            {planSemanticWarnings.length > 0 && (
+                                                <div className="p-3 rounded-lg border border-amber-400/40 bg-amber-500/10 text-sm whitespace-pre-wrap">
+                                                    <span className="font-medium text-amber-300">Semantic order warnings</span>
+                                                    <div className="mt-1 space-y-1">
+                                                        {planSemanticWarnings.map((w, idx) => (
+                                                            <p key={`warn_${idx}`} className="text-xs text-amber-200">{w}</p>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            ) : null}
+                                            )}
                                             <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
                                                 <Button type="button" variant="outline" onClick={handleRegeneratePlan} disabled={isSummarizeLayerProcessing}>
                                                     <RefreshCw className="mr-2 h-4 w-4" /> Regenerate plan
@@ -3633,6 +4357,12 @@ export function AutonomousAgentWizard() {
                                                         setPlanSummary('');
                                                         setPlanNodeHints([]);
                                                         setPlanNodeReasons({});
+                                                        setPlanOrderingConfidence(null);
+                                                        setPlanOrderingHopRationales([]);
+                                                        setPlanRankedSelectionSummary([]);
+                                                        setPlanRepairActions([]);
+                                                        setPlanSemanticWarnings([]);
+                                                        setPlanDiagnosticsOpen(false);
                                                         setPrompt('');
                                                         setStep('idle');
                                                     }}
@@ -3982,33 +4712,60 @@ export function AutonomousAgentWizard() {
                                             <AlertCircle className="h-5 w-5" /> Field Ownership
                                         </CardTitle>
                                         <CardDescription>
-                                            Choose who provides each field where applicable. Locked fields are fixed, AI-filled, or configured in the Credentials step.
+                                            Two areas: workflow structure (forms, logic), then secrets and fill mode. Locked rows use OAuth, vault, or AI-filled values—finish accounts on the Credentials step.
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
-                                        {false && (() => {
-                                            const blueprint = (pendingWorkflowData as any)?.update?.structuralBlueprint;
-                                            if (!blueprint) return null;
-                                            const nodeNarratives = Array.isArray(blueprint.nodeNarratives)
+                                        {(() => {
+                                            const update = (pendingWorkflowData as any)?.update;
+                                            const blueprint = update?.structuralBlueprint;
+                                            const structuralDiagnostics = update?.structuralDiagnostics;
+                                            if (!blueprint && !structuralDiagnostics) return null;
+                                            const nodeNarratives = Array.isArray(blueprint?.nodeNarratives)
                                                 ? blueprint.nodeNarratives
                                                 : [];
-                                            const branchNarratives = Array.isArray(blueprint.branchNarratives)
+                                            const branchNarratives = Array.isArray(blueprint?.branchNarratives)
                                                 ? blueprint.branchNarratives
                                                 : [];
                                             const terminalObservability = Array.isArray(
-                                                blueprint.terminalObservability
+                                                blueprint?.terminalObservability
                                             )
                                                 ? blueprint.terminalObservability
                                                 : [];
+                                            const structuralErrors =
+                                                Array.isArray(structuralDiagnostics?.errors) && structuralDiagnostics.errors.length > 0
+                                                    ? structuralDiagnostics.errors
+                                                    : [];
+                                            const structuralWarnings =
+                                                Array.isArray(structuralDiagnostics?.warnings) && structuralDiagnostics.warnings.length > 0
+                                                    ? structuralDiagnostics.warnings
+                                                    : [];
                                             return (
                                                 <div className="rounded border border-indigo-400/30 bg-indigo-500/5 p-4 space-y-3">
                                                     <p className="text-sm font-semibold text-indigo-300">
                                                         Workflow Blueprint
                                                     </p>
-                                                    {blueprint.overviewText ? (
+                                                    {blueprint?.overviewText ? (
                                                         <p className="text-sm text-muted-foreground">
                                                             {blueprint.overviewText}
                                                         </p>
+                                                    ) : null}
+                                                    {structuralErrors.length > 0 || structuralWarnings.length > 0 ? (
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs font-semibold text-red-300">
+                                                                Structural issues
+                                                            </p>
+                                                            {structuralErrors.map((msg: string, idx: number) => (
+                                                                <p key={`struct_err_${idx}`} className="text-xs text-red-200">
+                                                                    - {msg}
+                                                                </p>
+                                                            ))}
+                                                            {structuralWarnings.map((msg: string, idx: number) => (
+                                                                <p key={`struct_warn_${idx}`} className="text-xs text-amber-200">
+                                                                    - {msg}
+                                                                </p>
+                                                            ))}
+                                                        </div>
                                                     ) : null}
                                                     {nodeNarratives.length > 0 ? (
                                                         <div className="space-y-1">
@@ -4051,140 +4808,402 @@ export function AutonomousAgentWizard() {
                                         })()}
                                         <div className="flex flex-wrap gap-2">
                                             <Button type="button" variant="outline" onClick={() => applyOwnershipToAll('manual_static')}>
-                                                Convert All To User
+                                                Convert All To You
                                             </Button>
                                             <Button type="button" variant="outline" onClick={() => applyOwnershipToAll('runtime_ai')}>
-                                                Convert All Eligible To AI Runtime
+                                                Convert All Eligible To AI (runtime or build)
                                             </Button>
                                             <Button type="button" variant="outline" onClick={resetOwnershipToAIRecommendations}>
                                                 Reset To AI Recommendations
                                             </Button>
                                         </div>
-                                        <div className="space-y-3">
-                                            {ownershipByNode.map((group) => {
-                                                const totals = group.fields.reduce(
-                                                    (acc, question: any) => {
-                                                        if (question.ownershipUiMode === 'locked') {
-                                                            acc.locked += 1;
-                                                            return acc;
-                                                        }
-                                                        const modeKey = `mode_${question.nodeId}_${question.fieldName}`;
-                                                        const selectedMode = resolveWizardFieldFillMode(
-                                                            fillModeValues[modeKey],
-                                                            question.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
-                                                        );
-                                                        if (selectedMode === 'runtime_ai') acc.ai += 1;
-                                                        else acc.user += 1;
-                                                        return acc;
+                                        <div className="space-y-8">
+                                            {(
+                                                [
+                                                    {
+                                                        key: 'structural',
+                                                        title: 'Workflow structure',
+                                                        description:
+                                                            'Forms, conditions, and branching. Choose You for static values, AI (build) for one-time generation at build, or AI (runtime) when the field supports it.',
+                                                        groups: ownershipStructuralByNode,
                                                     },
-                                                    { user: 0, ai: 0, locked: 0 }
-                                                );
-                                                return (
-                                                    <div key={group.nodeId} className="rounded border border-border/60 p-3 space-y-3">
-                                                        <div className="flex items-center justify-between gap-3">
-                                                            <div>
-                                                                <p className="text-sm font-semibold">{group.nodeLabel}</p>
-                                                                <p className="text-xs text-muted-foreground">{group.nodeType}</p>
-                                                            </div>
-                                                            <Badge variant="outline" className="text-xs">
-                                                                User {totals.user} | AI {totals.ai}
-                                                                {totals.locked > 0 ? ` | Locked ${totals.locked}` : ''}
-                                                            </Badge>
-                                                        </div>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
-                                                        {group.fields.map((question: any, idx: number) => {
-                                                            const modeKey = `mode_${question.nodeId}_${question.fieldName}`;
-                                                            const selectedMode = resolveWizardFieldFillMode(
-                                                                fillModeValues[modeKey],
-                                                                question.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
+                                                    {
+                                                        key: 'secrets',
+                                                        title: 'Secrets & fill mode',
+                                                        description:
+                                                            'API keys, webhooks, and other values: You, AI (build), or AI (runtime) where supported. Vault and OAuth are completed on Credentials.',
+                                                        groups: ownershipSecretsByNode,
+                                                    },
+                                                ] as const
+                                            ).map((section) => (
+                                                <div key={section.key} className="space-y-3">
+                                                    <div>
+                                                        <h3 className="text-sm font-semibold text-foreground">{section.title}</h3>
+                                                        <p className="text-xs text-muted-foreground">{section.description}</p>
+                                                    </div>
+                                                    {section.groups.length === 0 ? (
+                                                        <p className="text-xs text-muted-foreground rounded border border-dashed border-border/60 px-3 py-2">
+                                                            No fields in this category for this workflow.
+                                                        </p>
+                                                    ) : (
+                                                        section.groups.map((group) => {
+                                                            const totals = group.fields.reduce(
+                                                                (acc, question: any) => {
+                                                                    const rowLocked =
+                                                                        question.ownershipUiMode === 'locked' &&
+                                                                        !(
+                                                                            question.isUnlockableCredential &&
+                                                                            isCredentialUnlocked(question)
+                                                                        );
+                                                                    if (rowLocked) {
+                                                                        acc.locked += 1;
+                                                                        return acc;
+                                                                    }
+                                                                    const modeKey = `mode_${question.nodeId}_${question.fieldName}`;
+                                                                    const selectedMode =
+                                                                        ownershipEffectiveModes.byModeKey[modeKey] ||
+                                                                        resolveWizardFieldFillMode(
+                                                                            fillModeValues[modeKey],
+                                                                            question.fillModeDefault as
+                                                                                | 'manual_static'
+                                                                                | 'runtime_ai'
+                                                                                | 'buildtime_ai_once'
+                                                                                | undefined
+                                                                        );
+                                                                    if (selectedMode === 'runtime_ai') acc.aiRun += 1;
+                                                                    else if (selectedMode === 'buildtime_ai_once')
+                                                                        acc.aiBuild += 1;
+                                                                    else acc.you += 1;
+                                                                    return acc;
+                                                                },
+                                                                { you: 0, aiBuild: 0, aiRun: 0, locked: 0 }
                                                             );
-                                                            const locked = question.ownershipUiMode === 'locked';
-                                                            const aiDisabled = locked;
-                                                            const userDisabled = locked;
-                                                            const lockHint =
-                                                                locked && question.ownershipLockReason
-                                                                    ? OWNERSHIP_LOCK_REASON_COPY[String(question.ownershipLockReason)] ||
-                                                                      String(question.ownershipLockReason)
-                                                                    : null;
                                                             return (
-                                                                <div key={`${question.id || idx}`} className="rounded border border-border/40 p-3">
-                                                                    <div className="flex items-start justify-between gap-3">
+                                                                <div
+                                                                    key={`${section.key}_${group.nodeId}`}
+                                                                    className="rounded border border-border/60 p-3 space-y-3"
+                                                                >
+                                                                    <div className="flex items-center justify-between gap-3">
                                                                         <div>
-                                                                            <p className="text-sm font-medium">{question.fieldName}</p>
-                                                                            <p className="text-xs text-muted-foreground">
-                                                                                {lockHint ||
-                                                                                    (String(question.ownershipClass || '') === 'structural' && !locked
-                                                                                        ? 'Structural field: choose User to edit static values before run, or AI Runtime when supported. Save may adjust mode to match policy.'
-                                                                                        : null) ||
-                                                                                    question.description ||
-                                                                                    'Select ownership for this field'}
-                                                                            </p>
+                                                                            <p className="text-sm font-semibold">{group.nodeLabel}</p>
+                                                                            <p className="text-xs text-muted-foreground">{group.nodeType}</p>
                                                                         </div>
-                                                                        <div className="flex items-center gap-2">
-                                                                            <Button
-                                                                                type="button"
-                                                                                size="sm"
-                                                                                variant={selectedMode === 'manual_static' ? 'default' : 'outline'}
-                                                                                disabled={userDisabled}
-                                                                                onClick={() =>
-                                                                                    setFillModeValues((prev) => ({
-                                                                                        ...prev,
-                                                                                        [modeKey]: 'manual_static',
-                                                                                    }))
-                                                                                }
-                                                                            >
-                                                                                User
-                                                                            </Button>
-                                                                            <Button
-                                                                                type="button"
-                                                                                size="sm"
-                                                                                variant={selectedMode === 'runtime_ai' ? 'default' : 'outline'}
-                                                                                disabled={aiDisabled}
-                                                                                onClick={() =>
-                                                                                    setFillModeValues((prev) => ({
-                                                                                        ...prev,
-                                                                                        [modeKey]: 'runtime_ai',
-                                                                                    }))
-                                                                                }
-                                                                            >
-                                                                                AI Runtime
-                                                                            </Button>
+                                                                        <div className="flex flex-wrap items-center gap-2 justify-end">
+                                                                            {section.key === 'secrets' && (
+                                                                                <>
+                                                                                    <Button
+                                                                                        type="button"
+                                                                                        variant="ghost"
+                                                                                        size="sm"
+                                                                                        className="h-7 text-[10px] px-2"
+                                                                                        onClick={() =>
+                                                                                            applyOwnershipForNode(
+                                                                                                group.nodeId,
+                                                                                                'manual_static'
+                                                                                            )
+                                                                                        }
+                                                                                    >
+                                                                                        This node: You
+                                                                                    </Button>
+                                                                                    <Button
+                                                                                        type="button"
+                                                                                        variant="ghost"
+                                                                                        size="sm"
+                                                                                        className="h-7 text-[10px] px-2"
+                                                                                        onClick={() =>
+                                                                                            applyOwnershipForNode(
+                                                                                                group.nodeId,
+                                                                                                'runtime_ai'
+                                                                                            )
+                                                                                        }
+                                                                                    >
+                                                                                        This node: AI (best)
+                                                                                    </Button>
+                                                                                </>
+                                                                            )}
+                                                                            <Badge variant="outline" className="text-xs">
+                                                                                You {totals.you} | AI build {totals.aiBuild} | AI
+                                                                                run {totals.aiRun}
+                                                                                {totals.locked > 0 ? ` | Locked ${totals.locked}` : ''}
+                                                                            </Badge>
                                                                         </div>
                                                                     </div>
-                                                                    {locked && question.aiFilledAtBuildTime ? (
-                                                                        <div className="mt-2 rounded border border-muted p-2">
-                                                                            <p className="text-[11px] text-muted-foreground">
-                                                                                Value was set at generation; this row stays locked for this field type.
-                                                                            </p>
-                                                                        </div>
-                                                                    ) : null}
-                                                                    {!locked && selectedMode === 'runtime_ai' && (
-                                                                        <div className="mt-2 rounded border border-amber-300/40 bg-amber-500/10 p-2">
-                                                                            <p className="text-xs text-amber-200 font-medium">Filled automatically by AI at runtime</p>
-                                                                            <p className="text-[11px] text-amber-100/80">
-                                                                                This field will be generated dynamically from previous node output and workflow intent.
-                                                                            </p>
-                                                                        </div>
-                                                                    )}
-                                                                    {!locked &&
-                                                                        selectedMode === 'manual_static' &&
-                                                                        String(question.defaultValue || '').trim().length > 0 && (
-                                                                            <div className="mt-2 rounded border border-emerald-500/25 bg-emerald-500/5 p-2">
-                                                                                <p className="text-[11px] text-muted-foreground mb-1">
-                                                                                    Current value in workflow (edit on Configuration step)
-                                                                                </p>
-                                                                                <pre className="text-[11px] whitespace-pre-wrap break-words max-h-28 overflow-auto font-mono text-left">
-                                                                                    {String(question.defaultValue)}
-                                                                                </pre>
-                                                                            </div>
-                                                                        )}
+                                                                    <div className="grid grid-cols-1 gap-3">
+                                                                        {group.fields.map((question: any, idx: number) => {
+                                                                            const modeKey = `mode_${question.nodeId}_${question.fieldName}`;
+                                                                            const selectedMode =
+                                                                                ownershipEffectiveModes.byModeKey[modeKey] ||
+                                                                                resolveWizardFieldFillMode(
+                                                                                    fillModeValues[modeKey],
+                                                                                    question.fillModeDefault as
+                                                                                        | 'manual_static'
+                                                                                        | 'runtime_ai'
+                                                                                        | 'buildtime_ai_once'
+                                                                                        | undefined
+                                                                                );
+                                                                            const locked =
+                                                                                question.ownershipUiMode === 'locked' &&
+                                                                                !(
+                                                                                    question.isUnlockableCredential &&
+                                                                                    isCredentialUnlocked(question)
+                                                                                );
+                                                                            const youDisabled = locked;
+                                                                            const buildDisabled =
+                                                                                locked || question.supportsBuildtimeAI === false;
+                                                                            const aiRuntimeDisabled =
+                                                                                locked || question.supportsRuntimeAI === false;
+                                                                            const rowExplanation = explainWizardOwnershipRow(
+                                                                                question,
+                                                                                { locked, aiDisabled: aiRuntimeDisabled }
+                                                                            );
+                                                                            const unlockKey = `unlock_${question.nodeId}_${question.fieldName}`;
+                                                                            const primaryLabel =
+                                                                                question.text ||
+                                                                                question.label ||
+                                                                                question.fieldName;
+                                                                            const ownershipFooterText =
+                                                                                rowExplanation ||
+                                                                                (String(question.description || '').trim()
+                                                                                    ? String(question.description).trim()
+                                                                                    : null) ||
+                                                                                (String(question.ownershipClass || '') !==
+                                                                                'structural'
+                                                                                    ? 'Select ownership for this field'
+                                                                                    : null);
+                                                                            const planeRowForPreview = findPlaneRow(
+                                                                                fieldPlaneRows,
+                                                                                String(question.nodeId || ''),
+                                                                                String(question.fieldName || '')
+                                                                            );
+                                                                            const fromNodeSnapshot = snapshotConfigFieldToString(
+                                                                                planeRowForPreview?.valueSnapshot
+                                                                            );
+                                                                            const fromQuestionDefaultPreview =
+                                                                                question.defaultValue !== undefined &&
+                                                                                question.defaultValue !== null
+                                                                                    ? snapshotConfigFieldToString(
+                                                                                          question.defaultValue
+                                                                                      )
+                                                                                    : '';
+                                                                            const workflowPreviewText =
+                                                                                fromNodeSnapshot &&
+                                                                                String(fromNodeSnapshot).trim() !== ''
+                                                                                    ? fromNodeSnapshot
+                                                                                    : fromQuestionDefaultPreview &&
+                                                                                        String(fromQuestionDefaultPreview).trim() !==
+                                                                                            ''
+                                                                                      ? fromQuestionDefaultPreview
+                                                                                      : '';
+                                                                            return (
+                                                                                <div
+                                                                                    key={`${section.key}_${question.id || idx}`}
+                                                                                    className="rounded border border-border/40 p-3"
+                                                                                >
+                                                                                    {question.isUnlockableCredential &&
+                                                                                    question.ownershipUiMode === 'locked' ? (
+                                                                                        <div className="mb-3 flex items-center justify-between gap-2 rounded-md border border-border/50 bg-muted/20 px-2 py-1.5">
+                                                                                            <Label
+                                                                                                htmlFor={unlockKey}
+                                                                                                className="text-xs font-medium text-muted-foreground cursor-pointer"
+                                                                                            >
+                                                                                                Unlock ownership (User vs AI)
+                                                                                            </Label>
+                                                                                            <Switch
+                                                                                                id={unlockKey}
+                                                                                                checked={isCredentialUnlocked(question)}
+                                                                                                onCheckedChange={(v) =>
+                                                                                                    setCredentialUnlockOverrides((prev) => ({
+                                                                                                        ...prev,
+                                                                                                        [unlockKey]: v,
+                                                                                                    }))
+                                                                                                }
+                                                                                            />
+                                                                                        </div>
+                                                                                    ) : null}
+                                                                                    <div className="flex items-start justify-between gap-3">
+                                                                                        <div className="min-w-0 flex-1">
+                                                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                                                <p className="text-sm font-medium">{primaryLabel}</p>
+                                                                                                {question.aiFilledAtBuildTime ? (
+                                                                                                    <span
+                                                                                                        className="inline-flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-200"
+                                                                                                        title="Filled by AI when the workflow was generated"
+                                                                                                    >
+                                                                                                        <Sparkles
+                                                                                                            className="h-3 w-3 shrink-0"
+                                                                                                            aria-hidden
+                                                                                                        />
+                                                                                                        AI prefilled
+                                                                                                    </span>
+                                                                                                ) : null}
+                                                                                                {question.aiUsesRuntime && !question.aiFilledAtBuildTime ? (
+                                                                                                    <span
+                                                                                                        className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-200"
+                                                                                                        title="This field is left empty in the saved workflow; AI fills it when the workflow runs"
+                                                                                                    >
+                                                                                                        <Sparkles
+                                                                                                            className="h-3 w-3 shrink-0"
+                                                                                                            aria-hidden
+                                                                                                        />
+                                                                                                        AI at runtime
+                                                                                                    </span>
+                                                                                                ) : null}
+                                                                                                {question.aiBuildTimePending &&
+                                                                                                !question.aiFilledAtBuildTime ? (
+                                                                                                    <span
+                                                                                                        className="inline-flex items-center gap-1 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.5 text-[10px] text-sky-200"
+                                                                                                        title="Build-time AI is selected but no snapshot yet—regenerate, complete attach steps, or enter the value yourself"
+                                                                                                    >
+                                                                                                        <Sparkles
+                                                                                                            className="h-3 w-3 shrink-0"
+                                                                                                            aria-hidden
+                                                                                                        />
+                                                                                                        AI build — empty
+                                                                                                    </span>
+                                                                                                ) : null}
+                                                                                            </div>
+                                                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                                                                <span className="font-medium text-foreground/80">
+                                                                                                    {group.nodeLabel}
+                                                                                                </span>
+                                                                                                <span className="mx-1 opacity-40">·</span>
+                                                                                                <span className="font-mono text-[11px] opacity-75">
+                                                                                                    {question.fieldName}
+                                                                                                </span>
+                                                                                            </p>
+                                                                                            {ownershipFooterText ? (
+                                                                                                <p className="text-xs text-muted-foreground mt-1">
+                                                                                                    {ownershipFooterText}
+                                                                                                </p>
+                                                                                            ) : null}
+                                                                                        </div>
+                                                                                        <div className="flex flex-wrap items-center gap-2 shrink-0 justify-end">
+                                                                                            <Button
+                                                                                                type="button"
+                                                                                                size="sm"
+                                                                                                variant={
+                                                                                                    selectedMode === 'manual_static'
+                                                                                                        ? 'default'
+                                                                                                        : 'outline'
+                                                                                                }
+                                                                                                disabled={youDisabled}
+                                                                                                onClick={() =>
+                                                                                                    setFillModeValues((prev) => ({
+                                                                                                        ...prev,
+                                                                                                        [modeKey]: 'manual_static',
+                                                                                                    }))
+                                                                                                }
+                                                                                            >
+                                                                                                You
+                                                                                            </Button>
+                                                                                            <Button
+                                                                                                type="button"
+                                                                                                size="sm"
+                                                                                                variant={
+                                                                                                    selectedMode === 'buildtime_ai_once'
+                                                                                                        ? 'default'
+                                                                                                        : 'outline'
+                                                                                                }
+                                                                                                disabled={buildDisabled}
+                                                                                                onClick={() =>
+                                                                                                    setFillModeValues((prev) => ({
+                                                                                                        ...prev,
+                                                                                                        [modeKey]: 'buildtime_ai_once',
+                                                                                                    }))
+                                                                                                }
+                                                                                            >
+                                                                                                AI (build)
+                                                                                            </Button>
+                                                                                            <Button
+                                                                                                type="button"
+                                                                                                size="sm"
+                                                                                                variant={
+                                                                                                    selectedMode === 'runtime_ai'
+                                                                                                        ? 'default'
+                                                                                                        : 'outline'
+                                                                                                }
+                                                                                                disabled={aiRuntimeDisabled}
+                                                                                                onClick={() =>
+                                                                                                    setFillModeValues((prev) => ({
+                                                                                                        ...prev,
+                                                                                                        [modeKey]: 'runtime_ai',
+                                                                                                    }))
+                                                                                                }
+                                                                                            >
+                                                                                                AI (runtime)
+                                                                                            </Button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    {locked && question.aiFilledAtBuildTime ? (
+                                                                                        <div className="mt-2 rounded border border-muted p-2 space-y-1">
+                                                                                            <p className="text-[11px] text-muted-foreground">
+                                                                                                Value was set at generation; this row stays locked for
+                                                                                                this field type.
+                                                                                            </p>
+                                                                                            {workflowPreviewText ? (
+                                                                                                <pre className="text-[11px] whitespace-pre-wrap break-words max-h-28 overflow-auto font-mono text-left text-foreground/90">
+                                                                                                    {workflowPreviewText}
+                                                                                                </pre>
+                                                                                            ) : null}
+                                                                                        </div>
+                                                                                    ) : null}
+                                                                                    {!locked && selectedMode === 'buildtime_ai_once' && (
+                                                                                        <div className="mt-2 rounded border border-sky-300/40 bg-sky-500/10 p-2">
+                                                                                            <p className="text-xs text-sky-200 font-medium">
+                                                                                                Filled by AI once when the workflow is built
+                                                                                            </p>
+                                                                                            <p className="text-[11px] text-sky-100/80">
+                                                                                                Value is produced during generation or attach steps, not
+                                                                                                on every run.
+                                                                                            </p>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {!locked && selectedMode === 'runtime_ai' && (
+                                                                                        <div className="mt-2 rounded border border-amber-300/40 bg-amber-500/10 p-2">
+                                                                                            <p className="text-xs text-amber-200 font-medium">
+                                                                                                Filled automatically by AI at runtime
+                                                                                            </p>
+                                                                                            <p className="text-[11px] text-amber-100/80">
+                                                                                                This field will be generated dynamically from previous
+                                                                                                node output and workflow intent.
+                                                                                            </p>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {!locked && workflowPreviewText ? (
+                                                                                        <div className="mt-2 rounded border border-emerald-500/25 bg-emerald-500/5 p-2">
+                                                                                            <p className="text-[11px] text-muted-foreground mb-1">
+                                                                                                Current value in workflow (edit on Configuration
+                                                                                                step)
+                                                                                            </p>
+                                                                                            <pre className="text-[11px] whitespace-pre-wrap break-words max-h-40 overflow-auto font-mono text-left">
+                                                                                                {workflowPreviewText}
+                                                                                            </pre>
+                                                                                        </div>
+                                                                                    ) : null}
+                                                                                    {!locked &&
+                                                                                        !workflowPreviewText &&
+                                                                                        question.aiFilledAtBuildTime && (
+                                                                                            <div className="mt-2 rounded border border-emerald-500/20 bg-emerald-500/5 p-2">
+                                                                                                <p className="text-[11px] text-muted-foreground">
+                                                                                                    AI prefilled this field, but the value is not shown
+                                                                                                    here (e.g. complex JSON). Open the{' '}
+                                                                                                    <span className="font-medium text-foreground/80">
+                                                                                                        Configuration
+                                                                                                    </span>{' '}
+                                                                                                    step to view or edit it.
+                                                                                                </p>
+                                                                                            </div>
+                                                                                        )}
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
                                                                 </div>
                                                             );
-                                                        })}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
+                                                        })
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
                                         <Button type="button" className="w-full" onClick={proceedFromOwnershipStage}>
                                             Proceed To Credentials
@@ -4201,10 +5220,10 @@ export function AutonomousAgentWizard() {
                                 <Card className="border-amber-500/30 shadow-lg">
                                     <CardHeader>
                                         <CardTitle className="text-amber-400 flex items-center gap-2">
-                                            <AlertCircle className="h-5 w-5" /> Credentials Required
+                                            <KeyRound className="h-5 w-5 shrink-0" aria-hidden /> Credentials
                                         </CardTitle>
                                         <CardDescription>
-                                            Provide only credentials that remain required after ownership selection.
+                                            Secrets grouped by node. Status reflects your connections; inputs appear only when something is still missing.
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
@@ -4225,98 +5244,480 @@ export function AutonomousAgentWizard() {
                                         {((pendingWorkflowData as any)?.unifiedReadiness?.summary) && (
                                             <div className="rounded border border-border/60 p-3 space-y-1 text-xs text-muted-foreground">
                                                 <p><span className="font-semibold">Structural:</span> unresolved fields require manual confirmation before run.</p>
-                                                <p><span className="font-semibold">Value ownership:</span> fields marked runtime AI are not asked in this step.</p>
-                                                <p><span className="font-semibold">Credentials:</span> only missing required credentials are requested here.</p>
+                                                <p><span className="font-semibold">Value ownership:</span> fields marked AI Runtime are not asked here.</p>
+                                                <p><span className="font-semibold">Credentials:</span> only missing secrets show a field below.</p>
                                             </div>
                                         )}
-                                        {Array.isArray((pendingWorkflowData as any)?.credentialStatuses) &&
-                                            (pendingWorkflowData as any).credentialStatuses.length > 0 && (
-                                            <div className="rounded border border-border/60 p-3 space-y-2">
-                                                <p className="text-xs font-semibold text-muted-foreground">
-                                                    Credential status by node
-                                                </p>
-                                                <div className="space-y-1 max-h-44 overflow-auto pr-1">
-                                                    {(pendingWorkflowData as any).credentialStatuses.map((row: any, idx: number) => (
-                                                        <div
-                                                            key={`${row.nodeId}-${row.credentialId}-${idx}`}
-                                                            className="grid grid-cols-12 gap-2 text-xs rounded border border-border/40 px-2 py-1"
-                                                        >
-                                                            <span className="col-span-4 truncate">{row.nodeLabel || row.nodeId}</span>
-                                                            <span className="col-span-4 truncate text-muted-foreground">{row.displayName}</span>
-                                                            <span className="col-span-4 text-right">
-                                                                {row.status === 'required_missing'
-                                                                    ? 'required_missing'
-                                                                    : row.status === 'resolved_connected'
-                                                                    ? 'resolved_connected'
-                                                                    : 'not_required'}
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                        {credentialQuestionsForStep.length > 0 ? credentialQuestionsForStep.map((q: any, idx: number) => {
-                                            const useSelect = q.type === 'select' || (q.options && q.options.length > 0);
-                                            return (
-                                            <div key={q.id || idx} className="space-y-2">
-                                                <Label>{q.label || q.fieldName}{q.required ? ' *' : ''}</Label>
-                                                {q?.credential?.satisfied === true && (
-                                                    <p className="text-xs text-muted-foreground">already satisfied</p>
-                                                )}
-                                                {q?.required && q?.credential?.satisfied !== true && (
-                                                    <p className="text-xs text-amber-200">required missing</p>
-                                                )}
-                                                {useSelect ? (
-                                                    <Select
-                                                        value={
-                                                            q.options && q.options.length > 0
-                                                                ? normalizeSelectValue(
-                                                                      credentialValues[q.id],
-                                                                      q.defaultValue,
-                                                                      q.options
-                                                                  )
-                                                                : String(credentialValues[q.id] ?? q.defaultValue ?? '')
-                                                        }
-                                                        onValueChange={(value) => {
-                                                            setCredentialValues((prev) => ({ ...prev, [q.id]: value }));
-                                                        }}
+                                        {credentialWizardDisplayForStep.groups.length > 0 ? (
+                                            <div className="space-y-4">
+                                                {credentialWizardDisplayForStep.groups.map((group: any) => (
+                                                    <div
+                                                        key={group.nodeId}
+                                                        className="rounded-lg border border-border/60 overflow-hidden"
                                                     >
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder={q.placeholder || `Select ${q.fieldName}`} />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {q.options && q.options.length > 0 ? (
-                                                                q.options.map((option: any, optIdx: number) => {
-                                                                    const optionValue = typeof option === 'string' ? option : option.value;
-                                                                    const optionLabel = typeof option === 'string' ? option : (option.label || option.value);
-                                                                    if (String(optionValue ?? '').trim().length === 0) return null;
-                                                                    return (
-                                                                        <SelectItem key={optIdx} value={String(optionValue)}>
-                                                                            {optionLabel}
-                                                                        </SelectItem>
-                                                                    );
-                                                                })
-                                                            ) : (
-                                                                <div className="px-2 py-1 text-sm text-muted-foreground">No options available</div>
-                                                            )}
-                                                        </SelectContent>
-                                                    </Select>
-                                                ) : (
-                                                <Input
-                                                    value={credentialValues[q.id] ?? ''}
-                                                    type={q.type === 'password' ? 'password' : 'text'}
-                                                    placeholder={q.placeholder || `Enter ${q.fieldName}`}
-                                                    onChange={(e) => setCredentialValues((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                                                />
-                                                )}
+                                                        <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-muted/25 border-b border-border/50">
+                                                            <span className="text-sm font-semibold text-foreground">{group.nodeLabel}</span>
+                                                            <Badge variant="secondary" className="text-[10px] font-mono font-normal">
+                                                                {group.nodeType}
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="overflow-x-auto">
+                                                            <table className="w-full text-sm">
+                                                                <caption className="sr-only">
+                                                                    Credentials for {group.nodeLabel}
+                                                                </caption>
+                                                                <thead>
+                                                                    <tr className="border-b border-border/40 text-left text-xs text-muted-foreground">
+                                                                        <th className="p-2 w-10 font-medium" scope="col">
+                                                                            <span className="sr-only">Source</span>
+                                                                        </th>
+                                                                        <th className="p-2 font-medium" scope="col">Secret</th>
+                                                                        <th className="p-2 font-medium w-[148px]" scope="col">Status</th>
+                                                                        <th className="p-2 font-medium min-w-[200px]" scope="col">Provide value</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {group.rows.map((row: any) => {
+                                                                        const rowPlane = credentialPlaneKeyFromQuestion({
+                                                                            nodeId: row.nodeId,
+                                                                            fieldName: row.fieldName,
+                                                                        });
+                                                                        const q = credentialQuestionsForStep.find(
+                                                                            (c: any) =>
+                                                                                c.id === row.questionId ||
+                                                                                credentialPlaneKeyFromQuestion(c) ===
+                                                                                    rowPlane
+                                                                        );
+                                                                        const showInput = !!q;
+                                                                        const statusLabel = credentialWizardFriendlyStatus(row.status);
+                                                                        const statusBadgeClass =
+                                                                            row.status === 'resolved_connected'
+                                                                                ? 'bg-emerald-600/15 text-emerald-100 border-emerald-500/35'
+                                                                                : row.status === 'required_missing'
+                                                                                  ? ''
+                                                                                  : 'text-muted-foreground';
+                                                                        return (
+                                                                            <tr
+                                                                                key={row.questionId}
+                                                                                className="border-b border-border/30 align-top last:border-b-0"
+                                                                            >
+                                                                                <td className="p-2 align-middle">
+                                                                                    {row.aiPrefilled ? (
+                                                                                        <Sparkles
+                                                                                            className="h-4 w-4 text-emerald-400 shrink-0"
+                                                                                            aria-label="AI prefilled at build time"
+                                                                                        />
+                                                                                    ) : row.ownershipSummary === 'locked' ||
+                                                                                      row.ownershipSummary === 'unlockable_locked' ? (
+                                                                                        <Lock
+                                                                                            className="h-4 w-4 text-muted-foreground shrink-0"
+                                                                                            aria-label="Vault or OAuth"
+                                                                                        />
+                                                                                    ) : row.ownershipSummary === 'ai_runtime' ? (
+                                                                                        <Bot
+                                                                                            className="h-4 w-4 text-muted-foreground shrink-0"
+                                                                                            aria-label="AI at runtime"
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <User
+                                                                                            className="h-4 w-4 text-muted-foreground shrink-0"
+                                                                                            aria-label="You provide"
+                                                                                        />
+                                                                                    )}
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    <p className="font-medium text-foreground">{row.displayTitle}</p>
+                                                                                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                                                                                        {row.subtitle}
+                                                                                    </p>
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    <Badge
+                                                                                        variant={
+                                                                                            row.status === 'required_missing'
+                                                                                                ? 'destructive'
+                                                                                                : 'secondary'
+                                                                                        }
+                                                                                        className={`text-[10px] font-normal whitespace-nowrap ${statusBadgeClass}`}
+                                                                                    >
+                                                                                        {statusLabel}
+                                                                                    </Badge>
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    {showInput ? (
+                                                                                        (() => {
+                                                                                            const useSelect =
+                                                                                                q.type === 'select' ||
+                                                                                                (q.options && q.options.length > 0);
+                                                                                            return useSelect ? (
+                                                                                                <Select
+                                                                                                    value={
+                                                                                                        q.options && q.options.length > 0
+                                                                                                            ? normalizeSelectValue(
+                                                                                                                  credentialValues[q.id],
+                                                                                                                  q.defaultValue,
+                                                                                                                  q.options
+                                                                                                              )
+                                                                                                            : String(
+                                                                                                                  credentialValues[q.id] ??
+                                                                                                                      q.defaultValue ??
+                                                                                                                      ''
+                                                                                                              )
+                                                                                                    }
+                                                                                                    onValueChange={(value) => {
+                                                                                                        setCredentialValues((prev) => ({
+                                                                                                            ...prev,
+                                                                                                            [q.id]: value,
+                                                                                                        }));
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <SelectTrigger className="w-full">
+                                                                                                        <SelectValue
+                                                                                                            placeholder={
+                                                                                                                q.placeholder ||
+                                                                                                                `Select ${q.fieldName}`
+                                                                                                            }
+                                                                                                        />
+                                                                                                    </SelectTrigger>
+                                                                                                    <SelectContent>
+                                                                                                        {q.options && q.options.length > 0 ? (
+                                                                                                            q.options.map(
+                                                                                                                (option: any, optIdx: number) => {
+                                                                                                                    const optionValue =
+                                                                                                                        typeof option === 'string'
+                                                                                                                            ? option
+                                                                                                                            : option.value;
+                                                                                                                    const optionLabel =
+                                                                                                                        typeof option === 'string'
+                                                                                                                            ? option
+                                                                                                                            : option.label ||
+                                                                                                                              option.value;
+                                                                                                                    if (
+                                                                                                                        String(
+                                                                                                                            optionValue ?? ''
+                                                                                                                        ).trim().length === 0
+                                                                                                                    )
+                                                                                                                        return null;
+                                                                                                                    return (
+                                                                                                                        <SelectItem
+                                                                                                                            key={optIdx}
+                                                                                                                            value={String(
+                                                                                                                                optionValue
+                                                                                                                            )}
+                                                                                                                        >
+                                                                                                                            {optionLabel}
+                                                                                                                        </SelectItem>
+                                                                                                                    );
+                                                                                                                }
+                                                                                                            )
+                                                                                                        ) : (
+                                                                                                            <div className="px-2 py-1 text-sm text-muted-foreground">
+                                                                                                                No options available
+                                                                                                            </div>
+                                                                                                        )}
+                                                                                                    </SelectContent>
+                                                                                                </Select>
+                                                                                            ) : (
+                                                                                                <Input
+                                                                                                    value={credentialValues[q.id] ?? ''}
+                                                                                                    type={
+                                                                                                        q.type === 'password'
+                                                                                                            ? 'password'
+                                                                                                            : 'text'
+                                                                                                    }
+                                                                                                    placeholder={
+                                                                                                        q.placeholder ||
+                                                                                                        `Enter ${q.fieldName}`
+                                                                                                    }
+                                                                                                    onChange={(e) =>
+                                                                                                        setCredentialValues((prev) => ({
+                                                                                                            ...prev,
+                                                                                                            [q.id]: e.target.value,
+                                                                                                        }))
+                                                                                                    }
+                                                                                                />
+                                                                                            );
+                                                                                        })()
+                                                                                    ) : (
+                                                                                        <span className="text-xs text-muted-foreground">—</span>
+                                                                                    )}
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                            );
-                                        }) : (
-                                            <p className="text-sm text-muted-foreground">No credentials required. You can continue.</p>
+                                        ) : credentialQuestionsForStep.length > 0 ? (
+                                            <div className="space-y-3">
+                                                <p className="text-xs text-muted-foreground">
+                                                    Showing a simple list (detailed node view unavailable for this response).
+                                                </p>
+                                                {credentialQuestionsForStep.map((q: any, idx: number) => {
+                                                    const useSelect =
+                                                        q.type === 'select' || (q.options && q.options.length > 0);
+                                                    return (
+                                                        <div key={q.id || idx} className="space-y-2 rounded border border-border/50 p-3">
+                                                            <Label>
+                                                                {q.label || q.fieldName}
+                                                                {q.required ? ' *' : ''}
+                                                            </Label>
+                                                            {q?.credential?.satisfied === true && (
+                                                                <p className="text-xs text-muted-foreground">Connected</p>
+                                                            )}
+                                                            {q?.required && q?.credential?.satisfied !== true && (
+                                                                <Badge variant="destructive" className="text-[10px] font-normal">
+                                                                    Needs your secret
+                                                                </Badge>
+                                                            )}
+                                                            {useSelect ? (
+                                                                <Select
+                                                                    value={
+                                                                        q.options && q.options.length > 0
+                                                                            ? normalizeSelectValue(
+                                                                                  credentialValues[q.id],
+                                                                                  q.defaultValue,
+                                                                                  q.options
+                                                                              )
+                                                                            : String(
+                                                                                  credentialValues[q.id] ??
+                                                                                      q.defaultValue ??
+                                                                                      ''
+                                                                              )
+                                                                    }
+                                                                    onValueChange={(value) => {
+                                                                        setCredentialValues((prev) => ({
+                                                                            ...prev,
+                                                                            [q.id]: value,
+                                                                        }));
+                                                                    }}
+                                                                >
+                                                                    <SelectTrigger className="w-full">
+                                                                        <SelectValue
+                                                                            placeholder={q.placeholder || `Select ${q.fieldName}`}
+                                                                        />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {q.options && q.options.length > 0 ? (
+                                                                            q.options.map((option: any, optIdx: number) => {
+                                                                                const optionValue =
+                                                                                    typeof option === 'string' ? option : option.value;
+                                                                                const optionLabel =
+                                                                                    typeof option === 'string'
+                                                                                        ? option
+                                                                                        : option.label || option.value;
+                                                                                if (String(optionValue ?? '').trim().length === 0)
+                                                                                    return null;
+                                                                                return (
+                                                                                    <SelectItem key={optIdx} value={String(optionValue)}>
+                                                                                        {optionLabel}
+                                                                                    </SelectItem>
+                                                                                );
+                                                                            })
+                                                                        ) : (
+                                                                            <div className="px-2 py-1 text-sm text-muted-foreground">
+                                                                                No options available
+                                                                            </div>
+                                                                        )}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            ) : (
+                                                                <Input
+                                                                    value={credentialValues[q.id] ?? ''}
+                                                                    type={q.type === 'password' ? 'password' : 'text'}
+                                                                    placeholder={q.placeholder || `Enter ${q.fieldName}`}
+                                                                    onChange={(e) =>
+                                                                        setCredentialValues((prev) => ({
+                                                                            ...prev,
+                                                                            [q.id]: e.target.value,
+                                                                        }))
+                                                                    }
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : credentialWizardDisplayForStep.groups.length === 0 &&
+                                          credentialQuestionsForStep.length === 0 &&
+                                          oauthRequirementCandidatesList.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground">
+                                                No credentials required for this workflow. You can continue.
+                                            </p>
+                                        ) : null}
+                                        {oauthRequirementCandidatesList.length > 0 && (
+                                            <div className="space-y-3 rounded-lg border border-border/60 p-3">
+                                                <p className="text-sm font-medium text-foreground">Account connections</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Gmail, Google Sheets, and Drive use your Google account (not a text field).
+                                                </p>
+                                                {oauthRequirementCandidatesList.map((row: any, oi: number) => {
+                                                    const blocking = blockingOAuthCredentials.some(
+                                                        (b: any) =>
+                                                            String(b?.vaultKey || b?.credentialId || '').toLowerCase() ===
+                                                            String(row?.vaultKey || row?.credentialId || '').toLowerCase()
+                                                    );
+                                                    const label =
+                                                        row.displayName ||
+                                                        String(row.provider || row.vaultKey || 'OAuth')
+                                                            .replace(/_/g, ' ')
+                                                            .replace(/\b\w/g, (l: string) => l.toUpperCase());
+                                                    const google = oauthRowNeedsGoogleConnect(row);
+                                                    return (
+                                                        <div
+                                                            key={`oauth-cred-${oi}-${row.vaultKey || row.credentialId || oi}`}
+                                                            className="space-y-2 rounded border border-border/40 p-3"
+                                                        >
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <Label className="text-sm font-medium">{label}</Label>
+                                                                {!blocking ? (
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className="text-[10px] bg-emerald-600/15 text-emerald-200 border-emerald-500/35"
+                                                                    >
+                                                                        Connected
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <Badge variant="destructive" className="text-[10px] font-normal">
+                                                                        Action required
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            {google && blocking ? (
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    className="w-full"
+                                                                    onClick={handleConnectGoogleOAuth}
+                                                                >
+                                                                    Connect Google
+                                                                </Button>
+                                                            ) : null}
+                                                            {google && !blocking ? (
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    Google account is linked for this workflow.
+                                                                </p>
+                                                            ) : null}
+                                                            {!google && blocking ? (
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    Connect {String(row.provider || 'this provider')} from app settings or use the
+                                                                    secret field if your node uses a webhook/API key instead.
+                                                                </p>
+                                                            ) : null}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                        {credentialOptionalIncludeCandidates.length > 0 && (
+                                            <Collapsible className="rounded-lg border border-border/40 p-3">
+                                                <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-medium text-foreground">
+                                                    <span>Optional secret fields</span>
+                                                    <ChevronDown className="h-4 w-4 shrink-0" />
+                                                </CollapsibleTrigger>
+                                                <CollapsibleContent className="mt-3 space-y-3">
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Enable to add optional vault fields to this step (required empty secrets always stay visible).
+                                                    </p>
+                                                    {credentialOptionalIncludeCandidates.map((q: any) => {
+                                                        const k = credentialPlaneKeyFromQuestion(q);
+                                                        return (
+                                                            <div
+                                                                key={q.id || k}
+                                                                className="flex items-center justify-between gap-2 rounded border border-border/30 p-2"
+                                                            >
+                                                                <Label className="text-sm">{q.label || q.fieldName}</Label>
+                                                                <Switch
+                                                                    checked={credentialStepIncludeOverrides[k] === true}
+                                                                    onCheckedChange={(on) => {
+                                                                        setCredentialStepIncludeOverrides((prev) => {
+                                                                            const next = { ...prev };
+                                                                            if (on) next[k] = true;
+                                                                            else delete next[k];
+                                                                            return next;
+                                                                        });
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </CollapsibleContent>
+                                            </Collapsible>
+                                        )}
+                                        {credentialQuestionsForStep.some(
+                                            (q: any) =>
+                                                !credentialRowMustStayVisible(
+                                                    q,
+                                                    isCredQuestionConfigEmpty(q),
+                                                    getCredentialQuestionEffectiveFillMode(q)
+                                                )
+                                        ) && (
+                                            <Collapsible className="rounded-lg border border-border/40 p-3">
+                                                <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-medium text-foreground">
+                                                    <span>Visibility on this step</span>
+                                                    <ChevronDown className="h-4 w-4 shrink-0" />
+                                                </CollapsibleTrigger>
+                                                <CollapsibleContent className="mt-3 space-y-3">
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Turn off to hide optional rows from the Credentials step (not allowed for required empty secrets).
+                                                    </p>
+                                                    {credentialQuestionsForStep
+                                                        .filter(
+                                                            (q: any) =>
+                                                                !credentialRowMustStayVisible(
+                                                                    q,
+                                                                    isCredQuestionConfigEmpty(q),
+                                                                    getCredentialQuestionEffectiveFillMode(q)
+                                                                )
+                                                        )
+                                                        .map((q: any) => {
+                                                            const k = credentialPlaneKeyFromQuestion(q);
+                                                            return (
+                                                                <div
+                                                                    key={q.id || k}
+                                                                    className="flex items-center justify-between gap-2 rounded border border-border/30 p-2"
+                                                                >
+                                                                    <Label className="text-sm">{q.label || q.fieldName}</Label>
+                                                                    <Switch
+                                                                        checked={credentialStepIncludeOverrides[k] !== false}
+                                                                        onCheckedChange={(on) => {
+                                                                            setCredentialStepIncludeOverrides((prev) => ({
+                                                                                ...prev,
+                                                                                [k]: on,
+                                                                            }));
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            );
+                                                        })}
+                                                </CollapsibleContent>
+                                            </Collapsible>
+                                        )}
+                                        {!credentialSecretsReady &&
+                                            (credentialQuestionsForStep.length > 0 ||
+                                                oauthRequirementCandidatesList.length > 0) && (
+                                            <p className="text-sm text-amber-600 dark:text-amber-400">
+                                                Enter required secrets and connect accounts above before continuing.
+                                            </p>
                                         )}
                                         <div className="flex gap-2">
                                             <Button type="button" variant="outline" onClick={() => setStep('field-ownership')}>Back</Button>
-                                            <Button type="button" className="flex-1" onClick={() => { setCurrentQuestionIndex(0); setStep('configuration'); }}>
+                                            <Button
+                                                type="button"
+                                                className="flex-1"
+                                                disabled={
+                                                    !credentialSecretsReady &&
+                                                    (credentialQuestionsForStep.length > 0 ||
+                                                        oauthRequirementCandidatesList.length > 0)
+                                                }
+                                                onClick={() => {
+                                                    setCurrentQuestionIndex(0);
+                                                    setStep('configuration');
+                                                }}
+                                            >
                                                 Continue To Inputs
                                             </Button>
                                         </div>
@@ -4646,17 +6047,78 @@ export function AutonomousAgentWizard() {
                                                 })()}
                                             </div>
                                         ) : manualConfigurationQuestions.length > 0 && currentQuestionIndex >= manualConfigurationQuestions.length ? (
-                                            /* All questions answered - Show Continue Building button */
+                                            /* Ready check matches backend attach-inputs / attach-credentials */
                                             <div className="space-y-4 text-center">
-                                                <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
-                                                <h3 className="text-lg font-semibold">All Questions Answered</h3>
+                                                <CheckCircle2
+                                                    className={`h-12 w-12 mx-auto ${configurationGateReady ? 'text-green-500' : 'text-muted-foreground'}`}
+                                                />
+                                                <h3 className="text-lg font-semibold">
+                                                    {configurationGateReady ? 'Ready to save workflow' : 'Almost there'}
+                                                </h3>
                                                 <p className="text-sm text-muted-foreground">
-                                                    You've completed all {manualConfigurationQuestions.length} configuration questions.
+                                                    {configurationGateReady
+                                                        ? `Configuration complete (${manualConfigurationQuestions.length} questions). You can save and open the workflow.`
+                                                        : 'Fill required fields or credentials (see previous steps) before saving.'}
                                                 </p>
+                                                {!configurationGateReady && (
+                                                    <ul className="text-left text-sm text-amber-600 dark:text-amber-400 max-w-md mx-auto list-disc pl-5 space-y-1">
+                                                        {!credentialSecretsReady &&
+                                                            blockingOAuthCredentials.length > 0 && (
+                                                            <li>
+                                                                Connect accounts:{' '}
+                                                                {blockingOAuthCredentials
+                                                                    .map(
+                                                                        (c: any) =>
+                                                                            c.displayName ||
+                                                                            c.provider ||
+                                                                            c.vaultKey ||
+                                                                            c.credentialId
+                                                                    )
+                                                                    .filter(Boolean)
+                                                                    .join(', ')}
+                                                            </li>
+                                                        )}
+                                                        {!credentialSecretsReady && credentialQuestionsForStep.length > 0 && (
+                                                            <li>
+                                                                Missing vault secrets:{' '}
+                                                                {credentialQuestionsForStep
+                                                                    .filter(
+                                                                        (q: any) =>
+                                                                            q?.credential?.satisfied !== true &&
+                                                                            !getCredentialAnswerForQuestion(q)
+                                                                    )
+                                                                    .map(
+                                                                        (q: any) =>
+                                                                            q.label || q.fieldName || q.credential?.vaultKey
+                                                                    )
+                                                                    .filter(Boolean)
+                                                                    .join(', ') || 'see Credentials step'}
+                                                            </li>
+                                                        )}
+                                                        {manualConfigurationQuestions.some((q: any) => {
+                                                            if (!q.required) return false;
+                                                            const key = q.id;
+                                                            const isCred =
+                                                                q.category === 'credential' &&
+                                                                (q as any).isVaultCredential;
+                                                            const raw = isCred
+                                                                ? credentialValues[key]
+                                                                : inputValues[key];
+                                                            return (
+                                                                raw === undefined ||
+                                                                raw === null ||
+                                                                String(raw).trim() === ''
+                                                            );
+                                                        }) && (
+                                                            <li>Some required configuration answers are empty — use Previous to review.</li>
+                                                        )}
+                                                    </ul>
+                                                )}
                                                 <Button
                                                     type="button"
                                                     onClick={() => { void handleBuild(); }}
                                                     className="w-full"
+                                                    disabled={!configurationGateReady}
                                                 >
                                                     <Check className="h-4 w-4 mr-2" />
                                                     Continue Building Workflow
@@ -4794,202 +6256,23 @@ export function AutonomousAgentWizard() {
                                             </div>
                                         )}
                                         
-                                        {/* Credentials Section */}
-                                        {pendingWorkflowData.discoveredCredentials && pendingWorkflowData.discoveredCredentials.length > 0 && (
-                                            <div className="space-y-4 pt-4 border-t">
-                                                <h3 className="text-sm font-semibold text-foreground">Required Credentials</h3>
-                                                {pendingWorkflowData.discoveredCredentials
-                                                    // ✅ CRITICAL: Backend already filters to only missing credentials
-                                                    // OAuth already connected (via header bar) won't appear here
-                                                    // ✅ STRICT: NEVER show Google OAuth in configuration modal
-                                                    // Also filter out any satisfied credentials (double-check)
-                                                    .filter((cred: any) => {
-                                                        // ✅ STRICT FILTER: Exclude Google OAuth from configuration modal
-                                                        const isGoogleOAuth = (cred.provider?.toLowerCase() === 'google' && cred.type === 'oauth') ||
-                                                                              (cred.vaultKey?.toLowerCase() === 'google' && cred.type === 'oauth');
-                                                        if (isGoogleOAuth) {
-                                                            console.log('[Frontend] ✅ Filtering out Google OAuth from configuration modal');
-                                                            return false; // Never show Google OAuth
-                                                        }
-                                                        return !cred.satisfied && !cred.resolved; // Include other credentials
-                                                    })
-                                                    .map((cred: any, i: number) => {
-                                                        const credKey = cred.vaultKey || cred.credentialId || '';
-                                                        const normalizedKey = credKey.toLowerCase().replace(/_/g, '_');
-                                                        const credLabel = cred.displayName || credKey.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-                                                        const credType = cred.type || '';
-                                                        const provider = cred.provider || '';
-                                                        
-                                                        // ✅ CRITICAL: OAuth credentials must NEVER be shown as form fields
-                                                        // They are handled via "Connect <Provider>" buttons only
-                                                        const isOAuth = credType === 'oauth';
-                                                        
-                                                        if (isOAuth) {
-                                                            // Render OAuth connect button instead of input field
-                                                            return (
-                                                                <div key={i} className="space-y-2">
-                                                                    <Label className="text-sm font-medium">
-                                                                        {credLabel}
-                                                                        <span className="text-red-400 ml-1">*</span>
-                                                                    </Label>
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant="outline"
-                                                                        className="w-full"
-                                                                        onClick={async () => {
-                                                                            try {
-                                                                                // Get current user
-                                                                                const { data: { user }, error: userError } = await supabase.auth.getUser();
-                                                                                
-                                                                                if (userError || !user) {
-                                                                                    toast({
-                                                                                        title: 'Authentication Required',
-                                                                                        description: 'Please sign in first to connect your account',
-                                                                                        variant: 'destructive',
-                                                                                    });
-                                                                                    return;
-                                                                                }
-
-                                                                                // Store current workflow state in sessionStorage to return after OAuth
-                                                                                if (pendingWorkflowData) {
-                                                                                    sessionStorage.setItem('pendingWorkflowAfterOAuth', JSON.stringify({
-                                                                                        workflowId: generatedWorkflowId,
-                                                                                        step: step,
-                                                                                        pendingWorkflowData: pendingWorkflowData,
-                                                                                    }));
-                                                                                }
-
-                                                                                // Build redirect URL - return to workflow wizard after OAuth
-                                                                                const currentPath = window.location.pathname;
-                                                                                
-                                                                                // Handle different OAuth providers
-                                                                                if (provider === 'google') {
-                                                                                    const redirectUrl = `${window.location.origin}/auth/google/callback?returnTo=${encodeURIComponent(currentPath)}`;
-
-                                                                                    // Initiate Google OAuth flow
-                                                                                    const { data, error } = await supabase.auth.signInWithOAuth({
-                                                                                        provider: 'google',
-                                                                                        options: {
-                                                                                            redirectTo: redirectUrl,
-                                                                                            queryParams: {
-                                                                                                access_type: 'offline',
-                                                                                                prompt: 'consent',
-                                                                                                scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/bigquery https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/contacts email profile',
-                                                                                            },
-                                                                                        },
-                                                                                    });
-
-                                                                                    if (error) {
-                                                                                        throw error;
-                                                                                    }
-                                                                                } else if (provider === 'slack') {
-                                                                                    // Slack OAuth - redirect to Slack OAuth URL
-                                                                                    // Note: Slack OAuth typically requires a different flow
-                                                                                    // For now, show a message that Slack OAuth should be configured via settings
-                                                                                    toast({
-                                                                                        title: 'Slack Connection',
-                                                                                        description: 'Please connect Slack via the Connections panel in settings, or provide a Slack Webhook URL.',
-                                                                                    });
-                                                                                    return;
-                                                                                } else {
-                                                                                    // Other OAuth providers
-                                                                                    toast({
-                                                                                        title: 'OAuth Provider',
-                                                                                        description: `OAuth connection for ${provider} is not yet implemented. Please connect via settings.`,
-                                                                                    });
-                                                                                    return;
-                                                                                }
-
-                                                                                toast({
-                                                                                    title: 'Redirecting to Google...',
-                                                                                    description: 'Please authorize access to Google services. You will be returned here after authorization.',
-                                                                                });
-                                                                            } catch (error) {
-                                                                                console.error('Google OAuth error:', error);
-                                                                                toast({
-                                                                                    title: 'Authentication Failed',
-                                                                                    description: error instanceof Error ? error.message : 'Failed to initiate Google authentication',
-                                                                                    variant: 'destructive',
-                                                                                });
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        Connect {provider.charAt(0).toUpperCase() + provider.slice(1)}
-                                                                    </Button>
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        Click to connect your {provider} account via OAuth
-                                                                    </p>
-                                                                </div>
-                                                            );
-                                                        }
-                                                        
-                                                        // Non-OAuth credentials (webhook URLs, API keys, SMTP, etc.) - show as input fields
-                                                        const isPassword = credType === 'api_key' || credType === 'token' || 
-                                                                         normalizedKey.includes('key') || 
-                                                                         normalizedKey.includes('token') || 
-                                                                         normalizedKey.includes('password') ||
-                                                                         normalizedKey.includes('secret');
-                                                        
-                                                        // Determine field type for guide
-                                                        let fieldType = 'credential';
-                                                        if (normalizedKey.includes('slack') && 
-                                                            (normalizedKey.includes('bot_token') || normalizedKey.includes('bot token'))) {
-                                                            fieldType = 'token';
-                                                        } else if (normalizedKey.includes('webhook') && normalizedKey.includes('url')) {
-                                                            fieldType = 'webhook_url';
-                                                        } else if (normalizedKey.includes('url')) {
-                                                            fieldType = 'url';
-                                                        } else if (normalizedKey.includes('smtp')) {
-                                                            fieldType = 'smtp';
-                                                        } else if (normalizedKey.includes('token')) {
-                                                            fieldType = 'token';
-                                                        }
-                                                        
-                                                        return (
-                                                            <div key={i} className="space-y-2">
-                                                                <div className="flex items-center justify-between gap-2">
-                                                                    <Label htmlFor={`required-cred-${i}`} className="text-sm font-medium">
-                                                                        {credLabel}
-                                                                        <span className="text-red-400 ml-1">*</span>
-                                                                    </Label>
-                                                                    {(cred.helpText || cred.description) ? (
-                                                                        <HelpTooltip
-                                                                            helpText={{
-                                                                                title: `What is "${credLabel}"?`,
-                                                                                description: String(cred.helpText || cred.description || '').trim(),
-                                                                            }}
-                                                                            ariaLabel={`Help for ${credLabel}`}
-                                                                            side="left"
-                                                                        />
-                                                                    ) : null}
-                                                                </div>
-                                                                <Input
-                                                                    id={`required-cred-${i}`}
-                                                                    type={isPassword ? 'password' : 'text'}
-                                                                    placeholder={`Enter ${credLabel}`}
-                                                                    className="w-full"
-                                                                    value={credentialValues[normalizedKey] || credentialValues[credKey] || credentialValues[cred.credentialId] || ''}
-                                                                    onChange={(e) => setCredentialValues({
-                                                                        ...credentialValues,
-                                                                        [normalizedKey]: e.target.value,
-                                                                        [credKey]: e.target.value,
-                                                                        [cred.credentialId]: e.target.value,
-                                                                    })}
-                                                                />
-                                                                <div className="flex justify-end">
-                                                                    <InputGuideLink
-                                                                        fieldKey={normalizedKey}
-                                                                        fieldLabel={credLabel}
-                                                                        fieldType={fieldType}
-                                                                        placeholder={credLabel}
-                                                                        helpText={String(cred.helpText || '')}
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                            </div>
-                                        )}
+                                        {/* Vault/OAuth: single path is the Credentials step (avoid duplicating discoveredCredentials here). */}
+                                        {pendingWorkflowData.discoveredCredentials &&
+                                            pendingWorkflowData.discoveredCredentials.length > 0 && (
+                                                <div className="space-y-2 pt-4 border-t border-border/60">
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Secrets and account connections are handled on the{' '}
+                                                        <button
+                                                            type="button"
+                                                            className="text-primary underline underline-offset-2 hover:text-primary/90"
+                                                            onClick={() => setStep('credentials')}
+                                                        >
+                                                            Credentials
+                                                        </button>{' '}
+                                                        step so you do not enter the same values twice.
+                                                    </p>
+                                                </div>
+                                            )}
                                         
                                         {/* Continue Building Button - Only show in fallback mode */}
                                         {allQuestions.length === 0 && (
@@ -5854,25 +7137,67 @@ export function AutonomousAgentWizard() {
                                                     <h3 className="text-lg font-semibold">Credentials</h3>
                                                     {missingItems.credentials
                                                         .filter(cred => !cred.satisfied)
-                                                        .map((cred) => (
+                                                        .map((cred) => {
+                                                            const controlType = resolveConfigureFieldType(cred);
+                                                            return (
                                                             <div key={cred.provider} className="p-4 border rounded-lg space-y-2">
                                                                 <Label>{cred.displayName}</Label>
-                                                                <Input
-                                                                    type="text"
-                                                                    placeholder={`Enter ${cred.displayName} credentials`}
-                                                                    value={configureCredentials[cred.provider]?.value || ''}
-                                                                    onChange={(e) => {
-                                                                        setConfigureCredentials({
-                                                                            ...configureCredentials,
-                                                                            [cred.provider]: { value: e.target.value },
-                                                                        });
-                                                                    }}
-                                                                />
+                                                                {controlType === 'select' && Array.isArray(cred.options) && cred.options.length > 0 ? (
+                                                                    <Select
+                                                                        value={configureCredentials[cred.provider]?.value || ''}
+                                                                        onValueChange={(value) => {
+                                                                            setConfigureCredentials({
+                                                                                ...configureCredentials,
+                                                                                [cred.provider]: {
+                                                                                    value: normalizeSelectValue(
+                                                                                        value,
+                                                                                        undefined,
+                                                                                        cred.options
+                                                                                    ),
+                                                                                },
+                                                                            });
+                                                                        }}
+                                                                    >
+                                                                        <SelectTrigger>
+                                                                            <SelectValue placeholder={cred.placeholder || `Select ${cred.displayName}`} />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {cred.options.map((opt) => (
+                                                                                <SelectItem key={`${cred.provider}_${opt.value}`} value={String(opt.value)}>
+                                                                                    {opt.label}
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                ) : controlType === 'textarea' ? (
+                                                                    <Textarea
+                                                                        placeholder={cred.placeholder || `Enter ${cred.displayName} credentials`}
+                                                                        value={configureCredentials[cred.provider]?.value || ''}
+                                                                        onChange={(e) => {
+                                                                            setConfigureCredentials({
+                                                                                ...configureCredentials,
+                                                                                [cred.provider]: { value: e.target.value },
+                                                                            });
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <Input
+                                                                        type={controlType === 'password' ? 'password' : (controlType === 'number' ? 'number' : 'text')}
+                                                                        placeholder={cred.placeholder || `Enter ${cred.displayName} credentials`}
+                                                                        value={configureCredentials[cred.provider]?.value || ''}
+                                                                        onChange={(e) => {
+                                                                            setConfigureCredentials({
+                                                                                ...configureCredentials,
+                                                                                [cred.provider]: { value: e.target.value },
+                                                                            });
+                                                                        }}
+                                                                    />
+                                                                )}
                                                                 <p className="text-xs text-muted-foreground">
                                                                     Required for: {cred.nodes.join(', ')}
                                                                 </p>
                                                             </div>
-                                                        ))}
+                                                        )})}
                                                 </div>
                                             )}
 
@@ -5880,36 +7205,103 @@ export function AutonomousAgentWizard() {
                                             {missingItems.inputs && missingItems.inputs.length > 0 && (
                                                 <div className="space-y-4">
                                                     <h3 className="text-lg font-semibold">Sensitive Inputs</h3>
-                                                    {missingItems.inputs.map((input) => (
+                                                    {missingItems.inputs.map((input) => {
+                                                        const controlType = resolveConfigureFieldType(input);
+                                                        return (
                                                         <div key={`${input.nodeId}_${input.fieldName}`} className="p-4 border rounded-lg space-y-2">
                                                             <Label>
                                                                 {input.nodeLabel} - {input.fieldName}
                                                                 {input.required && <span className="text-red-500 ml-1">*</span>}
                                                             </Label>
-                                                            <Input
-                                                                type={input.fieldType === 'number' ? 'number' : 'text'}
-                                                                placeholder={input.description}
-                                                                value={
-                                                                    configureInputs.find(
-                                                                        i => i.nodeId === input.nodeId && i.fieldName === input.fieldName
-                                                                    )?.value || ''
-                                                                }
-                                                                onChange={(e) => {
-                                                                    const existingIndex = configureInputs.findIndex(
-                                                                        i => i.nodeId === input.nodeId && i.fieldName === input.fieldName
-                                                                    );
-                                                                    if (existingIndex >= 0) {
-                                                                        const updated = [...configureInputs];
-                                                                        updated[existingIndex] = { ...updated[existingIndex], value: e.target.value };
-                                                                        setConfigureInputs(updated);
-                                                                    } else {
-                                                                        setConfigureInputs([
-                                                                            ...configureInputs,
-                                                                            { nodeId: input.nodeId, fieldName: input.fieldName, value: e.target.value },
-                                                                        ]);
+                                                            {controlType === 'select' && Array.isArray(input.options) && input.options.length > 0 ? (
+                                                                <Select
+                                                                    value={
+                                                                        configureInputs.find(
+                                                                            i => i.nodeId === input.nodeId && i.fieldName === input.fieldName
+                                                                        )?.value || ''
                                                                     }
-                                                                }}
-                                                            />
+                                                                    onValueChange={(value) => {
+                                                                        const selectedValue = normalizeSelectValue(
+                                                                            value,
+                                                                            undefined,
+                                                                            input.options
+                                                                        );
+                                                                        const existingIndex = configureInputs.findIndex(
+                                                                            i => i.nodeId === input.nodeId && i.fieldName === input.fieldName
+                                                                        );
+                                                                        if (existingIndex >= 0) {
+                                                                            const updated = [...configureInputs];
+                                                                            updated[existingIndex] = { ...updated[existingIndex], value: selectedValue };
+                                                                            setConfigureInputs(updated);
+                                                                        } else {
+                                                                            setConfigureInputs([
+                                                                                ...configureInputs,
+                                                                                { nodeId: input.nodeId, fieldName: input.fieldName, value: selectedValue },
+                                                                            ]);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <SelectTrigger>
+                                                                        <SelectValue placeholder={input.placeholder || `Select ${input.fieldName}`} />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {input.options.map((opt) => (
+                                                                            <SelectItem key={`${input.nodeId}_${input.fieldName}_${opt.value}`} value={String(opt.value)}>
+                                                                                {opt.label}
+                                                                            </SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            ) : controlType === 'textarea' ? (
+                                                                <Textarea
+                                                                    placeholder={input.placeholder || input.description}
+                                                                    value={
+                                                                        configureInputs.find(
+                                                                            i => i.nodeId === input.nodeId && i.fieldName === input.fieldName
+                                                                        )?.value || ''
+                                                                    }
+                                                                    onChange={(e) => {
+                                                                        const existingIndex = configureInputs.findIndex(
+                                                                            i => i.nodeId === input.nodeId && i.fieldName === input.fieldName
+                                                                        );
+                                                                        if (existingIndex >= 0) {
+                                                                            const updated = [...configureInputs];
+                                                                            updated[existingIndex] = { ...updated[existingIndex], value: e.target.value };
+                                                                            setConfigureInputs(updated);
+                                                                        } else {
+                                                                            setConfigureInputs([
+                                                                                ...configureInputs,
+                                                                                { nodeId: input.nodeId, fieldName: input.fieldName, value: e.target.value },
+                                                                            ]);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                <Input
+                                                                    type={controlType === 'password' ? 'password' : ((controlType === 'number' || input.fieldType === 'number') ? 'number' : 'text')}
+                                                                    placeholder={input.placeholder || input.description}
+                                                                    value={
+                                                                        configureInputs.find(
+                                                                            i => i.nodeId === input.nodeId && i.fieldName === input.fieldName
+                                                                        )?.value || ''
+                                                                    }
+                                                                    onChange={(e) => {
+                                                                        const existingIndex = configureInputs.findIndex(
+                                                                            i => i.nodeId === input.nodeId && i.fieldName === input.fieldName
+                                                                        );
+                                                                        if (existingIndex >= 0) {
+                                                                            const updated = [...configureInputs];
+                                                                            updated[existingIndex] = { ...updated[existingIndex], value: e.target.value };
+                                                                            setConfigureInputs(updated);
+                                                                        } else {
+                                                                            setConfigureInputs([
+                                                                                ...configureInputs,
+                                                                                { nodeId: input.nodeId, fieldName: input.fieldName, value: e.target.value },
+                                                                            ]);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            )}
                                                             {input.examples && input.examples.length > 0 && (
                                                                 <p className="text-xs text-muted-foreground">
                                                                     Example: {JSON.stringify(input.examples[0])}
@@ -5917,7 +7309,7 @@ export function AutonomousAgentWizard() {
                                                             )}
                                                             <p className="text-xs text-muted-foreground">{input.description}</p>
                                                         </div>
-                                                    ))}
+                                                    )})}
                                                 </div>
                                             )}
 

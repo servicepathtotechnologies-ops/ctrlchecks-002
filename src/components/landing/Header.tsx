@@ -12,12 +12,15 @@ export function Header() {
   const { user } = useAuth();
 
   const navItems = [
-    { name: "Platform", href: "#features" },
+    { name: "Demo", href: "#demo" },
     { name: "How it works", href: "#how-it-works" },
-    { name: "Security", href: "#security" },
-    { name: "Developers", href: "#open-core" },
-    { name: "Why CtrlChecks", href: "#advantage" },
-    { name: "Pricing", href: "#pricing" },
+    { name: "Trust", href: "#trust" },
+    { name: "Open core", href: "#open-core" },
+    { name: "Plugins", href: "#plugins-api" },
+    { name: "Verticals", href: "#verticals" },
+    { name: "Why us", href: "#why-ctrlchecks" },
+    { name: "Beta", href: "#features" },
+    { name: "Plans", href: "#subscription" },
   ];
 
   return (
@@ -31,7 +34,7 @@ export function Header() {
             <span className="text-xl font-bold">CtrlChecks</span>
           </Link>
 
-          <div className="hidden lg:flex lg:items-center lg:gap-6">
+          <div className="hidden xl:flex xl:items-center xl:gap-5">
             {navItems.map((item) => (
               <a
                 key={item.name}
@@ -43,7 +46,7 @@ export function Header() {
             ))}
           </div>
 
-          <div className="hidden lg:flex lg:items-center lg:gap-4">
+          <div className="hidden xl:flex xl:items-center xl:gap-4">
             <Button
               variant="ghost"
               size="icon"
@@ -74,7 +77,7 @@ export function Header() {
             )}
           </div>
 
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-2 xl:hidden">
             <Button
               variant="ghost"
               size="icon"
@@ -106,9 +109,9 @@ export function Header() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden"
+              className="xl:hidden"
             >
-              <div className="space-y-1 pb-4 pt-2">
+              <div className="max-h-[min(70vh,28rem)] space-y-1 overflow-y-auto pb-4 pt-2">
                 {navItems.map((item) => (
                   <a
                     key={item.name}

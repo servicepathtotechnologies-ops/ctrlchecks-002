@@ -61,3 +61,70 @@ export function resolveWizardFieldFillMode(
   }
   return 'manual_static';
 }
+
+/**
+ * Wizard policy guard: mirrors worker `coerceFieldFillModeByPolicy`.
+ * Only `=== false` disables a mode (undefined means allowed), matching registry metadata.
+ */
+export function resolveWizardEffectiveFieldFillMode(
+  wizardExplicit: string | undefined,
+  questionDefault: FieldFillMode | undefined,
+  supportsRuntimeAI?: boolean,
+  supportsBuildtimeAI?: boolean
+): {
+  mode: FieldFillMode;
+  coerced: boolean;
+  reason?: 'runtime_not_supported' | 'buildtime_not_supported';
+} {
+  let mode = resolveWizardFieldFillMode(wizardExplicit, questionDefault);
+  let coerced = false;
+  let reason: 'runtime_not_supported' | 'buildtime_not_supported' | undefined;
+
+  if (mode === 'runtime_ai' && supportsRuntimeAI === false) {
+    mode =
+      questionDefault === 'runtime_ai'
+        ? 'manual_static'
+        : questionDefault === 'manual_static' || questionDefault === 'buildtime_ai_once'
+          ? questionDefault
+          : 'manual_static';
+    if (mode === 'runtime_ai') mode = 'manual_static';
+    coerced = true;
+    reason = 'runtime_not_supported';
+  }
+  if (mode === 'buildtime_ai_once' && supportsBuildtimeAI === false) {
+    mode =
+      questionDefault === 'buildtime_ai_once'
+        ? 'manual_static'
+        : questionDefault === 'manual_static' || questionDefault === 'runtime_ai'
+          ? questionDefault
+          : 'manual_static';
+    if (mode === 'buildtime_ai_once') mode = 'manual_static';
+    coerced = true;
+    reason = 'buildtime_not_supported';
+  }
+  if (mode === 'runtime_ai' && supportsRuntimeAI === false) {
+    mode = 'manual_static';
+    coerced = true;
+    reason = 'runtime_not_supported';
+  }
+
+  return { mode, coerced, reason };
+}
+
+/** Bulk "set to AI": runtime when allowed, else buildtime when allowed, else manual. */
+export function wizardBulkAIModeForQuestion(
+  supportsRuntimeAI?: boolean,
+  supportsBuildtimeAI?: boolean
+): FieldFillMode {
+  if (supportsRuntimeAI !== false) return 'runtime_ai';
+  if (supportsBuildtimeAI !== false) return 'buildtime_ai_once';
+  return 'manual_static';
+}
+
+export function shouldAskWizardManualQuestion(
+  effectiveMode: FieldFillMode,
+  ownershipUiMode?: string
+): boolean {
+  if (ownershipUiMode === 'locked') return false;
+  return effectiveMode !== 'runtime_ai';
+}

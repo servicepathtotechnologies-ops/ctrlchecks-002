@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Plus, X } from 'lucide-react';
 import { InputGuideLink } from './InputGuideLink';
+import { normalizeFormFieldIdentity } from '@/lib/formFieldIdentity';
 
 interface FormField {
   id: string;
@@ -42,14 +43,15 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
   };
 
   const handleAddField = useCallback(() => {
-    const newField: FormField = {
+    const newField = normalizeFormFieldIdentity({
       id: `field_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       label: 'New Field',
+      key: 'new_field',
       name: 'new_field',
       type: 'text',
       required: false,
       placeholder: '',
-    };
+    }, new Set(config.fields.map((f: any) => String(f.key || f.name || '')))) as FormField;
 
     onConfigChange({
       ...config,
@@ -68,11 +70,32 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
     const updatedFields = config.fields.map((field, i) => {
       const stableId = field.id || field.key || field.name || `field-${i}`;
       if (stableId === fieldId) {
-        const updated = { ...field, [key]: value };
+        const updated = { ...field, [key]: value } as Record<string, unknown>;
         if (key === 'label') {
-          updated.name = labelToName(value);
+          const normalized = normalizeFormFieldIdentity(
+            { ...updated, key: updated.key || updated.name || labelToName(String(value)) },
+            new Set(
+              config.fields
+                .filter((f, idx) => (f.id || f.key || f.name || `field-${idx}`) !== fieldId)
+                .map((f: any) => String(f.key || f.name || ''))
+            )
+          ) as any;
+          updated.name = normalized.name;
+          (updated as any).key = normalized.key;
+          updated.label = normalized.label;
+        } else if (key === 'name') {
+          const normalized = normalizeFormFieldIdentity(
+            { ...updated, key: value, name: value },
+            new Set(
+              config.fields
+                .filter((f, idx) => (f.id || f.key || f.name || `field-${idx}`) !== fieldId)
+                .map((f: any) => String(f.key || f.name || ''))
+            )
+          ) as any;
+          updated.name = normalized.name;
+          (updated as any).key = normalized.key;
         }
-        return updated;
+        return updated as FormField;
       }
       return field;
     });
