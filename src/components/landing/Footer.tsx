@@ -45,17 +45,19 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/40 bg-transparent">
-      <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <footer className="border-t border-border/50 bg-transparent">
+      <div className="container mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10 lg:py-20">
         <div className="grid gap-8 lg:grid-cols-6">
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center">
                 <img src="/favicon.ico" alt="" className="h-full w-full" />
               </div>
-              <span className="text-xl font-bold">CtrlChecks AI-OS</span>
+              <span className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                CtrlChecks AI-OS
+              </span>
             </Link>
-            <p className="mt-4 max-w-sm text-sm text-muted-foreground">
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
               AI automation OS — intent, intelligence, execution.{" "}
               <a
                 href="https://www.ctrlchecks.ai"
@@ -82,8 +84,10 @@ export function Footer() {
 
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category}>
-              <h3 className="font-semibold">{category}</h3>
-              <ul className="mt-4 space-y-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/90">
+                {category}
+              </h3>
+              <ul className="mt-5 space-y-3">
                 {links.map((link) => (
                   <li key={link.name}>
                     <a

@@ -11,8 +11,8 @@ export function SubscriptionSection() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section id="subscription" className="py-20 sm:py-32" aria-labelledby="subscription-heading">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="subscription" className="py-24 sm:py-32" aria-labelledby="subscription-heading">
+      <div className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}

@@ -25,6 +25,7 @@ import { validateAndFixWorkflow } from '@/lib/workflowValidation';
 import { useTheme } from '@/hooks/useTheme';
 import { InputGuideLink } from './InputGuideLink';
 import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';
+import { ThemedBorderGlow } from '@/components/ui/themed-border-glow';
 import { WorkflowConfirmationStep } from './WorkflowConfirmationStep';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
 import { generateFieldGuide } from './guideGenerator';
@@ -3501,6 +3502,12 @@ export function AutonomousAgentWizard() {
 
                         console.log('Received update:', update);
 
+                        if (typeof update.progress_percentage === 'number') {
+                            setProgress(
+                                Math.min(100, Math.max(0, Number(update.progress_percentage)))
+                            );
+                        }
+
                         if (update.status === 'error') {
                             throw new Error(
                                 typeof update.error === 'string'
@@ -4193,9 +4200,27 @@ export function AutonomousAgentWizard() {
 
                             <div className="grid grid-cols-3 gap-4 mt-8">
                                 {['Social Media Automation', 'Data Syncing', 'Report Generation'].map((i) => (
-                                    <div key={i} className="p-4 rounded-lg border border-border bg-card/30 hover:bg-muted/50 cursor-pointer transition-all hover:border-indigo-500/50 hover:scale-[1.02] text-center text-sm text-muted-foreground" onClick={() => setPrompt(`Create a workflow for ${i.toLowerCase()}`)}>
-                                        {i}
-                                    </div>
+                                    <ThemedBorderGlow
+                                        key={i}
+                                        borderRadius={10}
+                                        glowRadius={26}
+                                        className="min-h-[4.5rem]"
+                                    >
+                                        <div
+                                            className="flex h-full min-h-[4.5rem] items-center justify-center p-4 text-center text-sm text-muted-foreground transition-all hover:bg-muted/40 cursor-pointer hover:scale-[1.02]"
+                                            onClick={() => setPrompt(`Create a workflow for ${i.toLowerCase()}`)}
+                                            role="button"
+                                            tabIndex={0}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    setPrompt(`Create a workflow for ${i.toLowerCase()}`);
+                                                }
+                                            }}
+                                        >
+                                            {i}
+                                        </div>
+                                    </ThemedBorderGlow>
                                 ))}
                             </div>
 
@@ -4219,7 +4244,13 @@ export function AutonomousAgentWizard() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="flex flex-col gap-6"
                             >
-                            <Card className="shadow-xl overflow-hidden">
+                            <ThemedBorderGlow
+                                className="w-full shadow-xl"
+                                animated={hasWorkflowPlan && step === 'questioning'}
+                                borderRadius={12}
+                                glowRadius={40}
+                            >
+                                <div className="overflow-hidden">
                                 <div className="h-1 w-full bg-gradient-to-r from-indigo-500 to-purple-500" />
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2 text-indigo-400">
@@ -4389,7 +4420,8 @@ export function AutonomousAgentWizard() {
                                         </>
                                     )}
                                 </CardContent>
-                            </Card>
+                                </div>
+                            </ThemedBorderGlow>
                         </motion.div>
                     </div>
                     )}

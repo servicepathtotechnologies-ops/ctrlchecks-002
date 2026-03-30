@@ -11,10 +11,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Theme is already initialized by useTheme hook
   // This component just ensures the hook is called at the app level
   useEffect(() => {
-    // Ensure theme class is applied to document root
     const root = window.document.documentElement;
+    const body = window.document.body;
     root.classList.remove("light", "dark");
+    body.classList.remove("light", "dark");
     root.classList.add(theme);
+    body.classList.add(theme);
   }, [theme]);
 
   return <>{children}</>;

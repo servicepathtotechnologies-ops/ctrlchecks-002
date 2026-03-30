@@ -6,7 +6,7 @@ export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("theme") as Theme;
-      if (stored) return stored;
+      if (stored === "light" || stored === "dark") return stored;
       return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     }
     return "light";
@@ -14,8 +14,11 @@ export function useTheme() {
 
   useEffect(() => {
     const root = window.document.documentElement;
+    const body = window.document.body;
     root.classList.remove("light", "dark");
+    body.classList.remove("light", "dark");
     root.classList.add(theme);
+    body.classList.add(theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
 

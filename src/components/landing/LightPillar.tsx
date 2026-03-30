@@ -31,8 +31,8 @@ function parseColor(hex: string): THREE.Vector3 {
 }
 
 export default function LightPillar({
-  topColor = "#5227FF",
-  bottomColor = "#FF9FFC",
+  topColor = "#0A66C2",
+  bottomColor = "#60A5FA",
   intensity = 1.0,
   rotationSpeed = 0.3,
   interactive = false,

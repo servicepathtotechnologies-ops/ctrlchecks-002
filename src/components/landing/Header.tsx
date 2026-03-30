@@ -25,13 +25,13 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-strong">
-      <nav className="container mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main">
-        <div className="flex h-16 items-center justify-between">
+      <nav className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10" aria-label="Main">
+        <div className="flex h-[4.25rem] items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center">
               <img src="/favicon.ico" alt="" className="h-full w-full" />
             </div>
-            <span className="text-xl font-bold">CtrlChecks</span>
+            <span className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">CtrlChecks</span>
           </Link>
 
           <div className="hidden xl:flex xl:items-center xl:gap-5">

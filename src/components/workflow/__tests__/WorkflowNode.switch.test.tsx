@@ -18,6 +18,14 @@ vi.mock('@/stores/debugStore', () => ({
   }),
 }));
 
+vi.mock('@/hooks/useTheme', () => ({
+  useTheme: () => ({
+    theme: 'light' as const,
+    setTheme: vi.fn(),
+    toggleTheme: vi.fn(),
+  }),
+}));
+
 describe('WorkflowNode switch safety', () => {
   it('renders without crashing for malformed switch cases payload', () => {
     const props: any = {

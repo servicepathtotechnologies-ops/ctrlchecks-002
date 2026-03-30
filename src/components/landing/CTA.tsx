@@ -9,14 +9,14 @@ export function CTA() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="py-20 sm:py-32" aria-labelledby="cta-heading">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 sm:py-32" aria-labelledby="cta-heading">
+      <div className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 28, scale: 0.98 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={landingViewport}
           transition={reduceMotion ? { duration: 0.5 } : springBouncy}
-          className="relative overflow-hidden rounded-3xl gradient-primary p-8 sm:p-16"
+          className="relative overflow-hidden rounded-2xl border border-primary/10 shadow-xl shadow-primary/10 gradient-primary p-10 sm:p-16 lg:p-20"
         >
           {!reduceMotion && (
             <>

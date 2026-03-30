@@ -13,7 +13,7 @@ export function Hero() {
     : springSnappy;
 
   return (
-    <section className="relative overflow-hidden pt-32 pb-16 sm:pt-40 sm:pb-24">
+    <section className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-28">
       <div className="container relative mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <motion.div
@@ -23,11 +23,11 @@ export function Hero() {
             className="mb-4 inline-flex flex-wrap items-center justify-center gap-2"
           >
             <motion.span
-              className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-transparent px-4 py-1.5 text-sm font-semibold text-primary shadow-none"
+              className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-background/60 px-5 py-2 text-sm font-semibold text-primary shadow-sm backdrop-blur-sm dark:bg-background/20"
               animate={
                 reduceMotion
                   ? undefined
-                  : { boxShadow: ["0 0 0 0 hsl(174 60% 51% / 0)", "0 0 0 10px hsl(174 60% 51% / 0)"] }
+                  : { boxShadow: ["0 0 0 0 hsl(var(--primary) / 0)", "0 0 0 12px hsl(var(--primary) / 0)"] }
               }
               transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
             >
@@ -101,7 +101,7 @@ export function Hero() {
               <Button
                 size="lg"
                 asChild
-                className="gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"
+                className="gradient-primary text-primary-foreground shadow-glow hover:brightness-[1.03]"
               >
                 <Link to="/signup">
                   Join the beta

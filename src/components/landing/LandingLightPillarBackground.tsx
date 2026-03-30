@@ -8,13 +8,13 @@ function readRootTheme(): "light" | "dark" {
   return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
-/** Light mode: brighter teal → sky-blue so WebGL reads like dark mode’s glow on white. */
-const PILLAR_LIGHT_TOP = "#14b8a6";
-const PILLAR_LIGHT_BOTTOM = "#60a5fa";
+/** Light mode: professional blue → soft sky (white + blue theme). */
+const PILLAR_LIGHT_TOP = "#0A66C2";
+const PILLAR_LIGHT_BOTTOM = "#93C5FD";
 
-/** Dark mode: unchanged — purple / magenta pillar on near-black. */
-const PILLAR_DARK_TOP = "#5227FF";
-const PILLAR_DARK_BOTTOM = "#FF9FFC";
+/** Dark mode: bright blue pillar on deep navy. */
+const PILLAR_DARK_TOP = "#3B82F6";
+const PILLAR_DARK_BOTTOM = "#60A5FA";
 
 /**
  * Full-viewport fixed WebGL pillar behind the entire landing page.
@@ -60,7 +60,7 @@ export function LandingLightPillarBackground() {
           </div>
           {/* Dark vignette; light: whisper-thin veil so text stays crisp without erasing the CSS/WebGL pillar */}
           {liveTheme === "light" ? (
-            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] via-transparent to-sky-100/12" />
+            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-blue-50/25 dark:hidden" />
           ) : (
             <>
               <div className="absolute inset-0 bg-gradient-to-b from-background/58 via-background/48 to-background/62" />

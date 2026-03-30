@@ -1,9 +1,11 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { cn } from '@/lib/utils';
 import { NodeData } from '@/stores/workflowStore';
 import { NODE_CATEGORIES } from './nodeTypes';
 import { useDebugStore } from '@/stores/debugStore';
+import { useTheme } from '@/hooks/useTheme';
+import { ThemedBorderGlow } from '@/components/ui/themed-border-glow';
 import {
   Play, Webhook, Clock, Globe, Brain, Sparkles, Gem, Link, GitBranch,
   GitMerge, Repeat, Timer, ShieldAlert, Code, Braces, Table, Type,
@@ -28,6 +30,8 @@ type WorkflowNodeProps = Node<NodeData>;
 
 const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>) => {
   const { openDebug } = useDebugStore();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   // Skip rendering form nodes - they use custom FormTriggerNode component
   if (data?.type === 'form') {
@@ -104,25 +108,53 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
 
   const status = data.executionStatus || 'idle';
 
-  // Determine border styles based on status
-  let borderClass = selected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-muted-foreground/50';
+  const nodeWidth = isAIAgentNode ? 280 : 240;
+  const nodeMinHeight = isAIAgentNode ? 120 : 70;
 
-  if (status === 'running') {
-    borderClass = 'border-blue-500 border-2 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse';
-  } else if (status === 'success') {
-    borderClass = 'border-blue-500 border-2';
-  }
-  // Error nodes keep default border color (no red)
+  const glowOverrides = useMemo(() => {
+    let colors: string[] | undefined;
+    let glowColor: string | undefined;
+    let glowIntensity: number | undefined;
+    let animated = false;
+
+    if (status === 'running') {
+      colors = isLight
+        ? ['#1e40af', '#2563eb', '#0284c7']
+        : ['#2563eb', '#3b82f6', '#60a5fa'];
+      glowColor = isLight ? '217 91 40' : '217 91 68';
+      glowIntensity = 1.52;
+      animated = true;
+    } else if (status === 'success') {
+      colors = isLight
+        ? ['#166534', '#0f766e', '#15803d']
+        : ['#22c55e', '#2dd4bf', '#4ade80'];
+      glowColor = isLight ? '142 76 32' : '142 76 62';
+      glowIntensity = 1.42;
+    } else if (selected) {
+      glowIntensity = isLight ? 1.52 : 1.58;
+      glowColor = isLight ? '174 60 40' : '174 60 68';
+    }
+
+    return { colors, glowColor, glowIntensity, animated };
+  }, [status, selected, isLight]);
 
   return (
-    <div
-      className={cn(
-        'px-5 py-4 rounded-lg border-2 bg-card shadow-md transition-all relative',
-        borderClass,
-        isAIAgentNode && 'pb-16' // Extra padding for bottom port labels
-      )}
-      style={{ width: isAIAgentNode ? '280px' : '240px', minHeight: isAIAgentNode ? '120px' : '70px' }}
+    <ThemedBorderGlow
+      variant="canvas-node"
+      className="shadow-md transition-all"
+      style={{ width: nodeWidth, minHeight: nodeMinHeight }}
+      colors={glowOverrides.colors}
+      glowColor={glowOverrides.glowColor}
+      glowIntensity={glowOverrides.glowIntensity}
+      animated={glowOverrides.animated}
     >
+      <div
+        className={cn(
+          'px-5 py-4 rounded-[inherit] bg-card transition-all relative',
+          isAIAgentNode && 'pb-16',
+          status === 'running' && 'motion-safe:animate-pulse'
+        )}
+      >
       {/* Execution Status Indicators */}
       {status === 'running' && (
         <div className="absolute -top-2 -right-2 bg-background rounded-full p-0.5 shadow-sm border border-border z-10">
@@ -370,7 +402,8 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
           className="!w-4 !h-4 !bg-muted-foreground !border-2 !border-background"
         />
       )}
-    </div>
+      </div>
+    </ThemedBorderGlow>
   );
 });
 
