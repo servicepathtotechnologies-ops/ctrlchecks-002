@@ -12,6 +12,7 @@ const footerLinks = {
     { name: "Why CtrlChecks", href: "#why-ctrlchecks" },
     { name: "Beta focus", href: "#features" },
     { name: "Subscription", href: "#subscription" },
+    { name: "FAQ", href: "#faq" },
   ],
   Resources: [
     { name: "Documentation", href: "#" },

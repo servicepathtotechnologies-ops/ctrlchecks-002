@@ -220,6 +220,78 @@ type WizardSelectedVariationMeta = {
 } | null;
 
 /**
+ * Parse a structuredSummary string into its display sections.
+ * Strips the configuration contract boilerplate — only Goal, Intent alignment,
+ * Execution steps, and Terminals are shown to the user.
+ */
+function parseStructuredSummary(raw: string): {
+    goal: string;
+    intentAlignment: string;
+    executionSteps: string[];
+    terminals: string;
+} {
+    const goal = raw.match(/^Goal:\s*([\s\S]*?)(?=\n\n(?:Intent alignment:|Execution:|Terminals:|##|$))/m)?.[1]?.trim() ?? '';
+    const intentAlignment = raw.match(/Intent alignment:\s*([\s\S]*?)(?=\n\n(?:Execution:|Terminals:|##|$))/m)?.[1]?.trim() ?? '';
+    const executionBlock = raw.match(/Execution:\s*([\s\S]*?)(?=\n\n(?:Terminals:|##|$))/m)?.[1]?.trim() ?? '';
+    const terminals = raw.match(/Terminals?:\s*([^\n]+)/m)?.[1]?.trim() ?? '';
+    const executionSteps = executionBlock
+        .split('\n')
+        .map(l => l.replace(/^\d+\.\s*/, '').trim())
+        .filter(Boolean);
+    return { goal, intentAlignment, executionSteps, terminals };
+}
+
+/** Clean structured display of the workflow plan — no boilerplate, no config contract. */
+function StructuredPlanDisplay({ summary, compact = false }: { summary: string; compact?: boolean }) {
+    const { goal, intentAlignment, executionSteps, terminals } = parseStructuredSummary(summary);
+    if (!goal && executionSteps.length === 0) {
+        return <p className={compact ? 'text-xs text-slate-300/90' : 'text-sm text-foreground'}>{summary}</p>;
+    }
+    if (compact) {
+        return (
+            <div className="space-y-1.5 text-xs text-slate-300/90">
+                {goal && <p className="font-medium text-slate-200 leading-snug">{goal}</p>}
+                {executionSteps.length > 0 && (
+                    <ol className="space-y-0.5 pl-3 list-decimal list-outside">
+                        {executionSteps.map((s, i) => <li key={i} className="leading-snug">{s}</li>)}
+                    </ol>
+                )}
+                {terminals && <p className="text-slate-400 italic">{terminals}</p>}
+            </div>
+        );
+    }
+    return (
+        <div className="space-y-3 text-sm">
+            {goal && (
+                <div>
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Goal</span>
+                    <p className="mt-0.5 text-foreground leading-relaxed">{goal}</p>
+                </div>
+            )}
+            {intentAlignment && (
+                <div>
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Intent alignment</span>
+                    <p className="mt-0.5 text-foreground/80 leading-relaxed">{intentAlignment}</p>
+                </div>
+            )}
+            {executionSteps.length > 0 && (
+                <div>
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Execution</span>
+                    <ol className="mt-1 space-y-1 pl-4 list-decimal list-outside">
+                        {executionSteps.map((s, i) => (
+                            <li key={i} className="text-foreground/90 leading-relaxed">{s}</li>
+                        ))}
+                    </ol>
+                </div>
+            )}
+            {terminals && (
+                <p className="text-xs text-muted-foreground italic border-t border-border/40 pt-2">{terminals}</p>
+            )}
+        </div>
+    );
+}
+
+/**
  * Single source of truth for POST /api/generate-workflow (mode: create).
  * Must match for streaming and non-streaming fallback so plan-driven create is not dropped.
  */
@@ -228,6 +300,7 @@ function buildGenerateWorkflowCreateBody(params: {
     originalPrompt: string;
     config: Record<string, unknown>;
     planRegistryTags: string[];
+
     planMandatoryNodeTypes: string[];
     planNodeHints: string[];
     selectedVariationMeta: WizardSelectedVariationMeta;
@@ -251,7 +324,9 @@ function buildGenerateWorkflowCreateBody(params: {
         originalPrompt: originalPrompt || finalPrompt,
         selectedVariationId: selectedVariationMeta?.id ?? null,
         selectedStructuredPrompt: finalPrompt,
-        confirmedStructuredPrompt: finalPrompt,
+        // Use original user prompt as confirmedStructuredPrompt — not the full structured summary
+        // which contains registry contract text that causes false node detection
+        confirmedStructuredPrompt: originalPrompt || finalPrompt,
         registryTags:
             planRegistryTags.length > 0 ? planRegistryTags : selectedVariationMeta?.keywords || [],
         mandatoryNodeTypes:
@@ -1183,6 +1258,33 @@ export function AutonomousAgentWizard() {
                     }
                 }
             }
+            // ✅ Intent-aware pre-selection: for fields not yet in _fillMode, infer the
+            // correct button from the question metadata set by the backend generator.
+            // - aiFilledAtBuildTime=true  → AI already generated a value → pre-select buildtime_ai_once
+            // - aiUsesRuntime=true        → value intentionally empty, resolved at run time → pre-select runtime_ai
+            // - otherwise                 → user must provide → pre-select manual_static (schema default)
+            for (const q of allQuestions) {
+                const nodeId = (q as any)?.nodeId;
+                const fieldName = (q as any)?.fieldName;
+                if (!nodeId || !fieldName) continue;
+                const key = `mode_${nodeId}_${fieldName}`;
+                if (next[key] !== undefined) continue; // already set by _fillMode or user
+                const aiFilledAtBuildTime = (q as any)?.aiFilledAtBuildTime;
+                const aiUsesRuntime = (q as any)?.aiUsesRuntime;
+                const fillModeDefault = (q as any)?.fillModeDefault as string | undefined;
+                if (aiFilledAtBuildTime) {
+                    next[key] = 'buildtime_ai_once';
+                    changed = true;
+                } else if (aiUsesRuntime) {
+                    next[key] = 'runtime_ai';
+                    changed = true;
+                } else if (fillModeDefault === 'buildtime_ai_once' || fillModeDefault === 'runtime_ai') {
+                    // Schema says AI should handle this — respect it as the default
+                    next[key] = fillModeDefault;
+                    changed = true;
+                }
+                // manual_static fields: leave undefined so the UI shows "You" as default
+            }
             return changed ? next : prev;
         });
 
@@ -1656,7 +1758,10 @@ export function AutonomousAgentWizard() {
                     prompt: mainPrompt,
                     mode: 'plan_credentials',
                     planProposedNodeChain: chain,
-                    confirmedStructuredPrompt: mainPrompt,
+                    // Use the original user prompt as context for credential/semantic checks,
+                    // NOT the full structured summary which contains registry contract text
+                    // that causes false node detection (http_request, postgresql, etc.)
+                    confirmedStructuredPrompt: originalPrompt || mainPrompt,
                 }),
             });
 
@@ -1676,14 +1781,23 @@ export function AutonomousAgentWizard() {
                     canonicalizationHint
                         ? `Non-canonical node types in plan: ${canonicalizationHint}`
                         : (
+                    preflightJson.message ||
                     preflightJson.errors?.join?.('; ') ||
                     preflightJson.error ||
-                    preflightJson.message ||
                     'Credential preflight failed'
                         );
+                const isStructuralFailure =
+                    preflightJson?.errorType === 'STRUCTURAL_HEALING_FAILED' ||
+                    (typeof preflightJson?.error === 'string' &&
+                        preflightJson.error.toLowerCase().includes('structural'));
                 toast({
-                    title: 'Plan credential check failed',
-                    description: typeof msg === 'string' ? msg : 'Could not analyze credentials for this plan.',
+                    title: isStructuralFailure ? 'Plan structural validation failed' : 'Plan credential check failed',
+                    description:
+                        typeof msg === 'string'
+                            ? msg
+                            : isStructuralFailure
+                                ? 'Could not validate workflow structure for this plan.'
+                                : 'Could not analyze credentials for this plan.',
                     variant: 'destructive',
                 });
                 const semanticIssues = Array.isArray(preflightJson?.canonicalizationIssues)
@@ -4510,11 +4624,9 @@ export function AutonomousAgentWizard() {
                                                 <Sparkles className="h-4 w-4" />
                                                 Final Analyzed Prompt:
                                             </p>
-                                            <div className="prose prose-sm dark:prose-invert max-w-none">
-                                                <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap font-medium">
-                                                    {refinement.enhancedPrompt || refinement.systemPrompt || refinement.refinedPrompt || 'No prompt available'}
-                                                </p>
-                                            </div>
+                                            <StructuredPlanDisplay
+                                                summary={planSummary || refinement.enhancedPrompt || refinement.systemPrompt || refinement.refinedPrompt || ''}
+                                            />
                                         </div>
 
                                         {/* Confirmation Buttons — only in FSM states that allow confirmUnderstanding (STATE_1 / STATE_2).
@@ -6663,7 +6775,7 @@ export function AutonomousAgentWizard() {
                                     </div>
 
                                     {/* Compact Final Prompt Summary so users see WHAT is being built */}
-                                    {refinement && (refinement.enhancedPrompt || refinement.systemPrompt || refinement.refinedPrompt) && (
+                                    {refinement && (refinement.enhancedPrompt || refinement.systemPrompt || refinement.refinedPrompt || planSummary) && (
                                         <motion.div
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
@@ -6671,12 +6783,13 @@ export function AutonomousAgentWizard() {
                                             className="mt-4 max-w-xl mx-auto text-left"
                                         >
                                             <div className="rounded-lg border border-slate-600/40 bg-slate-900/60 px-4 py-3 shadow-lg">
-                                                <p className="text-xs font-semibold text-slate-300 mb-1">
+                                                <p className="text-xs font-semibold text-slate-300 mb-2">
                                                     Final analyzed prompt
                                                 </p>
-                                                <p className="text-xs sm:text-sm text-slate-300/90 leading-relaxed whitespace-pre-wrap">
-                                                    {refinement.enhancedPrompt || refinement.systemPrompt || refinement.refinedPrompt}
-                                                </p>
+                                                <StructuredPlanDisplay
+                                                    summary={planSummary || refinement.enhancedPrompt || refinement.systemPrompt || refinement.refinedPrompt || ''}
+                                                    compact
+                                                />
                                             </div>
                                         </motion.div>
                                     )}

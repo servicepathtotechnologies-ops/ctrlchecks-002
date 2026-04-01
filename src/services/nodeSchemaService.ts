@@ -52,6 +52,8 @@ export interface InputFieldSchema {
   };
   role?: string;
   essentialForExecution?: boolean;
+  /** Ownership category — 'credential' fields are managed by the credential system, not user input */
+  ownership?: 'credential' | 'structural' | 'value';
 }
 
 export interface OutputFieldSchema {

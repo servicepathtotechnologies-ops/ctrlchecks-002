@@ -626,6 +626,49 @@ export default function PropertiesPanel({
     [selectedNodeId, updateNodeConfig]
   );
 
+  // Auto-persist node config changes to backend.
+  // Debounced so rapid typing doesn't flood the API — fires 1.5s after the last change.
+  const autoPersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!selectedNode || !workflowId) return;
+    // Only auto-persist when the workflow is already saved (has an ID)
+    if (autoPersistTimerRef.current) clearTimeout(autoPersistTimerRef.current);
+    autoPersistTimerRef.current = setTimeout(async () => {
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session?.access_token) return;
+
+        const nodeConfig = selectedNode.data?.config || {};
+        const nodeInputs: Record<string, any> = {};
+        Object.keys(nodeConfig).forEach((key) => {
+          const value = nodeConfig[key];
+          if (value === undefined || value === null) return;
+          if (key.startsWith('_')) return;
+          if (key.includes('credential') || key.includes('oauth')) return;
+          nodeInputs[key] = value;
+        });
+
+        if (Object.keys(nodeInputs).length === 0) return;
+
+        await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-inputs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
+          body: JSON.stringify({ inputs: { [selectedNode.id]: nodeInputs } }),
+        });
+      } catch {
+        // Non-fatal — user can still manually save
+      }
+    }, 1500);
+    return () => {
+      if (autoPersistTimerRef.current) clearTimeout(autoPersistTimerRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode?.data?.config, selectedNode?.id, workflowId]);
+
   // Memoize available fields for condition builder – safe when no node is selected
   const availableFieldsForConditions = useMemo(() => {
     if (!selectedNodeId) return [];
@@ -1565,6 +1608,33 @@ export default function PropertiesPanel({
                           <h3 className="text-xs font-medium uppercase text-muted-foreground/70 tracking-wide">
                             Configuration
                           </h3>
+                          {/* Connected Account badge — shown for nodes with credential-owned fields */}
+                          {backendSchema && (() => {
+                            const credFields = Object.entries(backendSchema.inputSchema || {}).filter(
+                              ([, f]) => (f as any).ownership === 'credential'
+                            );
+                            if (credFields.length === 0) return null;
+                            const credentialId = (selectedNode.data.config || {} as any).credentialId;
+                            const isConnected = !!credentialId;
+                            // Derive a friendly provider name from credentialId or node type
+                            const nodeType = selectedNode.data.type || '';
+                            const providerLabel =
+                              nodeType.includes('google') || (credentialId && String(credentialId).includes('google'))
+                                ? 'Google Account'
+                                : nodeType.includes('github')
+                                ? 'GitHub Account'
+                                : nodeType.includes('linkedin')
+                                ? 'LinkedIn Account'
+                                : 'Account';
+                            return (
+                              <div className={`flex items-center gap-2 rounded-md px-3 py-2 text-xs border ${isConnected ? 'bg-green-500/5 border-green-500/30 text-green-700 dark:text-green-400' : 'bg-amber-500/5 border-amber-500/30 text-amber-700 dark:text-amber-400'}`}>
+                                <span className={`h-2 w-2 rounded-full flex-shrink-0 ${isConnected ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                {isConnected
+                                  ? `${providerLabel} connected`
+                                  : `No ${providerLabel} connected — connect via the Connections panel`}
+                              </div>
+                            );
+                          })()}
                           {selectedNode.data.type === 'switch' && switchConfigHint && (
                             <div
                               role="status"
@@ -1576,6 +1646,9 @@ export default function PropertiesPanel({
                           {nodeDefinition.configFields.map((field) => {
                             // ✅ Systematic UI: visibleIf (optional), then requiredIf (hide + required when true)
                             let effectiveRequired = field.required;
+                            // fieldConditionActive: true = condition met (field is active/required),
+                            // false = condition not met (field shown but dimmed/optional)
+                            let fieldConditionActive = true;
                             if (backendSchema) {
                               const ui = (backendSchema.inputSchema as any)?.[field.key]?.ui;
                               const currentConfig = selectedNode.data.config || {};
@@ -1584,15 +1657,15 @@ export default function PropertiesPanel({
                                 (field.visibleIf as { field: string; equals: unknown } | undefined);
                               if (visibleIf) {
                                 const visOk = (currentConfig as any)?.[visibleIf.field] === visibleIf.equals;
-                                if (!visOk) return null;
+                                // Always show the field — just dim it when condition not met
+                                fieldConditionActive = visOk;
                               }
                               const requiredIf = ui?.requiredIf as { field: string; equals: any } | undefined;
                               if (requiredIf) {
                                 const conditionMet = (currentConfig as any)?.[requiredIf.field] === requiredIf.equals;
-                                if (!conditionMet) {
-                                  return null;
-                                }
-                                effectiveRequired = true;
+                                // Always show — required only when condition met, optional otherwise
+                                fieldConditionActive = conditionMet;
+                                effectiveRequired = conditionMet;
                               }
                             }
 
@@ -1611,7 +1684,7 @@ export default function PropertiesPanel({
                             const fieldError = validationErrors[field.key];
 
                             return (
-                              <div key={field.key} className="space-y-2">
+                              <div key={field.key} className={`space-y-2 transition-opacity ${fieldConditionActive ? 'opacity-100' : 'opacity-45'}`}>
                                 {/* Top - Heading */}
                                 {/* ✅ ACCESSIBILITY FIX: Only use htmlFor when there's a single input field */}
                                 {selectedNode.data.type === 'if_else' && field.key === 'conditions' ? (

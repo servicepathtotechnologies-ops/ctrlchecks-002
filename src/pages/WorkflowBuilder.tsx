@@ -336,16 +336,15 @@ export default function WorkflowBuilder() {
             const nodeConfig = node.data?.config || {};
             const nodeInputs: Record<string, any> = {};
             
-            // Extract all non-empty config values as inputs
+            // Extract all config values as inputs — include empty strings so user-cleared
+            // fields (e.g. recipientEmails = "") are persisted, not silently dropped.
+            // Only skip undefined/null, internal _prefixed fields, and credential fields.
             Object.keys(nodeConfig).forEach((key) => {
               const value = nodeConfig[key];
-              // Skip empty values, credentials, and internal fields
-              if (value !== undefined && value !== null && value !== '' && 
-                  !key.startsWith('_') && 
-                  !key.includes('credential') && 
-                  !key.includes('oauth')) {
-                nodeInputs[key] = value;
-              }
+              if (value === undefined || value === null) return;
+              if (key.startsWith('_')) return;
+              if (key.includes('credential') || key.includes('oauth')) return;
+              nodeInputs[key] = value;
             });
             
             // Only add node if it has inputs

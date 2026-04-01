@@ -11,6 +11,7 @@ import { PluginsApiSection } from "@/components/landing/PluginsApiSection";
 import { IndustryVerticalsSection } from "@/components/landing/IndustryVerticalsSection";
 import { WhyCtrlChecksSection } from "@/components/landing/WhyCtrlChecksSection";
 import { SubscriptionSection } from "@/components/landing/SubscriptionSection";
+import { FaqSection } from "@/components/landing/FaqSection";
 import { CTA } from "@/components/landing/CTA";
 import { Footer } from "@/components/landing/Footer";
 
@@ -32,6 +33,7 @@ const Index = () => {
           <WhyCtrlChecksSection />
           <Features />
           <SubscriptionSection />
+          <FaqSection />
           <CTA />
         </main>
         <Footer />
