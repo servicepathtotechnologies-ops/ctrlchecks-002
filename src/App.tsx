@@ -29,6 +29,8 @@ const Templates = lazy(() => import("./pages/Templates"));
 const TemplatesManager = lazy(() => import("./pages/admin/TemplatesManager"));
 const TemplateEditor = lazy(() => import("./pages/admin/TemplateEditor"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const UsersManager = lazy(() => import("./pages/admin/UsersManager"));
+const UserDetails = lazy(() => import("./pages/admin/UserDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const GoogleAuthCallback = lazy(() => import("./pages/auth/google/Callback"));
 const LinkedInAuthCallback = lazy(() => import("./pages/auth/linkedin/Callback"));
@@ -112,6 +114,22 @@ const App = () => (
                     element={
                       <AdminRoute>
                         <TemplatesManager />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/users"
+                    element={
+                      <AdminRoute>
+                        <UsersManager />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/users/:id"
+                    element={
+                      <AdminRoute>
+                        <UserDetails />
                       </AdminRoute>
                     }
                   />

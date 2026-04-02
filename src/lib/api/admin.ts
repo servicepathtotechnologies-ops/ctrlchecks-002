@@ -10,8 +10,34 @@ import { ENDPOINTS } from '@/config/endpoints';
 type Template = Database['public']['Tables']['templates']['Row'];
 type TemplateInsert = Database['public']['Tables']['templates']['Insert'];
 type TemplateUpdate = Database['public']['Tables']['templates']['Update'];
+type AppRole = Database['public']['Enums']['app_role'];
 
 const ADMIN_API_BASE = `${ENDPOINTS.itemBackend}/admin-templates`;
+const ADMIN_USERS_API_BASE = `${ENDPOINTS.itemBackend}/admin-users`;
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  status: 'active' | 'pending' | 'disabled';
+  role: AppRole;
+}
+
+export interface AdminUserWorkflowSummary {
+  id: string;
+  title: string;
+  apiCalls: number;
+  tokensUsedToBuild: number;
+  status: 'active' | 'inactive';
+}
+
+export interface AdminUserDetails extends AdminUser {
+  subscriptionTaken: boolean;
+  firstSignInAt: string | null;
+  lastSignInAt: string | null;
+  totalWorkflowsBuilt: number;
+  workflows: AdminUserWorkflowSummary[];
+}
 
 /**
  * Get Supabase session token
@@ -169,5 +195,96 @@ export async function deleteTemplate(templateId: string): Promise<{ message: str
   }
 
   return response.json();
+}
+
+/**
+ * List all users with status and role (admin only)
+ */
+export async function getAllUsers(): Promise<AdminUser[]> {
+  const token = await getAuthToken();
+
+  const response = await fetch(ADMIN_USERS_API_BASE, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch users');
+  }
+
+  const data = await response.json();
+  return data.users || [];
+}
+
+/**
+ * Update a user's role (admin only)
+ */
+export async function updateUserRole(userId: string, role: AppRole): Promise<{ success: boolean; role: AppRole }> {
+  const token = await getAuthToken();
+
+  const response = await fetch(`${ADMIN_USERS_API_BASE}/${userId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ role }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to update user role');
+  }
+
+  return response.json();
+}
+
+/**
+ * Delete a user (admin only)
+ */
+export async function deleteUser(userId: string): Promise<{ success: boolean }> {
+  const token = await getAuthToken();
+
+  const response = await fetch(`${ADMIN_USERS_API_BASE}/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to delete user');
+  }
+
+  return response.json();
+}
+
+/**
+ * Get a single user's details with workflow stats (admin only)
+ */
+export async function getUserDetails(userId: string): Promise<AdminUserDetails> {
+  const token = await getAuthToken();
+
+  const response = await fetch(`${ADMIN_USERS_API_BASE}/${userId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch user details');
+  }
+
+  const data = await response.json();
+  return data.user;
 }
 

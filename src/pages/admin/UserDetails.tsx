@@ -1,0 +1,189 @@
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import { getUserDetails, type AdminUserDetails } from '@/lib/api/admin';
+
+function formatDate(value: string | null): string {
+  if (!value) {
+    return 'N/A';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return 'N/A';
+  }
+
+  return date.toLocaleString();
+}
+
+export default function UserDetails() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [user, setUser] = useState<AdminUserDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadUserDetails = useCallback(async (targetUserId: string, keepLoadingState: boolean = true) => {
+    if (keepLoadingState) {
+      setLoading(true);
+    }
+
+    setRefreshing(!keepLoadingState);
+
+    if (!targetUserId) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
+    try {
+      const data = await getUserDetails(targetUserId);
+      setUser(data);
+    } catch (error) {
+      toast({
+        title: 'Failed to load user details',
+        description: error instanceof Error ? error.message : 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    void (async () => {
+      await loadUserDetails(id);
+    })();
+  }, [id, loadUserDetails]);
+
+  async function handleRefresh() {
+    if (!id) {
+      return;
+    }
+
+    await loadUserDetails(id, false);
+  }
+
+  if (loading) {
+    return <div className="p-6">Loading user details...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="p-6 space-y-4">
+        <p className="text-muted-foreground">User not found.</p>
+        <Button variant="outline" onClick={() => navigate('/admin/users')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Users
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold">User Details</h1>
+          <p className="text-muted-foreground">Detailed profile and workflow usage overview.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigate('/admin/users')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{user.name}</CardTitle>
+          <CardDescription>{user.email}</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">Status</p>
+            <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>{user.status}</Badge>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Role</p>
+            <p className="font-medium">{user.role}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Subscription Taken</p>
+            <p className="font-medium">{user.subscriptionTaken ? 'Yes' : 'No'}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Total Workflows</p>
+            <p className="font-medium">{user.totalWorkflowsBuilt}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">First Sign In</p>
+            <p className="font-medium">{formatDate(user.firstSignInAt)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Last Sign In</p>
+            <p className="font-medium">{formatDate(user.lastSignInAt)}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Workflows</CardTitle>
+          <CardDescription>Workflow title, API calls, and active/inactive status.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Workflow Title</TableHead>
+                <TableHead>API Calls</TableHead>
+                <TableHead>Tokens Used to Build</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {user.workflows.map((workflow) => (
+                <TableRow key={workflow.id}>
+                  <TableCell className="font-medium">{workflow.title}</TableCell>
+                  <TableCell>{workflow.apiCalls}</TableCell>
+                  <TableCell>{workflow.tokensUsedToBuild}</TableCell>
+                  <TableCell>
+                    <Badge variant={workflow.status === 'active' ? 'default' : 'secondary'}>
+                      {workflow.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {user.workflows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    No workflows found for this user.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
