@@ -70,14 +70,7 @@ export function CTA() {
               transition={reduceMotion ? { duration: 0.35, delay: 0.16 } : { ...springSoft, delay: 0.18 }}
               className="mt-5 text-lg font-semibold text-white sm:text-xl"
             >
-              <a
-                href="https://ctrlchecks.ai"
-                className="underline-offset-4 transition-opacity hover:underline hover:opacity-95"
-                target="_blank"
-                rel="noreferrer"
-              >
-                ctrlchecks.ai
-              </a>
+              From Prompts to Production—Instantly
             </motion.p>
 
             <motion.div
