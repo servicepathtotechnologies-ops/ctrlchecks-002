@@ -459,6 +459,7 @@ export function AutonomousAgentWizard() {
     /** Single structured plan (replaces multi-variant selection) */
     const [hasWorkflowPlan, setHasWorkflowPlan] = useState(false);
     const [planSummary, setPlanSummary] = useState('');
+    const [isDegradedPlan, setIsDegradedPlan] = useState(false);
     const [planNodeHints, setPlanNodeHints] = useState<string[]>([]);
     const [planNodeReasons, setPlanNodeReasons] = useState<Record<string, string>>({});
     const [planOrderingConfidence, setPlanOrderingConfidence] = useState<number | null>(null);
@@ -1474,6 +1475,7 @@ export function AutonomousAgentWizard() {
             if (data.phase === 'summarize' && data.workflowIntentPlan) {
                 const p = data.workflowIntentPlan;
                 console.log('[Frontend] Summarize layer - received workflowIntentPlan');
+                setIsDegradedPlan(Boolean(data.degradedPlan || data.requiresConfirmation || data.planQuality === 'degraded' || p?.requires_confirmation));
                 setPlanSummary(p.structuredSummary || '');
                 setPlanNodeHints(Array.isArray(p.proposedNodeChain) ? p.proposedNodeChain : []);
                 setPlanNodeReasons(
@@ -1605,14 +1607,20 @@ export function AutonomousAgentWizard() {
     /** Re-run single-plan summarize from the current edited plan text (or original prompt). */
     const handleRegeneratePlan = async () => {
         const text = (planSummary.trim() || prompt.trim());
-        if (!text) return;
+        const baseOriginalPrompt = (originalPrompt || prompt || '').trim();
+        const analyzePrompt = baseOriginalPrompt || text;
+        if (!analyzePrompt) return;
         setStep('analyzing');
         setIsSummarizeLayerProcessing(true);
         try {
             const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: text, mode: 'analyze' }),
+                body: JSON.stringify({
+                    prompt: analyzePrompt,
+                    mode: 'analyze',
+                    originalPrompt: analyzePrompt,
+                }),
             });
             if (!response.ok) {
                 const error = await response.json().catch(() => ({ error: 'Regenerate failed' }));
@@ -1621,6 +1629,7 @@ export function AutonomousAgentWizard() {
             const data = await response.json();
             if (data.phase === 'summarize' && data.workflowIntentPlan) {
                 const p = data.workflowIntentPlan;
+                setIsDegradedPlan(Boolean(data.degradedPlan || data.requiresConfirmation || data.planQuality === 'degraded' || p?.requires_confirmation));
                 setPlanSummary(p.structuredSummary || '');
                 setPlanNodeHints(Array.isArray(p.proposedNodeChain) ? p.proposedNodeChain : []);
                 setPlanNodeReasons(
@@ -1658,7 +1667,7 @@ export function AutonomousAgentWizard() {
                         ? data.registryTags
                         : (p.registryTags || [])
                 );
-                setOriginalPrompt(data.originalPrompt || text);
+                setOriginalPrompt(data.originalPrompt || analyzePrompt);
                 setHasWorkflowPlan(true);
                 setSelectedVariationMeta({
                     id: 'structured-plan',
@@ -1685,6 +1694,14 @@ export function AutonomousAgentWizard() {
     const handleConfirmPlanAndAnalyze = async () => {
         if (!planSummary.trim()) {
             toast({ title: 'Empty plan', description: 'Add a structured plan or regenerate.', variant: 'destructive' });
+            return;
+        }
+        if (isDegradedPlan) {
+            toast({
+                title: 'Plan quality degraded',
+                description: 'Regenerate analysis from original prompt before continuing to workflow setup.',
+                variant: 'destructive',
+            });
             return;
         }
         const mainPrompt = planSummary.trim();
@@ -1786,10 +1803,20 @@ export function AutonomousAgentWizard() {
                     preflightJson.error ||
                     'Credential preflight failed'
                         );
+                const hasStructuralValidationDiagnostics =
+                    Array.isArray(preflightJson?.diagnostics?.validationErrors) &&
+                    preflightJson.diagnostics.validationErrors.length > 0;
+                const hasStructuralIssueCode =
+                    Array.isArray(preflightJson?.errors) &&
+                    preflightJson.errors.some((e: any) => {
+                        if (!e || typeof e !== 'object') return false;
+                        const code = String(e.code || e.errorType || '').toUpperCase();
+                        return code.includes('STRUCTURAL');
+                    });
                 const isStructuralFailure =
                     preflightJson?.errorType === 'STRUCTURAL_HEALING_FAILED' ||
-                    (typeof preflightJson?.error === 'string' &&
-                        preflightJson.error.toLowerCase().includes('structural'));
+                    hasStructuralValidationDiagnostics ||
+                    hasStructuralIssueCode;
                 toast({
                     title: isStructuralFailure ? 'Plan structural validation failed' : 'Plan credential check failed',
                     description:
@@ -2802,7 +2829,13 @@ export function AutonomousAgentWizard() {
             let savedWorkflow: any = null; // Declare outside try block for catch access
             try {
                 const { data: { user } } = await supabase.auth.getUser();
-                
+
+                /** Canonical user text for intent authority (form field allowlist). Not the augmented planner blob. */
+                const canonicalUserIntentForMetadata =
+                    (originalPrompt && originalPrompt.trim()) ||
+                    (typeof prompt === 'string' && prompt.trim()) ||
+                    '';
+
                 // First, save the workflow without inputs/credentials
                 const workflowData = {
                     name: (analysis?.summary && typeof analysis.summary === 'string') 
@@ -2812,6 +2845,16 @@ export function AutonomousAgentWizard() {
                     edges: pendingWorkflowData.edges,
                     user_id: user?.id,
                     updated_at: new Date().toISOString(),
+                    ...(canonicalUserIntentForMetadata
+                        ? {
+                              metadata: { originalUserPrompt: canonicalUserIntentForMetadata },
+                              graph: {
+                                  nodes: pendingWorkflowData.nodes,
+                                  edges: pendingWorkflowData.edges,
+                                  metadata: { originalUserPrompt: canonicalUserIntentForMetadata },
+                              },
+                          }
+                        : {}),
                 };
                 
                 const { data: workflowResult, error: saveError } = await supabase
@@ -2866,6 +2909,9 @@ export function AutonomousAgentWizard() {
                                 // ✅ COMPREHENSIVE: Send answers using question IDs (cred_*, op_*, config_*, resource_*)
                                 // inputValues already uses question IDs (input.id) as keys when available
                                 inputs: combinedInputs, // Format: { "cred_nodeId_fieldName": "value", "op_nodeId_fieldName": "value", "mode_nodeId_fieldName": "fillMode", etc. }
+                                ...(canonicalUserIntentForMetadata
+                                    ? { originalUserPrompt: canonicalUserIntentForMetadata }
+                                    : {}),
                             }),
                         });
                         

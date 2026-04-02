@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run src/components/workflow/__tests__/guideGenerator.registry.test.ts",
     "test:vitest": "vitest run",
-    "audit:field-guidance": "tsx scripts/enrich-field-guidance-inventory.ts"
+    "audit:field-guidance": "tsx scripts/enrich-field-guidance-inventory.ts",
+    "generate:templates-sql": "tsx scripts/generate-workflow-templates-sql.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
