@@ -71,12 +71,12 @@ export function CTA() {
               className="mt-5 text-lg font-semibold text-white sm:text-xl"
             >
               <a
-                href="https://www.ctrlchecks.ai"
+                href="https://ctrlchecks.ai"
                 className="underline-offset-4 transition-opacity hover:underline hover:opacity-95"
                 target="_blank"
                 rel="noreferrer"
               >
-                www.ctrlchecks.ai
+                ctrlchecks.ai
               </a>
             </motion.p>
 

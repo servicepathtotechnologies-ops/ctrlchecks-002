@@ -61,12 +61,12 @@ export function Footer() {
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
               AI automation OS — intent, intelligence, execution.{" "}
               <a
-                href="https://www.ctrlchecks.ai"
+                href="https://ctrlchecks.ai"
                 className="font-medium text-primary underline-offset-4 hover:underline"
                 target="_blank"
                 rel="noreferrer"
               >
-                www.ctrlchecks.ai
+                ctrlchecks.ai
               </a>
             </p>
             <div className="mt-6 flex gap-4">
