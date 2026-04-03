@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { WorkflowAuthGate } from '@/components/WorkflowAuthGate';
 import { WorkflowActionButton } from '@/components/WorkflowActionButton';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, ArrowLeft, Zap } from 'lucide-react';
+import { Sparkles, Wrench, ArrowLeft } from 'lucide-react';
+import { AppBrand } from '@/components/brand/AppBrand';
 
 export default function WorkflowCreationChoice() {
   const navigate = useNavigate();
@@ -26,21 +27,22 @@ export default function WorkflowCreationChoice() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Blurred Background */}
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
-      
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-4xl px-4 py-8">
-        <WorkflowAuthGate>
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="mb-4"
-            size="sm"
-          >
+    <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md">
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4">
+        <AppBrand context="app" size="sm" />
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+            Dashboard
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
+        </div>
+      </header>
+
+      <div className="flex flex-1 items-center justify-center overflow-y-auto px-4 py-8">
+        <div className="relative z-10 w-full max-w-4xl">
+        <WorkflowAuthGate>
 
           <div className="text-center mb-6">
             <h1 className="text-2xl font-semibold mb-1.5">Create New Workflow</h1>
@@ -95,6 +97,7 @@ export default function WorkflowCreationChoice() {
             </Card>
           </div>
         </WorkflowAuthGate>
+        </div>
       </div>
     </div>
   );

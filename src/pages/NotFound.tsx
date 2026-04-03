@@ -1,5 +1,6 @@
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { AppBrand } from "@/components/brand/AppBrand";
 
 const NotFound = () => {
   const location = useLocation();
@@ -9,13 +10,20 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
+    <div className="flex min-h-screen flex-col bg-muted">
+      <header className="border-b border-border bg-card">
+        <div className="container mx-auto flex justify-center px-4 py-4">
+          <AppBrand context="marketing" showSubtitle />
+        </div>
+      </header>
+      <div className="flex flex-1 items-center justify-center p-6">
+        <div className="text-center">
+          <h1 className="mb-4 text-4xl font-bold">404</h1>
+          <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
+          <Link to="/" className="text-primary underline hover:text-primary/90">
+            Return to Home
+          </Link>
+        </div>
       </div>
     </div>
   );

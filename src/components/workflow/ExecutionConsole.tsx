@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { Json } from '@/integrations/supabase/types';
 import ExecutionLogBlock from './ExecutionLogBlock';
 
@@ -523,10 +524,8 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
 
                   {/* Form URL Display - Show when workflow has form node */}
                   {(() => {
-                    const formNode = nodes.find((node: any) => node.data?.type === 'form');
-                    if (formNode && workflowId) {
-                      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-                      const formUrl = `${window.location.origin}/form/${workflowId}/${formNode.id}`;
+                    const formUrl = workflowId ? buildFormPublicUrl(workflowId, nodes) : null;
+                    if (formUrl) {
                       return (
                         <div className="p-3 rounded-md bg-primary/10 border border-primary/20 mb-4">
                           <div className="text-xs font-medium text-primary mb-2">📋 Form URL (Readonly)</div>

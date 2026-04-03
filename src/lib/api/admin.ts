@@ -20,6 +20,8 @@ export interface AdminUser {
   name: string;
   email: string;
   status: 'active' | 'pending' | 'disabled';
+  /** Auth ban (admin suspension); user cannot sign in until reinstated */
+  suspended: boolean;
   role: AppRole;
 }
 
@@ -37,6 +39,17 @@ export interface AdminUserDetails extends AdminUser {
   lastSignInAt: string | null;
   totalWorkflowsBuilt: number;
   workflows: AdminUserWorkflowSummary[];
+}
+
+function normalizeAdminUser(raw: Partial<AdminUser> & { id: string }): AdminUser {
+  return {
+    id: raw.id,
+    name: raw.name ?? '',
+    email: raw.email ?? '',
+    status: raw.status ?? 'active',
+    suspended: Boolean(raw.suspended),
+    role: raw.role ?? 'user',
+  };
 }
 
 /**
@@ -217,7 +230,8 @@ export async function getAllUsers(): Promise<AdminUser[]> {
   }
 
   const data = await response.json();
-  return data.users || [];
+  const users = (data.users || []) as Partial<AdminUser>[];
+  return users.map((u) => normalizeAdminUser(u as AdminUser));
 }
 
 /**
@@ -266,6 +280,32 @@ export async function deleteUser(userId: string): Promise<{ success: boolean }> 
 }
 
 /**
+ * Suspend (ban) or reinstate a user at the auth provider. Suspended users cannot sign in.
+ */
+export async function setUserSuspended(
+  userId: string,
+  suspended: boolean
+): Promise<{ success: boolean; suspended: boolean }> {
+  const token = await getAuthToken();
+
+  const response = await fetch(`${ADMIN_USERS_API_BASE}/${userId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ suspended }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || 'Failed to update suspension');
+  }
+
+  return response.json();
+}
+
+/**
  * Get a single user's details with workflow stats (admin only)
  */
 export async function getUserDetails(userId: string): Promise<AdminUserDetails> {
@@ -285,6 +325,14 @@ export async function getUserDetails(userId: string): Promise<AdminUserDetails> 
   }
 
   const data = await response.json();
-  return data.user;
+  const u = data.user as AdminUserDetails;
+  return {
+    ...normalizeAdminUser(u),
+    subscriptionTaken: u.subscriptionTaken,
+    firstSignInAt: u.firstSignInAt,
+    lastSignInAt: u.lastSignInAt,
+    totalWorkflowsBuilt: u.totalWorkflowsBuilt,
+    workflows: u.workflows ?? [],
+  };
 }
 

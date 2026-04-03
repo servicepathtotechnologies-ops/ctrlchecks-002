@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { FileText, Copy, ExternalLink, Loader2 } from "lucide-react";
+import { buildFormPublicUrl } from "@/lib/formPublicUrl";
 
 interface FormSettingsProps {
   workflowId: string | null;
@@ -49,14 +50,7 @@ export default function FormSettings({ workflowId }: FormSettingsProps) {
 
     setLoading(true);
     try {
-      // Check if workflow has a form trigger node
-      const formNode = nodes.find((node: any) => node.data?.type === "form");
-      if (!formNode) {
-        setFormUrl(null);
-        return;
-      }
-
-      const url = `${window.location.origin}/form/${workflowId}/${formNode.id}`;
+      const url = buildFormPublicUrl(workflowId, nodes);
       setFormUrl(url);
     } catch (error) {
       console.error("Error generating form URL:", error);

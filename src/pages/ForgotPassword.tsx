@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AppBrand } from "@/components/brand/AppBrand";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -52,7 +53,10 @@ export default function ForgotPassword() {
 
   if (sent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+        <div className="mb-8 flex justify-center">
+          <AppBrand context="marketing" showSubtitle />
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -66,7 +70,7 @@ export default function ForgotPassword() {
             We've sent a password reset link to <strong>{email}</strong>
           </p>
           <Button asChild variant="outline" className="mt-4">
-            <Link to="/sign-in">
+            <Link to="/signin">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to sign in
             </Link>
@@ -77,7 +81,10 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+      <div className="mb-8 flex justify-center">
+        <AppBrand context="marketing" showSubtitle />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -113,7 +120,7 @@ export default function ForgotPassword() {
 
         <div className="text-center">
           <Link
-            to="/sign-in"
+            to="/signin"
             className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
           >
             <ArrowLeft className="w-4 h-4" />

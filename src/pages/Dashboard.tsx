@@ -1,11 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { useRole } from "@/hooks/useRole";
-import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
-import { Zap, Plus, Play, FolderOpen, LayoutTemplate, History, Settings, MoreHorizontal, Copy, Trash2, Clock, Bot, Workflow, MessageSquare, Sparkles, Wrench, ArrowLeft, Sun, Moon, Activity, User } from "lucide-react";
-import ConnectionsPanel from "@/components/ConnectionsPanel";
+import { Zap, Plus, Play, FolderOpen, LayoutTemplate, History, MoreHorizontal, Copy, Trash2, Clock, Bot, Workflow, MessageSquare, Sparkles, Wrench, ArrowLeft, Activity } from "lucide-react";
+import { AppChromeHeader } from "@/components/layout/AppChromeHeader";
 import GoogleConnectionStatus from "@/components/GoogleConnectionStatus";
 import { WorkflowAuthGate } from "@/components/WorkflowAuthGate";
 import { WorkflowActionButton } from "@/components/WorkflowActionButton";
@@ -32,8 +30,6 @@ type WorkflowRecord = Tables<'workflows'> & {
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
-  const { canAccessAdmin } = useRole();
-  const { theme, toggleTheme } = useTheme();
   const { authStatus } = useWorkflowAuth();
   const navigate = useNavigate();
   const [workflows, setWorkflows] = useState<WorkflowRecord[]>([]);
@@ -393,72 +389,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center">
-              <img src="/favicon.ico" alt="logo" className="h-full w-full" />
-            </div>
-            <span className="text-xl font-bold">CtrlChecks</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <ConnectionsPanel />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full"
-              title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-            >
-              {theme === "light" ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/templates')}
-              className="hidden sm:flex"
-            >
-              <LayoutTemplate className="mr-2 h-4 w-4" /> Templates
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/workflows')}
-              className="hidden sm:flex"
-            >
-              <FolderOpen className="mr-2 h-4 w-4" /> Workflows
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/executions')}
-              className="hidden sm:flex"
-            >
-              <History className="mr-2 h-4 w-4" /> Executions
-            </Button>
-            {canAccessAdmin && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/admin/dashboard')}
-                className="hidden sm:flex"
-              >
-                <Settings className="mr-2 h-4 w-4" /> Admin
-              </Button>
-            )}
-            <span className="text-sm text-muted-foreground hidden md:inline">{user.email}</span>
-            <Button variant="outline" size="sm" onClick={() => navigate('/profile')}>
-              <User className="mr-2 h-4 w-4" />
-              Profile
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AppChromeHeader />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">

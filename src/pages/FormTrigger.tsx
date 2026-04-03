@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { Loader2 } from 'lucide-react';
 import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';
+import { AppBrand } from '@/components/brand/AppBrand';
 
 interface FormField {
   name: string;
@@ -33,11 +34,14 @@ export default function FormTrigger() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  /** Canonical form node id from DB (may differ from route param when URL is stale) */
+  const [resolvedFormNodeId, setResolvedFormNodeId] = useState<string | null>(null);
 
   const loadFormConfig = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+      setResolvedFormNodeId(null);
 
       // Fetch workflow and form node config
       const { data: workflow, error: workflowError } = await supabase
@@ -55,15 +59,31 @@ export default function FormTrigger() {
       }
 
       const nodes = workflow.nodes as any[];
-      const formNode = nodes?.find(
+      const isFormNode = (node: any) =>
+        node.data?.type === 'form' || node.type === 'form';
+
+      let formNode = nodes?.find(
         (node: any) =>
-          (node.id === nodeId || node.data?.id === nodeId) &&
-          (node.data?.type === 'form' || node.type === 'form')
+          (node.id === nodeId || node.data?.id === nodeId) && isFormNode(node)
       );
+
+      if (!formNode) {
+        const formOnly = (nodes || []).filter(isFormNode);
+        if (formOnly.length === 1) {
+          formNode = formOnly[0];
+          if (import.meta.env.DEV) {
+            console.info(
+              '[FormTrigger] Route node id did not match; using the single form node in this workflow'
+            );
+          }
+        }
+      }
 
       if (!formNode) {
         throw new Error('Form node not found in this workflow');
       }
+
+      setResolvedFormNodeId(formNode.id);
 
       const config = formNode.data?.config || formNode.config || {};
 
@@ -108,7 +128,8 @@ export default function FormTrigger() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!workflowId || !nodeId || !formConfig) return;
+    const effectiveNodeId = resolvedFormNodeId ?? nodeId;
+    if (!workflowId || !effectiveNodeId || !formConfig) return;
 
     setSubmitting(true);
     setSubmitError(null);
@@ -123,10 +144,10 @@ export default function FormTrigger() {
       }
 
       // Generate idempotency key
-      const idempotencyKey = `form_${workflowId}_${nodeId}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      const idempotencyKey = `form_${workflowId}_${effectiveNodeId}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
       const response = await fetch(
-        `${ENDPOINTS.itemBackend}/api/form-trigger/${workflowId}/${nodeId}/submit`,
+        `${ENDPOINTS.itemBackend}/api/form-trigger/${workflowId}/${effectiveNodeId}/submit`,
         {
           method: 'POST',
           headers: {
@@ -165,10 +186,15 @@ export default function FormTrigger() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading form...</p>
+      <div className="flex min-h-screen flex-col bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200/80 bg-white/90 px-4 py-3 dark:border-gray-700 dark:bg-gray-900/90">
+          <AppBrand context="marketing" size="sm" />
+        </header>
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading form...</p>
+          </div>
         </div>
       </div>
     );
@@ -176,13 +202,18 @@ export default function FormTrigger() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="flex min-h-screen flex-col bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200/80 bg-white/90 px-4 py-3 dark:border-gray-700 dark:bg-gray-900/90">
+          <AppBrand context="marketing" size="sm" />
+        </header>
+        <div className="flex flex-1 items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">✗</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error</h1>
           <p className="text-gray-600 dark:text-gray-300">{error}</p>
+        </div>
         </div>
       </div>
     );
@@ -194,7 +225,11 @@ export default function FormTrigger() {
 
   if (submitSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="flex min-h-screen flex-col bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200/80 bg-white/90 px-4 py-3 dark:border-gray-700 dark:bg-gray-900/90">
+          <AppBrand context="marketing" size="sm" />
+        </header>
+        <div className="flex flex-1 items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">✓</span>
@@ -204,6 +239,7 @@ export default function FormTrigger() {
           {formConfig.redirectUrl && (
             <p className="text-sm text-muted-foreground mt-4">Redirecting...</p>
           )}
+        </div>
         </div>
       </div>
     );
@@ -217,7 +253,11 @@ export default function FormTrigger() {
           description="Please wait while we process your submission."
         />
       )}
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex min-h-screen flex-col bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200/80 bg-white/90 px-4 py-3 dark:border-gray-700 dark:bg-gray-900/90">
+          <AppBrand context="marketing" size="sm" />
+        </header>
+        <div className="flex-1 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -229,8 +269,8 @@ export default function FormTrigger() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {formConfig.fields.map((field) => {
-                // Create unique field ID using workflowId, nodeId, and field name to prevent duplicates
-                const fieldId = `form-${workflowId}-${nodeId}-${field.name}`;
+                const keyNodeId = resolvedFormNodeId ?? nodeId ?? '';
+                const fieldId = `form-${workflowId}-${keyNodeId}-${field.name}`;
                 return (
                   <div key={field.name} className="space-y-2">
                     <label
@@ -342,6 +382,7 @@ export default function FormTrigger() {
               </button>
             </form>
           </div>
+        </div>
         </div>
       </div>
     </>

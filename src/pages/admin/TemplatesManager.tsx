@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AdminChromeHeader } from '@/components/layout/AdminChromeHeader';
 import { getAllTemplates, deleteTemplate, toggleTemplateActive, createTemplate, updateTemplate } from '@/lib/api/admin';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -201,12 +202,14 @@ export default function TemplatesManager() {
     }
   }
 
-  if (loading) {
-    return <div className="p-6">Loading templates...</div>;
-  }
-
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-background">
+      <AdminChromeHeader />
+      <div className="container mx-auto space-y-6 p-6">
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading templates...</p>
+      ) : (
+      <>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Templates Manager</h1>
@@ -505,6 +508,9 @@ export default function TemplatesManager() {
           )}
         </DialogContent>
       </Dialog>
+      </>
+      )}
+      </div>
     </div>
   );
 }

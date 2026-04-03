@@ -8,12 +8,12 @@ import { useNavigate } from 'react-router-dom';
 import { Copy, Star, Clock, TrendingUp } from 'lucide-react';
 import { WorkflowAuthGate } from '@/components/WorkflowAuthGate';
 import { WorkflowActionButton } from '@/components/WorkflowActionButton';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { getActiveTemplates, copyTemplate } from '@/lib/api/templates';
 import { useToast } from '@/hooks/use-toast';
+import { AppChromeHeader } from '@/components/layout/AppChromeHeader';
 import type { Database } from '@/integrations/supabase/types';
 
 type Template = Database['public']['Tables']['templates']['Row'] & {
@@ -73,12 +73,13 @@ export default function Templates() {
     template.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (loading) {
-    return <div className="p-6">Loading templates...</div>;
-  }
-
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-background">
+      <AppChromeHeader />
+      <div className="container mx-auto space-y-6 p-6">
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading templates...</p>
+        ) : (
       <WorkflowAuthGate>
         <div>
           <h1 className="text-3xl font-bold">Workflow Templates</h1>
@@ -157,6 +158,8 @@ export default function Templates() {
           </div>
         )}
       </WorkflowAuthGate>
+        )}
+      </div>
     </div>
   );
 }

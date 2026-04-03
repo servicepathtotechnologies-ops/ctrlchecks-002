@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, Bell, BellOff, Check, ExternalLink, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { AppChromeHeader } from "@/components/layout/AppChromeHeader";
 
 interface Notification {
   id: string;
@@ -93,14 +94,19 @@ export default function NotificationsSettings() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        <AppChromeHeader />
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="min-h-screen bg-background">
+      <AppChromeHeader />
+      <main className="container mx-auto max-w-2xl space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Notifications</h1>
@@ -193,6 +199,7 @@ export default function NotificationsSettings() {
           )}
         </CardContent>
       </Card>
+      </main>
     </div>
   );
 }

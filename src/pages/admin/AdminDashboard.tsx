@@ -4,6 +4,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
+import { AdminChromeHeader } from '@/components/layout/AdminChromeHeader';
 import { Shield, LayoutTemplate, Users, Settings, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,7 +44,9 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-background">
+      <AdminChromeHeader />
+      <div className="container mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -109,6 +112,7 @@ export default function AdminDashboard() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

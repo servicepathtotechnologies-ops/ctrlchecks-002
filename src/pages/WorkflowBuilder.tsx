@@ -14,6 +14,7 @@ import { useDebugStore } from '@/stores/debugStore';
 import { Edge } from '@xyflow/react';
 import { Json } from '@/integrations/supabase/types';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
+import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { enforceFrontendRenderContract, normalizeBackendWorkflow, validateNodeTypesRegistered } from '@/lib/node-type-normalizer';
 
 const NodeLibrary = lazy(() => import('@/components/workflow/NodeLibrary'));
@@ -680,7 +681,9 @@ export default function WorkflowBuilder() {
 
         const isActive = workflowData.status === 'active';
         console.log('Workflow status check:', { workflowId: finalWorkflowId, status: workflowData.status, isActive });
-        const formUrl = `${window.location.origin}/form/${finalWorkflowId}/${formNode.id}`;
+        const formUrl =
+          buildFormPublicUrl(finalWorkflowId, nodes) ??
+          `${window.location.origin}/form/${finalWorkflowId}/${formNode.id}`;
 
         if (!isActive) {
           // Workflow is not active - show activation message

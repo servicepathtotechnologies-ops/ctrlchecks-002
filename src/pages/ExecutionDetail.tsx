@@ -7,6 +7,7 @@ import {
   ArrowLeft, Clock, CheckCircle, XCircle, Loader2, 
   RefreshCw
 } from 'lucide-react';
+import { AppChromeHeader } from '@/components/layout/AppChromeHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -155,21 +156,19 @@ export default function ExecutionDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <AppChromeHeader />
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
+          <div className="flex min-w-0 items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate('/executions')}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center">
-                <img src="/favicon.ico" alt="logo" className="h-full w-full" />
-              </div>
-              <div>
-                <span className="text-lg font-bold">{execution.workflows?.name || 'Execution'}</span>
-                <div className="text-xs text-muted-foreground font-mono">{execution.id.slice(0, 8)}...</div>
-              </div>
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold truncate md:text-2xl">
+                {execution.workflows?.name || 'Execution'}
+              </h1>
+              <div className="font-mono text-xs text-muted-foreground">{execution.id.slice(0, 8)}…</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -183,9 +182,7 @@ export default function ExecutionDetail() {
             )}
           </div>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8">
         {/* Summary */}
         <div className="grid gap-4 md:grid-cols-4 mb-8">
           <Card>

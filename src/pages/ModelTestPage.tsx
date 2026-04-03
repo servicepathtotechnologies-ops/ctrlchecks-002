@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { AppChromeHeader } from '@/components/layout/AppChromeHeader';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Mistral7BTestComponent from '@/components/model-testing/text-models/mistral-7b/TestComponent';
@@ -20,8 +21,10 @@ export default function ModelTestPage() {
 
   if (!testPath || !TestComponent) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="min-h-screen bg-background">
+        <AppChromeHeader />
+        <div className="container mx-auto p-6">
+        <div className="mb-6 flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/model-testing')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -30,13 +33,16 @@ export default function ModelTestPage() {
         <div className="text-muted-foreground">
           The test case "{testPath}" is not available yet. Please check back later.
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center gap-4 mb-6">
+    <div className="min-h-screen bg-background">
+      <AppChromeHeader />
+      <div className="container mx-auto p-6">
+      <div className="mb-6 flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/model-testing')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -45,6 +51,7 @@ export default function ModelTestPage() {
         </h1>
       </div>
       <TestComponent />
+      </div>
     </div>
   );
 }

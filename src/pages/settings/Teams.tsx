@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Plus, Users, UserPlus, Crown, Shield, Eye, Settings } from "lucide-react";
 import { format } from "date-fns";
+import { AppChromeHeader } from "@/components/layout/AppChromeHeader";
 import type { Database } from "@/integrations/supabase/types";
 
 type TeamRole = Database["public"]["Enums"]["team_role"];
@@ -223,14 +224,19 @@ export default function TeamsSettings() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        <AppChromeHeader />
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="min-h-screen bg-background">
+      <AppChromeHeader />
+      <main className="container mx-auto max-w-4xl space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Teams</h1>
@@ -422,6 +428,7 @@ export default function TeamsSettings() {
           </div>
         </div>
       )}
+      </main>
     </div>
   );
 }

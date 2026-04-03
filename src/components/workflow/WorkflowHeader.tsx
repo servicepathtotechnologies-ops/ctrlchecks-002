@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { AppBrand } from '@/components/brand/AppBrand';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import WebhookSettings from './WebhookSettings';
 import ScheduleSettings from './ScheduleSettings';
@@ -200,13 +201,13 @@ export default function WorkflowHeader({
   };
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4">
-      <div className="flex items-center gap-4">
+    <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 gap-2 min-w-0">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/workflows')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-
-        <div className="flex items-center gap-2">
+        <AppBrand context="app" size="sm" className="hidden sm:flex" />
+        <div className="flex min-w-0 items-center gap-2">
           {isEditing ? (
             <Input
               value={workflowName}

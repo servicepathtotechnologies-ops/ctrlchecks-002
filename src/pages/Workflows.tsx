@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Search, Zap, MoreHorizontal, Play, Trash2, Copy, Clock, History, Bot, Cpu, Workflow, MessageSquare, ChevronRight, Edit, Sparkles, Wrench, ArrowLeft, User } from 'lucide-react';
-import ConnectionsPanel from '@/components/ConnectionsPanel';
+import { Plus, Search, Zap, MoreHorizontal, Play, Trash2, Copy, Clock, History, Bot, Cpu, Workflow, MessageSquare, ChevronRight, Edit, Sparkles, Wrench, ArrowLeft } from 'lucide-react';
+import { AppChromeHeader } from '@/components/layout/AppChromeHeader';
 import GoogleConnectionStatus from '@/components/GoogleConnectionStatus';
 import { WorkflowAuthGate } from '@/components/WorkflowAuthGate';
 import { WorkflowActionButton } from '@/components/WorkflowActionButton';
@@ -305,27 +305,7 @@ export default function Workflows() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link to="/dashboard" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center">
-                <img src="/favicon.ico" alt="logo" className="h-full w-full" />
-              </div>
-              <span className="text-xl font-bold">CtrlChecks</span>
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <ConnectionsPanel />
-            <span className="text-sm text-muted-foreground">{user.email}</span>
-            <Button variant="outline" size="sm" onClick={() => navigate('/profile')}>
-              <User className="mr-2 h-4 w-4" />
-              Profile
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AppChromeHeader />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">

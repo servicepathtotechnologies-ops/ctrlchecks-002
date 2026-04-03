@@ -9,9 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Save, CheckCircle, AlertCircle, RefreshCw, ArrowLeft, User as UserIcon, Moon, Sun, LogOut } from "lucide-react";
-import ConnectionsPanel from "@/components/ConnectionsPanel";
-import { useTheme } from "@/hooks/useTheme";
+import { Loader2, Save, CheckCircle, AlertCircle, RefreshCw, User as UserIcon, LogOut } from "lucide-react";
+import { AppChromeHeader } from "@/components/layout/AppChromeHeader";
 
 interface ConnectionStatus {
   connected: boolean;
@@ -23,7 +22,6 @@ interface ConnectionStatus {
 export default function Profile() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
@@ -476,41 +474,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/dashboard')}
-              className="rounded-full h-8 w-8"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex h-7 w-7 items-center justify-center">
-              <img src="/favicon.ico" alt="logo" className="h-full w-full" />
-            </div>
-            <span className="text-lg font-bold">CtrlChecks</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ConnectionsPanel />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full h-8 w-8"
-              title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-            >
-              {theme === "light" ? (
-                <Moon className="h-4 w-4" />
-              ) : (
-                <Sun className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AppChromeHeader />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-4 max-w-6xl">

@@ -14,6 +14,7 @@ import NodeLibrary from '@/components/workflow/NodeLibrary';
 import WorkflowCanvas from '@/components/workflow/WorkflowCanvas';
 import PropertiesPanel from '@/components/workflow/PropertiesPanel';
 import ExecutionConsole from '@/components/workflow/ExecutionConsole';
+import { AdminChromeHeader } from '@/components/layout/AdminChromeHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -185,7 +186,8 @@ export default function TemplateEditor() {
 
   return (
     <div className="h-screen flex flex-col">
-      <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4">
+      <AdminChromeHeader compact fluid />
+      <header className="h-14 shrink-0 border-b border-border bg-card flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/admin/templates')}>
             <ArrowLeft className="h-4 w-4" />

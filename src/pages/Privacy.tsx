@@ -1,14 +1,18 @@
 import { Link } from "react-router-dom";
+import { AppBrand } from "@/components/brand/AppBrand";
 
 export default function Privacy() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="mb-8">
-          <Link to="/" className="text-primary hover:underline">
+      <header className="border-b border-border bg-card">
+        <div className="container mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4">
+          <AppBrand context="marketing" showSubtitle />
+          <Link to="/" className="text-sm text-primary hover:underline">
             ← Back to Home
           </Link>
         </div>
+      </header>
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
 
         <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
         <p className="text-muted-foreground mb-8">

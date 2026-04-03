@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { AdminChromeHeader } from '@/components/layout/AdminChromeHeader';
 import { deleteUser, getAllUsers, updateUserRole, type AdminUser } from '@/lib/api/admin';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -109,12 +110,14 @@ export default function UsersManager() {
     }
   }
 
-  if (loading) {
-    return <div className="p-6">Loading users...</div>;
-  }
-
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-background">
+      <AdminChromeHeader />
+      <div className="container mx-auto space-y-6 p-6">
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading users...</p>
+      ) : (
+      <>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Users Management</h1>
@@ -151,9 +154,13 @@ export default function UsersManager() {
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                      {user.status}
-                    </Badge>
+                    {user.suspended ? (
+                      <Badge variant="destructive">Suspended</Badge>
+                    ) : (
+                      <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                        {user.status}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Select
@@ -205,6 +212,9 @@ export default function UsersManager() {
           </Table>
         </CardContent>
       </Card>
+      </>
+      )}
+      </div>
     </div>
   );
 }

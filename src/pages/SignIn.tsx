@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/auth";
 import { isAdmin } from "@/lib/roles";
 import { useToast } from "@/hooks/use-toast";
+import { AppBrand } from "@/components/brand/AppBrand";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -128,12 +129,9 @@ export default function SignIn() {
       <div className="flex-1 flex items-center justify-center p-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md space-y-8">
           <div className="text-center">
-            <Link to="/" className="inline-flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center">
-                <img src="/favicon.ico" alt="logo" className="h-full w-full" />
-              </div>
-              <span className="text-2xl font-bold">CtrlChecks</span>
-            </Link>
+            <div className="flex justify-center">
+              <AppBrand context="marketing" showSubtitle className="justify-center" />
+            </div>
             <h1 className="mt-6 text-3xl font-bold">Welcome back</h1>
             <p className="mt-2 text-muted-foreground">Sign in to continue to your dashboard</p>
           </div>

@@ -1,5 +1,5 @@
 import { useWorkflowStore } from '@/stores/workflowStore';
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from 'react';
 import { getNodeDefinition, ConfigField } from './nodeTypes';
 import { NODE_USAGE_GUIDES } from './nodeUsageGuides';
 import { nodeSchemaService, NodeDefinition } from '@/services/nodeSchemaService';
@@ -31,6 +31,20 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
+import { buildFormPublicUrl } from '@/lib/formPublicUrl';
+import { useRole } from '@/hooks/useRole';
+import { mergeCapabilityHints } from '@/lib/aiEditorPermissions';
+import type {
+  AiEditorCapabilitiesResponse,
+  AiEditorChatMode,
+  AiEditorMutationOperation,
+  WorkflowDiffSummary,
+} from '@/types/aiEditor';
+import {
+  enforceFrontendRenderContract,
+  normalizeBackendWorkflow,
+  validateNodeTypesRegistered,
+} from '@/lib/node-type-normalizer';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useDroppable } from '@dnd-kit/core';
 import { useExpressionDropStore } from '@/stores/expressionDropStore';
@@ -108,9 +122,29 @@ export default function PropertiesPanel({
   debugInputData,
   lastResolvedInputs = {},
 }: PropertiesPanelProps) {
-  const { selectedNode, selectNode, updateNodeConfig, deleteSelectedNode, workflowId, nodes, edges, setNodes, setEdges } = useWorkflowStore();
+  const {
+    selectedNode,
+    selectNode,
+    updateNodeConfig,
+    deleteSelectedNode,
+    workflowId,
+    nodes,
+    edges,
+    setNodes,
+    setEdges,
+    setIsDirty,
+    setAiEditedNodeIds,
+    clearAiEditedNodeHighlight,
+  } = useWorkflowStore();
+  const { role: appRole } = useRole();
   const { toast } = useToast();
   const { pendingExpression, clearPendingExpression } = useExpressionDropStore();
+
+  /** Canonical form URL from graph (not selection) — matches persisted workflow node id */
+  const formPublicUrl = useMemo(
+    () => (workflowId ? buildFormPublicUrl(workflowId, nodes) : null),
+    [workflowId, nodes]
+  );
 
   // View mode state - default to properties
   const [viewMode, setViewMode] = useState<ViewMode>('properties');
@@ -167,7 +201,16 @@ export default function PropertiesPanel({
   ]);
   const [aiInput, setAiInput] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiChatMode, setAiChatMode] = useState<AiEditorChatMode>('analyze');
+  const [aiCapabilities, setAiCapabilities] = useState<AiEditorCapabilitiesResponse | null>(null);
+  const [pendingAiOperations, setPendingAiOperations] = useState<AiEditorMutationOperation[]>([]);
+  const [pendingAiDiff, setPendingAiDiff] = useState<WorkflowDiffSummary | null>(null);
+  const [pendingAiPrompt, setPendingAiPrompt] = useState('');
+  const [pendingPreviewValid, setPendingPreviewValid] = useState(true);
+  const [showAiDiffDetails, setShowAiDiffDetails] = useState(false);
+  const [isAiApplyLoading, setIsAiApplyLoading] = useState(false);
   const aiScrollAreaRef = useRef<HTMLDivElement>(null);
+  const aiHighlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadWorkflowStatus = useCallback(async () => {
     if (!workflowId) return;
@@ -259,7 +302,216 @@ export default function PropertiesPanel({
     }
   }, [aiMessages, viewMode]);
 
-  // AI Editor send handler
+  // AI editor: server-side capability matrix (authoritative for apply gates)
+  useEffect(() => {
+    if (viewMode !== 'ai-editor') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        if (!token) {
+          if (!cancelled) setAiCapabilities(null);
+          return;
+        }
+        const q = workflowId ? `?workflowId=${encodeURIComponent(workflowId)}` : '';
+        const res = await fetch(`${ENDPOINTS.itemBackend}/api/ai/editor/capabilities${q}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = (await res.json()) as AiEditorCapabilitiesResponse;
+        if (!cancelled) setAiCapabilities(json.success ? json : null);
+      } catch {
+        if (!cancelled) setAiCapabilities(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [viewMode, workflowId]);
+
+  const buildAiEditorWorkflowPayload = useCallback(() => {
+    return {
+      nodes: nodes.map((n) => {
+        const baseType = n.data?.type || n.type;
+        const canonicalConfig =
+          baseType === 'if_else'
+            ? normalizeIfElseConfig((n.data?.config || {}) as Record<string, unknown>)
+            : (n.data?.config || {});
+
+        return {
+          id: n.id,
+          type: baseType,
+          position: n.position,
+          data: {
+            label: n.data?.label || baseType || 'Node',
+            type: baseType,
+            category: n.data?.category || 'utility',
+            config: canonicalConfig,
+          },
+        };
+      }),
+      edges: edges.map((e) => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        sourceHandle: e.sourceHandle || undefined,
+        targetHandle: e.targetHandle || undefined,
+        type: e.type || 'main',
+      })),
+      metadata: workflowId ? { id: workflowId } : undefined,
+    };
+  }, [nodes, edges, workflowId]);
+
+  const commitBackendWorkflowToCanvas = useCallback(
+    (backendWorkflow: { nodes: unknown[]; edges: unknown[] }) => {
+      const normalizedBackend = normalizeBackendWorkflow({
+        nodes: backendWorkflow.nodes as any[],
+        edges: backendWorkflow.edges as any[],
+      });
+      const normalized = validateAndFixWorkflow({
+        nodes: normalizedBackend.nodes,
+        edges: normalizedBackend.edges,
+      });
+      const contracted = enforceFrontendRenderContract({
+        nodes: normalized.nodes as any[],
+        edges: normalized.edges as any[],
+      });
+      const typeValidation = validateNodeTypesRegistered(contracted.nodes);
+      if (!typeValidation.valid) {
+        console.warn('[AI Editor] Some node types missing from registry:', typeValidation.missingTypes);
+      }
+      const validEdges = contracted.edges.filter((edge) => {
+        const sourceExists = contracted.nodes.some((n) => n.id === edge.source);
+        const targetExists = contracted.nodes.some((n) => n.id === edge.target);
+        return sourceExists && targetExists;
+      });
+      setNodes(contracted.nodes as any);
+      setEdges(validEdges);
+      setIsDirty(true);
+    },
+    [setNodes, setEdges, setIsDirty]
+  );
+
+  const diffToHighlightIds = (diff: WorkflowDiffSummary | null): string[] => {
+    if (!diff?.nodes?.length) return [];
+    const ids: string[] = [];
+    for (const d of diff.nodes) {
+      if (d.after || (d.before && d.after)) ids.push(d.nodeId);
+    }
+    return [...new Set(ids)];
+  };
+
+  const handleDiscardPendingAi = () => {
+    setPendingAiOperations([]);
+    setPendingAiDiff(null);
+    setPendingAiPrompt('');
+    setPendingPreviewValid(true);
+    setShowAiDiffDetails(false);
+  };
+
+  const handleApplyAiEdits = async () => {
+    if (pendingAiOperations.length === 0 || isAiApplyLoading) return;
+    if (!pendingPreviewValid) {
+      toast({
+        title: 'Cannot apply',
+        description: 'Dry-run validation failed. Adjust the workflow or prompt before applying.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const currentWorkflow = buildAiEditorWorkflowPayload();
+    if (!Array.isArray(currentWorkflow.nodes) || currentWorkflow.nodes.length === 0) {
+      toast({
+        title: 'Nothing to apply',
+        description: 'Add at least one node before applying AI edits.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsAiApplyLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) {
+        throw new Error('Sign in required to apply AI edits.');
+      }
+
+      const res = await fetch(`${ENDPOINTS.itemBackend}/api/ai/editor/apply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          workflowId: workflowId || undefined,
+          workflow: currentWorkflow,
+          operations: pendingAiOperations,
+          actor: sessionData.session?.user?.id,
+          prompt: pendingAiPrompt,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error || data.errors?.join?.(', ') || 'Apply failed';
+        throw new Error(msg);
+      }
+
+      const wf = data.workflow;
+      if (!wf?.nodes || !wf?.edges) {
+        throw new Error('Invalid workflow in apply response');
+      }
+
+      commitBackendWorkflowToCanvas({ nodes: wf.nodes, edges: wf.edges });
+
+      const highlightIds = diffToHighlightIds(data.diff || pendingAiDiff);
+      setAiEditedNodeIds(highlightIds);
+      if (aiHighlightTimerRef.current) clearTimeout(aiHighlightTimerRef.current);
+      aiHighlightTimerRef.current = setTimeout(() => {
+        clearAiEditedNodeHighlight();
+        aiHighlightTimerRef.current = null;
+      }, 12000);
+
+      const versionNote = data.versionId ? ` Version: ${data.versionId}.` : '';
+      setAiMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `Applied ${pendingAiOperations.length} operation(s) to the workflow.${versionNote}`,
+          timestamp: new Date(),
+        },
+      ]);
+
+      handleDiscardPendingAi();
+      toast({
+        title: 'AI edits applied',
+        description: 'Workflow updated on the canvas.',
+      });
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Apply failed';
+      toast({
+        title: 'Apply failed',
+        description: JSON.stringify(errorMessage),
+        variant: 'destructive',
+      });
+      setAiMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `Error applying edits: ${errorMessage}`,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsAiApplyLoading(false);
+    }
+  };
+
+  // AI Editor send handler: analyze (read-only) or suggest (structured ops + preview)
   const handleAiSend = async () => {
     if (!aiInput.trim() || isAiLoading) return;
 
@@ -270,169 +522,141 @@ export default function PropertiesPanel({
       timestamp: new Date(),
     };
 
-    setAiMessages(prev => [...prev, userMessage]);
+    /** Include prior turns so follow-ups like "implement it" inherit intent from Analyze mode */
+    const conversationHistory = [...aiMessages, userMessage]
+      .filter((m) => m.id !== 'welcome')
+      .filter((m) => m.role === 'user' || m.role === 'assistant')
+      .slice(-24)
+      .map((m) => ({
+        role: m.role,
+        content:
+          m.content.length > 14000 ? `${m.content.slice(0, 14000)}…` : m.content,
+      }));
+
+    setAiMessages((prev) => [...prev, userMessage]);
+    const outgoingPrompt = userMessage.content.trim();
     setAiInput('');
     setIsAiLoading(true);
 
     try {
-      const currentWorkflow = {
-        nodes: nodes.map(n => {
-          const cleanedNode: any = {
-            id: n.id,
-            type: n.type || n.data?.type,
-            position: n.position,
-            data: {
-              type: n.type || n.data?.type,
-              label: n.data?.label || n.type || 'Node',
-            }
-          };
-
-          if (n.data?.config) {
-            const canonicalConfig =
-              (n.type || n.data?.type) === 'if_else'
-                ? normalizeIfElseConfig(n.data.config as Record<string, unknown>)
-                : n.data.config;
-            cleanedNode.config = {};
-            for (const [key, value] of Object.entries(canonicalConfig)) {
-              if (value !== null && value !== undefined) {
-                if (typeof value === 'object') {
-                  cleanedNode.config[key] = JSON.stringify(value);
-                } else {
-                  cleanedNode.config[key] = String(value);
-                }
-              }
-            }
-          }
-
-          return cleanedNode;
-        }),
-        edges: edges.map(e => ({
-          id: e.id,
-          source: e.source,
-          target: e.target,
-          sourceHandle: e.sourceHandle || undefined,
-          targetHandle: e.targetHandle || undefined,
-        }))
-      };
+      const currentWorkflow = buildAiEditorWorkflowPayload();
 
       if (!Array.isArray(currentWorkflow.nodes) || currentWorkflow.nodes.length === 0) {
-        throw new Error('Current workflow has no nodes. Please add at least one node before using AI edit.');
-      }
-
-      let executionHistory: any[] = [];
-      try {
-        if (workflowId) {
-          const { data: executions } = await supabase
-            .from('executions')
-            .select('id, status, error, logs, output, started_at')
-            .eq('workflow_id', workflowId)
-            .eq('status', 'failed')
-            .order('started_at', { ascending: false })
-            .limit(3);
-
-          if (executions && executions.length > 0) {
-            executionHistory = executions.map(exec => ({
-              id: exec.id,
-              status: exec.status,
-              error: exec.error,
-              logs: exec.logs,
-              output: exec.output,
-              started_at: exec.started_at,
-            }));
-          }
-        }
-      } catch (execError) {
-        console.warn('Failed to fetch execution history:', execError);
+        throw new Error('Current workflow has no nodes. Please add at least one node before using the AI editor.');
       }
 
       const { data: sessionData } = await supabase.auth.getSession();
-      
-      // Add timeout to prevent indefinite hanging (120 seconds for AI generation)
+      const token = sessionData?.session?.access_token;
+      if (!token) {
+        throw new Error('Sign in is required for the AI editor.');
+      }
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds
-      
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
+
+      const endpoint =
+        aiChatMode === 'suggest'
+          ? `${ENDPOINTS.itemBackend}/api/ai/editor/suggest`
+          : `${ENDPOINTS.itemBackend}/api/ai/editor/analyze`;
+
       let response: Response;
       try {
-        response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
+        response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(sessionData?.session?.access_token
-              ? { Authorization: `Bearer ${sessionData.session.access_token}` }
-              : {}),
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            prompt: userMessage.content.trim(),
-            mode: 'edit',
-            currentWorkflow: currentWorkflow,
-            executionHistory: executionHistory.length > 0 ? executionHistory : undefined,
+            workflowId: workflowId || undefined,
+            workflow: currentWorkflow,
+            nodeId: selectedNode?.id,
+            prompt: outgoingPrompt,
+            conversationHistory,
           }),
           signal: controller.signal,
         });
-        
         clearTimeout(timeoutId);
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         if (fetchError.name === 'AbortError') {
-          throw new Error('Request timed out. The AI generation is taking too long. Please try again with a simpler request.');
+          throw new Error(
+            'Request timed out. Try again with a shorter question.'
+          );
         }
         throw fetchError;
       }
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'AI edit failed' }));
-        throw new Error(`AI Edit Error: ${error.error || error.message || 'Unknown error'}`);
+        const error = await response.json().catch(() => ({ error: 'AI request failed' }));
+        throw new Error(error.error || error.message || 'AI request failed');
       }
 
       const data = await response.json();
 
-      // Handle both response formats: direct nodes/edges or nested in workflow object
-      const workflowData = data.workflow || data;
-      const responseNodes = workflowData.nodes || data.nodes;
-      const responseEdges = workflowData.edges || data.edges;
+      if (aiChatMode === 'analyze') {
+        const result = data.result || data;
+        const assistantText: string =
+          result.message ||
+          result.explanation ||
+          'I have analyzed the workflow based on your request.';
 
-      if (responseNodes && responseEdges && Array.isArray(responseNodes) && Array.isArray(responseEdges)) {
-        const validated = validateAndFixWorkflow({ nodes: responseNodes, edges: responseEdges });
+        setAiMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: assistantText,
+            timestamp: new Date(),
+          },
+        ]);
+      } else {
+        const result = data.result || {};
+        const assistantText: string =
+          result.message || 'Here are suggested edits. Review and click Apply to commit.';
+        const ops = (result.operations || []) as AiEditorMutationOperation[];
+        const diff = (result.diff || null) as WorkflowDiffSummary | null;
 
-        setNodes(validated.nodes);
-        setEdges(validated.edges);
+        setPendingAiOperations(ops);
+        setPendingAiDiff(diff);
+        setPendingAiPrompt(outgoingPrompt);
+        const pe = Array.isArray(data.previewErrors) ? data.previewErrors : [];
+        setPendingPreviewValid(data.previewValid !== false && pe.length === 0);
 
-        const explanation = data.explanation || data.documentation || `I've updated the workflow based on your request.`;
-        const historyNote = executionHistory.length > 0
-          ? '\n\n💡 Used execution history to help debug and fix issues.'
-          : '';
+        let extra = '';
+        if (data.previewErrors?.length) {
+          extra += `\n\nDry-run issues:\n- ${data.previewErrors.slice(0, 5).join('\n- ')}`;
+        }
+        if (ops.length === 0) {
+          extra += '\n\n(No structured operations returned — try rephrasing your request.)';
+        }
 
-        setAiMessages(prev => [...prev, {
+        setAiMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: `${assistantText}${extra}`,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch (error: any) {
+      console.error('AI Editor Error:', error);
+      const errorMessage =
+        error?.message || error?.error || 'Sorry, the AI editor encountered an error.';
+
+      setAiMessages((prev) => [
+        ...prev,
+        {
           id: Date.now().toString(),
           role: 'assistant',
-          content: explanation + historyNote,
+          content: `Error: ${errorMessage}`,
           timestamp: new Date(),
-        }]);
-      } else {
-        console.error('Invalid response format:', data);
-        throw new Error(`Invalid response format. Expected nodes and edges, got: ${JSON.stringify(Object.keys(data))}`);
-      }
-
-    } catch (error: any) {
-      console.error('AI Edit Error:', error);
-
-      let errorMessage = 'Sorry, I encountered an error while processing your request.';
-      if (error?.message) {
-        errorMessage = `Error: ${error.message}`;
-      } else if (error?.error) {
-        errorMessage = `Error: ${error.error}`;
-      } else if (typeof error === 'string') {
-        errorMessage = `Error: ${error}`;
-      }
-
-      setAiMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: errorMessage + ' Please try again or check the console for details.',
-        timestamp: new Date(),
-      }]);
+        },
+      ]);
       toast({
-        title: 'Error',
+        title: 'AI Editor Error',
         description: errorMessage,
         variant: 'destructive',
       });
@@ -549,70 +773,213 @@ export default function PropertiesPanel({
   }, [debugMode, pendingExpression, selectedNode, clearPendingExpression, updateNodeConfig]);
 
   // Render AI Editor view
-  const renderAIEditor = () => (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <ScrollArea className="flex-1 px-4 py-3" ref={aiScrollAreaRef}>
-        <div className="space-y-3">
-          {aiMessages.map((msg) => (
-            <div
-              key={msg.id}
-              className={cn(
-                "flex flex-col gap-1 max-w-[85%]",
-                msg.role === 'user' ? "ml-auto items-end" : "mr-auto items-start"
-              )}
+  const renderAIEditor = () => {
+    const perm = mergeCapabilityHints(aiCapabilities, appRole);
+    const suggestBlocked = !perm.canSuggest;
+    const applyDisabled =
+      pendingAiOperations.length === 0 ||
+      !perm.canApply ||
+      !pendingPreviewValid ||
+      isAiApplyLoading;
+
+    const renderDiffBullets = () => {
+      const bullets: ReactNode[] = [];
+      for (const d of pendingAiDiff?.nodes || []) {
+        const label =
+          d.after?.data?.label || d.before?.data?.label || d.nodeId;
+        if (!d.before && d.after) {
+          bullets.push(
+            <li key={`add-${d.nodeId}`}>
+              Add node: <strong>{label}</strong>
+            </li>
+          );
+        } else if (d.before && !d.after) {
+          bullets.push(
+            <li key={`rm-${d.nodeId}`}>
+              Remove node: <strong>{label}</strong>
+            </li>
+          );
+        } else if (d.before && d.after) {
+          bullets.push(
+            <li key={`chg-${d.nodeId}`}>
+              Modify node: <strong>{label}</strong>
+            </li>
+          );
+        }
+      }
+      if (bullets.length === 0 && pendingAiOperations.length) {
+        pendingAiOperations.forEach((op, i) => {
+          bullets.push(
+            <li key={`op-${i}-${op.kind}`}>
+              <code className="text-[10px]">{op.kind}</code>
+            </li>
+          );
+        });
+      }
+      return bullets.length ? (
+        <ul className="text-[11px] text-muted-foreground space-y-1 list-disc pl-4 mt-2">
+          {bullets}
+        </ul>
+      ) : null;
+    };
+
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+        <div className="px-4 pt-3 pb-2 border-b border-border/40 space-y-2 shrink-0">
+          <ToggleGroup
+            type="single"
+            value={aiChatMode}
+            onValueChange={(v) => {
+              if (v === 'analyze' || v === 'suggest') {
+                setAiChatMode(v);
+                handleDiscardPendingAi();
+              }
+            }}
+            className="justify-start"
+          >
+            <ToggleGroupItem value="analyze" className="text-xs h-7 px-2">
+              Analyze
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="suggest"
+              disabled={suggestBlocked}
+              className="text-xs h-7 px-2"
+              title={
+                suggestBlocked ? 'Suggest/apply requires moderator or admin (or active workflow blocks apply).' : ''
+              }
             >
-              <div
-                className={cn(
-                  "px-3 py-2 rounded-sm text-xs leading-relaxed",
-                  msg.role === 'user'
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/60 text-foreground/90 border border-border/40"
-                )}
-              >
-                {msg.content}
-              </div>
-              <span className="text-[10px] text-muted-foreground/60">
-                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-          ))}
-          {isAiLoading && (
-            <div className="flex flex-col gap-1 mr-auto items-start max-w-[85%]">
-              <div className="bg-muted/60 text-foreground/70 px-3 py-2 rounded-sm border border-border/40 flex items-center gap-2">
-                <Loader2 className="h-3 w-3 text-muted-foreground/60 animate-spin" />
-                <span className="text-xs">Processing...</span>
-              </div>
-            </div>
+              Suggest edits
+            </ToggleGroupItem>
+          </ToggleGroup>
+          {!perm.canSuggest && (
+            <p className="text-[10px] text-muted-foreground leading-snug">
+              Your role can analyze workflows. Suggesting and applying edits needs moderator or admin (see server
+              capabilities).
+            </p>
+          )}
+          {perm.canSuggest && !perm.canApply && !!perm.applyBlockedReason && (
+            <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-snug">
+              {perm.applyBlockedReason}
+            </p>
           )}
         </div>
-      </ScrollArea>
 
-      <div className="px-4 py-3 border-t border-border/40 bg-background">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Describe your change..."
-            value={aiInput}
-            onChange={(e) => setAiInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAiSend()}
-            disabled={isAiLoading}
-            className="flex-1 h-8 text-xs border-border/60 focus-visible:ring-1 focus-visible:ring-ring/50"
-          />
-          <Button
-            size="icon"
-            onClick={handleAiSend}
-            disabled={isAiLoading || !aiInput.trim()}
-            className="h-8 w-8"
-          >
-            {isAiLoading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5" />
+        <ScrollArea className="flex-1 px-4 py-3 min-h-0" ref={aiScrollAreaRef}>
+          <div className="space-y-3">
+            {aiMessages.map((msg) => (
+              <div
+                key={msg.id}
+                className={cn(
+                  'flex flex-col gap-1 max-w-[85%]',
+                  msg.role === 'user' ? 'ml-auto items-end' : 'mr-auto items-start'
+                )}
+              >
+                <div
+                  className={cn(
+                    'px-3 py-2 rounded-sm text-xs leading-relaxed',
+                    msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted/60 text-foreground/90 border border-border/40'
+                  )}
+                >
+                  {msg.content}
+                </div>
+                <span className="text-[10px] text-muted-foreground/60">
+                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            ))}
+            {pendingAiOperations.length > 0 && (
+              <div className="mr-auto max-w-[95%] rounded-sm border border-violet-500/35 bg-violet-500/5 px-3 py-2">
+                <p className="text-xs font-medium text-foreground">Pending AI changes</p>
+                {!pendingPreviewValid && (
+                  <p className="text-[10px] text-destructive mt-1">
+                    Dry-run reported validation errors — applying is disabled until the suggestion validates.
+                  </p>
+                )}
+                {renderDiffBullets()}
+                <button
+                  type="button"
+                  className="text-[10px] text-violet-600 dark:text-violet-400 mt-2 underline"
+                  onClick={() => setShowAiDiffDetails((v) => !v)}
+                >
+                  {showAiDiffDetails ? 'Hide operation JSON' : 'View operation JSON'}
+                </button>
+                {showAiDiffDetails && (
+                  <pre className="mt-2 max-h-40 overflow-auto text-[10px] bg-muted/40 p-2 rounded border border-border/40">
+                    {JSON.stringify(pendingAiOperations, null, 2)}
+                  </pre>
+                )}
+              </div>
             )}
-          </Button>
+            {isAiLoading && (
+              <div className="flex flex-col gap-1 mr-auto items-start max-w-[85%]">
+                <div className="bg-muted/60 text-foreground/70 px-3 py-2 rounded-sm border border-border/40 flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 text-muted-foreground/60 animate-spin" />
+                  <span className="text-xs">Processing...</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        {pendingAiOperations.length > 0 && (
+          <div className="px-4 py-2 border-t border-border/40 bg-muted/20 flex flex-wrap items-center gap-2 shrink-0">
+            <Button
+              size="sm"
+              className="h-7 text-xs"
+              disabled={applyDisabled}
+              onClick={() => void handleApplyAiEdits()}
+            >
+              {isAiApplyLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+              Apply to canvas
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              disabled={isAiApplyLoading}
+              onClick={handleDiscardPendingAi}
+            >
+              Discard
+            </Button>
+            <span className="text-[10px] text-muted-foreground ml-auto">
+              {pendingAiOperations.length} op(s)
+            </span>
+          </div>
+        )}
+
+        <div className="px-4 py-3 border-t border-border/40 bg-background shrink-0">
+          <div className="flex gap-2">
+            <Input
+              placeholder={
+                aiChatMode === 'analyze'
+                  ? 'Ask about this workflow...'
+                  : 'Describe edits (e.g. add a node, update config)...'
+              }
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAiSend()}
+              disabled={isAiLoading}
+              className="flex-1 h-8 text-xs border-border/60 focus-visible:ring-1 focus-visible:ring-ring/50"
+            />
+            <Button
+              size="icon"
+              onClick={handleAiSend}
+              disabled={isAiLoading || !aiInput.trim()}
+              className="h-8 w-8"
+            >
+              {isAiLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Send className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Selected node ID (may be undefined when no node is selected)
   const selectedNodeId = selectedNode?.id;
@@ -1346,7 +1713,7 @@ export default function PropertiesPanel({
                               <div className="flex gap-2 items-center">
                                 <div className="flex-1 min-w-0 p-2 border border-border/40 rounded-sm bg-background">
                                   <code className="text-xs font-mono break-all whitespace-normal text-foreground/80">
-                                    {`${window.location.origin}/form/${workflowId}/${selectedNode.id}`}
+                                    {formPublicUrl ?? '(No form trigger in graph — save a workflow with a form node)'}
                                   </code>
                                 </div>
                                 <Button
@@ -1355,13 +1722,14 @@ export default function PropertiesPanel({
                                   className="h-8 w-8 flex-shrink-0 border-border/60 hover:bg-muted/60"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    const url = `${window.location.origin}/form/${workflowId}/${selectedNode.id}`;
-                                    navigator.clipboard.writeText(url);
+                                    if (!formPublicUrl) return;
+                                    navigator.clipboard.writeText(formPublicUrl);
                                     toast({
                                       title: 'Copied!',
                                       description: 'Form URL copied to clipboard',
                                     });
                                   }}
+                                  disabled={!formPublicUrl}
                                   title="Copy form URL"
                                 >
                                   <Copy className="h-3.5 w-3.5" />
@@ -1372,9 +1740,10 @@ export default function PropertiesPanel({
                                   className="h-8 w-8 flex-shrink-0 border-border/60 hover:bg-muted/60"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    const url = `${window.location.origin}/form/${workflowId}/${selectedNode.id}`;
-                                    window.open(url, '_blank');
+                                    if (!formPublicUrl) return;
+                                    window.open(formPublicUrl, '_blank');
                                   }}
+                                  disabled={!formPublicUrl}
                                   title="Open form in new tab"
                                 >
                                   <ExternalLink className="h-3.5 w-3.5" />

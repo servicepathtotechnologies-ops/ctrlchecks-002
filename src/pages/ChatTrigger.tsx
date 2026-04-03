@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { Loader2, Send, MessageSquare } from 'lucide-react';
 import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';
+import { AppBrand } from '@/components/brand/AppBrand';
 
 interface ChatMessage {
   id: string;
@@ -327,7 +328,8 @@ export default function ChatTrigger() {
       {/* Header */}
       <div className="bg-card/80 backdrop-blur-sm border-b border-border/50 p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <AppBrand context="marketing" size="sm" />
             <MessageSquare className="h-6 w-6 text-primary" />
             <div>
               <h1 className="text-xl font-semibold">

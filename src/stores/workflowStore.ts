@@ -36,6 +36,9 @@ interface WorkflowState {
   isDirty: boolean;
   copiedNode: WorkflowNode | null;
 
+  /** Node ids to highlight after AI editor apply (short-lived UX cue) */
+  aiEditedNodeIds: string[];
+
   // Undo/Redo Stacks
   undoStack: { nodes: WorkflowNode[]; edges: Edge[] }[];
   redoStack: { nodes: WorkflowNode[]; edges: Edge[] }[];
@@ -67,6 +70,9 @@ interface WorkflowState {
   copySelectedNode: () => void;
   pasteNode: () => void;
   selectAll: () => void;
+
+  setAiEditedNodeIds: (ids: string[]) => void;
+  clearAiEditedNodeHighlight: () => void;
 }
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
@@ -78,6 +84,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   workflowName: 'Untitled Workflow',
   isDirty: false,
   copiedNode: null,
+  aiEditedNodeIds: [],
   undoStack: [],
   redoStack: [],
 
@@ -468,6 +475,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   setWorkflowName: (name) => set({ workflowName: name, isDirty: true }),
   setIsDirty: (dirty) => set({ isDirty: dirty }),
 
+  setAiEditedNodeIds: (ids) => set({ aiEditedNodeIds: [...new Set(ids)] }),
+
+  clearAiEditedNodeHighlight: () => set({ aiEditedNodeIds: [] }),
+
   resetWorkflow: () => {
     // CRITICAL: Completely reset all state to prevent stale data
     set({
@@ -481,6 +492,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       undoStack: [],
       redoStack: [],
       copiedNode: null,
+      aiEditedNodeIds: [],
     });
   },
 }));

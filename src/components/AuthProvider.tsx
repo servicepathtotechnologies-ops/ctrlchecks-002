@@ -1,7 +1,15 @@
 import { useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext } from "@/lib/auth-context";
+
+/** Supabase Auth ban (e.g. admin suspension); blocks new sessions and refresh. */
+function isAccountBanned(user: User | null | undefined): boolean {
+    if (!user?.banned_until) return false;
+    const t = new Date(user.banned_until).getTime();
+    return !Number.isNaN(t) && t > Date.now();
+}
 
 /**
  * Avoid re-renders when Supabase emits the same logical session/user with new object references
@@ -30,19 +38,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Set up auth state listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, nextSession) => {
-                if (import.meta.env.DEV) {
-                    console.log('Auth state changed:', event, nextSession?.user?.email);
-                }
-                setSession((prev) => mergeSession(prev, nextSession));
-                setUser((prev) => mergeUser(prev, nextSession?.user ?? null));
-                setLoading(false);
+                void (async () => {
+                    if (import.meta.env.DEV) {
+                        console.log('Auth state changed:', event, nextSession?.user?.email);
+                    }
+
+                    let effective = nextSession;
+                    if (nextSession?.user && isAccountBanned(nextSession.user)) {
+                        await supabase.auth.signOut();
+                        effective = null;
+                        toast.error('This account has been suspended. You have been signed out.');
+                    }
+
+                    setSession((prev) => mergeSession(prev, effective));
+                    setUser((prev) => mergeUser(prev, effective?.user ?? null));
+                    setLoading(false);
+                })();
             }
         );
 
         // Check for existing session
-        supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-            setSession((prev) => mergeSession(prev, currentSession));
-            setUser((prev) => mergeUser(prev, currentSession?.user ?? null));
+        supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+            let s = currentSession;
+            if (currentSession?.user && isAccountBanned(currentSession.user)) {
+                await supabase.auth.signOut();
+                s = null;
+                toast.error('This account has been suspended. You have been signed out.');
+            }
+            setSession((prev) => mergeSession(prev, s));
+            setUser((prev) => mergeUser(prev, s?.user ?? null));
             setLoading(false);
         });
 
@@ -111,12 +135,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const signIn = async (email: string, password: string) => {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
 
-        return { error: error as Error | null };
+        if (error) {
+            return { error: error as Error | null };
+        }
+
+        if (data.user && isAccountBanned(data.user)) {
+            await supabase.auth.signOut();
+            return {
+                error: new Error(
+                    'This account has been suspended. Contact support if you need help.'
+                ),
+            };
+        }
+
+        return { error: null };
     };
 
     const signInWithGoogle = async () => {

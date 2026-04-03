@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { AppBrand } from "@/components/brand/AppBrand";
 import { z } from "zod";
 
 const signUpSchema = z.object({
@@ -122,12 +123,9 @@ export default function SignUp() {
           className="w-full max-w-md space-y-8"
         >
           <div className="text-center">
-            <Link to="/" className="inline-flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center">
-                <img src="/favicon.ico" alt="logo" className="h-full w-full" />
-              </div>
-              <span className="text-2xl font-bold">CtrlChecks</span>
-            </Link>
+            <div className="flex justify-center">
+              <AppBrand context="marketing" showSubtitle className="justify-center" />
+            </div>
             <h1 className="mt-6 text-3xl font-bold">Create your account</h1>
             <p className="mt-2 text-muted-foreground">Start automating your workflows today</p>
           </div>

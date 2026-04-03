@@ -153,55 +153,72 @@ function applyHierarchicalLayout(nodes: any[], edges: any[]): any[] {
     });
 }
 
-// Regenerate all node and edge IDs to ensure global uniqueness
-function regenerateAllIds(nodes: any[], edges: any[]): { nodes: any[], edges: any[] } {
-    const nodeIdMap = new Map<string, string>();
+/**
+ * Preserves existing node IDs when they are non-empty and unique (stable URLs vs DB).
+ * Assigns new IDs only for missing/empty IDs or duplicate IDs (first occurrence keeps).
+ * Remaps edges to final node IDs; ambiguous duplicate-id edges attach to the first matching node.
+ */
+export function ensureUniqueNodeIdsPreserveStable(
+    nodes: any[],
+    edges: any[]
+): { nodes: any[]; edges: any[] } {
     const existingIds = new Set<string>();
+    const idFirstIndex = new Map<string, number>();
 
-    // First pass: generate new IDs for all nodes
-    const regeneratedNodes = nodes.map((node: any) => {
-        const oldId = node.id;
-        if (!oldId) {
-            // If node has no ID, generate one
-            const newId = generateUniqueId('node', existingIds);
-            return {
-                ...node,
-                id: newId
-            };
+    nodes.forEach((node: any, index: number) => {
+        const id = node?.id;
+        if (id && typeof id === 'string' && !idFirstIndex.has(id)) {
+            idFirstIndex.set(id, index);
         }
-        const newId = generateUniqueId('node', existingIds);
-        nodeIdMap.set(oldId, newId);
-        return {
-            ...node,
-            id: newId
-        };
     });
 
-    // Second pass: update edges with new node IDs, only keep edges with valid source/target
-    const regeneratedEdges = edges
-        .filter((edge: any) => {
-            // Only keep edges where both source and target exist in the nodeIdMap
-            const hasSource = edge.source && nodeIdMap.has(edge.source);
-            const hasTarget = edge.target && nodeIdMap.has(edge.target);
-            return hasSource && hasTarget;
-        })
-        .map((edge: any) => {
-            const newSourceId = nodeIdMap.get(edge.source)!;
-            const newTargetId = nodeIdMap.get(edge.target)!;
-            const newEdgeId = generateUniqueId('edge', existingIds);
+    const finalNodes = nodes.map((node: any, index: number) => {
+        const id = node?.id;
+        if (!id || typeof id !== 'string') {
+            return { ...node, id: generateUniqueId('node', existingIds) };
+        }
+        const firstIdx = idFirstIndex.get(id);
+        if (firstIdx !== index) {
+            return { ...node, id: generateUniqueId('node', existingIds) };
+        }
+        if (existingIds.has(id)) {
+            return { ...node, id: generateUniqueId('node', existingIds) };
+        }
+        existingIds.add(id);
+        return { ...node, id };
+    });
 
+    const resolveEndpoint = (originalId: string | undefined): string | undefined => {
+        if (!originalId) return undefined;
+        const idx = nodes.findIndex((n: any) => n?.id === originalId);
+        if (idx === -1) return undefined;
+        return finalNodes[idx]?.id;
+    };
+
+    const edgeExistingIds = new Set<string>();
+    const finalEdges = edges
+        .map((edge: any) => {
+            const newSource = resolveEndpoint(edge.source);
+            const newTarget = resolveEndpoint(edge.target);
+            if (!newSource || !newTarget) return null;
+            let edgeId = edge.id;
+            if (!edgeId || edgeExistingIds.has(edgeId)) {
+                edgeId = generateUniqueId('edge', edgeExistingIds);
+            } else {
+                edgeExistingIds.add(edgeId);
+            }
             return {
                 ...edge,
-                id: newEdgeId,
-                source: newSourceId,
-                target: newTargetId,
-                // Preserve handle IDs for proper connection
+                id: edgeId,
+                source: newSource,
+                target: newTarget,
                 sourceHandle: edge.sourceHandle,
                 targetHandle: edge.targetHandle,
             };
-        });
+        })
+        .filter(Boolean) as any[];
 
-    return { nodes: regeneratedNodes, edges: regeneratedEdges };
+    return { nodes: finalNodes, edges: finalEdges };
 }
 
 export function validateWorkflow(nodes: Node[], edges: Edge[]): WorkflowValidationError[] {
@@ -691,8 +708,11 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
 
     // Resolution summary - handled internally, no logging needed
 
-    // 1. Regenerate ALL IDs to ensure global uniqueness (prevents collisions from backend)
-    const { nodes: regeneratedNodes, edges: regeneratedEdges } = regenerateAllIds(nodes, edges);
+    // 1. Ensure unique node/edge IDs while preserving stable IDs from DB (form URLs, bookmarks)
+    const { nodes: regeneratedNodes, edges: regeneratedEdges } = ensureUniqueNodeIdsPreserveStable(
+        nodes,
+        edges
+    );
 
     // 1.5 Enforce single-trigger, linear chain for simple AI-generated workflows
     // This mirrors backend normalizeWorkflowGraph logic so the canvas always sees

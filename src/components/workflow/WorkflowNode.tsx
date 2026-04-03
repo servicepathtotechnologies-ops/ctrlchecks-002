@@ -3,6 +3,7 @@ import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { cn } from '@/lib/utils';
 import { NodeData } from '@/stores/workflowStore';
 import { NODE_CATEGORIES } from './nodeTypes';
+import { useWorkflowStore } from '@/stores/workflowStore';
 import { useDebugStore } from '@/stores/debugStore';
 import { useTheme } from '@/hooks/useTheme';
 import { ThemedBorderGlow } from '@/components/ui/themed-border-glow';
@@ -30,6 +31,7 @@ type WorkflowNodeProps = Node<NodeData>;
 
 const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>) => {
   const { openDebug } = useDebugStore();
+  const isAiEditedHighlight = useWorkflowStore((s) => s.aiEditedNodeIds.includes(id));
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
@@ -152,9 +154,18 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
         className={cn(
           'px-5 py-4 rounded-[inherit] bg-card transition-all relative',
           isAIAgentNode && 'pb-16',
-          status === 'running' && 'motion-safe:animate-pulse'
+          status === 'running' && 'motion-safe:animate-pulse',
+          isAiEditedHighlight && 'ring-2 ring-violet-500/70 ring-offset-2 ring-offset-background'
         )}
       >
+      {isAiEditedHighlight && (
+        <div
+          className="absolute -top-2 left-2 z-10 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-violet-600 text-white shadow-sm border border-violet-400/40"
+          title="Updated by AI editor"
+        >
+          AI
+        </div>
+      )}
       {/* Execution Status Indicators */}
       {status === 'running' && (
         <div className="absolute -top-2 -right-2 bg-background rounded-full p-0.5 shadow-sm border border-border z-10">

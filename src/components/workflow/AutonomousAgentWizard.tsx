@@ -1,4 +1,5 @@
 import { ENDPOINTS } from '@/config/endpoints';
+import { AppBrand } from '@/components/brand/AppBrand';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
@@ -4274,11 +4275,12 @@ export function AutonomousAgentWizard() {
         <div className="fixed inset-0 z-50 bg-background text-foreground font-sans flex flex-col">
             {/* Header */}
             <div className="p-6 border-b border-border bg-card flex justify-between items-center shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+                    <AppBrand context="app" size="sm" className="shrink-0" />
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
                         <Bot className="h-6 w-6 text-white" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                         <h2 className="text-lg font-semibold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
                             Autonomous Workflow Agent
                         </h2>

@@ -31,6 +31,10 @@ const TemplateEditor = lazy(() => import("./pages/admin/TemplateEditor"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const UsersManager = lazy(() => import("./pages/admin/UsersManager"));
 const UserDetails = lazy(() => import("./pages/admin/UserDetails"));
+const AdminPlaceholder = lazy(() => import("./pages/admin/AdminPlaceholder"));
+const SettingsApiKeys = lazy(() => import("./pages/settings/ApiKeys"));
+const SettingsTeams = lazy(() => import("./pages/settings/Teams"));
+const SettingsNotifications = lazy(() => import("./pages/settings/Notifications"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const GoogleAuthCallback = lazy(() => import("./pages/auth/google/Callback"));
 const LinkedInAuthCallback = lazy(() => import("./pages/auth/linkedin/Callback"));
@@ -101,6 +105,10 @@ const App = () => (
                   <Route path="/executions" element={<Executions />} />
                   <Route path="/execution/:id" element={<ExecutionDetail />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/settings/profile" element={<Profile />} />
+                  <Route path="/settings/api-keys" element={<SettingsApiKeys />} />
+                  <Route path="/settings/teams" element={<SettingsTeams />} />
+                  <Route path="/settings/notifications" element={<SettingsNotifications />} />
                   <Route
                     path="/admin/dashboard"
                     element={
@@ -138,6 +146,22 @@ const App = () => (
                     element={
                       <AdminRoute>
                         <TemplateEditor />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/settings"
+                    element={
+                      <AdminRoute>
+                        <AdminPlaceholder />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/analytics"
+                    element={
+                      <AdminRoute>
+                        <AdminPlaceholder />
                       </AdminRoute>
                     }
                   />
