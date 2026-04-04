@@ -12,6 +12,24 @@
 import { Node, Edge } from '@xyflow/react';
 import { NODE_TYPES } from '@/components/workflow/nodeTypes';
 
+/** Coerce React Flow position from DB/JSON (numeric strings break strict typeof checks in layout). */
+export function coerceReactFlowPosition(position: unknown): { x: number; y: number } | null {
+  if (!position || typeof position !== 'object') return null;
+  const p = position as Record<string, unknown>;
+  const toNum = (v: unknown): number | null => {
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    if (typeof v === 'string' && v.trim() !== '') {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+    return null;
+  };
+  const x = toNum(p.x);
+  const y = toNum(p.y);
+  if (x === null || y === null) return null;
+  return { x, y };
+}
+
 /**
  * Backend to Frontend Node Type Mapping
  * Maps backend node type names to frontend React Flow component types
@@ -62,11 +80,13 @@ export function normalizeBackendNode(backendNode: any): Node {
   // Config can be in: node.data.config, node.config, or node.data (spread)
   const preservedConfig = backendNode.data?.config || backendNode.config || {};
   
+  const coercedPos = coerceReactFlowPosition(backendNode.position);
+
   // Ensure node has proper structure
   const normalizedNode: Node = {
     id: backendNode.id,
     type: frontendType,
-    position: backendNode.position || { x: 0, y: 0 },
+    position: coercedPos ?? { x: 0, y: 0 },
     data: {
       type: actualNodeType, // Actual node type stored here
       label: backendNode.data?.label || getNodeLabel(actualNodeType),

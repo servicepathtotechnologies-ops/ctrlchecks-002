@@ -1,6 +1,7 @@
 
 import { Node, Edge } from '@xyflow/react';
 import { NODE_TYPES } from '@/components/workflow/nodeTypes';
+import { coerceReactFlowPosition } from '@/lib/node-type-normalizer';
 
 export interface WorkflowValidationError {
     nodeId?: string;
@@ -134,14 +135,9 @@ function applyHierarchicalLayout(nodes: any[], edges: any[]): any[] {
 
     // Apply positions to nodes - preserve existing valid positions, use layout for others
     return nodes.map(node => {
-        const hasValidPosition = node.position &&
-            typeof node.position === 'object' &&
-            typeof node.position.x === 'number' &&
-            typeof node.position.y === 'number';
-
-        if (hasValidPosition) {
-            // Preserve existing position
-            return node;
+        const coerced = coerceReactFlowPosition(node.position);
+        if (coerced) {
+            return { ...node, position: coerced };
         }
 
         // Use calculated layout position
@@ -857,13 +853,18 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
         linearEdges = regeneratedEdges;
     }
 
+    // Coerce string positions from JSON/DB so strict number checks do not trigger full re-layout
+    linearNodes = linearNodes.map((node: any) => {
+        const c = coerceReactFlowPosition(node.position);
+        if (c) {
+            return { ...node, position: c };
+        }
+        return node;
+    });
+
     // Check which nodes need positioning
     const nodesNeedingPosition = linearNodes.filter((node: any) => {
-        const hasValidPosition = node.position &&
-            typeof node.position === 'object' &&
-            typeof node.position.x === 'number' &&
-            typeof node.position.y === 'number';
-        return !hasValidPosition;
+        return !coerceReactFlowPosition(node.position);
     });
 
     // If any nodes need positioning and we have edges, apply hierarchical layout
@@ -878,15 +879,10 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
     } else {
         // Preserve original positions - only set default if position is truly missing
         nodes = linearNodes.map((node: any, index: number) => {
-            // Check if position exists and is valid (has x and y properties)
-            const hasValidPosition = node.position &&
-                typeof node.position === 'object' &&
-                typeof node.position.x === 'number' &&
-                typeof node.position.y === 'number';
-
+            const coerced = coerceReactFlowPosition(node.position);
             return {
                 ...node,
-                position: hasValidPosition ? node.position : { x: index * 250, y: 100 },
+                position: coerced ?? { x: index * 250, y: 100 },
                 data: node.data || {},
             };
         });

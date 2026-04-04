@@ -28,9 +28,14 @@ export interface AdminUser {
 export interface AdminUserWorkflowSummary {
   id: string;
   title: string;
-  apiCalls: number;
+  /** Number of workflow executions (runs) */
+  workflowRuns: number;
+  /** LLM calls recorded during workflow build/configure */
+  aiBuildCalls: number;
   tokensUsedToBuild: number;
   status: 'active' | 'inactive';
+  /** @deprecated Same as workflowRuns */
+  apiCalls?: number;
 }
 
 export interface AdminUserDetails extends AdminUser {

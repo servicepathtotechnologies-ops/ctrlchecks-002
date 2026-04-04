@@ -372,6 +372,9 @@ export function AutonomousAgentWizard() {
     const [inputValues, setInputValues] = useState<Record<string, string>>({});
     // Per-field fill mode selections: mode_<nodeId>_<fieldName> -> 'manual_static' | 'runtime_ai' | 'buildtime_ai_once'
     const [fillModeValues, setFillModeValues] = useState<Record<string, string>>({});
+    // Per-field on/off toggle: fieldEnabled_<nodeId>_<fieldName> -> true | false
+    // Default is false (off). Auto-enabled when AI has pre-filled a value.
+    const [fieldEnabledOverrides, setFieldEnabledOverrides] = useState<Record<string, boolean>>({});
     const [showCredentialStep, setShowCredentialStep] = useState(false);
     // Configure step state
     const [missingItems, setMissingItems] = useState<{
@@ -1125,12 +1128,26 @@ export function AutonomousAgentWizard() {
             ownershipQuestions
                 .filter((q: any) => {
                     const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
+                    const fieldEnabledKey = `fieldEnabled_${q.nodeId}_${q.fieldName}`;
+                    const hasAiPrefilledValue = !!(q.aiFilledAtBuildTime || q.aiUsesRuntime);
+                    const fieldEnabled: boolean =
+                        fieldEnabledOverrides[fieldEnabledKey] !== undefined
+                            ? fieldEnabledOverrides[fieldEnabledKey]
+                            : hasAiPrefilledValue;
+
+                    // If toggle is OFF, skip entirely — user doesn't want to configure this field
+                    if (!fieldEnabled) return false;
+
                     const effective =
                         ownershipEffectiveModes.byModeKey[modeKey] ||
                         resolveWizardFieldFillMode(
                             fillModeValues[modeKey],
                             q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
                         );
+
+                    // Only show fields where user selected "You" (manual_static)
+                    if (effective !== 'manual_static') return false;
+
                     const rowLocked =
                         q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
                     const ownershipModeForAsk = rowLocked ? 'locked' : q.ownershipUiMode || 'selectable';
@@ -1148,10 +1165,9 @@ export function AutonomousAgentWizard() {
                         String(b.label || b.fieldName || '')
                     );
                 }),
-        [ownershipQuestions, fillModeValues, ownershipEffectiveModes, isCredentialUnlocked]
+        [ownershipQuestions, fillModeValues, ownershipEffectiveModes, isCredentialUnlocked, fieldEnabledOverrides]
     );
 
-    /** Single gate: manual answers + any required vault secrets (matches attach-credentials readiness). */
     const configurationGateReady = useMemo(() => {
         if (!credentialSecretsReady) return false;
         return manualConfigurationQuestions.every((q: any) => {
@@ -1387,28 +1403,32 @@ export function AutonomousAgentWizard() {
 
     // Map backend phases to progress ranges
     const getProgressForPhase = (phase: string): number => {
+        // Progress milestones tied to real backend work:
+        // understand (prompt parsed) → planning (graph designed) →
+        // construction (nodes+edges built) → validation (edges/types checked) →
+        // verification (credentials/schema verified) → learning (final save)
         const phaseMap: Record<string, number> = {
-            'understand': 15,      // 0-30% range
-            'planning': 50,        // 30-70% range
-            'construction': 80,    // 70-95% range
-            'validation': 92,      // 95-99% range
-            'verification': 97,    // 95-99% range
-            'healing': 85,         // Recovery phase
-            'learning': 98,        // Final cleanup
+            'understand':   20,   // prompt parsed
+            'planning':     40,   // graph structure designed
+            'construction': 65,   // nodes + edges assembled
+            'validation':   80,   // structural validation done
+            'verification': 90,   // credential + schema checks done
+            'healing':      75,   // recovery — slightly behind construction
+            'learning':     95,   // final cleanup before save
         };
-        return phaseMap[phase] || 0;
+        return phaseMap[phase] ?? 10;
     };
 
     // Map phases to user-friendly descriptions
     const getPhaseDescription = (phase: string): string => {
         const descriptions: Record<string, string> = {
-            'understand': 'Analyzing user prompt',
-            'planning': 'Designing workflow structure',
-            'construction': 'Finalizing nodes and connections',
-            'validation': 'Validating consistency',
-            'verification': 'Running final checks',
-            'healing': 'Resolving issues',
-            'learning': 'Finalizing workflow',
+            'understand':   'Analyzing prompt and extracting intent',
+            'planning':     'Designing node graph and connections',
+            'construction': 'Building nodes, edges and config',
+            'validation':   'Validating graph structure and edges',
+            'verification': 'Verifying credentials and schemas',
+            'healing':      'Resolving structural issues',
+            'learning':     'Finalizing and saving workflow',
         };
         return descriptions[phase] || 'Processing...';
     };
@@ -1707,8 +1727,15 @@ export function AutonomousAgentWizard() {
         }
         const mainPrompt = planSummary.trim();
         setPrompt(mainPrompt);
-        setStep('analyzing');
-        setIsSummarizeLayerProcessing(true);
+        // Go directly to building screen — no need to re-show the analyze loader
+        setStep('building');
+        setProgress(5);
+        setIsComplete(false);
+        setCurrentPhase('preflight');
+        setBuildStartTime(Date.now());
+        setElapsedTime(0);
+        setBuildingLogs(['Validating workflow plan...']);
+        setIsSummarizeLayerProcessing(false);
 
         const confirmStructuredPlanForBuild = (): boolean => {
             let cs = stateManager.getCurrentState();
@@ -2192,7 +2219,11 @@ export function AutonomousAgentWizard() {
                         // Step 2: Validate and fix workflow
                         const normalized = validateAndFixWorkflow({ nodes: normalizedBackend.nodes, edges: normalizedBackend.edges });
 
-                        const workflowData = {
+                        const metaRefine1: Record<string, unknown> = {};
+                        const p1 = (originalPrompt && originalPrompt.trim()) || (typeof prompt === 'string' && prompt.trim()) || '';
+                        if (p1) metaRefine1.originalUserPrompt = p1;
+                        if (data.buildAiUsage && typeof data.buildAiUsage === 'object') metaRefine1.buildAiUsage = data.buildAiUsage;
+                        const workflowData: Record<string, unknown> = {
                             name: (analysis?.summary && typeof analysis.summary === 'string') 
                                 ? analysis.summary.substring(0, 50) 
                                 : 'AI Generated Workflow',
@@ -2201,6 +2232,10 @@ export function AutonomousAgentWizard() {
                             user_id: user?.id,
                             updated_at: new Date().toISOString(),
                         };
+                        if (Object.keys(metaRefine1).length > 0) {
+                            workflowData.metadata = metaRefine1;
+                            workflowData.graph = { nodes: normalized.nodes, edges: normalized.edges, metadata: { ...metaRefine1 } };
+                        }
 
                         const { data: savedWorkflow, error: saveError } = await supabase
                             .from('workflows')
@@ -2257,7 +2292,11 @@ export function AutonomousAgentWizard() {
                             const { data: { user } } = await supabase.auth.getUser();
                             const normalized = validateAndFixWorkflow({ nodes: workflowNodes, edges: workflowEdges });
 
-                            const workflowData = {
+                            const metaRefine2: Record<string, unknown> = {};
+                            const p2 = (originalPrompt && originalPrompt.trim()) || (typeof prompt === 'string' && prompt.trim()) || '';
+                            if (p2) metaRefine2.originalUserPrompt = p2;
+                            if (data.buildAiUsage && typeof data.buildAiUsage === 'object') metaRefine2.buildAiUsage = data.buildAiUsage;
+                            const workflowData: Record<string, unknown> = {
                                 name: (analysis?.summary && typeof analysis.summary === 'string') 
                                     ? analysis.summary.substring(0, 50) 
                                     : 'AI Generated Workflow',
@@ -2266,6 +2305,10 @@ export function AutonomousAgentWizard() {
                                 user_id: user?.id,
                                 updated_at: new Date().toISOString(),
                             };
+                            if (Object.keys(metaRefine2).length > 0) {
+                                workflowData.metadata = metaRefine2;
+                                workflowData.graph = { nodes: normalized.nodes, edges: normalized.edges, metadata: { ...metaRefine2 } };
+                            }
 
                             const { data: savedWorkflow, error: saveError } = await supabase
                                 .from('workflows')
@@ -2838,6 +2881,14 @@ export function AutonomousAgentWizard() {
                     '';
 
                 // First, save the workflow without inputs/credentials
+                const buildAiFromGen = (pendingWorkflowData as any)?.update?.buildAiUsage;
+                const workflowMetadataCfg: Record<string, unknown> = {};
+                if (canonicalUserIntentForMetadata) {
+                    workflowMetadataCfg.originalUserPrompt = canonicalUserIntentForMetadata;
+                }
+                if (buildAiFromGen && typeof buildAiFromGen === 'object') {
+                    workflowMetadataCfg.buildAiUsage = buildAiFromGen;
+                }
                 const workflowData = {
                     name: (analysis?.summary && typeof analysis.summary === 'string') 
                         ? analysis.summary.substring(0, 50) 
@@ -2846,13 +2897,13 @@ export function AutonomousAgentWizard() {
                     edges: pendingWorkflowData.edges,
                     user_id: user?.id,
                     updated_at: new Date().toISOString(),
-                    ...(canonicalUserIntentForMetadata
+                    ...(Object.keys(workflowMetadataCfg).length > 0
                         ? {
-                              metadata: { originalUserPrompt: canonicalUserIntentForMetadata },
+                              metadata: workflowMetadataCfg,
                               graph: {
                                   nodes: pendingWorkflowData.nodes,
                                   edges: pendingWorkflowData.edges,
-                                  metadata: { originalUserPrompt: canonicalUserIntentForMetadata },
+                                  metadata: { ...workflowMetadataCfg },
                               },
                           }
                         : {}),
@@ -3228,26 +3279,31 @@ export function AutonomousAgentWizard() {
         // Scroll to top before transitioning to building page
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
-        setStep('building');
-        setProgress(0);
+        // Only reset step/progress if not already on building screen
+        // (handleConfirmPlan pre-sets these to avoid a flash back to 0)
+        if (step !== 'building') {
+            setStep('building');
+            setProgress(0);
+            setCurrentPhase('');
+            setBuildStartTime(Date.now());
+            setElapsedTime(0);
+        }
         setIsComplete(false);
-        setCurrentPhase('');
-        setBuildStartTime(Date.now());
-        setElapsedTime(0);
         setBuildingLogs(['Initializing Autonomous Agent...', 'Loading Node Library...', 'Synthesizing Requirements...']);
 
         // Fallback: Gradually increase progress if backend doesn't send updates
+        // Paced to reflect real work: slow ramp so backend signals drive the actual jumps
         let fallbackProgressInterval: NodeJS.Timeout | null = null;
         const startFallbackProgress = () => {
             fallbackProgressInterval = setInterval(() => {
                 setProgress(prev => {
-                    // Cap at 95% until completion
-                    if (prev >= 95) return prev;
-                    // Gradually increase, slower as we approach 95%
-                    const increment = prev < 30 ? 2 : prev < 70 ? 1.5 : 0.5;
-                    return Math.min(95, prev + increment);
+                    // Hard cap at 88% — only backend completion signals push past this
+                    if (prev >= 88) return prev;
+                    // Very slow increments: fast early, crawls near cap
+                    const increment = prev < 20 ? 1.5 : prev < 50 ? 0.8 : prev < 75 ? 0.4 : 0.15;
+                    return Math.min(88, prev + increment);
                 });
-            }, 500);
+            }, 800);
         };
 
         const stopFallbackProgress = () => {
@@ -3389,7 +3445,7 @@ export function AutonomousAgentWizard() {
                             variant: 'destructive',
                         });
                     }
-                    setProgress(95);
+                    setProgress(88);
                     setIsComplete(false);
                     setBuildingLogs((prev) => [
                         ...prev,
@@ -3774,7 +3830,7 @@ export function AutonomousAgentWizard() {
                                             'Structural validation did not pass. Edit the plan or retry generation.',
                                         variant: 'destructive',
                                     });
-                                    setProgress(95);
+                                    setProgress(88);
                                     setIsComplete(false);
                                     setStep('building');
                                     return;
@@ -3828,7 +3884,18 @@ export function AutonomousAgentWizard() {
                                         });
                                     }
 
-                                    const workflowData = {
+                                    const canonicalPromptStream =
+                                        (originalPrompt && originalPrompt.trim()) ||
+                                        (typeof prompt === 'string' && prompt.trim()) ||
+                                        '';
+                                    const workflowMetaStream: Record<string, unknown> = {};
+                                    if (canonicalPromptStream) {
+                                        workflowMetaStream.originalUserPrompt = canonicalPromptStream;
+                                    }
+                                    if (update.buildAiUsage && typeof update.buildAiUsage === 'object') {
+                                        workflowMetaStream.buildAiUsage = update.buildAiUsage;
+                                    }
+                                    const workflowData: Record<string, unknown> = {
                                         name: (analysis?.summary && typeof analysis.summary === 'string') 
                                             ? analysis.summary.substring(0, 50) 
                                             : 'AI Generated Workflow',
@@ -3837,6 +3904,14 @@ export function AutonomousAgentWizard() {
                                         user_id: user?.id,
                                         updated_at: new Date().toISOString(),
                                     };
+                                    if (Object.keys(workflowMetaStream).length > 0) {
+                                        workflowData.metadata = workflowMetaStream;
+                                        workflowData.graph = {
+                                            nodes: normalized.nodes,
+                                            edges: normalized.edges,
+                                            metadata: { ...workflowMetaStream },
+                                        };
+                                    }
 
                                     const { data: savedWorkflow, error: saveError } = await supabase
                                         .from('workflows')
@@ -3967,7 +4042,7 @@ export function AutonomousAgentWizard() {
                             'Structural validation did not pass. Edit the plan or retry generation.',
                         variant: 'destructive',
                     });
-                    setProgress(95);
+                    setProgress(88);
                     setIsComplete(false);
                     setStep('building');
                     return;
@@ -3994,7 +4069,13 @@ export function AutonomousAgentWizard() {
                     const { data: { user } } = await supabase.auth.getUser();
                     const normalized = validateAndFixWorkflow({ nodes: workflowNodes, edges: workflowEdges });
 
-                    const workflowData = {
+                    const metaFallback: Record<string, unknown> = {};
+                    const pfb = (originalPrompt && originalPrompt.trim()) || (typeof prompt === 'string' && prompt.trim()) || '';
+                    if (pfb) metaFallback.originalUserPrompt = pfb;
+                    if (finalData?.buildAiUsage && typeof finalData.buildAiUsage === 'object') {
+                        metaFallback.buildAiUsage = finalData.buildAiUsage;
+                    }
+                    const workflowData: Record<string, unknown> = {
                         name: (analysis?.summary && typeof analysis.summary === 'string') 
                             ? analysis.summary.substring(0, 50) 
                             : 'AI Generated Workflow',
@@ -4003,6 +4084,10 @@ export function AutonomousAgentWizard() {
                         user_id: user?.id,
                         updated_at: new Date().toISOString(),
                     };
+                    if (Object.keys(metaFallback).length > 0) {
+                        workflowData.metadata = metaFallback;
+                        workflowData.graph = { nodes: normalized.nodes, edges: normalized.edges, metadata: { ...metaFallback } };
+                    }
 
                     const { data: savedWorkflow, error: saveError } = await supabase
                         .from('workflows')
@@ -4056,7 +4141,7 @@ export function AutonomousAgentWizard() {
                 setProgress(100);
                 setIsComplete(true);
             } else if (finalData) {
-                setProgress(95);
+                setProgress(88);
                 setIsComplete(false);
             }
             
@@ -4078,7 +4163,13 @@ export function AutonomousAgentWizard() {
                         const { data: { user } } = await supabase.auth.getUser();
                         const normalized = validateAndFixWorkflow({ nodes: retryWorkflowNodes, edges: retryWorkflowEdges });
 
-                        const workflowData = {
+                        const metaRetry: Record<string, unknown> = {};
+                        const pr = (originalPrompt && originalPrompt.trim()) || (typeof prompt === 'string' && prompt.trim()) || '';
+                        if (pr) metaRetry.originalUserPrompt = pr;
+                        if (finalData?.buildAiUsage && typeof finalData.buildAiUsage === 'object') {
+                            metaRetry.buildAiUsage = finalData.buildAiUsage;
+                        }
+                        const workflowData: Record<string, unknown> = {
                             name: (analysis?.summary && typeof analysis.summary === 'string') 
                                 ? analysis.summary.substring(0, 50) 
                                 : 'AI Generated Workflow',
@@ -4087,6 +4178,10 @@ export function AutonomousAgentWizard() {
                             user_id: user?.id,
                             updated_at: new Date().toISOString(),
                         };
+                        if (Object.keys(metaRetry).length > 0) {
+                            workflowData.metadata = metaRetry;
+                            workflowData.graph = { nodes: normalized.nodes, edges: normalized.edges, metadata: { ...metaRetry } };
+                        }
 
                         const { data: savedWorkflow, error: saveError } = await supabase
                             .from('workflows')
@@ -4390,11 +4485,11 @@ export function AutonomousAgentWizard() {
                         </motion.div>
                     </div>
 
-                    {/* Loading state for analyzing / summarize layer processing */}
+                    {/* Loading state: initial prompt analysis only */}
                     {step === 'analyzing' && (
                         <GlassBlurLoader 
-                            text={isSummarizeLayerProcessing ? "Refining Your Intent..." : "Analyzing Requirements..."}
-                            description={isSummarizeLayerProcessing ? "Building a single structured workflow plan from your prompt..." : "Decomposing your request into logical steps and identifying necessary integrations."}
+                            text="Analyzing Your Prompt..."
+                            description="Decomposing your request into logical steps and identifying necessary integrations."
                         />
                     )}
 
@@ -5139,14 +5234,19 @@ export function AutonomousAgentWizard() {
                                                                                     question.isUnlockableCredential &&
                                                                                     isCredentialUnlocked(question)
                                                                                 );
-                                                                            const youDisabled = locked;
-                                                                            const buildDisabled =
-                                                                                locked || question.supportsBuildtimeAI === false;
-                                                                            const aiRuntimeDisabled =
-                                                                                locked || question.supportsRuntimeAI === false;
+                                                                            const youDisabled = false;
+                                                                            const buildDisabled = false;
+                                                                            const aiRuntimeDisabled = false;
+                                                                            // ── Per-field on/off toggle ──
+                                                                            const fieldEnabledKey = `fieldEnabled_${question.nodeId}_${question.fieldName}`;
+                                                                            const hasAiPrefilledValue = !!(question.aiFilledAtBuildTime || question.aiUsesRuntime);
+                                                                            const fieldEnabled: boolean =
+                                                                                fieldEnabledOverrides[fieldEnabledKey] !== undefined
+                                                                                    ? fieldEnabledOverrides[fieldEnabledKey]
+                                                                                    : hasAiPrefilledValue;
                                                                             const rowExplanation = explainWizardOwnershipRow(
                                                                                 question,
-                                                                                { locked, aiDisabled: aiRuntimeDisabled }
+                                                                                { locked, aiDisabled: false }
                                                                             );
                                                                             const unlockKey = `unlock_${question.nodeId}_${question.fieldName}`;
                                                                             const primaryLabel =
@@ -5189,11 +5289,67 @@ export function AutonomousAgentWizard() {
                                                                             return (
                                                                                 <div
                                                                                     key={`${section.key}_${question.id || idx}`}
-                                                                                    className="rounded border border-border/40 p-3"
+                                                                                    className="rounded border border-border/40 overflow-hidden"
                                                                                 >
+                                                                                    {/* ── Header row: label + on/off toggle ── */}
+                                                                                    <div className="flex items-center justify-between gap-3 px-3 py-2 bg-muted/10">
+                                                                                        <div className="min-w-0 flex-1">
+                                                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                                                <p className="text-sm font-medium">{primaryLabel}</p>
+                                                                                                {question.aiFilledAtBuildTime ? (
+                                                                                                    <span className="inline-flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-200" title="Filled by AI when the workflow was generated">
+                                                                                                        <Sparkles className="h-3 w-3 shrink-0" aria-hidden />
+                                                                                                        AI prefilled
+                                                                                                    </span>
+                                                                                                ) : null}
+                                                                                                {question.aiUsesRuntime && !question.aiFilledAtBuildTime ? (
+                                                                                                    <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-200" title="AI fills this at runtime">
+                                                                                                        <Sparkles className="h-3 w-3 shrink-0" aria-hidden />
+                                                                                                        AI at runtime
+                                                                                                    </span>
+                                                                                                ) : null}
+                                                                                                {question.aiBuildTimePending && !question.aiFilledAtBuildTime ? (
+                                                                                                    <span className="inline-flex items-center gap-1 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.5 text-[10px] text-sky-200">
+                                                                                                        <Sparkles className="h-3 w-3 shrink-0" aria-hidden />
+                                                                                                        AI build — empty
+                                                                                                    </span>
+                                                                                                ) : null}
+                                                                                            </div>
+                                                                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                                                                <span className="font-medium text-foreground/80">{group.nodeLabel}</span>
+                                                                                                <span className="mx-1 opacity-40">·</span>
+                                                                                                <span className="font-mono text-[11px] opacity-75">{question.fieldName}</span>
+                                                                                            </p>
+                                                                                        </div>
+                                                                                        <Switch
+                                                                                            checked={fieldEnabled}
+                                                                                            onCheckedChange={(v) =>
+                                                                                                setFieldEnabledOverrides((prev) => ({
+                                                                                                    ...prev,
+                                                                                                    [fieldEnabledKey]: v,
+                                                                                                }))
+                                                                                            }
+                                                                                            aria-label={`Enable ${primaryLabel}`}
+                                                                                        />
+                                                                                    </div>
+
+                                                                                    {/* ── OFF: collapsed preview ── */}
+                                                                                    {!fieldEnabled && (
+                                                                                        <div className="px-3 py-2 border-t border-border/20">
+                                                                                            {workflowPreviewText ? (
+                                                                                                <p className="text-[11px] text-muted-foreground/60 italic truncate">{workflowPreviewText.slice(0, 100)}</p>
+                                                                                            ) : (
+                                                                                                <p className="text-[11px] text-muted-foreground/50 italic">Not configured</p>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {/* ── ON: full controls ── */}
+                                                                                    {fieldEnabled && (
+                                                                                    <div className="px-3 pb-3 pt-2 border-t border-border/20 space-y-2">
                                                                                     {question.isUnlockableCredential &&
                                                                                     question.ownershipUiMode === 'locked' ? (
-                                                                                        <div className="mb-3 flex items-center justify-between gap-2 rounded-md border border-border/50 bg-muted/20 px-2 py-1.5">
+                                                                                        <div className="flex items-center justify-between gap-2 rounded-md border border-border/50 bg-muted/20 px-2 py-1.5">
                                                                                             <Label
                                                                                                 htmlFor={unlockKey}
                                                                                                 className="text-xs font-medium text-muted-foreground cursor-pointer"
@@ -5214,55 +5370,6 @@ export function AutonomousAgentWizard() {
                                                                                     ) : null}
                                                                                     <div className="flex items-start justify-between gap-3">
                                                                                         <div className="min-w-0 flex-1">
-                                                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                                                <p className="text-sm font-medium">{primaryLabel}</p>
-                                                                                                {question.aiFilledAtBuildTime ? (
-                                                                                                    <span
-                                                                                                        className="inline-flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-200"
-                                                                                                        title="Filled by AI when the workflow was generated"
-                                                                                                    >
-                                                                                                        <Sparkles
-                                                                                                            className="h-3 w-3 shrink-0"
-                                                                                                            aria-hidden
-                                                                                                        />
-                                                                                                        AI prefilled
-                                                                                                    </span>
-                                                                                                ) : null}
-                                                                                                {question.aiUsesRuntime && !question.aiFilledAtBuildTime ? (
-                                                                                                    <span
-                                                                                                        className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-200"
-                                                                                                        title="This field is left empty in the saved workflow; AI fills it when the workflow runs"
-                                                                                                    >
-                                                                                                        <Sparkles
-                                                                                                            className="h-3 w-3 shrink-0"
-                                                                                                            aria-hidden
-                                                                                                        />
-                                                                                                        AI at runtime
-                                                                                                    </span>
-                                                                                                ) : null}
-                                                                                                {question.aiBuildTimePending &&
-                                                                                                !question.aiFilledAtBuildTime ? (
-                                                                                                    <span
-                                                                                                        className="inline-flex items-center gap-1 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.5 text-[10px] text-sky-200"
-                                                                                                        title="Build-time AI is selected but no snapshot yet—regenerate, complete attach steps, or enter the value yourself"
-                                                                                                    >
-                                                                                                        <Sparkles
-                                                                                                            className="h-3 w-3 shrink-0"
-                                                                                                            aria-hidden
-                                                                                                        />
-                                                                                                        AI build — empty
-                                                                                                    </span>
-                                                                                                ) : null}
-                                                                                            </div>
-                                                                                            <p className="text-xs text-muted-foreground mt-1">
-                                                                                                <span className="font-medium text-foreground/80">
-                                                                                                    {group.nodeLabel}
-                                                                                                </span>
-                                                                                                <span className="mx-1 opacity-40">·</span>
-                                                                                                <span className="font-mono text-[11px] opacity-75">
-                                                                                                    {question.fieldName}
-                                                                                                </span>
-                                                                                            </p>
                                                                                             {ownershipFooterText ? (
                                                                                                 <p className="text-xs text-muted-foreground mt-1">
                                                                                                     {ownershipFooterText}
@@ -5273,12 +5380,7 @@ export function AutonomousAgentWizard() {
                                                                                             <Button
                                                                                                 type="button"
                                                                                                 size="sm"
-                                                                                                variant={
-                                                                                                    selectedMode === 'manual_static'
-                                                                                                        ? 'default'
-                                                                                                        : 'outline'
-                                                                                                }
-                                                                                                disabled={youDisabled}
+                                                                                                variant={selectedMode === 'manual_static' ? 'default' : 'outline'}
                                                                                                 onClick={() =>
                                                                                                     setFillModeValues((prev) => ({
                                                                                                         ...prev,
@@ -5291,12 +5393,7 @@ export function AutonomousAgentWizard() {
                                                                                             <Button
                                                                                                 type="button"
                                                                                                 size="sm"
-                                                                                                variant={
-                                                                                                    selectedMode === 'buildtime_ai_once'
-                                                                                                        ? 'default'
-                                                                                                        : 'outline'
-                                                                                                }
-                                                                                                disabled={buildDisabled}
+                                                                                                variant={selectedMode === 'buildtime_ai_once' ? 'default' : 'outline'}
                                                                                                 onClick={() =>
                                                                                                     setFillModeValues((prev) => ({
                                                                                                         ...prev,
@@ -5309,12 +5406,7 @@ export function AutonomousAgentWizard() {
                                                                                             <Button
                                                                                                 type="button"
                                                                                                 size="sm"
-                                                                                                variant={
-                                                                                                    selectedMode === 'runtime_ai'
-                                                                                                        ? 'default'
-                                                                                                        : 'outline'
-                                                                                                }
-                                                                                                disabled={aiRuntimeDisabled}
+                                                                                                variant={selectedMode === 'runtime_ai' ? 'default' : 'outline'}
                                                                                                 onClick={() =>
                                                                                                     setFillModeValues((prev) => ({
                                                                                                         ...prev,
@@ -5328,64 +5420,41 @@ export function AutonomousAgentWizard() {
                                                                                     </div>
                                                                                     {locked && question.aiFilledAtBuildTime ? (
                                                                                         <div className="mt-2 rounded border border-muted p-2 space-y-1">
-                                                                                            <p className="text-[11px] text-muted-foreground">
-                                                                                                Value was set at generation; this row stays locked for
-                                                                                                this field type.
-                                                                                            </p>
+                                                                                            <p className="text-[11px] text-muted-foreground">Value was set at generation; this row stays locked for this field type.</p>
                                                                                             {workflowPreviewText ? (
-                                                                                                <pre className="text-[11px] whitespace-pre-wrap break-words max-h-28 overflow-auto font-mono text-left text-foreground/90">
-                                                                                                    {workflowPreviewText}
-                                                                                                </pre>
+                                                                                                <pre className="text-[11px] whitespace-pre-wrap break-words max-h-28 overflow-auto font-mono text-left text-foreground/90">{workflowPreviewText}</pre>
                                                                                             ) : null}
                                                                                         </div>
                                                                                     ) : null}
                                                                                     {!locked && selectedMode === 'buildtime_ai_once' && (
                                                                                         <div className="mt-2 rounded border border-sky-300/40 bg-sky-500/10 p-2">
-                                                                                            <p className="text-xs text-sky-200 font-medium">
-                                                                                                Filled by AI once when the workflow is built
-                                                                                            </p>
-                                                                                            <p className="text-[11px] text-sky-100/80">
-                                                                                                Value is produced during generation or attach steps, not
-                                                                                                on every run.
-                                                                                            </p>
+                                                                                            <p className="text-xs text-sky-200 font-medium">Filled by AI once when the workflow is built</p>
+                                                                                            <p className="text-[11px] text-sky-100/80">Value is produced during generation or attach steps, not on every run.</p>
                                                                                         </div>
                                                                                     )}
                                                                                     {!locked && selectedMode === 'runtime_ai' && (
                                                                                         <div className="mt-2 rounded border border-amber-300/40 bg-amber-500/10 p-2">
-                                                                                            <p className="text-xs text-amber-200 font-medium">
-                                                                                                Filled automatically by AI at runtime
-                                                                                            </p>
-                                                                                            <p className="text-[11px] text-amber-100/80">
-                                                                                                This field will be generated dynamically from previous
-                                                                                                node output and workflow intent.
-                                                                                            </p>
+                                                                                            <p className="text-xs text-amber-200 font-medium">Filled automatically by AI at runtime</p>
+                                                                                            <p className="text-[11px] text-amber-100/80">This field will be generated dynamically from previous node output and workflow intent.</p>
                                                                                         </div>
                                                                                     )}
                                                                                     {!locked && workflowPreviewText ? (
                                                                                         <div className="mt-2 rounded border border-emerald-500/25 bg-emerald-500/5 p-2">
-                                                                                            <p className="text-[11px] text-muted-foreground mb-1">
-                                                                                                Current value in workflow (edit on Configuration
-                                                                                                step)
-                                                                                            </p>
-                                                                                            <pre className="text-[11px] whitespace-pre-wrap break-words max-h-40 overflow-auto font-mono text-left">
-                                                                                                {workflowPreviewText}
-                                                                                            </pre>
+                                                                                            <p className="text-[11px] text-muted-foreground mb-1">Current value in workflow (edit on Configuration step)</p>
+                                                                                            <pre className="text-[11px] whitespace-pre-wrap break-words max-h-40 overflow-auto font-mono text-left">{workflowPreviewText}</pre>
                                                                                         </div>
                                                                                     ) : null}
-                                                                                    {!locked &&
-                                                                                        !workflowPreviewText &&
-                                                                                        question.aiFilledAtBuildTime && (
-                                                                                            <div className="mt-2 rounded border border-emerald-500/20 bg-emerald-500/5 p-2">
-                                                                                                <p className="text-[11px] text-muted-foreground">
-                                                                                                    AI prefilled this field, but the value is not shown
-                                                                                                    here (e.g. complex JSON). Open the{' '}
-                                                                                                    <span className="font-medium text-foreground/80">
-                                                                                                        Configuration
-                                                                                                    </span>{' '}
-                                                                                                    step to view or edit it.
-                                                                                                </p>
-                                                                                            </div>
-                                                                                        )}
+                                                                                    {!locked && !workflowPreviewText && question.aiFilledAtBuildTime && (
+                                                                                        <div className="mt-2 rounded border border-emerald-500/20 bg-emerald-500/5 p-2">
+                                                                                            <p className="text-[11px] text-muted-foreground">
+                                                                                                AI prefilled this field, but the value is not shown here (e.g. complex JSON). Open the{' '}
+                                                                                                <span className="font-medium text-foreground/80">Configuration</span>{' '}
+                                                                                                step to view or edit it.
+                                                                                            </p>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    </div>
+                                                                                    )}
                                                                                 </div>
                                                                             );
                                                                         })}

@@ -993,6 +993,30 @@ export default function PropertiesPanel({
     [selectedNodeId, updateNodeConfig]
   );
 
+  // Per-field enabled toggle — writes to config._fieldEnabled[fieldName]
+  const handleFieldEnabledChange = useCallback(
+    (fieldKey: string, enabled: boolean) => {
+      if (!selectedNodeId || !selectedNode) return;
+      const current = (selectedNode.data.config?._fieldEnabled as Record<string, boolean> | undefined) ?? {};
+      updateNodeConfig(selectedNodeId, {
+        _fieldEnabled: { ...current, [fieldKey]: enabled },
+      });
+    },
+    [selectedNodeId, selectedNode, updateNodeConfig]
+  );
+
+  // Per-field fill mode — writes to config._fillMode[fieldName]
+  const handleFillModeChange = useCallback(
+    (fieldKey: string, mode: 'manual_static' | 'buildtime_ai_once' | 'runtime_ai') => {
+      if (!selectedNodeId || !selectedNode) return;
+      const current = (selectedNode.data.config?._fillMode as Record<string, string> | undefined) ?? {};
+      updateNodeConfig(selectedNodeId, {
+        _fillMode: { ...current, [fieldKey]: mode },
+      });
+    },
+    [selectedNodeId, selectedNode, updateNodeConfig]
+  );
+
   // Auto-persist node config changes to backend.
   // Debounced so rapid typing doesn't flood the API — fires 1.5s after the last change.
   const autoPersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -2052,145 +2076,227 @@ export default function PropertiesPanel({
                             // ✅ SCHEMA-DRIVEN UI: Get validation error for this field
                             const fieldError = validationErrors[field.key];
 
+                            // ── Per-field on/off toggle ──────────────────────────────────────────
+                            const nodeConfig = (selectedNode.data.config || {}) as Record<string, unknown>;
+                            const fieldEnabledMap = (nodeConfig._fieldEnabled as Record<string, boolean> | undefined) ?? {};
+                            const fillModeMap = (nodeConfig._fillMode as Record<string, string> | undefined) ?? {};
+
+                            // A field is auto-enabled when AI already gave it a non-empty value
+                            const rawFieldValue = nodeConfig[field.key];
+                            const hasAiValue =
+                              rawFieldValue !== undefined &&
+                              rawFieldValue !== null &&
+                              rawFieldValue !== '' &&
+                              !(typeof rawFieldValue === 'object' && !Array.isArray(rawFieldValue) && Object.keys(rawFieldValue as object).length === 0);
+
+                            // Explicit user toggle takes precedence; fall back to auto-enable when AI filled
+                            const fieldEnabled: boolean =
+                              fieldEnabledMap[field.key] !== undefined
+                                ? fieldEnabledMap[field.key]
+                                : hasAiValue;
+
+                            const currentFillMode: 'manual_static' | 'buildtime_ai_once' | 'runtime_ai' =
+                              (fillModeMap[field.key] as 'manual_static' | 'buildtime_ai_once' | 'runtime_ai' | undefined) ??
+                              (hasAiValue ? 'buildtime_ai_once' : 'manual_static');
+
                             return (
-                              <div key={field.key} className={`space-y-2 transition-opacity ${fieldConditionActive ? 'opacity-100' : 'opacity-45'}`}>
-                                {/* Top - Heading */}
-                                {/* ✅ ACCESSIBILITY FIX: Only use htmlFor when there's a single input field */}
-                                {selectedNode.data.type === 'if_else' && field.key === 'conditions' ? (
-                                  <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1">
-                                    {field.label}
-                                    {effectiveRequired && <span className="text-destructive/80">*</span>}
-                                    {/* ✅ SCHEMA-DRIVEN UI: Show schema-driven indicator */}
-                                    {backendSchema && (
-                                      <span className="ml-1 text-[10px] text-muted-foreground/50" title="Rendered from backend schema">
-                                        🎯
-                                      </span>
-                                    )}
-                                  </Label>
-                                ) : (
-                                  <Label htmlFor={field.key} className="text-xs font-medium text-foreground/90 flex items-center gap-1">
-                                    {field.label}
-                                    {effectiveRequired && <span className="text-destructive/80">*</span>}
-                                    {/* ✅ SCHEMA-DRIVEN UI: Show schema-driven indicator */}
-                                    {backendSchema && (
-                                      <span className="ml-1 text-[10px] text-muted-foreground/50" title="Rendered from backend schema">
-                                        🎯
-                                      </span>
-                                    )}
-                                  </Label>
-                                )}
-
-                                {/* ✅ SCHEMA-DRIVEN UI: Show validation error inline */}
-                                {fieldError && (
-                                  <p className="text-xs text-destructive/80 flex items-center gap-1">
-                                    <XCircle className="h-3 w-3" />
-                                    {fieldError}
-                                  </p>
-                                )}
-
-                                {/* Next - Description (if exists and not a help link) */}
-                                {hasDescription && (
-                                  <p className="text-xs text-muted-foreground/70 leading-relaxed">{effectiveHelpText}</p>
-                                )}
-
-                                {/* Next - Input Field */}
-                                {/* Special handling for If/Else conditions */}
-                                {selectedNode.data.type === 'if_else' && field.key === 'conditions' ? (
-                                  <div className="space-y-2">
-                                    <ToggleGroup
-                                      type="single"
-                                      value={ifElseConditionsEditorMode}
-                                      onValueChange={(v) => {
-                                        if (v === 'builder' || v === 'json') setIfElseConditionsEditorMode(v);
-                                      }}
-                                      className="justify-start"
-                                    >
-                                      <ToggleGroupItem value="builder" className="text-xs px-2 py-1">
-                                        Builder
-                                      </ToggleGroupItem>
-                                      <ToggleGroupItem value="json" className="text-xs px-2 py-1">
-                                        JSON
-                                      </ToggleGroupItem>
-                                    </ToggleGroup>
-
-                                    {ifElseConditionsEditorMode === 'builder' ? (
-                                      <ConditionBuilder
-                                        key={`condition-builder-${selectedNode.id}-${field.key}`}
-                                        value={(selectedNode.data.config || {})[field.key] as ConditionRule[] | string | null | undefined}
-                                        onChange={(conditions: ConditionRule[]) => {
-                                          handleConfigChange(field.key, conditions);
-                                          setIfElseConditionsJsonError(null);
-                                        }}
-                                        availableFields={availableFieldsForConditions}
-                                      />
-                                    ) : (
-                                      <div className="space-y-2">
-                                        <Textarea
-                                          id={`${field.key}_json`}
-                                          value={ifElseConditionsJsonText}
-                                          onChange={(e) => {
-                                            const nextText = e.target.value;
-                                            setIfElseConditionsJsonText(nextText);
-
-                                            // Apply parsed JSON when valid; keep text otherwise so user can fix syntax
-                                            try {
-                                              const parsed = JSON.parse(nextText);
-                                              if (Array.isArray(parsed)) {
-                                                handleConfigChange(field.key, normalizeIfElseConditions(parsed));
-                                                setIfElseConditionsJsonError(null);
-                                              } else if (parsed && typeof parsed === 'object') {
-                                                handleConfigChange(field.key, normalizeIfElseConditions([parsed]));
-                                                setIfElseConditionsJsonError(null);
-                                              } else {
-                                                setIfElseConditionsJsonError('JSON must be an array of condition objects.');
-                                              }
-                                            } catch {
-                                              setIfElseConditionsJsonError('Invalid JSON (fix syntax to apply).');
-                                            }
-                                          }}
-                                          placeholder={`[\n  { "field": "$json.age", "operator": "greater_than", "value": 18 }\n]`}
-                                          className="min-h-[120px] font-mono text-xs border-border/60 focus-visible:ring-1 focus-visible:ring-ring/50"
-                                          onMouseDown={handleInputMouseDown}
-                                          onFocus={(e) => e.stopPropagation()}
-                                        />
-                                        {ifElseConditionsJsonError && (
-                                          <p className="text-xs text-destructive/80 flex items-center gap-1">
-                                            <XCircle className="h-3 w-3" />
-                                            {ifElseConditionsJsonError}
-                                          </p>
+                              <div key={field.key} className={`rounded-md border border-border/40 bg-muted/10 transition-opacity ${fieldConditionActive ? 'opacity-100' : 'opacity-45'}`}>
+                                {/* ── Field header row: label + toggle ── */}
+                                <div className="flex items-center justify-between gap-2 px-3 py-2">
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    {selectedNode.data.type === 'if_else' && field.key === 'conditions' ? (
+                                      <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1 truncate">
+                                        {field.label}
+                                        {effectiveRequired && <span className="text-destructive/80">*</span>}
+                                        {backendSchema && (
+                                          <span className="ml-1 text-[10px] text-muted-foreground/50" title="Rendered from backend schema">🎯</span>
                                         )}
-                                      </div>
+                                      </Label>
+                                    ) : (
+                                      <Label htmlFor={field.key} className="text-xs font-medium text-foreground/90 flex items-center gap-1 truncate">
+                                        {field.label}
+                                        {effectiveRequired && <span className="text-destructive/80">*</span>}
+                                        {backendSchema && (
+                                          <span className="ml-1 text-[10px] text-muted-foreground/50" title="Rendered from backend schema">🎯</span>
+                                        )}
+                                      </Label>
+                                    )}
+                                    {hasAiValue && !fieldEnabled && (
+                                      <span className="text-[10px] text-sky-500/80 font-medium shrink-0">AI prefilled</span>
                                     )}
                                   </div>
-                                ) : (
-                                  renderField(field)
+                                  {/* On/Off toggle */}
+                                  <Switch
+                                    checked={fieldEnabled}
+                                    onCheckedChange={(checked) => handleFieldEnabledChange(field.key, checked)}
+                                    className="shrink-0 scale-90"
+                                    aria-label={`Enable ${field.label}`}
+                                  />
+                                </div>
+
+                                {/* ── When OFF: collapsed preview ── */}
+                                {!fieldEnabled && (
+                                  <div className="px-3 pb-2">
+                                    {hasAiValue ? (
+                                      <p className="text-[11px] text-muted-foreground/60 italic truncate">
+                                        {typeof rawFieldValue === 'object'
+                                          ? JSON.stringify(rawFieldValue).slice(0, 80)
+                                          : String(rawFieldValue).slice(0, 80)}
+                                      </p>
+                                    ) : (
+                                      <p className="text-[11px] text-muted-foreground/50 italic">Not configured</p>
+                                    )}
+                                  </div>
                                 )}
 
-                                {/* Last - User Manual Link at Right Side End */}
-                                {/* MANDATORY: Show guide link for ALL input fields (per requirements) */}
-                                {(['text', 'textarea', 'json', 'number', 'select', 'time', 'cron'].includes(field.type)) && (
-                                  <div className="flex justify-end">
-                                    {hasHelpLink ? (
-                                      <button
+                                {/* ── When ON: mode selector + input ── */}
+                                {fieldEnabled && (
+                                  <div className="px-3 pb-3 space-y-2 border-t border-border/30 pt-2">
+                                    {/* You / AI (build) / AI (runtime) selector */}
+                                    <div className="flex gap-1">
+                                      <Button
                                         type="button"
-                                        onClick={() => setSelectedHelp(helpInfo)}
-                                        className="text-xs text-muted-foreground/70 hover:text-foreground/80 cursor-pointer flex items-center gap-1 transition-colors duration-150"
+                                        size="sm"
+                                        variant={currentFillMode === 'manual_static' ? 'default' : 'outline'}
+                                        className="h-6 px-2 text-[11px]"
+                                        onClick={() => handleFillModeChange(field.key, 'manual_static')}
                                       >
-                                        <HelpCircle className="h-3 w-3" />
-                                        How to get {field.label}?
-                                      </button>
-                                    ) : (
-                                      <InputGuideLink
-                                        fieldKey={field.key}
-                                        fieldLabel={field.label}
-                                        fieldType={field.type}
-                                        nodeType={selectedNode.data.type}
-                                        placeholder={field.placeholder}
-                                        helpText={effectiveHelpText}
-                                        helpCategory={field.helpCategory}
-                                        docsUrl={field.docsUrl}
-                                        exampleValue={field.exampleValue}
-                                      />
+                                        You
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant={currentFillMode === 'buildtime_ai_once' ? 'default' : 'outline'}
+                                        className="h-6 px-2 text-[11px]"
+                                        onClick={() => handleFillModeChange(field.key, 'buildtime_ai_once')}
+                                      >
+                                        AI (build)
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant={currentFillMode === 'runtime_ai' ? 'default' : 'outline'}
+                                        className="h-6 px-2 text-[11px]"
+                                        onClick={() => handleFillModeChange(field.key, 'runtime_ai')}
+                                      >
+                                        AI (runtime)
+                                      </Button>
+                                    </div>
+
+                                    {/* Mode hint */}
+                                    {currentFillMode === 'buildtime_ai_once' && (
+                                      <p className="text-[10px] text-sky-500/80">Filled by AI once when the workflow is built</p>
+                                    )}
+                                    {currentFillMode === 'runtime_ai' && (
+                                      <p className="text-[10px] text-amber-500/80">AI resolves this from previous node output at runtime</p>
+                                    )}
+
+                                    {/* ✅ SCHEMA-DRIVEN UI: Show validation error inline */}
+                                    {fieldError && (
+                                      <p className="text-xs text-destructive/80 flex items-center gap-1">
+                                        <XCircle className="h-3 w-3" />
+                                        {fieldError}
+                                      </p>
+                                    )}
+
+                                    {/* Description */}
+                                    {hasDescription && (
+                                      <p className="text-xs text-muted-foreground/70 leading-relaxed">{effectiveHelpText}</p>
+                                    )}
+
+                                    {/* Input — only shown when mode is manual_static or buildtime_ai_once */}
+                                    {currentFillMode !== 'runtime_ai' && (
+                                      <div className="space-y-1">
+                                        {selectedNode.data.type === 'if_else' && field.key === 'conditions' ? (
+                                          <div className="space-y-2">
+                                            <ToggleGroup
+                                              type="single"
+                                              value={ifElseConditionsEditorMode}
+                                              onValueChange={(v) => {
+                                                if (v === 'builder' || v === 'json') setIfElseConditionsEditorMode(v);
+                                              }}
+                                              className="justify-start"
+                                            >
+                                              <ToggleGroupItem value="builder" className="text-xs px-2 py-1">Builder</ToggleGroupItem>
+                                              <ToggleGroupItem value="json" className="text-xs px-2 py-1">JSON</ToggleGroupItem>
+                                            </ToggleGroup>
+                                            {ifElseConditionsEditorMode === 'builder' ? (
+                                              <ConditionBuilder
+                                                key={`condition-builder-${selectedNode.id}-${field.key}`}
+                                                value={(selectedNode.data.config || {})[field.key] as ConditionRule[] | string | null | undefined}
+                                                onChange={(conditions: ConditionRule[]) => {
+                                                  handleConfigChange(field.key, conditions);
+                                                  setIfElseConditionsJsonError(null);
+                                                }}
+                                                availableFields={availableFieldsForConditions}
+                                              />
+                                            ) : (
+                                              <div className="space-y-2">
+                                                <Textarea
+                                                  id={`${field.key}_json`}
+                                                  value={ifElseConditionsJsonText}
+                                                  onChange={(e) => {
+                                                    const nextText = e.target.value;
+                                                    setIfElseConditionsJsonText(nextText);
+                                                    try {
+                                                      const parsed = JSON.parse(nextText);
+                                                      if (Array.isArray(parsed)) {
+                                                        handleConfigChange(field.key, normalizeIfElseConditions(parsed));
+                                                        setIfElseConditionsJsonError(null);
+                                                      } else if (parsed && typeof parsed === 'object') {
+                                                        handleConfigChange(field.key, normalizeIfElseConditions([parsed]));
+                                                        setIfElseConditionsJsonError(null);
+                                                      } else {
+                                                        setIfElseConditionsJsonError('JSON must be an array of condition objects.');
+                                                      }
+                                                    } catch {
+                                                      setIfElseConditionsJsonError('Invalid JSON (fix syntax to apply).');
+                                                    }
+                                                  }}
+                                                  placeholder={`[\n  { "field": "$json.age", "operator": "greater_than", "value": 18 }\n]`}
+                                                  className="min-h-[120px] font-mono text-xs border-border/60 focus-visible:ring-1 focus-visible:ring-ring/50"
+                                                  onMouseDown={handleInputMouseDown}
+                                                  onFocus={(e) => e.stopPropagation()}
+                                                />
+                                                {ifElseConditionsJsonError && (
+                                                  <p className="text-xs text-destructive/80 flex items-center gap-1">
+                                                    <XCircle className="h-3 w-3" />
+                                                    {ifElseConditionsJsonError}
+                                                  </p>
+                                                )}
+                                              </div>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          renderField(field)
+                                        )}
+                                        {(['text', 'textarea', 'json', 'number', 'select', 'time', 'cron'].includes(field.type)) && (
+                                          <div className="flex justify-end">
+                                            {hasHelpLink ? (
+                                              <button
+                                                type="button"
+                                                onClick={() => setSelectedHelp(helpInfo)}
+                                                className="text-xs text-muted-foreground/70 hover:text-foreground/80 cursor-pointer flex items-center gap-1 transition-colors duration-150"
+                                              >
+                                                <HelpCircle className="h-3 w-3" />
+                                                How to get {field.label}?
+                                              </button>
+                                            ) : (
+                                              <InputGuideLink
+                                                fieldKey={field.key}
+                                                fieldLabel={field.label}
+                                                fieldType={field.type}
+                                                nodeType={selectedNode.data.type}
+                                                placeholder={field.placeholder}
+                                                helpText={effectiveHelpText}
+                                                helpCategory={field.helpCategory}
+                                                docsUrl={field.docsUrl}
+                                                exampleValue={field.exampleValue}
+                                              />
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 )}

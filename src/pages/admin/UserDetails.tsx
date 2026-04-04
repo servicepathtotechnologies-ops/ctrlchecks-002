@@ -287,15 +287,16 @@ export default function UserDetails() {
       <Card>
         <CardHeader>
           <CardTitle>Workflows</CardTitle>
-          <CardDescription>Workflow title, API calls, and active/inactive status.</CardDescription>
+          <CardDescription>Workflow title, run count, AI build usage, and status.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Workflow Title</TableHead>
-                <TableHead>API Calls</TableHead>
-                <TableHead>Tokens Used to Build</TableHead>
+                <TableHead>Workflow runs</TableHead>
+                <TableHead>AI calls (build)</TableHead>
+                <TableHead>Tokens (build)</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -303,7 +304,8 @@ export default function UserDetails() {
               {user.workflows.map((workflow) => (
                 <TableRow key={workflow.id}>
                   <TableCell className="font-medium">{workflow.title}</TableCell>
-                  <TableCell>{workflow.apiCalls}</TableCell>
+                  <TableCell>{workflow.workflowRuns ?? workflow.apiCalls ?? 0}</TableCell>
+                  <TableCell>{workflow.aiBuildCalls ?? 0}</TableCell>
                   <TableCell>{workflow.tokensUsedToBuild}</TableCell>
                   <TableCell>
                     <Badge variant={workflow.status === 'active' ? 'default' : 'secondary'}>
@@ -314,7 +316,7 @@ export default function UserDetails() {
               ))}
               {user.workflows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
                     No workflows found for this user.
                   </TableCell>
                 </TableRow>

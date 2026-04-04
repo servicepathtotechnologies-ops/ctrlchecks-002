@@ -88,6 +88,19 @@ export default function WorkflowBuilder() {
           nodes: data.nodes || graphData?.nodes || [],
           edges: data.edges || graphData?.edges || [],
         };
+
+        if (import.meta.env.DEV && backendWorkflow.nodes.length > 0) {
+          const sample = backendWorkflow.nodes.slice(0, 5);
+          console.log(
+            '[WorkflowBuilder][DEV] Raw DB row — position field types (first nodes, before normalize):',
+            sample.map((n: any) => ({
+              id: n?.id,
+              hasPosition: !!n?.position,
+              xType: typeof n?.position?.x,
+              yType: typeof n?.position?.y,
+            }))
+          );
+        }
         
         // ✅ DEBUG: Log node configs to verify they're present
         console.log('[WorkflowBuilder] Loading workflow with', backendWorkflow.nodes.length, 'nodes');
@@ -168,9 +181,15 @@ export default function WorkflowBuilder() {
       return false;
     } catch (error) {
       console.error('Error loading workflow:', error);
+      const loadMsg =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string'
+            ? (error as { message: string }).message
+            : 'Failed to load workflow';
       toast({
-        title: 'Error',
-        description: 'Failed to load workflow',
+        title: 'Error loading workflow',
+        description: loadMsg,
         variant: 'destructive',
       });
       // Reset on error to prevent corrupted state
@@ -228,6 +247,7 @@ export default function WorkflowBuilder() {
     if (!user) return;
 
     setIsSaving(true);
+    let saveSucceeded = false;
     try {
       // Validate edges before saving
       const validEdges = edges.filter(edge => {
@@ -281,6 +301,9 @@ export default function WorkflowBuilder() {
         name: useWorkflowStore.getState().workflowName,
         nodes: normalized.nodes as unknown as Json,
         edges: normalized.edges as unknown as Json, // Normalized edges (deduplicated, validated)
+        graph: { nodes: normalized.nodes, edges: normalized.edges } as unknown as Json,
+        settings: {} as unknown as Json,
+        schema_version: 2,
         user_id: user.id,
         updated_at: new Date().toISOString(),
       };
@@ -339,12 +362,14 @@ export default function WorkflowBuilder() {
             
             // Extract all config values as inputs — include empty strings so user-cleared
             // fields (e.g. recipientEmails = "") are persisted, not silently dropped.
-            // Only skip undefined/null, internal _prefixed fields, and credential fields.
+            // Only skip undefined/null and internal _prefixed fields.
+            // Credential/oauth keys (e.g. credentialId, apiKey) are legitimate node config
+            // that must be persisted. The attach-inputs API already strips raw OAuth tokens
+            // at the API boundary.
             Object.keys(nodeConfig).forEach((key) => {
               const value = nodeConfig[key];
               if (value === undefined || value === null) return;
               if (key.startsWith('_')) return;
-              if (key.includes('credential') || key.includes('oauth')) return;
               nodeInputs[key] = value;
             });
             
@@ -420,20 +445,27 @@ export default function WorkflowBuilder() {
         }
       }
 
-      setIsDirty(false);
+      saveSucceeded = true;
       toast({
         title: 'Saved',
         description: 'Workflow saved and configured successfully',
       });
     } catch (error) {
       console.error('Error saving workflow:', error);
+      const saveMsg =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string'
+            ? (error as { message: string }).message
+            : 'Failed to save workflow';
       toast({
-        title: 'Error',
-        description: 'Failed to save workflow',
+        title: 'Save failed',
+        description: saveMsg,
         variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
+      if (saveSucceeded) setIsDirty(false);
     }
   }, [nodes, edges, user, navigate, setWorkflowId, setIsDirty]);
 

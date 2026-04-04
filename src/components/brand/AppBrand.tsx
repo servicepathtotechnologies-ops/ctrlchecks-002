@@ -25,7 +25,7 @@ export function AppBrand({
     context === 'admin' ? '/admin/dashboard' : context === 'marketing' ? '/' : '/dashboard';
 
   const imgWrap = cn(
-    'flex shrink-0 items-center justify-center overflow-hidden rounded-lg',
+    'flex shrink-0 items-center justify-center overflow-hidden',
     size === 'sm' && 'h-7 w-7',
     size === 'minimal' && 'h-8 w-8',
     size === 'default' && 'h-9 w-9'
