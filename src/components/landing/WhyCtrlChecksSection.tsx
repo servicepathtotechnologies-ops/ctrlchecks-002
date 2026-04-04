@@ -82,7 +82,7 @@ export function WhyCtrlChecksSection() {
         </motion.div>
 
         <p className="mx-auto mt-10 max-w-2xl text-center text-lg font-semibold text-foreground">
-          Why CtrlChecks AI-OS wins—and stays ahead
+          Why CtrlChecks wins—and stays ahead
         </p>
         <ul className="mx-auto mt-8 grid max-w-xl gap-3">
           {wins.map((line, index) => (

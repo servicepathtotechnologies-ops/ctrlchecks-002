@@ -84,7 +84,7 @@ export default function ResetPassword() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
         <div className="mb-8 flex justify-center">
-          <AppBrand context="marketing" showSubtitle />
+          <AppBrand context="marketing" />
         </div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -106,7 +106,7 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <div className="mb-8 flex justify-center">
-        <AppBrand context="marketing" showSubtitle />
+        <AppBrand context="marketing" />
       </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}

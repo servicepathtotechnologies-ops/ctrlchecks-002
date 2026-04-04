@@ -28,7 +28,7 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 glass-strong">
       <nav className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10" aria-label="Main">
         <div className="flex h-[4.25rem] items-center justify-between">
-          <AppBrand context="marketing" showSubtitle />
+          <AppBrand context="marketing" />
 
           <div className="hidden xl:flex xl:items-center xl:gap-5">
             {navItems.map((item) => (

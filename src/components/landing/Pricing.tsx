@@ -9,7 +9,7 @@ const plans = [
     name: "Free",
     price: "$0",
     period: "forever",
-    description: "Explore CtrlChecks AI-OS during beta",
+    description: "Explore CtrlChecks during beta",
     features: [
       "5 workflows",
       "100 executions/month",

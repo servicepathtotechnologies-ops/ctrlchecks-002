@@ -43,7 +43,7 @@ export function Testimonials() {
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
             Authentic go-to-market beats fictional testimonials. Here is how we are inviting
-            teams into the CtrlChecks AI-OS beta.
+            teams into the CtrlChecks beta.
           </p>
         </motion.div>
 

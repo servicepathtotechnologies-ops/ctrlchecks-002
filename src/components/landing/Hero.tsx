@@ -31,7 +31,7 @@ export function Hero() {
               }
               transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
             >
-              CtrlChecks AI-OS: Beta launch
+              CtrlChecks: Beta launch
             </motion.span>
           </motion.div>
 

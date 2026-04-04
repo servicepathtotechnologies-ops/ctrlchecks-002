@@ -130,7 +130,7 @@ export default function SignIn() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md space-y-8">
           <div className="text-center">
             <div className="flex justify-center">
-              <AppBrand context="marketing" showSubtitle className="justify-center" />
+              <AppBrand context="marketing" className="justify-center" />
             </div>
             <h1 className="mt-6 text-3xl font-bold">Welcome back</h1>
             <p className="mt-2 text-muted-foreground">Sign in to continue to your dashboard</p>

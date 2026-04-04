@@ -11,14 +11,12 @@ export interface AppBrandProps {
   context?: AppBrandContext;
   size?: 'default' | 'sm' | 'minimal';
   className?: string;
-  showSubtitle?: boolean;
 }
 
 export function AppBrand({
   context = 'app',
   size = 'default',
   className,
-  showSubtitle = false,
 }: AppBrandProps) {
   const [src, setSrc] = useState(LOGO_PRIMARY);
   const to =
@@ -52,9 +50,6 @@ export function AppBrand({
       {size !== 'minimal' && (
         <div className="flex min-w-0 flex-col leading-tight">
           <span className={titleClass}>CtrlChecks</span>
-          {showSubtitle && (
-            <span className="text-xs text-muted-foreground">AI-OS</span>
-          )}
         </div>
       )}
     </Link>

@@ -6,7 +6,7 @@ export default function Privacy() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4">
-          <AppBrand context="marketing" showSubtitle />
+          <AppBrand context="marketing" />
           <Link to="/" className="text-sm text-primary hover:underline">
             ← Back to Home
           </Link>

@@ -13,7 +13,7 @@ const NotFound = () => {
     <div className="flex min-h-screen flex-col bg-muted">
       <header className="border-b border-border bg-card">
         <div className="container mx-auto flex justify-center px-4 py-4">
-          <AppBrand context="marketing" showSubtitle />
+          <AppBrand context="marketing" />
         </div>
       </header>
       <div className="flex flex-1 items-center justify-center p-6">

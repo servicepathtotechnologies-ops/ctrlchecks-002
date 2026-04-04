@@ -55,7 +55,7 @@ export function Footer() {
                 <img src="/favicon.ico" alt="" className="h-full w-full" />
               </div>
               <span className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-                CtrlChecks AI-OS
+                CtrlChecks
               </span>
             </Link>
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">

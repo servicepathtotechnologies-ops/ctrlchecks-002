@@ -124,7 +124,7 @@ export default function SignUp() {
         >
           <div className="text-center">
             <div className="flex justify-center">
-              <AppBrand context="marketing" showSubtitle className="justify-center" />
+              <AppBrand context="marketing" className="justify-center" />
             </div>
             <h1 className="mt-6 text-3xl font-bold">Create your account</h1>
             <p className="mt-2 text-muted-foreground">Start automating your workflows today</p>
