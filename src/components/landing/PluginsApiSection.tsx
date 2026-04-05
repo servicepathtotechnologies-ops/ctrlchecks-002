@@ -54,8 +54,8 @@ export function PluginsApiSection() {
             className="mt-4 text-muted-foreground"
           >
             Embed CtrlChecks into your product so CRMs, ERPs, and internal tools can trigger
-            workflows, sync documents, and hand off to AI agents—without exposing a separate
-            automation UI to every end user.
+            workflows, sync documents, and hand off to AI agents. No separate
+            automation UI exposed to every end user.
           </motion.p>
         </div>
 

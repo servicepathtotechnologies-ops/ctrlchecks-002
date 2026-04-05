@@ -4,7 +4,7 @@ import { landingViewport, springSoft } from "@/components/landing/landing-motion
 
 /** Slides 6–7 merged: max 3 bullets per column. */
 const transparencyBullets = [
-  "See triggers, logic, branches, and outputs—not a black box.",
+  "See triggers, logic, branches, and outputs. No black box.",
   "Error handling and paths stay visible for operators and auditors.",
   "Autonomy with the detail you need to trust production runs.",
 ];
@@ -83,7 +83,7 @@ export function TrustSection() {
               <h3 className="text-xl font-bold">Enterprise-ready security</h3>
             </div>
             <p className="mt-1 text-sm font-medium text-muted-foreground">
-              Foundational—not an afterthought
+              Foundational, not an afterthought
             </p>
             <ul className="mt-6 space-y-4">
               {securityBullets.map((p, i) => (

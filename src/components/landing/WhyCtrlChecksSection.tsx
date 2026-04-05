@@ -52,7 +52,7 @@ export function WhyCtrlChecksSection() {
             className="rounded-2xl border border-border/50 bg-background/10 p-8 text-center shadow-none backdrop-blur-md transition-colors hover:border-primary/30 dark:border-white/10 dark:bg-white/5"
           >
             <h3 className="text-lg font-semibold">Automation platforms</h3>
-            <p className="mt-3 text-sm text-muted-foreground">Zapier · Make · n8n</p>
+          <p className="mt-3 text-sm font-medium text-muted-foreground">Zapier · Make · n8n</p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -63,7 +63,7 @@ export function WhyCtrlChecksSection() {
             className="rounded-2xl border border-border/50 bg-background/10 p-8 text-center shadow-none backdrop-blur-md transition-colors hover:border-primary/30 dark:border-white/10 dark:bg-white/5"
           >
             <h3 className="text-lg font-semibold">AI agent frameworks</h3>
-            <p className="mt-3 text-sm text-muted-foreground">LangGraph · AutoGen · CrewAI</p>
+          <p className="mt-3 text-sm font-medium text-muted-foreground">LangGraph · AutoGen · CrewAI</p>
           </motion.div>
         </div>
 
@@ -77,12 +77,12 @@ export function WhyCtrlChecksSection() {
         >
           <p className="text-sm font-semibold uppercase tracking-wide text-primary">CtrlChecks</p>
           <p className="mt-2 text-lg font-bold sm:text-xl">
-            = AI automation infrastructure bridging both worlds.
+            AI automation infrastructure that bridges both worlds.
           </p>
         </motion.div>
 
         <p className="mx-auto mt-10 max-w-2xl text-center text-lg font-semibold text-foreground">
-          Why CtrlChecks wins—and stays ahead
+          Why CtrlChecks wins and stays ahead
         </p>
         <ul className="mx-auto mt-8 grid max-w-xl gap-3">
           {wins.map((line, index) => (

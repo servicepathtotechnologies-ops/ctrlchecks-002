@@ -14,7 +14,7 @@ const blocks = [
 ];
 
 const developerPath = [
-  "Self-host or use cloud—keep data and LLM access under your policy.",
+  "Self-host or use cloud. Keep data and LLM access under your policy.",
   "Fork-friendly core: debug, extend nodes, and contribute back where it fits.",
   "Ship custom agents and internal tools without rebuilding an automation OS from scratch.",
 ];
@@ -40,8 +40,8 @@ export function OpenCoreSection() {
             <span className="text-gradient">developers</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
-            The engine, SDKs, frameworks, and templates you use to build—not the same story as
-            embedding CtrlChecks inside another product (see Plugins & APIs).
+            The engine, SDKs, frameworks, and templates you use to build. Not the same story as
+            embedding CtrlChecks inside another product (see Plugins and APIs).
           </p>
         </motion.div>
 

@@ -49,7 +49,7 @@ export function SubscriptionSection() {
             <span className="text-primary" aria-hidden>
               ·
             </span>
-            <span>Subscription model: recurring access after a defined period—aligned to how your org deploys (cloud and/or self-host options as we launch).</span>
+            <span>Subscription model: recurring access after a defined period, aligned to how your org deploys. Cloud and self-host options available at launch.</span>
           </li>
           <li className="flex gap-2">
             <span className="text-primary" aria-hidden>

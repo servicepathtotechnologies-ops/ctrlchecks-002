@@ -82,7 +82,7 @@ export function Pricing() {
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
             Start free while we finalize enterprise programs. Limits and bundles may adjust as
-            we incorporate beta feedback — early partners get grandfathering where possible.
+            we incorporate beta feedback. Early partners get grandfathering where possible.
           </p>
         </motion.div>
 

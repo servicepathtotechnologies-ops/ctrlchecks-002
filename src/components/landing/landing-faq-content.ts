@@ -18,7 +18,7 @@ export type LandingFaqGroup = {
 export const LANDING_FAQ_INTRO = {
   title: "Technical FAQ",
   lede:
-    "Precise questions and concise engineering-oriented answers—aligned with the canvas, execution model, and security boundaries you see in the product.",
+    "Precise questions and concise engineering-oriented answers, aligned with the canvas, execution model, and security boundaries you see in the product.",
   /** Matches labels in WorkflowBuilder (Node Library, Properties panel) and Executions. */
   uiAlignmentLine:
     "In the product: workflow canvas, Node Library, Properties panel, and Executions for history and run detail.",
@@ -33,13 +33,13 @@ export const LANDING_FAQ_GROUPS: LandingFaqGroup[] = [
         id: "faq-1",
         question: "What structural model do CtrlChecks workflows use?",
         answer:
-          "Each workflow is a directed acyclic graph (DAG): exactly one trigger node starts execution; downstream nodes run in topological order along defined edges. The graph must be fully connected from trigger to outputs—cycles and orphaned nodes are rejected as structural contract errors before a run. What you author on the canvas is the canonical definition of that DAG.",
+          "Each workflow is a directed acyclic graph (DAG): exactly one trigger node starts execution; downstream nodes run in topological order along defined edges. The graph must be fully connected from trigger to outputs. Cycles and orphaned nodes are rejected as structural contract errors before a run. What you author on the canvas is the canonical definition of that DAG.",
       },
       {
         id: "faq-2",
         question: "How should I compose workflows in the visual editor?",
         answer:
-          "Default to a linear chain: trigger first, then steps in execution order, with one main input per non-merge node unless you introduce explicit branching. Each node is configured against its schema in the Properties panel. Structural validation applies to the whole graph—field-level validation alone is not sufficient for a correct automation.",
+          "Default to a linear chain: trigger first, then steps in execution order, with one main input per non-merge node unless you introduce explicit branching. Each node is configured against its schema in the Properties panel. Structural validation applies to the whole graph. Field-level validation alone is not sufficient for a correct automation.",
       },
       {
         id: "faq-3",
@@ -51,7 +51,7 @@ export const LANDING_FAQ_GROUPS: LandingFaqGroup[] = [
         id: "faq-4",
         question: "What is the relationship between AI-assisted authoring and the saved workflow?",
         answer:
-          "Assistive generation proposes node types and ordering; those proposals are hydrated from the unified node registry and compiled into the same validated DAG you would build manually. The persisted source of truth is the graph after compilation and validation—not raw model output. Inference endpoints and API keys are server-side configuration only; they are not treated as a customer-facing product differentiator.",
+          "Assistive generation proposes node types and ordering; those proposals are hydrated from the unified node registry and compiled into the same validated DAG you would build manually. The persisted source of truth is the graph after compilation and validation, not raw model output. Inference endpoints and API keys are server-side configuration only and are not treated as a customer-facing product differentiator.",
       },
       {
         id: "faq-5",
@@ -69,7 +69,7 @@ export const LANDING_FAQ_GROUPS: LandingFaqGroup[] = [
         id: "faq-6",
         question: "What is the failure and error-handling behavior during a run?",
         answer:
-          "When a node errors—validation, connector failure, or upstream API fault—the run stops at that node with an attributable error context suitable for remediation. Retry, compensation, or alerting are modeled explicitly in the workflow (for example via additional nodes or policies) where your deployment supports them, rather than as hidden client-side behavior.",
+          "When a node encounters an error (validation, connector failure, or upstream API fault) the run stops at that node with an attributable error context suitable for remediation. Retry, compensation, or alerting are modeled explicitly in the workflow (for example via additional nodes or policies) where your deployment supports them, rather than as hidden client-side behavior.",
       },
       {
         id: "faq-7",
@@ -87,13 +87,13 @@ export const LANDING_FAQ_GROUPS: LandingFaqGroup[] = [
         id: "faq-8",
         question: "Which teams and use cases is the platform aimed at?",
         answer:
-          "Organizations that need governed, reviewable automation: platform engineering, operations, and business technologists who require execution history, explicit graphs, and schema-driven validation suitable for production change control—not one-off scripts without lineage or shared contracts.",
+          "Organizations that need governed, reviewable automation: platform engineering, operations, and business technologists who require execution history, explicit graphs, and schema-driven validation suitable for production change control. Not one-off scripts without lineage or shared contracts.",
       },
       {
         id: "faq-9",
         question: "How does this compare to imperative scripts or general-purpose chat assistants?",
         answer:
-          "Imperative scripts are difficult to audit and standardize at scale. Chat-centric tools rarely persist a validated DAG with deterministic execution semantics. CtrlChecks combines a visual graph, registry-backed node contracts, worker-side execution, and separation between the SPA and data tier—aligned with how enterprise automation is operated and observed.",
+          "Imperative scripts are difficult to audit and standardize at scale. Chat-centric tools rarely persist a validated DAG with deterministic execution semantics. CtrlChecks combines a visual graph, registry-backed node contracts, worker-side execution, and separation between the SPA and data tier, aligned with how enterprise automation is operated and observed.",
       },
       {
         id: "faq-10",

@@ -77,9 +77,8 @@ export function Hero() {
             transition={{ ...titleTransition, delay: 0.34 }}
             className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg"
           >
-            Describe what you need in plain language and get production-ready, AI-driven
-            workflows—without hand-wiring every step. Built for autonomy you can see, security you
-            can trust, and value you can ship fast.
+            Describe what you need in plain language and get production-ready, AI-driven workflows.
+            No hand-wiring. Built for autonomy you can see, security you can trust, and value you can ship fast.
           </motion.p>
 
           <motion.p

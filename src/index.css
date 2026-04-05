@@ -22,7 +22,7 @@
     --accent-hex: #3b82f6;
     --text-hex: #0d1b2a;
     --text-muted-hex: #6b7280;
-    --border-hex: #e5e7eb;
+    --border-hex: #c8cdd6;
 
     /* Semantic — Light */
     --background: 0 0% 100%;
@@ -58,7 +58,7 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
+    --border: 220 13% 82%;
     --input: 220 13% 91%;
     --ring: 210 90% 40%;
 
@@ -95,7 +95,7 @@
     --accent-hex: #60a5fa;
     --text-hex: #e5e7eb;
     --text-muted-hex: #9ca3af;
-    --border-hex: #243447;
+    --border-hex: #2e4260;
 
     --background: 210 50% 11%;
     --foreground: 210 20% 91%;
@@ -130,7 +130,7 @@
     --warning: 38 92% 50%;
     --warning-foreground: 210 50% 11%;
 
-    --border: 215 33% 21%;
+    --border: 215 33% 28%;
     --input: 215 33% 21%;
     --ring: 217 91% 60%;
 

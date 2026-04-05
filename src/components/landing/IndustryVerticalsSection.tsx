@@ -23,7 +23,7 @@ export function IndustryVerticalsSection() {
             Built for <span className="text-gradient">your sector</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Same engine—tailored outcomes. Replace placeholders in code when your client list is
+            Same engine, tailored outcomes. Replace placeholders in code when your client list is
             final.
           </p>
         </motion.div>

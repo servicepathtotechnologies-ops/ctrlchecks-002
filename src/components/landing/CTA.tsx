@@ -60,7 +60,7 @@ export function CTA() {
               transition={reduceMotion ? { duration: 0.35, delay: 0.12 } : { ...springSoft, delay: 0.14 }}
               className="mt-4 text-base text-white/85 sm:text-lg"
             >
-              One OS for prompt-built workflows, agents, and integrations—on your infrastructure.
+              One OS for prompt-built workflows, agents, and integrations. On your infrastructure.
             </motion.p>
 
             <motion.p
@@ -70,7 +70,7 @@ export function CTA() {
               transition={reduceMotion ? { duration: 0.35, delay: 0.16 } : { ...springSoft, delay: 0.18 }}
               className="mt-5 text-lg font-semibold text-white sm:text-xl"
             >
-              From Prompts to Production—Instantly
+              From Prompts to Production, Instantly
             </motion.p>
 
             <motion.div

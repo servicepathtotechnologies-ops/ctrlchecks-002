@@ -30,7 +30,7 @@ export function WorkflowDemoSection() {
             <span className="text-gradient">build themselves</span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Software that engineers its own workflows—from intent to execution in one flow.
+            Software that engineers its own workflows, from intent to execution in one flow.
           </p>
         </motion.div>
 

@@ -59,7 +59,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              AI automation OS — intent, intelligence, execution.{" "}
+              AI automation OS: intent, intelligence, execution.{" "}
               <a
                 href="https://ctrlchecks.ai"
                 className="font-medium text-primary underline-offset-4 hover:underline"
