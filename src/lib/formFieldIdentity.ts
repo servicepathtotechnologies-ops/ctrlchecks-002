@@ -51,6 +51,45 @@ function ensureKey(raw: string, used: Set<string>): string {
   return key;
 }
 
+const VALID_FIELD_TYPES = new Set([
+  'text', 'email', 'number', 'textarea', 'select', 'checkbox', 'radio',
+  'tel', 'url', 'date', 'file',
+]);
+
+/** Normalize AI-generated field type strings to valid FormField types */
+function normalizeFieldType(raw: unknown): string {
+  if (!raw) return 'text';
+  const lower = String(raw).toLowerCase().trim();
+  // Direct match
+  if (VALID_FIELD_TYPES.has(lower)) return lower;
+  // Aliases
+  const aliases: Record<string, string> = {
+    'dropdown': 'select',
+    'multiselect': 'select',
+    'multi_select': 'select',
+    'multi-select': 'select',
+    'long_text': 'textarea',
+    'longtext': 'textarea',
+    'long-text': 'textarea',
+    'paragraph': 'textarea',
+    'phone': 'tel',
+    'telephone': 'tel',
+    'phone_number': 'tel',
+    'integer': 'number',
+    'float': 'number',
+    'decimal': 'number',
+    'bool': 'checkbox',
+    'boolean': 'checkbox',
+    'toggle': 'checkbox',
+    'link': 'url',
+    'attachment': 'file',
+    'upload': 'file',
+    'datetime': 'date',
+    'date_time': 'date',
+  };
+  return aliases[lower] || 'text';
+}
+
 export function normalizeFormFieldIdentity(
   field: Record<string, unknown>,
   used: Set<string>
@@ -63,9 +102,16 @@ export function normalizeFormFieldIdentity(
     key,
     name: key,
     label: shortenLabel(sourceLabel),
-    type: String(field.type || 'text'),
+    type: normalizeFieldType(field.type),
     required: field.required !== false,
-    options: Array.isArray(field.options) ? (field.options as any) : undefined,
+    options: Array.isArray(field.options)
+      ? (field.options as any[]).map((opt: any) => {
+          if (typeof opt === 'string') return { label: opt, value: opt };
+          const label = String(opt.label || opt.name || opt.text || opt.value || '');
+          const value = String(opt.value ?? opt.key ?? opt.id ?? label);
+          return { label, value };
+        }).filter(opt => opt.label || opt.value)
+      : undefined,
     placeholder: typeof field.placeholder === 'string' ? field.placeholder : undefined,
     defaultValue: typeof field.defaultValue === 'string' ? field.defaultValue : undefined,
   };

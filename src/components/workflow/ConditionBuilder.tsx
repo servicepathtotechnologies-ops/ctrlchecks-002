@@ -207,12 +207,15 @@ export default function ConditionBuilder({ value, onChange, availableFields = []
     .map(c => c.field)
     .filter(f => f && f !== '' && f !== '__custom__');
 
-  // ✅ REGISTRY-DRIVEN: suggestions come entirely from upstream node output schemas
-  // (passed via availableFields prop from PropertiesPanel → collectUpstreamFieldHints)
-  // plus any fields the AI already populated — no hardcoded fallbacks
   const fieldSuggestions = [
     ...availableFields,
     ...aiPopulatedFields,
+    'input.age',
+    'input.name',
+    'input.email',
+    '$json.status',
+    '$json.amount',
+    'input.status',
   ].filter((f, i, arr) => arr.indexOf(f) === i); // Deduplicate
 
   return (
