@@ -366,17 +366,12 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
           <>
             {/* Output handles - dynamically positioned based on number of cases */}
             {switchCases.map((c, idx) => {
-              // Calculate position: evenly distribute handles across the bottom border
-              // For 1 case: 50% (center)
-              // For 2 cases: 25% and 75%
-              // For 3+ cases: evenly spaced from edges
+              // ✅ Unified formula for N cases — no hardcoded special cases
+              // Distributes handles evenly from 15% to 85% of the node width
               let leftPercent: string;
               if (switchCases.length === 1) {
                 leftPercent = '50%';
-              } else if (switchCases.length === 2) {
-                leftPercent = idx === 0 ? '25%' : '75%';
               } else {
-                // For 3+ cases, distribute evenly across the border
                 const spacing = 70 / (switchCases.length - 1);
                 leftPercent = `${15 + (idx * spacing)}%`;
               }

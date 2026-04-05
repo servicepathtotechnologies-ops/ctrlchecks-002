@@ -243,3 +243,77 @@ export function validateWorkflowGraph(nodes: Node[], edges: Edge[]): ValidationR
   const valid = errors.length === 0;
   return { valid, errors, warnings };
 }
+
+/** Minimal node shape for ordering (matches persisted workflow nodes + React Flow). */
+type OrderableNode = {
+  id: string;
+  data?: { type?: string; category?: string };
+  type?: string;
+};
+
+function isTriggerNodeForOrder(node: OrderableNode): boolean {
+  const type = node.data?.type || node.type || '';
+  const category = String(node.data?.category || '').toLowerCase();
+  if (category === 'triggers' || category === 'trigger') return true;
+  if (type.includes('trigger')) return true;
+  const knownTriggerTypes = [
+    'manual_trigger',
+    'webhook',
+    'schedule',
+    'chat_trigger',
+    'form_trigger',
+    'form',
+    'workflow_trigger',
+    'error_trigger',
+    'interval',
+    'gmail_trigger',
+    'slack_trigger',
+    'discord_trigger',
+  ];
+  return knownTriggerTypes.includes(type);
+}
+
+/**
+ * BFS rank from the workflow trigger along edges (stable: sorted outgoing targets).
+ * Used to present post-credential / manual configuration in execution order.
+ */
+export function computeExecutionOrderRank(
+  nodes: OrderableNode[],
+  edges: Array<{ source: string; target: string }>
+): Map<string, number> {
+  const rank = new Map<string, number>();
+  if (!Array.isArray(nodes) || nodes.length === 0) return rank;
+
+  const trigger = nodes.find(isTriggerNodeForOrder);
+  if (!trigger) {
+    nodes.forEach((n, i) => rank.set(n.id, i));
+    return rank;
+  }
+
+  const outgoing = new Map<string, string[]>();
+  for (const e of edges || []) {
+    if (!e?.source || !e?.target) continue;
+    if (!outgoing.has(e.source)) outgoing.set(e.source, []);
+    outgoing.get(e.source)!.push(e.target);
+  }
+
+  const queue: string[] = [trigger.id];
+  const seen = new Set<string>(queue);
+  let r = 0;
+  rank.set(trigger.id, r++);
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    const outs = (outgoing.get(id) || []).slice().sort();
+    for (const t of outs) {
+      if (seen.has(t)) continue;
+      seen.add(t);
+      rank.set(t, r++);
+      queue.push(t);
+    }
+  }
+
+  for (const n of nodes) {
+    if (!rank.has(n.id)) rank.set(n.id, 9999);
+  }
+  return rank;
+}

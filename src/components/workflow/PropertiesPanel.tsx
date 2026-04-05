@@ -1031,25 +1031,56 @@ export default function PropertiesPanel({
         if (!sessionData?.session?.access_token) return;
 
         const nodeConfig = selectedNode.data?.config || {};
+        const nodeType = selectedNode.data?.type || selectedNode.type || '';
+
+        // ✅ REGISTRY-DRIVEN: Get field ownership from the node schema (no hardcoding)
+        // Fields with ownership='credential' go to attach-credentials
+        // All other fields go to attach-inputs
+        const cachedSchemas = nodeSchemaService.getCachedSchemas();
+        const nodeDef = cachedSchemas?.find((s) => s.type === nodeType);
+        const inputSchema = nodeDef?.inputSchema ?? {};
+
         const nodeInputs: Record<string, any> = {};
+        const credentialInputs: Record<string, any> = {};
+
         Object.keys(nodeConfig).forEach((key) => {
           const value = nodeConfig[key];
           if (value === undefined || value === null) return;
-          if (key.startsWith('_')) return;
-          if (key.includes('credential') || key.includes('oauth')) return;
-          nodeInputs[key] = value;
+          if (key.startsWith('_')) return; // internal meta keys
+
+          const fieldOwnership = (inputSchema[key] as any)?.ownership;
+
+          if (fieldOwnership === 'credential') {
+            // ✅ Route credential fields to attach-credentials
+            if (value !== '') credentialInputs[key] = value;
+          } else {
+            // ✅ Route all other fields (structural, value, unknown) to attach-inputs
+            nodeInputs[key] = value;
+          }
         });
 
-        if (Object.keys(nodeInputs).length === 0) return;
+        const token = sessionData.session.access_token;
+        const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
-        await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-inputs`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${sessionData.session.access_token}`,
-          },
-          body: JSON.stringify({ inputs: { [selectedNode.id]: nodeInputs } }),
-        });
+        // Send config inputs
+        if (Object.keys(nodeInputs).length > 0) {
+          await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-inputs`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ inputs: { [selectedNode.id]: nodeInputs } }),
+          });
+        }
+
+        // Send credential inputs (keyed by nodeId so backend knows which node they belong to)
+        if (Object.keys(credentialInputs).length > 0) {
+          await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-credentials`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              credentials: { [`node_${selectedNode.id}`]: credentialInputs },
+            }),
+          });
+        }
       } catch {
         // Non-fatal — user can still manually save
       }
@@ -2088,6 +2119,53 @@ export default function PropertiesPanel({
                               rawFieldValue !== null &&
                               rawFieldValue !== '' &&
                               !(typeof rawFieldValue === 'object' && !Array.isArray(rawFieldValue) && Object.keys(rawFieldValue as object).length === 0);
+
+                            // ✅ BUG D FIX: Check registry-driven effectiveFillMode for runtime_ai fields
+                            const schemaInputSchema = (backendSchema?.inputSchema || {}) as Record<string, any>;
+                            const schemaEffectiveFillMode = resolveEffectiveFieldFillMode(field.key, schemaInputSchema, nodeConfig);
+                            const schemaRuntimeSupported = supportsRuntimeAI(field.key, schemaInputSchema);
+                            const isSchemaRuntimeAiField = schemaEffectiveFillMode === 'runtime_ai' && schemaRuntimeSupported;
+
+                            // If this is a runtime_ai field in the schema-driven path, show the banner
+                            if (isSchemaRuntimeAiField) {
+                              const runtimeValueMeta = lastResolvedInputs?.[selectedNode.id]?.[field.key];
+                              return (
+                                <div key={field.key} className={`rounded-md border border-border/40 bg-muted/10 transition-opacity ${fieldConditionActive ? 'opacity-100' : 'opacity-45'}`}>
+                                  <div className="flex items-center gap-1.5 px-3 py-2">
+                                    <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1 truncate">
+                                      {field.label}
+                                      {backendSchema && (
+                                        <span className="ml-1 text-[10px] text-muted-foreground/50" title="Rendered from backend schema">🎯</span>
+                                      )}
+                                    </Label>
+                                  </div>
+                                  <div className="px-3 pb-3">
+                                    <div
+                                      className="text-xs text-muted-foreground border border-dashed border-border/60 rounded px-3 py-2 bg-muted/40"
+                                      role="status"
+                                      aria-label="AI-managed field, empty until execution"
+                                      data-testid="ai-managed-field"
+                                    >
+                                      <p className="font-medium text-foreground/80">Filled automatically by AI at runtime</p>
+                                      <p className="mt-1">
+                                        This field will be generated dynamically from previous node output and your workflow intent. You don&apos;t need to configure it manually.
+                                      </p>
+                                      {runtimeValueMeta && (
+                                        <div className="mt-2 p-2 rounded border border-border/50 bg-background/60">
+                                          <p className="text-[11px] text-foreground/80 font-medium">Last runtime value (read-only)</p>
+                                          <p className="text-[10px] text-muted-foreground mt-1">
+                                            {new Date(runtimeValueMeta.startedAt).toLocaleString()} • {runtimeValueMeta.source === 'runtime_ai' ? 'AI runtime' : 'Static config'}
+                                          </p>
+                                          <pre className="mt-1 max-h-28 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] whitespace-pre-wrap break-words">
+                                            {typeof runtimeValueMeta.value === 'string' ? runtimeValueMeta.value : JSON.stringify(runtimeValueMeta.value, null, 2)}
+                                          </pre>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
 
                             // Explicit user toggle takes precedence; fall back to auto-enable when AI filled
                             const fieldEnabled: boolean =

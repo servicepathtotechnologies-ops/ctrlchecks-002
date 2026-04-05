@@ -116,26 +116,25 @@ function conditionToExpression(condition: ConditionRule): string {
 
 export default function ConditionBuilder({ value, onChange, availableFields = [], className }: ConditionBuilderProps) {
   // Parse initial value - handle both structured and legacy formats
-  const [conditions, setConditions] = useState<ConditionRule[]>(() => {
-    if (!value) return [{ field: '', operator: 'equals', value: '' }];
-    
-    if (Array.isArray(value)) {
-      // Check if it's already structured format
-      if (value.length > 0 && typeof value[0] === 'object' && 'field' in value[0] && 'operator' in value[0]) {
-        return value as ConditionRule[];
+  const parseValue = (v: ConditionRule[] | string | null | undefined): ConditionRule[] => {
+    if (!v) return [{ field: '', operator: 'equals', value: '' }];
+
+    if (Array.isArray(v)) {
+      // Already structured format with field + operator
+      if (v.length > 0 && typeof v[0] === 'object' && 'field' in v[0] && 'operator' in v[0]) {
+        return v as ConditionRule[];
       }
-      // Check if it's legacy format with expression field
-      if (value.length > 0 && typeof value[0] === 'object' && 'expression' in value[0]) {
-        const parsed = parseLegacyExpression((value[0] as any).expression);
+      // Legacy format with expression field
+      if (v.length > 0 && typeof v[0] === 'object' && 'expression' in v[0]) {
+        const parsed = parseLegacyExpression((v[0] as any).expression);
         return parsed ? [parsed] : [{ field: '', operator: 'equals', value: '' }];
       }
     }
-    
+
     // Legacy string format
-    if (typeof value === 'string') {
+    if (typeof v === 'string') {
       try {
-        // Try to parse as JSON array
-        const parsed = JSON.parse(value);
+        const parsed = JSON.parse(v);
         if (Array.isArray(parsed) && parsed.length > 0) {
           if ('expression' in parsed[0]) {
             const rule = parseLegacyExpression(parsed[0].expression);
@@ -146,14 +145,30 @@ export default function ConditionBuilder({ value, onChange, availableFields = []
           }
         }
       } catch {
-        // Not JSON, try direct parsing
-        const rule = parseLegacyExpression(value);
+        const rule = parseLegacyExpression(v);
         return rule ? [rule] : [{ field: '', operator: 'equals', value: '' }];
       }
     }
-    
+
     return [{ field: '', operator: 'equals', value: '' }];
-  });
+  };
+
+  const [conditions, setConditions] = useState<ConditionRule[]>(() => parseValue(value));
+
+  // ✅ FIX: Sync state when value prop changes (AI-populated data arrives after mount)
+  const prevValueRef = useRef(value);
+  useEffect(() => {
+    // Only re-parse if the value reference actually changed
+    if (prevValueRef.current !== value) {
+      prevValueRef.current = value;
+      const parsed = parseValue(value);
+      // Only update if the parsed result is meaningfully different (has real field data)
+      const hasRealData = parsed.some(c => c.field && c.field !== '');
+      if (hasRealData) {
+        setConditions(parsed);
+      }
+    }
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use ref to store latest onChange to avoid dependency issues
   const onChangeRef = useRef(onChange);
@@ -168,7 +183,7 @@ export default function ConditionBuilder({ value, onChange, availableFields = []
   }, []);
 
   const addCondition = () => {
-    const updated = [...conditions, { field: '', operator: 'equals', value: '' }];
+    const updated: ConditionRule[] = [...conditions, { field: '', operator: 'equals' as const, value: '' }];
     setConditions(updated);
     // Don't notify on add - wait for user to fill in the condition
   };
@@ -187,14 +202,17 @@ export default function ConditionBuilder({ value, onChange, availableFields = []
   };
 
   // Generate field suggestions from available fields
+  // ✅ Also include any AI-populated field values so they appear in the dropdown
+  const aiPopulatedFields = conditions
+    .map(c => c.field)
+    .filter(f => f && f !== '' && f !== '__custom__');
+
+  // ✅ REGISTRY-DRIVEN: suggestions come entirely from upstream node output schemas
+  // (passed via availableFields prop from PropertiesPanel → collectUpstreamFieldHints)
+  // plus any fields the AI already populated — no hardcoded fallbacks
   const fieldSuggestions = [
     ...availableFields,
-    'input.age',
-    'input.name',
-    'input.email',
-    '$json.status',
-    '$json.amount',
-    'input.status',
+    ...aiPopulatedFields,
   ].filter((f, i, arr) => arr.indexOf(f) === i); // Deduplicate
 
   return (
@@ -211,24 +229,24 @@ export default function ConditionBuilder({ value, onChange, availableFields = []
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">Field</Label>
               <Select
-                value={condition.field && !fieldSuggestions.includes(condition.field) && condition.field !== '__custom__' 
-                  ? '__custom__' 
-                  : condition.field}
+                value={fieldSuggestions.includes(condition.field) ? condition.field : '__custom__'}
                 onValueChange={(val) => {
                   if (val === '__custom__') {
-                    // Keep the current custom value if it exists, otherwise set to __custom__
-                    if (condition.field && !fieldSuggestions.includes(condition.field) && condition.field !== '__custom__') {
-                      // Already has a custom value, keep it
-                      return;
+                    // Only reset to empty custom if not already a custom value
+                    if (fieldSuggestions.includes(condition.field)) {
+                      updateCondition(index, { field: '' });
                     }
-                    updateCondition(index, { field: '__custom__' });
                   } else {
                     updateCondition(index, { field: val });
                   }
                 }}
               >
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Select field" />
+                  {/* ✅ FIX: Show the actual custom field value in the trigger, not "Select field" */}
+                  {condition.field && !fieldSuggestions.includes(condition.field)
+                    ? <span className="truncate">{condition.field}</span>
+                    : <SelectValue placeholder="Select field" />
+                  }
                 </SelectTrigger>
                 <SelectContent>
                   {fieldSuggestions.map((field) => (
@@ -239,23 +257,14 @@ export default function ConditionBuilder({ value, onChange, availableFields = []
                   <SelectItem value="__custom__">Custom...</SelectItem>
                 </SelectContent>
               </Select>
-              {(condition.field === '__custom__' || (condition.field && !fieldSuggestions.includes(condition.field) && condition.field !== '__custom__')) && (
+              {/* Show custom input when field is not in suggestions */}
+              {(!fieldSuggestions.includes(condition.field)) && (
                 <Input
                   className="h-7 mt-1 text-xs"
-                  placeholder="e.g., input.age"
-                  value={condition.field === '__custom__' ? '' : condition.field}
+                  placeholder="e.g., $json.age"
+                  value={condition.field}
                   onChange={(e) => {
-                    const customField = e.target.value;
-                    updateCondition(index, { field: customField || '__custom__' });
-                  }}
-                  onBlur={(e) => {
-                    const customField = e.target.value.trim();
-                    if (customField) {
-                      updateCondition(index, { field: customField });
-                    } else if (condition.field === '__custom__') {
-                      // Keep as __custom__ if empty
-                      updateCondition(index, { field: '__custom__' });
-                    }
+                    updateCondition(index, { field: e.target.value });
                   }}
                 />
               )}

@@ -23,11 +23,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
+import { computeExecutionOrderRank } from '@/lib/workflowGraphValidator';
 import { useTheme } from '@/hooks/useTheme';
 import { InputGuideLink } from './InputGuideLink';
 import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';
 import { ThemedBorderGlow } from '@/components/ui/themed-border-glow';
 import { WorkflowConfirmationStep } from './WorkflowConfirmationStep';
+import { CredentialStatusPanel } from './CredentialStatusPanel';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
 import { generateFieldGuide } from './guideGenerator';
 import {
@@ -72,7 +74,7 @@ import {
  * Ensures proper state transitions before setting workflow blueprint.
  * 
  * This function enforces the FSM transition rules:
- * - STATE_2_CLARIFICATION_ACTIVE → STATE_3_UNDERSTANDING_CONFIRMED → (STATE_4_CREDENTIAL_COLLECTION if needed) → STATE_5_WORKFLOW_BUILDING
+ * - STATE_2_CLARIFICATION_ACTIVE ? STATE_3_UNDERSTANDING_CONFIRMED ? (STATE_4_CREDENTIAL_COLLECTION if needed) ? STATE_5_WORKFLOW_BUILDING
  * 
  * @param stateManager - The state manager instance
  * @param finalUnderstanding - The final understanding/prompt (for confirming understanding)
@@ -86,7 +88,7 @@ const ensureStateForBlueprint = (
     const currentState = stateManager.getCurrentState();
     const executionState = stateManager.getExecutionState();
     
-    // STATE_2_CLARIFICATION_ACTIVE → STATE_3_UNDERSTANDING_CONFIRMED
+    // STATE_2_CLARIFICATION_ACTIVE ? STATE_3_UNDERSTANDING_CONFIRMED
     if (currentState === WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE) {
         // First confirm understanding if not already done
         if (!executionState.final_understanding && finalUnderstanding) {
@@ -99,7 +101,7 @@ const ensureStateForBlueprint = (
         // After confirmation, we'll be in STATE_3_UNDERSTANDING_CONFIRMED, so continue below
     }
     
-    // STATE_3_UNDERSTANDING_CONFIRMED → STATE_5_WORKFLOW_BUILDING
+    // STATE_3_UNDERSTANDING_CONFIRMED ? STATE_5_WORKFLOW_BUILDING
     if (currentState === WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED) {
         const buildResult = stateManager.startBuilding();
         if (!buildResult.success) {
@@ -108,7 +110,7 @@ const ensureStateForBlueprint = (
         }
     }
     
-    // STATE_4_CREDENTIAL_COLLECTION → STATE_5_WORKFLOW_BUILDING
+    // STATE_4_CREDENTIAL_COLLECTION ? STATE_5_WORKFLOW_BUILDING
     if (currentState === WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION) {
         const buildResult = stateManager.startBuilding();
         if (!buildResult.success) {
@@ -123,7 +125,8 @@ const ensureStateForBlueprint = (
 
 /** True when backend pipeline contract is satisfied: safe to persist and open builder. */
 function isPipelineContractReady(data: { phase?: string; success?: boolean } | null | undefined): boolean {
-    return data?.phase === 'ready' && data.success !== false;
+    // Accept both 'ready' (legacy create pipeline) and 'complete' (AI-first pipeline)
+    return (data?.phase === 'ready' || data?.phase === 'complete') && data?.success !== false;
 }
 
 function groupQuestionsByNode(questions: any[]) {
@@ -206,6 +209,14 @@ interface RefinementResult {
         type: string;
         description: string;
     }>;
+    stageTrace?: Array<{
+        stage: string;
+        durationMs: number;
+        outputSummary: string;
+        error?: string;
+    }>;
+    validationIssues?: Array<{ severity: string; description: string }>;
+    fieldOwnershipMap?: Record<string, Record<string, string>>;
 }
 
 /** Mirrors selectedVariationMeta shape in AutonomousAgentWizard */
@@ -222,7 +233,7 @@ type WizardSelectedVariationMeta = {
 
 /**
  * Parse a structuredSummary string into its display sections.
- * Strips the configuration contract boilerplate — only Goal, Intent alignment,
+ * Strips the configuration contract boilerplate � only Goal, Intent alignment,
  * Execution steps, and Terminals are shown to the user.
  */
 function parseStructuredSummary(raw: string): {
@@ -242,7 +253,7 @@ function parseStructuredSummary(raw: string): {
     return { goal, intentAlignment, executionSteps, terminals };
 }
 
-/** Clean structured display of the workflow plan — no boilerplate, no config contract. */
+/** Clean structured display of the workflow plan � no boilerplate, no config contract. */
 function StructuredPlanDisplay({ summary, compact = false }: { summary: string; compact?: boolean }) {
     const { goal, intentAlignment, executionSteps, terminals } = parseStructuredSummary(summary);
     if (!goal && executionSteps.length === 0) {
@@ -292,6 +303,64 @@ function StructuredPlanDisplay({ summary, compact = false }: { summary: string; 
     );
 }
 
+/** Visual pipeline stage trace � shows each AI stage result as a node card. */
+function PipelineStageTrace({ stageTrace }: { stageTrace: Array<{ stage: string; durationMs: number; outputSummary: string; error?: string }> }) {
+    if (!stageTrace || stageTrace.length === 0) return null;
+
+    const stageIcons: Record<string, string> = {
+        intent: '??',
+        structural_prompt: '???',
+        node_selection: '??',
+        edge_reasoning: '??',
+        validation: '?',
+        credential_discovery: '??',
+        field_ownership: '??',
+    };
+
+    const stageLabels: Record<string, string> = {
+        intent: 'Intent Extraction',
+        structural_prompt: 'Structural Blueprint',
+        node_selection: 'Node Selection',
+        edge_reasoning: 'Edge Reasoning',
+        validation: 'Validation',
+        credential_discovery: 'Credential Discovery',
+        field_ownership: 'Field Ownership',
+    };
+
+    return (
+        <div className="mt-4 space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Pipeline Stages</p>
+            <div className="grid grid-cols-1 gap-2">
+                {stageTrace.map((s, i) => (
+                    <div
+                        key={i}
+                        className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 text-sm ${
+                            s.error
+                                ? 'border-destructive/40 bg-destructive/5'
+                                : 'border-border/50 bg-muted/30'
+                        }`}
+                    >
+                        <span className="text-base mt-0.5 shrink-0">{stageIcons[s.stage] ?? '??'}</span>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="font-medium text-foreground/90">
+                                    {stageLabels[s.stage] ?? s.stage.replace(/_/g, ' ')}
+                                </span>
+                                <span className="text-xs text-muted-foreground shrink-0">{s.durationMs}ms</span>
+                            </div>
+                            {s.error ? (
+                                <p className="text-xs text-destructive mt-0.5">{s.error}</p>
+                            ) : (
+                                <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.outputSummary}</p>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 /**
  * Single source of truth for POST /api/generate-workflow (mode: create).
  * Must match for streaming and non-streaming fallback so plan-driven create is not dropped.
@@ -325,7 +394,7 @@ function buildGenerateWorkflowCreateBody(params: {
         originalPrompt: originalPrompt || finalPrompt,
         selectedVariationId: selectedVariationMeta?.id ?? null,
         selectedStructuredPrompt: finalPrompt,
-        // Use original user prompt as confirmedStructuredPrompt — not the full structured summary
+        // Use original user prompt as confirmedStructuredPrompt � not the full structured summary
         // which contains registry contract text that causes false node detection
         confirmedStructuredPrompt: originalPrompt || finalPrompt,
         registryTags:
@@ -351,6 +420,40 @@ function buildGenerateWorkflowCreateBody(params: {
               }
             : undefined,
     };
+}
+
+/**
+ * Applies wizard fillModeValues (keys: `mode_<nodeId>_<fieldName>`) to each node's
+ * `node.data.config._fillMode` map. This ensures PropertiesPanel reads the correct
+ * fill mode and shows the AI runtime banner for fields the wizard set to `runtime_ai`.
+ */
+function applyFillModesToNodes(
+    nodes: any[],
+    fillModeValues: Record<string, string>
+): any[] {
+    return nodes.map((node: any) => {
+        const fillModeMap: Record<string, string> = {};
+        const prefix = `mode_${node.id}_`;
+        Object.entries(fillModeValues).forEach(([key, mode]) => {
+            if (key.startsWith(prefix)) {
+                fillModeMap[key.slice(prefix.length)] = mode;
+            }
+        });
+        if (Object.keys(fillModeMap).length === 0) return node;
+        return {
+            ...node,
+            data: {
+                ...node.data,
+                config: {
+                    ...(node.data?.config || {}),
+                    _fillMode: {
+                        ...(node.data?.config?._fillMode || {}),
+                        ...fillModeMap,
+                    },
+                },
+            },
+        };
+    });
 }
 
 export function AutonomousAgentWizard() {
@@ -408,7 +511,7 @@ export function AutonomousAgentWizard() {
     const [configureInputs, setConfigureInputs] = useState<Array<{ nodeId: string; fieldName: string; value: any }>>([]);
     const [isConfiguring, setIsConfiguring] = useState(false);
     const [workflowReady, setWorkflowReady] = useState(false);
-    // ✅ STEP-BY-STEP: Track current question index for wizard flow
+    // ? STEP-BY-STEP: Track current question index for wizard flow
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [credentialQuestionIndex, setCredentialQuestionIndex] = useState(0);
     const [allQuestions, setAllQuestions] = useState<any[]>([]);
@@ -425,6 +528,9 @@ export function AutonomousAgentWizard() {
     const [originalPrompt, setOriginalPrompt] = useState<string>('');
     const [isSummarizeLayerProcessing, setIsSummarizeLayerProcessing] = useState<boolean>(false);
     const [circleTextIndex, setCircleTextIndex] = useState(0);
+    // Bug A fix: gate "Refining" overlay behind questions completion
+    const [pipelineReady, setPipelineReady] = useState(false);
+    const [questionsAnswered, setQuestionsAnswered] = useState(false);
     const [workflowUnderstandingConfirmed, setWorkflowUnderstandingConfirmed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [confirmationData, setConfirmationData] = useState<{
@@ -445,7 +551,14 @@ export function AutonomousAgentWizard() {
         credentialStatuses?: any[],
         /** Node-grouped credential rows for the Credentials step (from worker mapper or client fallback). */
         credentialWizardView?: { rows: any[]; groups: any[] },
+        /** Field ownership map from pipeline response: nodeId ? fieldName ? FieldFillMode. */
+        fieldOwnershipMap?: Record<string, Record<string, string>>,
     } | null>(null);
+    // Credential status panel � shown after save when credentials are missing (friendly, not error)
+    type CredentialEntry = { vaultKey: string; displayName: string; nodeId: string; satisfied: boolean; required: boolean };
+    type CredentialPanelData = { workflowId: string; satisfied: CredentialEntry[]; missing: CredentialEntry[] };
+    const [credentialPanelData, setCredentialPanelData] = useState<CredentialPanelData | null>(null);
+
     // Auto-execution state
     const [executionId, setExecutionId] = useState<string | null>(null);
     // Track selected variation metadata so we can send it to the backend
@@ -538,20 +651,20 @@ export function AutonomousAgentWizard() {
 
     // Debug: Log when requiredCredentials changes
     useEffect(() => {
-        console.log('🔑 [Frontend] requiredCredentials state changed:', requiredCredentials);
-        console.log('📊 [Frontend] Current step:', step);
-        console.log('📋 [Frontend] Has refinement:', !!refinement);
+        console.log('?? [Frontend] requiredCredentials state changed:', requiredCredentials);
+        console.log('?? [Frontend] Current step:', step);
+        console.log('?? [Frontend] Has refinement:', !!refinement);
         if (step === 'confirmation' && refinement) {
-            console.log('✅ [Frontend] Should show credentials step:', requiredCredentials.length > 0);
+            console.log('? [Frontend] Should show credentials step:', requiredCredentials.length > 0);
         }
     }, [requiredCredentials, step, refinement]);
     
     // Debug: Log when workflow ID is set
     useEffect(() => {
         if (generatedWorkflowId) {
-            console.log('✅ Workflow ID set:', generatedWorkflowId);
+            console.log('? Workflow ID set:', generatedWorkflowId);
         } else {
-            console.log('⚠️ Workflow ID is null');
+            console.log('?? Workflow ID is null');
         }
     }, [generatedWorkflowId]);
 
@@ -579,7 +692,7 @@ export function AutonomousAgentWizard() {
         loadLastResolvedInputs();
     }, [generatedWorkflowId, step]);
 
-    // ✅ Handle OAuth callback return - restore workflow state after OAuth connection
+    // ? Handle OAuth callback return - restore workflow state after OAuth connection
     useEffect(() => {
         const checkOAuthReturn = async () => {
             // Check if we're returning from OAuth callback
@@ -709,7 +822,7 @@ export function AutonomousAgentWizard() {
         }
     }, [step, refinement?.requirements]);
 
-    // ✅ Auto-scroll to current question when question index changes
+    // ? Auto-scroll to current question when question index changes
     useEffect(() => {
         if (allQuestions.length > 0 && currentQuestionIndex < allQuestions.length) {
             // Small delay to ensure DOM is updated
@@ -1023,7 +1136,7 @@ export function AutonomousAgentWizard() {
         [credentialQuestionsStrictForStep]
     );
 
-    /** Optional vault questions not in the strict Credentials list — user can force-include. */
+    /** Optional vault questions not in the strict Credentials list � user can force-include. */
     const credentialOptionalIncludeCandidates = useMemo(
         () =>
             credentialQuestions.filter((q: any) => {
@@ -1122,72 +1235,81 @@ export function AutonomousAgentWizard() {
         return blockingOAuthCredentials.length === 0;
     }, [credentialQuestionsForStep, getCredentialAnswerForQuestion, blockingOAuthCredentials]);
 
-    /** Manual config questions (excluding pure credential vault rows — those use credentials step). */
-    const manualConfigurationQuestions = useMemo(
-        () =>
-            ownershipQuestions
-                .filter((q: any) => {
-                    const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
-                    const fieldEnabledKey = `fieldEnabled_${q.nodeId}_${q.fieldName}`;
-                    const hasAiPrefilledValue = !!(q.aiFilledAtBuildTime || q.aiUsesRuntime);
-                    const fieldEnabled: boolean =
-                        fieldEnabledOverrides[fieldEnabledKey] !== undefined
-                            ? fieldEnabledOverrides[fieldEnabledKey]
-                            : hasAiPrefilledValue;
+    /** Manual config questions (excluding pure credential vault rows � those use credentials step). */
+    const manualConfigurationQuestions = useMemo(() => {
+        const nodes = pendingWorkflowData?.nodes;
+        const edges = pendingWorkflowData?.edges;
+        const orderRank =
+            Array.isArray(nodes) && nodes.length > 0
+                ? computeExecutionOrderRank(nodes as any[], Array.isArray(edges) ? edges : [])
+                : new Map<string, number>();
 
-                    // If toggle is OFF, skip entirely — user doesn't want to configure this field
-                    if (!fieldEnabled) return false;
+        return ownershipQuestions
+            .filter((q: any) => {
+                const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
+                const fieldEnabledKey = `fieldEnabled_${q.nodeId}_${q.fieldName}`;
+                const hasAiPrefilledValue = !!(q.aiFilledAtBuildTime || q.aiUsesRuntime);
+                const fieldEnabled: boolean =
+                    fieldEnabledOverrides[fieldEnabledKey] !== undefined
+                        ? fieldEnabledOverrides[fieldEnabledKey]
+                        : hasAiPrefilledValue;
 
-                    const effective =
-                        ownershipEffectiveModes.byModeKey[modeKey] ||
-                        resolveWizardFieldFillMode(
-                            fillModeValues[modeKey],
-                            q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
-                        );
+                if (!fieldEnabled) return false;
 
-                    // Only show fields where user selected "You" (manual_static)
-                    if (effective !== 'manual_static') return false;
-
-                    const rowLocked =
-                        q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
-                    const ownershipModeForAsk = rowLocked ? 'locked' : q.ownershipUiMode || 'selectable';
-                    return shouldAskWizardManualQuestion(effective, ownershipModeForAsk);
-                })
-                .sort((a: any, b: any) => {
-                    // Structural questions first so users define graph semantics before value-level fields.
-                    const aStructural = a.ownershipClass === 'structural' ? 0 : 1;
-                    const bStructural = b.ownershipClass === 'structural' ? 0 : 1;
-                    if (aStructural !== bStructural) return aStructural - bStructural;
-                    const aOrder = a.askOrder ?? 999;
-                    const bOrder = b.askOrder ?? 999;
-                    if (aOrder !== bOrder) return aOrder - bOrder;
-                    return String(a.label || a.fieldName || '').localeCompare(
-                        String(b.label || b.fieldName || '')
+                const effective =
+                    ownershipEffectiveModes.byModeKey[modeKey] ||
+                    resolveWizardFieldFillMode(
+                        fillModeValues[modeKey],
+                        q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
                     );
-                }),
-        [ownershipQuestions, fillModeValues, ownershipEffectiveModes, isCredentialUnlocked, fieldEnabledOverrides]
+
+                if (effective !== 'manual_static') return false;
+
+                const rowLocked =
+                    q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
+                const ownershipModeForAsk = rowLocked ? 'locked' : q.ownershipUiMode || 'selectable';
+                return shouldAskWizardManualQuestion(effective, ownershipModeForAsk);
+            })
+            .sort((a: any, b: any) => {
+                const ra = orderRank.get(String(a.nodeId)) ?? 9999;
+                const rb = orderRank.get(String(b.nodeId)) ?? 9999;
+                if (ra !== rb) return ra - rb;
+                const aStructural = a.ownershipClass === 'structural' ? 0 : 1;
+                const bStructural = b.ownershipClass === 'structural' ? 0 : 1;
+                if (aStructural !== bStructural) return aStructural - bStructural;
+                const aOrder = a.askOrder ?? 999;
+                const bOrder = b.askOrder ?? 999;
+                if (aOrder !== bOrder) return aOrder - bOrder;
+                return String(a.label || a.fieldName || '').localeCompare(
+                    String(b.label || b.fieldName || '')
+                );
+            });
+    }, [
+        ownershipQuestions,
+        fillModeValues,
+        ownershipEffectiveModes,
+        isCredentialUnlocked,
+        fieldEnabledOverrides,
+        pendingWorkflowData?.nodes,
+        pendingWorkflowData?.edges,
+    ]);
+
+    const manualConfigurationQuestionIdsKey = useMemo(
+        () => manualConfigurationQuestions.map((q: any) => String(q.id ?? '')).join('|'),
+        [manualConfigurationQuestions]
     );
 
-    const configurationGateReady = useMemo(() => {
-        if (!credentialSecretsReady) return false;
-        return manualConfigurationQuestions.every((q: any) => {
-            if (!q.required) return true;
-            const key = q.id;
-            const isCredVault =
-                q.category === 'credential' && (q as any).isVaultCredential;
-            const raw = isCredVault
-                ? credentialValues[key] ??
-                  credentialValues[String(q?.credential?.vaultKey || '').trim()] ??
-                  credentialValues[String(q?.fieldName || '').trim()]
-                : inputValues[key];
-            return raw !== undefined && raw !== null && String(raw).trim() !== '';
+    useEffect(() => {
+        setCurrentQuestionIndex((i) => {
+            const n = manualConfigurationQuestions.length;
+            if (n === 0) return 0;
+            return Math.min(Math.max(0, i), n - 1);
         });
-    }, [
-        credentialSecretsReady,
-        manualConfigurationQuestions,
-        inputValues,
-        credentialValues,
-    ]);
+    }, [manualConfigurationQuestionIdsKey, manualConfigurationQuestions.length]);
+
+    // Always allow proceeding — workbench opens regardless of credential/input state.
+    // Missing credentials are shown as a friendly panel inside the workbench.
+    const configurationGateReady = true;
 
     const ownershipStructuralByNode = useMemo(
         () => groupQuestionsByNode(ownershipQuestions.filter((q: any) => q.ownershipClass === 'structural')),
@@ -1276,11 +1398,11 @@ export function AutonomousAgentWizard() {
                     }
                 }
             }
-            // ✅ Intent-aware pre-selection: for fields not yet in _fillMode, infer the
+            // ? Intent-aware pre-selection: for fields not yet in _fillMode, infer the
             // correct button from the question metadata set by the backend generator.
-            // - aiFilledAtBuildTime=true  → AI already generated a value → pre-select buildtime_ai_once
-            // - aiUsesRuntime=true        → value intentionally empty, resolved at run time → pre-select runtime_ai
-            // - otherwise                 → user must provide → pre-select manual_static (schema default)
+            // - aiFilledAtBuildTime=true  ? AI already generated a value ? pre-select buildtime_ai_once
+            // - aiUsesRuntime=true        ? value intentionally empty, resolved at run time ? pre-select runtime_ai
+            // - otherwise                 ? user must provide ? pre-select manual_static (schema default)
             for (const q of allQuestions) {
                 const nodeId = (q as any)?.nodeId;
                 const fieldName = (q as any)?.fieldName;
@@ -1297,7 +1419,7 @@ export function AutonomousAgentWizard() {
                     next[key] = 'runtime_ai';
                     changed = true;
                 } else if (fillModeDefault === 'buildtime_ai_once' || fillModeDefault === 'runtime_ai') {
-                    // Schema says AI should handle this — respect it as the default
+                    // Schema says AI should handle this � respect it as the default
                     next[key] = fillModeDefault;
                     changed = true;
                 }
@@ -1355,13 +1477,13 @@ export function AutonomousAgentWizard() {
 
     // Cognitive progress text rotation (every 1.5s)
     const cognitiveTexts = [
-        'Initializing cognitive engine…',
-        'Mapping workflow paths…',
-        'Optimizing decision nodes…',
-        'Finalizing intelligence layer…',
-        'Synthesizing requirements…',
-        'Building node connections…',
-        'Validating workflow structure…',
+        'Initializing cognitive engine�',
+        'Mapping workflow paths�',
+        'Optimizing decision nodes�',
+        'Finalizing intelligence layer�',
+        'Synthesizing requirements�',
+        'Building node connections�',
+        'Validating workflow structure�',
     ];
 
     useEffect(() => {
@@ -1404,16 +1526,16 @@ export function AutonomousAgentWizard() {
     // Map backend phases to progress ranges
     const getProgressForPhase = (phase: string): number => {
         // Progress milestones tied to real backend work:
-        // understand (prompt parsed) → planning (graph designed) →
-        // construction (nodes+edges built) → validation (edges/types checked) →
-        // verification (credentials/schema verified) → learning (final save)
+        // understand (prompt parsed) ? planning (graph designed) ?
+        // construction (nodes+edges built) ? validation (edges/types checked) ?
+        // verification (credentials/schema verified) ? learning (final save)
         const phaseMap: Record<string, number> = {
             'understand':   20,   // prompt parsed
             'planning':     40,   // graph structure designed
             'construction': 65,   // nodes + edges assembled
             'validation':   80,   // structural validation done
             'verification': 90,   // credential + schema checks done
-            'healing':      75,   // recovery — slightly behind construction
+            'healing':      75,   // recovery � slightly behind construction
             'learning':     95,   // final cleanup before save
         };
         return phaseMap[phase] ?? 10;
@@ -1710,7 +1832,7 @@ export function AutonomousAgentWizard() {
     };
 
     /**
-     * Structured plan is the single source of truth: confirm it in the FSM and start generation (no analyze→refine loop).
+     * Structured plan is the single source of truth: confirm it in the FSM and start generation (no analyze?refine loop).
      */
     const handleConfirmPlanAndAnalyze = async () => {
         if (!planSummary.trim()) {
@@ -1727,7 +1849,7 @@ export function AutonomousAgentWizard() {
         }
         const mainPrompt = planSummary.trim();
         setPrompt(mainPrompt);
-        // Go directly to building screen — no need to re-show the analyze loader
+        // Go directly to building screen � no need to re-show the analyze loader
         setStep('building');
         setProgress(5);
         setIsComplete(false);
@@ -1759,7 +1881,7 @@ export function AutonomousAgentWizard() {
             if (!confirmStructuredPlanForBuild()) {
                 toast({
                     title: 'Could not confirm plan',
-                    description: 'Try “Start over” and run Analyze again, then continue.',
+                    description: 'Try �Start over� and run Analyze again, then continue.',
                     variant: 'destructive',
                 });
                 setHasWorkflowPlan(true);
@@ -1819,7 +1941,7 @@ export function AutonomousAgentWizard() {
                     canonicalizationIssues.length > 0
                         ? canonicalizationIssues
                               .slice(0, 3)
-                              .map((c: any) => `${c.input}${c.normalized ? `→${c.normalized}` : ''}`)
+                              .map((c: any) => `${c.input}${c.normalized ? `?${c.normalized}` : ''}`)
                               .join(', ')
                         : '';
                 const msg =
@@ -1884,7 +2006,7 @@ export function AutonomousAgentWizard() {
                 });
                 stateManager.setRequiredCredentials(ids);
             }
-            await handleBuild(mainPrompt);
+            await handleRefine(mainPrompt);
         } catch (e: any) {
             toast({
                 title: 'Could not start workflow',
@@ -1918,7 +2040,7 @@ export function AutonomousAgentWizard() {
         
         // CRITICAL: Add null safety check
         if (!requirements) {
-            console.warn('⚠️  [Frontend] Requirements is null/undefined - skipping credential identification');
+            console.warn('??  [Frontend] Requirements is null/undefined - skipping credential identification');
             return credentials;
         }
         
@@ -1927,7 +2049,7 @@ export function AutonomousAgentWizard() {
         const answerTexts = Object.values(answerMap).join(' ').toLowerCase();
         const promptText = prompt.toLowerCase();
         
-        console.log('🔍 [Frontend] Identifying credentials:', { 
+        console.log('?? [Frontend] Identifying credentials:', { 
             promptText: promptText.substring(0, 100), 
             answerValues, 
             answerTexts: answerTexts.substring(0, 200) 
@@ -1968,24 +2090,24 @@ export function AutonomousAgentWizard() {
             answerTexts.includes('ai content') ||
             answerValues.some(v => v.includes('ai-generated') || v.includes('ai generated'));
         
-        console.log('🤖 [Frontend] AI Functionality detected:', hasAIFunctionality);
+        console.log('?? [Frontend] AI Functionality detected:', hasAIFunctionality);
         
         // Check for AI providers in answers
         if (answerValues.some(v => v.includes('openai') || v.includes('gpt'))) {
             credentials.push('OPENAI_API_KEY');
-            console.log('✅ [Frontend] Added OPENAI_API_KEY');
+            console.log('? [Frontend] Added OPENAI_API_KEY');
         } else if (answerValues.some(v => v.includes('claude') || v.includes('anthropic'))) {
             credentials.push('ANTHROPIC_API_KEY');
-            console.log('✅ [Frontend] Added ANTHROPIC_API_KEY');
+            console.log('? [Frontend] Added ANTHROPIC_API_KEY');
         } else if (answerValues.some(v => v.includes('gemini'))) {
             // Only ask for Gemini API Key if explicitly mentioned (not for Google Sheets/Gmail)
             credentials.push('GEMINI_API_KEY');
-            console.log('✅ [Frontend] Added GEMINI_API_KEY (from provider selection)');
+            console.log('? [Frontend] Added GEMINI_API_KEY (from provider selection)');
         } else if (hasAIFunctionality) {
             // If AI functionality is detected but no specific provider selected, default to Gemini
             // Only if AI functionality is actually needed (not just Google Sheets/Gmail)
             credentials.push('GEMINI_API_KEY');
-            console.log('✅ [Frontend] Added GEMINI_API_KEY (default for AI functionality)');
+            console.log('? [Frontend] Added GEMINI_API_KEY (default for AI functionality)');
         }
         
         // Check for output channels - ONLY if explicitly mentioned in prompt or answers
@@ -2075,7 +2197,7 @@ export function AutonomousAgentWizard() {
         });
         
         const finalCredentials = Array.from(normalizedCreds.values());
-        console.log('🎯 [Frontend] Final identified credentials (deduplicated):', finalCredentials);
+        console.log('?? [Frontend] Final identified credentials (deduplicated):', finalCredentials);
         return finalCredentials;
     };
 
@@ -2084,7 +2206,7 @@ export function AutonomousAgentWizard() {
         // Execution Flow Architecture (STEP-2): Validate state transition
         // Allow transition if questions are empty (auto-continue scenario) or if in correct state
         // Also allow if coming from summarize layer (step is 'refining' or 'questioning' with no questions)
-        // When analysisSnapshot is passed (structured plan → proceed), skip this gate — user already confirmed intent
+        // When analysisSnapshot is passed (structured plan ? proceed), skip this gate � user already confirmed intent
         if (!analysisSnapshot) {
             const currentState = mapWizardStepToState(step);
             const hasQuestions = effectiveAnalysis?.questions && effectiveAnalysis.questions.length > 0;
@@ -2101,7 +2223,7 @@ export function AutonomousAgentWizard() {
             }
         }
 
-        // ✅ CRITICAL: Use explicit prompt if provided (from selected variation), otherwise use state prompt
+        // ? CRITICAL: Use explicit prompt if provided (from selected variation), otherwise use state prompt
         const promptToUse = explicitPrompt || prompt;
 
         console.log('[Frontend] Using prompt for refinement:', promptToUse);
@@ -2110,9 +2232,16 @@ export function AutonomousAgentWizard() {
         // Update answers in state manager
         stateManager.setClarifyingAnswers(answers);
 
-        // Scroll immediately BEFORE state change - no waiting
+        // Bug A fix: reset pipeline flags for this new pipeline run
+        setPipelineReady(false);
+        setQuestionsAnswered(false);
+
+        // Keep the step as 'building' (already set by handleConfirmPlanAndAnalyze) while
+        // the backend pipeline runs. Do NOT advance to 'refining' here � the overlay must
+        // only appear after the user has submitted answers (questionsAnswered === true).
+        // If there are no questions the pipeline will advance to 'refining' after the
+        // backend responds (pipelineReady = true, questionsAnswered implicitly true).
         scrollImmediately(step3Ref);
-        setStep('refining');
         const fa = effectiveAnalysis?.questions?.map(q => ({
             question: q.text,
             answer: answers[q.id],
@@ -2122,10 +2251,18 @@ export function AutonomousAgentWizard() {
             console.log('Submitting workflow prompt:', promptToUse);
             console.log('Mode:', 'refine');
             console.log('Answers:', fa);
+            // Get the current user's ID so the backend can check vault tables for connected accounts.
+            // Without userId the backend defaults to 'anonymous' and all vault checks return false,
+            // causing connected OAuth accounts (LinkedIn, Notion, etc.) to show "Action required".
+            const { data: { session: refineSession } } = await supabase.auth.getSession();
+            const refineUserId = refineSession?.user?.id;
             const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: promptToUse, mode: 'refine', answers: fa })
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(refineSession?.access_token ? { Authorization: `Bearer ${refineSession.access_token}` } : {}),
+                },
+                body: JSON.stringify({ prompt: promptToUse, mode: 'refine', answers: fa, ...(refineUserId ? { userId: refineUserId } : {}) })
             });
 
             if (!response.ok) {
@@ -2138,10 +2275,10 @@ export function AutonomousAgentWizard() {
             const data = await response.json();
             setRefinement(data);
             
-            // 🔒 STRUCTURAL FIX: Handle discovered credentials from credential discovery phase
+            // ?? STRUCTURAL FIX: Handle discovered credentials from credential discovery phase
             // Backend now returns discoveredCredentials array with complete credential information
             if (data.discoveredCredentials && Array.isArray(data.discoveredCredentials) && data.discoveredCredentials.length > 0) {
-                console.log('🔑 [Frontend] Discovered credentials from backend:', data.discoveredCredentials);
+                console.log('?? [Frontend] Discovered credentials from backend:', data.discoveredCredentials);
                 
                 // Extract credential names from discovered credentials
                 const discoveredCredNames = data.discoveredCredentials
@@ -2157,7 +2294,18 @@ export function AutonomousAgentWizard() {
                 setRequiredCredentials(allCreds);
                 stateManager.setRequiredCredentials(allCreds);
                 
-                console.log('✅ [Frontend] Set required credentials from discovery:', allCreds);
+                console.log('? [Frontend] Set required credentials from discovery:', allCreds);
+
+                // ? FIX: Surface credentials in the building log immediately on discovery
+                const missingNow = data.discoveredCredentials.filter((c: any) => !c.satisfied);
+                const satisfiedNow = data.discoveredCredentials.filter((c: any) => c.satisfied);
+                setBuildingLogs(prev => {
+                    const lines: string[] = [];
+                    if (satisfiedNow.length > 0) lines.push(`? ${satisfiedNow.length} credential(s) connected`);
+                    if (missingNow.length > 0) lines.push(`?? ${missingNow.length} credential(s) required: ${missingNow.map((c: any) => c.displayName || c.vaultKey).join(', ')}`);
+                    const newLines = lines.filter(l => !prev.includes(l));
+                    return newLines.length > 0 ? [...prev, ...newLines] : prev;
+                });
             } else if (data.requiredCredentials && Array.isArray(data.requiredCredentials)) {
                 // Fallback to legacy format
                 const detectedCredentials = data.requiredCredentials || [];
@@ -2167,11 +2315,11 @@ export function AutonomousAgentWizard() {
             
             // CRITICAL FIX: Handle preview phase - show final prompt and allow node configuration
             if (data.phase === 'preview' && data.workflow) {
-                console.log('✅ Backend returned preview phase - showing final prompt and node configuration');
+                console.log('? Backend returned preview phase - showing final prompt and node configuration');
                 
                 // Store the enhanced prompt for display
                 if (data.enhancedPrompt) {
-                    console.log('📝 Enhanced prompt from backend:', data.enhancedPrompt);
+                    console.log('?? Enhanced prompt from backend:', data.enhancedPrompt);
                     // Update the refinement with enhanced prompt
                     setRefinement({
                         ...data,
@@ -2184,7 +2332,7 @@ export function AutonomousAgentWizard() {
                 const currentWizardState = mapWizardStepToState(step);
                 if (currentWizardState !== WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE) {
                     // Force transition to clarification active state first
-                    console.log('⚠️ Not in CLARIFICATION_ACTIVE state, attempting to fix state...');
+                    console.log('?? Not in CLARIFICATION_ACTIVE state, attempting to fix state...');
                     // Try to set clarifying answers to get into the right state
                     stateManager.setClarifyingAnswers(answers);
                 }
@@ -2203,7 +2351,7 @@ export function AutonomousAgentWizard() {
             // CRITICAL FIX: Check if backend already returned complete workflow (phase: 'complete')
             // If so, use it directly instead of making another request
             if (data.phase === 'complete' && data.workflow) {
-                console.log('✅ Backend returned complete workflow in refine response - using it directly');
+                console.log('? Backend returned complete workflow in refine response - using it directly');
                 
                 // Extract workflow data
                 const workflowNodes = data.workflow.nodes || [];
@@ -2255,7 +2403,7 @@ export function AutonomousAgentWizard() {
                             setProgress(100);
                             setIsComplete(true);
                             setStep('complete');
-                            console.log('✅ Workflow saved successfully with ID:', savedWorkflow.id);
+                            console.log('? Workflow saved successfully with ID:', savedWorkflow.id);
                             return; // Exit early - workflow is complete
                         }
                     } catch (saveErr: any) {
@@ -2269,13 +2417,157 @@ export function AutonomousAgentWizard() {
                 }
             }
             
-            // ✅ PRODUCTION: Only handle phase === 'ready' - all configuration/credentials after generation
+            // ? PRODUCTION: Only handle phase === 'ready' - all configuration/credentials after generation
             // Removed: phase === 'configuration' and phase === 'credentials' handling
             // Backend now always returns phase === 'ready' with discoveredInputs and discoveredCredentials
-            
+
+            // Handle ready phase � AI-first pipeline: save workflow then show field-ownership wizard
+            if (data.phase === 'ready' && data.workflow) {
+                console.log('? [Frontend] Ready phase - saving workflow and opening field-ownership wizard');
+
+                const workflowNodes = data.workflow.nodes || [];
+                const workflowEdges = data.workflow.edges || [];
+
+                if (workflowNodes.length > 0) {
+                    try {
+                        const { data: { user } } = await supabase.auth.getUser();
+                        const { normalizeBackendWorkflow } = await import('@/lib/node-type-normalizer');
+                        const normalizedBackend = normalizeBackendWorkflow({ nodes: workflowNodes, edges: workflowEdges });
+                        const normalized = validateAndFixWorkflow({ nodes: normalizedBackend.nodes, edges: normalizedBackend.edges });
+
+                        const workflowData: Record<string, unknown> = {
+                            name: (analysis?.summary && typeof analysis.summary === 'string')
+                                ? analysis.summary.substring(0, 50)
+                                : 'AI Generated Workflow',
+                            nodes: normalized.nodes,
+                            edges: normalized.edges,
+                            user_id: user?.id,
+                            updated_at: new Date().toISOString(),
+                        };
+
+                        const { data: savedWorkflow, error: saveError } = await supabase
+                            .from('workflows')
+                            .insert(workflowData)
+                            .select()
+                            .single();
+
+                        if (saveError) throw saveError;
+
+                        if (savedWorkflow?.id) {
+                            setGeneratedWorkflowId(savedWorkflow.id);
+                            setNodes(applyFillModesToNodes(normalized.nodes as any[], fillModeValues));
+                            setEdges(normalized.edges as any[]);
+                            setProgress(100);
+                            setIsComplete(true);
+                            console.log('? Workflow saved with ID:', savedWorkflow.id);
+
+                            // Wire into the existing field-ownership wizard
+                            const comprehensiveQuestions = data.comprehensiveQuestions || [];
+                            const discoveredCreds = data.discoveredCredentials || [];
+                            setPendingWorkflowData({
+                                nodes: normalized.nodes,
+                                edges: normalized.edges,
+                                update: data,
+                                discoveredInputs: data.discoveredInputs || [],
+                                discoveredCredentials: discoveredCreds,
+                                comprehensiveQuestions,
+                                unifiedReadiness: data.unifiedReadiness || null,
+                                credentialStatuses: data.credentialStatuses,
+                                credentialWizardView: data.credentialWizardView,
+                                fieldOwnershipMap: data.fieldOwnershipMap || undefined,
+                            });
+
+                            // Bug A fix: pipeline backend has completed � set pipelineReady flag.
+                            // Only advance to 'field-ownership' (questions UI) or 'complete' here.
+                            // The 'refining' overlay must NOT appear until questionsAnswered === true.
+                            setPipelineReady(true);
+                            if (comprehensiveQuestions.length > 0 || discoveredCreds.length > 0) {
+                                // Questions exist � show questions UI and wait for user to submit answers.
+                                // The 'refining' overlay is skipped; user goes directly to field-ownership.
+                                setAllQuestions(comprehensiveQuestions.map((q: any) => {
+                                    const fieldName = String(q.fieldName || '').trim() || 'credential';
+                                    const isCredentialQ = q.category === 'credential' || q.ownershipClass === 'credential';
+                                    // Augment fillModeDefault from fieldOwnershipMap if not already set.
+                                    const fom = data.fieldOwnershipMap as Record<string, Record<string, string>> | undefined;
+                                    const fomFillMode = fom?.[q.nodeId]?.[fieldName];
+                                    return {
+                                        ...q,
+                                        questionType: isCredentialQ ? 'credential' : (q.category || 'input'),
+                                        id: q.id || `${q.nodeId}_${fieldName}`,
+                                        fieldName,
+                                        label: q.text || q.label || `${q.nodeLabel} - ${fieldName}`,
+                                        isVaultCredential: isCredentialQ,
+                                        fillModeDefault: q.fillModeDefault || fomFillMode || undefined,
+                                    };
+                                }));
+                                setStep('field-ownership');
+                            } else if (data.fieldOwnershipMap && typeof data.fieldOwnershipMap === 'object' && Object.keys(data.fieldOwnershipMap).length > 0) {
+                                // Bug B fix: no comprehensiveQuestions but fieldOwnershipMap is non-empty � synthesize field rows.
+                                const fom = data.fieldOwnershipMap as Record<string, Record<string, string>>;
+                                console.log(`[Frontend] Synthesizing field rows from fieldOwnershipMap (AI-first path, ${Object.keys(fom).length} nodes)`);
+                                const nodeMap = new Map<string, any>();
+                                (normalized.nodes as any[]).forEach((node: any) => {
+                                    if (node?.id) nodeMap.set(String(node.id), node);
+                                });
+                                const synthesized: any[] = [];
+                                let askOrder = 1;
+                                for (const [nodeId, fields] of Object.entries(fom)) {
+                                    const node = nodeMap.get(nodeId);
+                                    const nodeType = String(node?.type || nodeId);
+                                    const nodeLabel = String(node?.data?.label || node?.data?.name || nodeType);
+                                    for (const [fieldName, fillMode] of Object.entries(fields)) {
+                                        const fillModeStr = String(fillMode || 'manual_static');
+                                        const isCredField = fillModeStr === 'manual_static' &&
+                                            (fieldName.toLowerCase().includes('key') ||
+                                             fieldName.toLowerCase().includes('token') ||
+                                             fieldName.toLowerCase().includes('secret') ||
+                                             fieldName.toLowerCase().includes('password') ||
+                                             fieldName.toLowerCase().includes('credential'));
+                                        synthesized.push({
+                                            questionType: 'input',
+                                            id: `fom_${nodeId}_${fieldName}`,
+                                            nodeId,
+                                            nodeType,
+                                            nodeLabel,
+                                            fieldName,
+                                            label: fieldName.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim(),
+                                            text: fieldName.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim(),
+                                            type: isCredField ? 'password' : 'text',
+                                            category: isCredField ? 'credential' : 'configuration',
+                                            ownershipClass: isCredField ? 'credential' : 'value',
+                                            required: false,
+                                            askOrder: askOrder++,
+                                            fillModeDefault: fillModeStr as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once',
+                                            supportsRuntimeAI: fillModeStr === 'runtime_ai',
+                                            supportsBuildtimeAI: fillModeStr === 'buildtime_ai_once' || fillModeStr === 'runtime_ai',
+                                            ownershipUiMode: isCredField ? 'locked' : 'selectable',
+                                            isVaultCredential: false,
+                                        });
+                                    }
+                                }
+                                setAllQuestions(synthesized);
+                                setStep('field-ownership');
+                            } else {
+                                // No questions � user has nothing to answer, proceed directly.
+                                setQuestionsAnswered(true);
+                                setStep('complete');
+                            }
+                            return;
+                        }
+                    } catch (saveErr: any) {
+                        console.error('Error saving workflow:', saveErr);
+                        toast({
+                            title: 'Warning',
+                            description: 'Workflow generated but failed to save: ' + (saveErr.message || 'Unknown error'),
+                            variant: 'destructive',
+                        });
+                    }
+                }
+            }
+
             // Handle complete phase - workflow is fully built and ready
             if (data.phase === 'complete') {
-                console.log('✅ [Frontend] Complete phase - workflow fully built');
+                console.log('? [Frontend] Complete phase - workflow fully built');
                 
                 // Extract credentials if provided (may be empty array)
                 const detectedCredentials = data.requiredCredentials || [];
@@ -2323,10 +2615,10 @@ export function AutonomousAgentWizard() {
 
                             if (savedWorkflow?.id) {
                                 setGeneratedWorkflowId(savedWorkflow.id);
-                                setNodes(normalized.nodes as any[]);
+                                setNodes(applyFillModesToNodes(normalized.nodes as any[], fillModeValues));
                                 setEdges(normalized.edges as any[]);
                                 setProgress(100);
-                                console.log('✅ Workflow saved successfully with ID:', savedWorkflow.id);
+                                console.log('? Workflow saved successfully with ID:', savedWorkflow.id);
                                 
                                 // Go to Configure step to collect missing credentials and inputs
                                 setStep('configure');
@@ -2345,7 +2637,7 @@ export function AutonomousAgentWizard() {
                 
                 // Always show confirmation step - auto-skip disabled
                 // User must explicitly confirm workflow regardless of credentials
-                console.log('✅ Showing confirmation step - user must explicitly approve');
+                console.log('? Showing confirmation step - user must explicitly approve');
                 setStep('confirmation');
                 scrollToStep(step3Ref, 300);
                 return;
@@ -2353,7 +2645,7 @@ export function AutonomousAgentWizard() {
             
             // LEGACY: Handle old refine response format (no phase field)
             // This is for backward compatibility
-            console.log('⚠️ [Frontend] Legacy refine response format detected (no phase field)');
+            console.log('?? [Frontend] Legacy refine response format detected (no phase field)');
             setWorkflowUnderstandingConfirmed(false);
             
             // Identify required credentials from requirements and answers
@@ -2365,16 +2657,16 @@ export function AutonomousAgentWizard() {
                 // Normalize credentials from backend
                 detectedCredentials = data.requiredCredentials.map((cred: string) => normalizeCredentialName(cred));
                 if (detectedCredentials.length > 0) {
-                    console.log('🔑 Backend identified required credentials:', detectedCredentials);
+                    console.log('?? Backend identified required credentials:', detectedCredentials);
                 } else {
-                    console.log('✅ Backend confirmed: No credentials required for this workflow');
+                    console.log('? Backend confirmed: No credentials required for this workflow');
                 }
             } else if (data?.requirements) {
                 // Fallback: Only use frontend detection if backend didn't provide requiredCredentials at all
                 detectedCredentials = identifyRequiredCredentials(data.requirements, answers);
-                console.log('🔑 Frontend identified required credentials (fallback):', detectedCredentials);
+                console.log('?? Frontend identified required credentials (fallback):', detectedCredentials);
             } else {
-                console.log('🔑 No credentials required');
+                console.log('?? No credentials required');
             }
             
             // Final deduplication with normalization
@@ -2389,24 +2681,24 @@ export function AutonomousAgentWizard() {
             const uniqueCredentials = Array.from(normalizedCreds.values());
             setRequiredCredentials(uniqueCredentials);
             stateManager.setRequiredCredentials(uniqueCredentials);
-            console.log('✅ Set requiredCredentials to (deduplicated & normalized):', uniqueCredentials);
+            console.log('? Set requiredCredentials to (deduplicated & normalized):', uniqueCredentials);
             
             // CRITICAL FIX: Only transition to confirmation if workflow is already built
             // Check if workflow exists in response (legacy format may include it)
             const hasWorkflow = data.workflow || data.partialWorkflow;
             
             if (hasWorkflow) {
-                console.log('✅ [Frontend] Workflow exists in response - showing confirmation step');
+                console.log('? [Frontend] Workflow exists in response - showing confirmation step');
                 // Always show confirmation step - auto-skip disabled
                 // User must explicitly confirm workflow regardless of credentials
                 setStep('confirmation');
                 scrollToStep(step3Ref, 300);
             } else {
                 // No workflow yet - automatically generate workflow using mode: 'create'
-                console.log('✅ [Frontend] Refinement complete - automatically generating workflow...');
-                console.log('📋 [Frontend] Proceeding to workflow generation (mode: create)');
+                console.log('? [Frontend] Refinement complete - automatically generating workflow...');
+                console.log('?? [Frontend] Proceeding to workflow generation (mode: create)');
                 
-                // ✅ CRITICAL: Use refined prompt from backend, or fallback to current prompt state
+                // ? CRITICAL: Use refined prompt from backend, or fallback to current prompt state
                 // The refined prompt should be the selected variation prompt that was sent
                 const selectedPromptForBuild = data.refinedPrompt || prompt;
                 console.log('[Frontend] Using prompt for workflow generation:', selectedPromptForBuild);
@@ -2424,7 +2716,7 @@ export function AutonomousAgentWizard() {
                 // The prompt is already set in state, so handleBuild will use it
                 setTimeout(() => {
                     handleBuild();
-                }, 500); // Small delay to ensure state is updated
+                }, 0); // state is already set synchronously
             }
         } catch (err: any) {
             console.error(err);
@@ -2693,7 +2985,7 @@ export function AutonomousAgentWizard() {
      */
     const autoExecuteWorkflow = async (workflowId: string) => {
         try {
-            console.log('🚀 Auto-executing workflow:', workflowId);
+            console.log('?? Auto-executing workflow:', workflowId);
             setExecutionStatus('running');
             setExecutionProgress(0);
             setExecutionError(null);
@@ -2854,7 +3146,7 @@ export function AutonomousAgentWizard() {
             });
             if (error) throw error;
             toast({
-                title: 'Redirecting to Google…',
+                title: 'Redirecting to Google�',
                 description: 'Authorize access; you will return here afterward.',
             });
         } catch (e: unknown) {
@@ -2867,9 +3159,9 @@ export function AutonomousAgentWizard() {
     }, [pendingWorkflowData, generatedWorkflowId, step, toast]);
 
     const handleBuild = async (explicitPrompt?: string) => {
-        // ✅ PRODUCTION FLOW: Unified configuration submission (inputs + credentials)
+        // ? PRODUCTION FLOW: Unified configuration submission (inputs + credentials)
         if (pendingWorkflowData && step === 'configuration') {
-            console.log('✅ Submitting unified configuration (inputs + credentials)');
+            console.log('? Submitting unified configuration (inputs + credentials)');
             let savedWorkflow: any = null; // Declare outside try block for catch access
             try {
                 const { data: { user } } = await supabase.auth.getUser();
@@ -2922,13 +3214,9 @@ export function AutonomousAgentWizard() {
                 savedWorkflow = workflowResult; // Store for catch block access
                 
                 if (savedWorkflow?.id) {
-                    // ✅ CRITICAL: Small delay to ensure workflow is fully committed to database
-                    // This prevents race conditions where credentials are attached before workflow exists
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    
                     const { data: { session } } = await supabase.auth.getSession();
                     
-                    // ✅ STEP 1: Attach inputs first (if any)
+                    // ? STEP 1: Attach inputs first (if any)
                     let inputsResult: any = null;
                     const sanitizedModeInputs = Object.fromEntries(
                         Object.entries(ownershipEffectiveModes.byModeKey).filter(([k, v]) => {
@@ -2948,8 +3236,8 @@ export function AutonomousAgentWizard() {
                         ...unlockPayload,
                     };
                     if (Object.keys(combinedInputs).length > 0) {
-                        console.log('📋 Attaching node inputs...');
-                        console.log('📋 Input values:', combinedInputs);
+                        console.log('?? Attaching node inputs...');
+                        console.log('?? Input values:', combinedInputs);
                         
                         const inputsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/attach-inputs`, {
                             method: 'POST',
@@ -2958,7 +3246,7 @@ export function AutonomousAgentWizard() {
                                 'Authorization': `Bearer ${session?.access_token || ''}`,
                             },
                             body: JSON.stringify({
-                                // ✅ COMPREHENSIVE: Send answers using question IDs (cred_*, op_*, config_*, resource_*)
+                                // ? COMPREHENSIVE: Send answers using question IDs (cred_*, op_*, config_*, resource_*)
                                 // inputValues already uses question IDs (input.id) as keys when available
                                 inputs: combinedInputs, // Format: { "cred_nodeId_fieldName": "value", "op_nodeId_fieldName": "value", "mode_nodeId_fieldName": "fillMode", etc. }
                                 ...(canonicalUserIntentForMetadata
@@ -2968,48 +3256,29 @@ export function AutonomousAgentWizard() {
                         });
                         
                         if (!inputsResponse.ok) {
-                            const errorData = await inputsResponse.json();
-                            console.error('❌ Attach inputs error:', errorData);
-                            // ✅ CRITICAL: Show backend error codes clearly
-                            const errorMessage = errorData.code 
-                                ? `${errorData.code}: ${errorData.message || errorData.error}`
-                                : errorData.details?.join(', ') || errorData.error || 'Failed to attach inputs';
-                            throw new Error(errorMessage);
-                        }
-                        
-                        inputsResult = await inputsResponse.json();
-                        console.log('✅ Inputs attached successfully:', inputsResult);
-                        const effectiveModesFromBackend = inputsResult?.diagnostics?.effectiveFillModes as
-                            | Record<string, string>
-                            | undefined;
-                        if (effectiveModesFromBackend && Object.keys(effectiveModesFromBackend).length > 0) {
-                            setFillModeValues((prev) => ({ ...prev, ...effectiveModesFromBackend }));
-                        }
-
-                        const iv = inputsResult?.validation;
-                        const phaseAfterInputs = String(inputsResult?.phase || '').toLowerCase();
-                        /** Backend returns invalid validation + configuring_credentials until vault secrets are attached. */
-                        const deferValidationUntilCredentials = phaseAfterInputs === 'configuring_credentials';
-                        if (
-                            iv &&
-                            iv.valid === false &&
-                            Array.isArray(iv.errors) &&
-                            iv.errors.length > 0 &&
-                            !deferValidationUntilCredentials
-                        ) {
-                            const errText = iv.errors.join('; ');
-                            toast({
-                                title: 'Workflow validation failed',
-                                description: errText,
-                                variant: 'destructive',
-                            });
-                            throw new Error(`Workflow validation failed: ${errText}`);
+                            const errorData = await inputsResponse.json().catch(() => ({}));
+                            console.warn('?? Attach inputs non-fatal error:', errorData);
+                            // Non-blocking: continue to open workbench regardless
+                        } else {
+                            inputsResult = await inputsResponse.json();
+                            console.log('? Inputs attached successfully:', inputsResult);
+                            const effectiveModesFromBackend = inputsResult?.diagnostics?.effectiveFillModes as
+                                | Record<string, string>
+                                | undefined;
+                            if (effectiveModesFromBackend && Object.keys(effectiveModesFromBackend).length > 0) {
+                                setFillModeValues((prev) => ({ ...prev, ...effectiveModesFromBackend }));
+                            }
+                            // Log validation warnings but do NOT block navigation
+                            const iv = inputsResult?.validation;
+                            if (iv && iv.valid === false && Array.isArray(iv.errors) && iv.errors.length > 0) {
+                                console.warn('?? Attach inputs validation warnings (non-blocking):', iv.errors);
+                            }
                         }
                     } else {
-                        console.log('ℹ️ No inputs to attach');
+                        console.log('?? No inputs to attach');
                     }
                     
-                    // ✅ STEP 2: Attach credentials in same continuation cycle (blocking on validation errors)
+                    // ? STEP 2: Attach credentials in same continuation cycle (blocking on validation errors)
                     let credentialsResult: any = null;
                     const inputPhase = String(inputsResult?.phase || '').toLowerCase();
                     const shouldAttachCredentialsNow =
@@ -3044,30 +3313,25 @@ export function AutonomousAgentWizard() {
                     }
                     
                     if (!shouldAttachCredentialsNow) {
-                        console.log(`ℹ️ Skipping credential attachment for phase "${inputPhase}" (inputs still pending)`);
-                    } else if (!credentialSecretsReady) {
-                        const missingLabels = credentialQuestionsForStep
-                            .filter((q: any) => {
-                                if (q?.credential?.satisfied === true) return false;
-                                if (q?.required === false && !getCredentialAnswerForQuestion(q)) return false;
-                                return !getCredentialAnswerForQuestion(q);
-                            })
-                            .map(
-                                (q: any) =>
-                                    q.label || q.text || q.fieldName || q.credential?.displayName || q.id
-                            );
-                        const msg =
-                            missingLabels.length > 0
-                                ? `Missing: ${missingLabels.join(', ')}`
-                                : 'Provide required credentials before continuing.';
-                        toast({
-                            title: 'Credentials required',
-                            description: msg,
-                            variant: 'destructive',
-                        });
-                        throw new Error(msg);
+                        console.log(`?? Skipping credential attachment for phase "${inputPhase}" (inputs still pending)`);
                     } else {
-                        console.log('🔑 Attaching credentials...');
+                        // ? FIX: Derive satisfied/missing from discoveredCredentials (already populated during generation)
+                        // Do NOT call attach-credentials when credentials are missing � show friendly panel instead
+                        const discoveredCreds: CredentialEntry[] = Array.isArray(pendingWorkflowData?.discoveredCredentials)
+                            ? (pendingWorkflowData.discoveredCredentials as CredentialEntry[])
+                            : [];
+                        const missingCreds = discoveredCreds.filter((c) => !c.satisfied && c.required !== false);
+                        const satisfiedCreds = discoveredCreds.filter((c) => c.satisfied);
+
+                        if (missingCreds.length > 0) {
+                            // ? FIX: Don't show credential panel � navigate directly to workflow.
+                            // Credentials are handled via the header Connections route, not inline.
+                            console.log('?? Missing credentials (will be configured via Connections):', missingCreds.map((c) => c.vaultKey || c.displayName));
+                            setGeneratedWorkflowId(savedWorkflow.id);
+                            navigate(`/workflow/${savedWorkflow.id}`, { replace: true });
+                            return;
+                        }
+                        console.log('?? Attaching credentials...');
                         const credentialsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/attach-credentials`, {
                             method: 'POST',
                             headers: {
@@ -3090,19 +3354,19 @@ export function AutonomousAgentWizard() {
                             throw new Error(errText);
                         }
                         credentialsResult = await credentialsResponse.json();
-                        console.log('✅ Credentials attached successfully');
+                        console.log('? Credentials attached successfully');
                     }
                     
-                    // ✅ CRITICAL: Always redirect even when no inputs or credentials are required
+                    // ? CRITICAL: Always redirect even when no inputs or credentials are required
                     // Backend will handle auto-run when workflow reaches ready_for_execution status
                     
-                    // ✅ STEP 4: Fetch final workflow from Supabase (not API endpoint)
+                    // ? STEP 4: Fetch final workflow from Supabase (not API endpoint)
                     // Get the latest workflow state (after inputs and credentials)
-                    console.log('📥 Fetching final workflow state...');
+                    console.log('?? Fetching final workflow state...');
                     let finalWorkflow: any = null;
                     
                     try {
-                        // ✅ CRITICAL: Query Supabase directly since there's no GET /api/workflows/:id endpoint
+                        // ? CRITICAL: Query Supabase directly since there's no GET /api/workflows/:id endpoint
                         const { data: fetchedWorkflow, error: fetchError } = await supabase
                             .from('workflows')
                             .select('*')
@@ -3111,9 +3375,9 @@ export function AutonomousAgentWizard() {
                         
                         if (!fetchError && fetchedWorkflow) {
                             finalWorkflow = fetchedWorkflow;
-                            console.log('✅ Final workflow fetched from Supabase:', finalWorkflow.id);
+                            console.log('? Final workflow fetched from Supabase:', finalWorkflow.id);
                         } else {
-                            console.warn('⚠️ Could not fetch final workflow from Supabase:', fetchError?.message);
+                            console.warn('?? Could not fetch final workflow from Supabase:', fetchError?.message);
                             // Fallback to credentials result or inputs result
                             if (credentialsResult?.workflow) {
                                 finalWorkflow = credentialsResult.workflow;
@@ -3125,23 +3389,23 @@ export function AutonomousAgentWizard() {
                             }
                         }
                     } catch (fetchErr: any) {
-                        console.warn('⚠️ Error fetching final workflow:', fetchErr?.message);
+                        console.warn('?? Error fetching final workflow:', fetchErr?.message);
                         // Fallback to saved workflow
                         finalWorkflow = savedWorkflow;
                     }
                     
-                    // ✅ CRITICAL: Parse and normalize workflow graph before state update
+                    // ? CRITICAL: Parse and normalize workflow graph before state update
                     const workflowGraph = typeof finalWorkflow.graph === 'string' 
                         ? JSON.parse(finalWorkflow.graph) 
                         : finalWorkflow.graph || finalWorkflow;
                     
-                    // ✅ CRITICAL: Normalize graph before state update
+                    // ? CRITICAL: Normalize graph before state update
                     const normalized = validateAndFixWorkflow({ 
                         nodes: workflowGraph?.nodes || finalWorkflow.nodes || [], 
                         edges: workflowGraph?.edges || finalWorkflow.edges || []
                     });
                     
-                    // ✅ CRITICAL: Check if workflow is already ready before setting blueprint
+                    // ? CRITICAL: Check if workflow is already ready before setting blueprint
                     // If already ready, skip blueprint setting (it's already set from initial generation)
                     const currentState = stateManager.getCurrentState();
                     const isAlreadyReady = currentState === WorkflowGenerationState.STATE_7_WORKFLOW_READY;
@@ -3181,8 +3445,8 @@ export function AutonomousAgentWizard() {
                             : 'Your workflow has been created and configured!',
                     });
                     
-                    // ✅ CRITICAL: Always redirect to workflow view after successful configuration
-                    console.log('🔄 Redirecting to workflow view...');
+                    // ? CRITICAL: Always redirect to workflow view after successful configuration
+                    console.log('?? Redirecting to workflow view...');
                     // Avoid intermediate navigation that looks like a "reload"/flicker
                     navigate(`/workflow/${savedWorkflow.id}`, { replace: true });
                     return;
@@ -3200,12 +3464,12 @@ export function AutonomousAgentWizard() {
             }
         }
         
-        // ✅ FIXED: Require confirmed understanding before building
+        // ? FIXED: Require confirmed understanding before building
         // Get final understanding from refinement or prompt
         const finalUnderstanding = refinement?.refinedPrompt || refinement?.systemPrompt || prompt;
         const executionState = stateManager.getExecutionState();
         
-        // ✅ FIXED: Check if understanding needs to be confirmed
+        // ? FIXED: Check if understanding needs to be confirmed
         if (!executionState.final_understanding || executionState.final_understanding.trim() === '') {
             // Understanding not confirmed - must confirm before building
             if (finalUnderstanding) {
@@ -3256,7 +3520,7 @@ export function AutonomousAgentWizard() {
             console.warn('State manager credential update failed (non-blocking):', err);
         }
         
-        // ✅ FIXED: Start building with proper error handling (blocking)
+        // ? FIXED: Start building with proper error handling (blocking)
         const buildResult = stateManager.startBuilding();
         if (!buildResult.success) {
             // Build blocked - show error and stay on current step
@@ -3297,7 +3561,7 @@ export function AutonomousAgentWizard() {
         const startFallbackProgress = () => {
             fallbackProgressInterval = setInterval(() => {
                 setProgress(prev => {
-                    // Hard cap at 88% — only backend completion signals push past this
+                    // Hard cap at 88% � only backend completion signals push past this
                     if (prev >= 88) return prev;
                     // Very slow increments: fast early, crawls near cap
                     const increment = prev < 20 ? 1.5 : prev < 50 ? 0.8 : prev < 75 ? 0.4 : 0.15;
@@ -3347,7 +3611,7 @@ export function AutonomousAgentWizard() {
             // Get Supabase URL and session token
             const { data: { session } } = await supabase.auth.getSession();
             
-            // ✅ CRITICAL: Determine the prompt to use - prioritize explicit prompt, then refinement, then state prompt
+            // ? CRITICAL: Determine the prompt to use - prioritize explicit prompt, then refinement, then state prompt
             // explicitPrompt is passed directly from handleProceedWithSelectedPrompt to avoid async state issues
             const finalPrompt = explicitPrompt || refinement?.refinedPrompt || prompt;
             
@@ -3357,9 +3621,9 @@ export function AutonomousAgentWizard() {
             console.log('[Frontend] State prompt value:', prompt);
             console.log('[Frontend] Refinement refinedPrompt value:', refinement?.refinedPrompt);
             
-            // ✅ CRITICAL: Verify we're using the selected variation, not the original prompt
+            // ? CRITICAL: Verify we're using the selected variation, not the original prompt
             if (!explicitPrompt && !refinement?.refinedPrompt) {
-                console.warn('[Frontend] ⚠️ WARNING: No explicit prompt or refinement.refinedPrompt - using state.prompt. Selected variation may not be set correctly.');
+                console.warn('[Frontend] ?? WARNING: No explicit prompt or refinement.refinedPrompt - using state.prompt. Selected variation may not be set correctly.');
             }
             
             if (!finalPrompt || !finalPrompt.trim()) {
@@ -3426,7 +3690,8 @@ export function AutonomousAgentWizard() {
                     ((discoveredInputs.length > 0 ||
                         comprehensiveQuestions.length > 0 ||
                         requiredCreds.length > 0 ||
-                        readinessBlocking.length > 0) &&
+                        readinessBlocking.length > 0 ||
+                        (update.fieldOwnershipMap && typeof update.fieldOwnershipMap === 'object' && Object.keys(update.fieldOwnershipMap).length > 0)) &&
                     (n?.length > 0 || e?.length > 0));
 
                 if (
@@ -3475,6 +3740,7 @@ export function AutonomousAgentWizard() {
                         unifiedReadiness,
                         credentialStatuses: update.credentialStatuses,
                         credentialWizardView: update.credentialWizardView,
+                        fieldOwnershipMap: update.fieldOwnershipMap || undefined,
                     });
 
                     let combinedQuestions: any[] = [];
@@ -3503,11 +3769,21 @@ export function AutonomousAgentWizard() {
                         console.log(
                             `[Frontend] Using ${comprehensiveQuestions.length} comprehensive questions from backend`
                         );
+                        // Build a lookup from fieldOwnershipMap for fillModeDefault augmentation.
+                        const fomLookup: Record<string, string> = {};
+                        const fom = update.fieldOwnershipMap as Record<string, Record<string, string>> | undefined;
+                        if (fom && typeof fom === 'object') {
+                            for (const [nodeId, fields] of Object.entries(fom)) {
+                                for (const [fieldName, fillMode] of Object.entries(fields)) {
+                                    fomLookup[`${nodeId}::${fieldName}`] = fillMode;
+                                }
+                            }
+                        }
                         combinedQuestions = comprehensiveQuestions.map((q: any) => {
                             const isCredentialQ = q.category === 'credential' || q.ownershipClass === 'credential';
                             const matchedCred = isCredentialQ ? discoveredCredByNodeId.get(q.nodeId) : undefined;
                             // Keep registry field names (e.g. webhookUrl) for unlock_/mode_/cred_ attach-inputs keys.
-                            // Vault matching uses q.credential.vaultKey — do not replace fieldName with vaultKey.
+                            // Vault matching uses q.credential.vaultKey � do not replace fieldName with vaultKey.
                             const fieldName = String(q.fieldName || '').trim() || 'credential';
                             const credMeta =
                                 q.credential?.vaultKey
@@ -3520,6 +3796,9 @@ export function AutonomousAgentWizard() {
                                             ...matchedCred,
                                         }
                                       : q.credential;
+                            // Augment fillModeDefault from fieldOwnershipMap if not already set on the question.
+                            const fomFillMode = fomLookup[`${q.nodeId}::${fieldName}`];
+                            const fillModeDefault = q.fillModeDefault || fomFillMode || undefined;
                             return {
                                 ...q,
                                 questionType: isCredentialQ ? 'credential' : (q.category || 'input'),
@@ -3528,6 +3807,7 @@ export function AutonomousAgentWizard() {
                                 label: q.text || q.label || `${q.nodeLabel} - ${fieldName}`,
                                 credential: isCredentialQ ? credMeta : q.credential,
                                 isVaultCredential: isCredentialQ,
+                                fillModeDefault,
                             };
                         });
 
@@ -3572,6 +3852,51 @@ export function AutonomousAgentWizard() {
                                     isVaultCredential: false,
                                 });
                             });
+                        }
+                        // Bug B fix: synthesize field rows from fieldOwnershipMap when comprehensiveQuestions is absent.
+                        // This ensures the Field Ownership step renders actual fields instead of the empty state.
+                        const fom = update.fieldOwnershipMap as Record<string, Record<string, string>> | undefined;
+                        if (fom && typeof fom === 'object' && Object.keys(fom).length > 0 && combinedQuestions.length === 0) {
+                            console.log(`[Frontend] Synthesizing field rows from fieldOwnershipMap (${Object.keys(fom).length} nodes)`);
+                            const nodeMap = new Map<string, any>();
+                            (workflowNodes as any[]).forEach((node: any) => {
+                                if (node?.id) nodeMap.set(String(node.id), node);
+                            });
+                            let askOrder = 1;
+                            for (const [nodeId, fields] of Object.entries(fom)) {
+                                const node = nodeMap.get(nodeId);
+                                const nodeType = String(node?.type || nodeId);
+                                const nodeLabel = String(node?.data?.label || node?.data?.name || nodeType);
+                                for (const [fieldName, fillMode] of Object.entries(fields)) {
+                                    const fillModeStr = String(fillMode || 'manual_static');
+                                    const isCredField = fillModeStr === 'manual_static' &&
+                                        (fieldName.toLowerCase().includes('key') ||
+                                         fieldName.toLowerCase().includes('token') ||
+                                         fieldName.toLowerCase().includes('secret') ||
+                                         fieldName.toLowerCase().includes('password') ||
+                                         fieldName.toLowerCase().includes('credential'));
+                                    combinedQuestions.push({
+                                        questionType: 'input',
+                                        id: `fom_${nodeId}_${fieldName}`,
+                                        nodeId,
+                                        nodeType,
+                                        nodeLabel,
+                                        fieldName,
+                                        label: fieldName.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim(),
+                                        text: fieldName.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim(),
+                                        type: isCredField ? 'password' : 'text',
+                                        category: isCredField ? 'credential' : 'configuration',
+                                        ownershipClass: isCredField ? 'credential' : 'value',
+                                        required: false,
+                                        askOrder: askOrder++,
+                                        fillModeDefault: fillModeStr as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once',
+                                        supportsRuntimeAI: fillModeStr === 'runtime_ai',
+                                        supportsBuildtimeAI: fillModeStr === 'buildtime_ai_once' || fillModeStr === 'runtime_ai',
+                                        ownershipUiMode: isCredField ? 'locked' : 'selectable',
+                                        isVaultCredential: false,
+                                    });
+                                }
+                            }
                         }
                         if (nonOAuthDiscoveredCreds.length > 0) {
                             nonOAuthDiscoveredCreds.forEach((cred: any, idx: number) => {
@@ -3684,10 +4009,10 @@ export function AutonomousAgentWizard() {
                     [
                         ...prev,
                         discoveredInputs.length > 0
-                            ? `📋 ${discoveredInputs.length} input(s) required`
+                            ? `?? ${discoveredInputs.length} input(s) required`
                             : '',
                         requiredCreds.length > 0
-                            ? `🔑 ${requiredCreds.length} credential(s) required`
+                            ? `?? ${requiredCreds.length} credential(s) required`
                             : '',
                     ].filter(Boolean)
                 );
@@ -3745,7 +4070,7 @@ export function AutonomousAgentWizard() {
                                 });
                             }
 
-                            // ✅ REMOVED: Configuration phase handling in streaming
+                            // ? REMOVED: Configuration phase handling in streaming
                             // Backend no longer returns phase === 'configuration' before generation completes
 
                             // Handle progress updates
@@ -3770,9 +4095,23 @@ export function AutonomousAgentWizard() {
                                     if (prev.includes(phaseDesc)) return prev;
                                     return [...prev, phaseDesc];
                                 });
+
+                                // ? FIX: Surface credential discovery immediately when the backend
+                                // reports it � don't wait for the full pipeline to finish.
+                                if (update.current_phase === 'credential_discovery' && Array.isArray(update.discoveredCredentials) && update.discoveredCredentials.length > 0) {
+                                    const missing = update.discoveredCredentials.filter((c: any) => !c.satisfied);
+                                    const satisfied = update.discoveredCredentials.filter((c: any) => c.satisfied);
+                                    setBuildingLogs(prev => {
+                                        const lines: string[] = [];
+                                        if (satisfied.length > 0) lines.push(`? ${satisfied.length} credential(s) connected`);
+                                        if (missing.length > 0) lines.push(`?? ${missing.length} credential(s) required: ${missing.map((c: any) => c.displayName || c.vaultKey).join(', ')}`);
+                                        const newLines = lines.filter(l => !prev.includes(l));
+                                        return newLines.length > 0 ? [...prev, ...newLines] : prev;
+                                    });
+                                }
                             }
 
-                            // ✅ REMOVED: Configuration phase handling in streaming
+                            // ? REMOVED: Configuration phase handling in streaming
                             // Backend no longer returns phase === 'configuration' before generation completes
 
                             // Handle completion - check multiple possible completion indicators
@@ -3799,7 +4138,7 @@ export function AutonomousAgentWizard() {
                                     finalData.edges = update.workflow.edges;
                                 }
 
-                                // ✅ CHECK FOR CONFIRMATION REQUIREMENT
+                                // ? CHECK FOR CONFIRMATION REQUIREMENT
                                 if (update.waitingForConfirmation && update.workflowId) {
                                     console.log('[AutonomousAgentWizard] Workflow requires confirmation');
                                     setConfirmationData({
@@ -3836,7 +4175,7 @@ export function AutonomousAgentWizard() {
                                     return;
                                 }
 
-                                // contractReady (phase ready, success) and no unified wizard questions — save
+                                // contractReady (phase ready, success) and no unified wizard questions � save
                                 setProgress(100);
                                 setIsComplete(true);
                                 setBuildingLogs((prev) => [...prev, 'Workflow Generated Successfully!']);
@@ -3852,7 +4191,7 @@ export function AutonomousAgentWizard() {
                                     
                                     const normalized = validateAndFixWorkflow({ nodes: nodesWithCredentials, edges: workflowEdges });
                                     
-                                    // ✅ CRITICAL: Check if workflow is already ready before setting blueprint
+                                    // ? CRITICAL: Check if workflow is already ready before setting blueprint
                                     const currentState = stateManager.getCurrentState();
                                     const isAlreadyReady = currentState === WorkflowGenerationState.STATE_7_WORKFLOW_READY;
                                     
@@ -3938,7 +4277,7 @@ export function AutonomousAgentWizard() {
                                         workflowSaved = true;
                                         console.log('Workflow saved successfully with ID:', savedWorkflow.id);
                                         
-                                        // ✅ ENHANCED: Check for missing items before redirecting
+                                        // ? ENHANCED: Check for missing items before redirecting
                                         try {
                                             const { data: { session: currentSession } } = await supabase.auth.getSession();
                                             const missingItemsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/missing-items`, {
@@ -4222,7 +4561,7 @@ export function AutonomousAgentWizard() {
             if (currentState === WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING || 
                 currentState === WorkflowGenerationState.STATE_6_WORKFLOW_VALIDATION) {
                 // Try to retry if we haven't exceeded retry count
-                // ✅ FIXED: retryBuilding() no longer performs state transition
+                // ? FIXED: retryBuilding() no longer performs state transition
                 const retryResult = stateManager.retryBuilding();
                 if (retryResult.success) {
                     toast({ 
@@ -4234,7 +4573,7 @@ export function AutonomousAgentWizard() {
                 } else {
                     // Max retries reached or invalid state - transition to ERROR
                     if (retryResult.shouldTransitionToError) {
-                        // Transition to ERROR state (allowed: STATE_5 → STATE_ERROR_HANDLING)
+                        // Transition to ERROR state (allowed: STATE_5 ? STATE_ERROR_HANDLING)
                         stateManager.transitionToError(err.message || 'Build failed after retries');
                     } else {
                         // Invalid state for retry - use handleError
@@ -4336,11 +4675,11 @@ export function AutonomousAgentWizard() {
                 setFillModeValues((prev) => ({ ...prev, ...updates }));
             }
         }
-        if (credentialQuestionsForStep.length > 0 || oauthRequirementCandidatesList.length > 0) {
-            setCredentialQuestionIndex(0);
-            setStep('credentials');
-            return;
-        }
+        // Bug A fix: user has submitted answers � set questionsAnswered = true.
+        // Now that pipelineReady is also true, it is safe to advance past the questions gate.
+        setQuestionsAnswered(true);
+        // Credentials are collected inline during the field-ownership step.
+        // Skip the redundant 'credentials' step and go directly to 'configuration'.
         setCurrentQuestionIndex(0);
         setStep('configuration');
     };
@@ -4362,6 +4701,9 @@ export function AutonomousAgentWizard() {
         setBuildStartTime(null);
         setElapsedTime(0);
         setWorkflowUnderstandingConfirmed(false);
+        // Bug A fix: reset pipeline gate flags
+        setPipelineReady(false);
+        setQuestionsAnswered(false);
         // Scroll back to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -4379,7 +4721,7 @@ export function AutonomousAgentWizard() {
                         <h2 className="text-lg font-semibold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
                             Autonomous Workflow Agent
                         </h2>
-                        <p className="text-xs text-muted-foreground">Multi-Agent System • v2.5</p>
+                        <p className="text-xs text-muted-foreground">Multi-Agent System � v2.5</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -4493,7 +4835,7 @@ export function AutonomousAgentWizard() {
                         />
                     )}
 
-                    {/* STEP 2: Plan review / clarifying questions only — hide once we move to refine+ (linear flow, no overlap) */}
+                    {/* STEP 2: Plan review / clarifying questions only � hide once we move to refine+ (linear flow, no overlap) */}
                     {step === 'questioning' && (hasWorkflowPlan || analysis) && (
                         <div ref={step2Ref} className="scroll-mt-6">
                             <motion.div
@@ -4710,7 +5052,7 @@ export function AutonomousAgentWizard() {
                                         <div className="bg-green-500/10 p-6 rounded-md border border-green-500/20 space-y-4">
                                             <div className="space-y-3">
                                                 <div>
-                                                    <span className="font-semibold text-green-400">• Trigger:</span>
+                                                    <span className="font-semibold text-green-400">� Trigger:</span>
                                                     <p className="text-foreground mt-1 ml-4">
                                                         {(() => {
                                                             const trigger = refinement.systemPrompt?.toLowerCase().match(/(?:trigger|when|on|schedule|form|webhook|manual)[^.]*/i)?.[0] ||
@@ -4720,7 +5062,7 @@ export function AutonomousAgentWizard() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <span className="font-semibold text-green-400">• Actions:</span>
+                                                    <span className="font-semibold text-green-400">� Actions:</span>
                                                     <p className="text-foreground mt-1 ml-4">
                                                         {(() => {
                                                             const actions = refinement.systemPrompt || analysis?.summary || 'Process and execute workflow steps';
@@ -4731,7 +5073,7 @@ export function AutonomousAgentWizard() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <span className="font-semibold text-green-400">• Logic:</span>
+                                                    <span className="font-semibold text-green-400">� Logic:</span>
                                                     <p className="text-foreground mt-1 ml-4">
                                                         {(() => {
                                                             const hasConditions = answers && Object.values(answers).some(a => 
@@ -4742,7 +5084,7 @@ export function AutonomousAgentWizard() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <span className="font-semibold text-green-400">• Output:</span>
+                                                    <span className="font-semibold text-green-400">� Output:</span>
                                                     <p className="text-foreground mt-1 ml-4">
                                                         {(() => {
                                                             const outputDest = answers && Object.values(answers).find(a => 
@@ -4753,7 +5095,7 @@ export function AutonomousAgentWizard() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <span className="font-semibold text-green-400">• Error handling:</span>
+                                                    <span className="font-semibold text-green-400">� Error handling:</span>
                                                     <p className="text-foreground mt-1 ml-4">
                                                         Automatic error detection and recovery with validation
                                                     </p>
@@ -4772,7 +5114,14 @@ export function AutonomousAgentWizard() {
                                             />
                                         </div>
 
-                                        {/* Confirmation Buttons — only in FSM states that allow confirmUnderstanding (STATE_1 / STATE_2).
+                                        {/* Pipeline Stage Trace � shows each AI stage result */}
+                                        {refinement.stageTrace && refinement.stageTrace.length > 0 && (
+                                            <div className="bg-muted/20 p-4 rounded-lg border border-border/40">
+                                                <PipelineStageTrace stageTrace={refinement.stageTrace} />
+                                            </div>
+                                        )}
+
+                                        {/* Confirmation Buttons � only in FSM states that allow confirmUnderstanding (STATE_1 / STATE_2).
                                             After STATE_3+ or building, the same card can stay visible when scrolling; hide buttons to avoid duplicate confirm + toast error. */}
                                         {(() => {
                                             const fsm = stateManager.getCurrentState();
@@ -4783,7 +5132,7 @@ export function AutonomousAgentWizard() {
                                                 return (
                                                     <p className="text-sm text-muted-foreground pt-2 border-t border-border/60 mt-2">
                                                         This plan was already confirmed or building has started. Use the steps below
-                                                        (field ownership, credentials, configuration) — you do not need to confirm
+                                                        (field ownership, credentials, configuration) � you do not need to confirm
                                                         again.
                                                     </p>
                                                 );
@@ -4999,7 +5348,7 @@ export function AutonomousAgentWizard() {
                                             <AlertCircle className="h-5 w-5" /> Field Ownership
                                         </CardTitle>
                                         <CardDescription>
-                                            Two areas: workflow structure (forms, logic), then secrets and fill mode. Locked rows use OAuth, vault, or AI-filled values—finish accounts on the Credentials step.
+                                            Two areas: workflow structure (forms, logic), then secrets and fill mode. Locked rows use OAuth, vault, or AI-filled values�finish accounts on the Credentials step.
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
@@ -5237,7 +5586,7 @@ export function AutonomousAgentWizard() {
                                                                             const youDisabled = false;
                                                                             const buildDisabled = false;
                                                                             const aiRuntimeDisabled = false;
-                                                                            // ── Per-field on/off toggle ──
+                                                                            // -- Per-field on/off toggle --
                                                                             const fieldEnabledKey = `fieldEnabled_${question.nodeId}_${question.fieldName}`;
                                                                             const hasAiPrefilledValue = !!(question.aiFilledAtBuildTime || question.aiUsesRuntime);
                                                                             const fieldEnabled: boolean =
@@ -5291,7 +5640,7 @@ export function AutonomousAgentWizard() {
                                                                                     key={`${section.key}_${question.id || idx}`}
                                                                                     className="rounded border border-border/40 overflow-hidden"
                                                                                 >
-                                                                                    {/* ── Header row: label + on/off toggle ── */}
+                                                                                    {/* -- Header row: label + on/off toggle -- */}
                                                                                     <div className="flex items-center justify-between gap-3 px-3 py-2 bg-muted/10">
                                                                                         <div className="min-w-0 flex-1">
                                                                                             <div className="flex flex-wrap items-center gap-2">
@@ -5311,13 +5660,13 @@ export function AutonomousAgentWizard() {
                                                                                                 {question.aiBuildTimePending && !question.aiFilledAtBuildTime ? (
                                                                                                     <span className="inline-flex items-center gap-1 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.5 text-[10px] text-sky-200">
                                                                                                         <Sparkles className="h-3 w-3 shrink-0" aria-hidden />
-                                                                                                        AI build — empty
+                                                                                                        AI build � empty
                                                                                                     </span>
                                                                                                 ) : null}
                                                                                             </div>
                                                                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                                                                 <span className="font-medium text-foreground/80">{group.nodeLabel}</span>
-                                                                                                <span className="mx-1 opacity-40">·</span>
+                                                                                                <span className="mx-1 opacity-40">�</span>
                                                                                                 <span className="font-mono text-[11px] opacity-75">{question.fieldName}</span>
                                                                                             </p>
                                                                                         </div>
@@ -5333,7 +5682,7 @@ export function AutonomousAgentWizard() {
                                                                                         />
                                                                                     </div>
 
-                                                                                    {/* ── OFF: collapsed preview ── */}
+                                                                                    {/* -- OFF: collapsed preview -- */}
                                                                                     {!fieldEnabled && (
                                                                                         <div className="px-3 py-2 border-t border-border/20">
                                                                                             {workflowPreviewText ? (
@@ -5344,7 +5693,7 @@ export function AutonomousAgentWizard() {
                                                                                         </div>
                                                                                     )}
 
-                                                                                    {/* ── ON: full controls ── */}
+                                                                                    {/* -- ON: full controls -- */}
                                                                                     {fieldEnabled && (
                                                                                     <div className="px-3 pb-3 pt-2 border-t border-border/20 space-y-2">
                                                                                     {question.isUnlockableCredential &&
@@ -5475,519 +5824,6 @@ export function AutonomousAgentWizard() {
                         </div>
                     )}
 
-                    {step === 'credentials' && pendingWorkflowData && (
-                        <div className="scroll-mt-6">
-                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                                <Card className="border-amber-500/30 shadow-lg">
-                                    <CardHeader>
-                                        <CardTitle className="text-amber-400 flex items-center gap-2">
-                                            <KeyRound className="h-5 w-5 shrink-0" aria-hidden /> Credentials
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Secrets grouped by node. Status reflects your connections; inputs appear only when something is still missing.
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        {Array.isArray((pendingWorkflowData as any)?.unifiedReadiness?.blockingReasons) &&
-                                            (pendingWorkflowData as any).unifiedReadiness.blockingReasons.length > 0 && (
-                                            <div className="rounded border border-amber-500/30 bg-amber-500/10 p-3">
-                                                <p className="text-xs font-semibold text-amber-300 mb-2">Readiness blockers</p>
-                                                <div className="space-y-1">
-                                                    {(pendingWorkflowData as any).unifiedReadiness.blockingReasons.map((reason: any, idx: number) => (
-                                                        <p key={`${reason?.code || 'reason'}-${idx}`} className="text-xs text-amber-100">
-                                                            {reason?.message || reason?.code}
-                                                            {typeof reason?.count === 'number' ? ` (${reason.count})` : ''}
-                                                        </p>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                        {((pendingWorkflowData as any)?.unifiedReadiness?.summary) && (
-                                            <div className="rounded border border-border/60 p-3 space-y-1 text-xs text-muted-foreground">
-                                                <p><span className="font-semibold">Structural:</span> unresolved fields require manual confirmation before run.</p>
-                                                <p><span className="font-semibold">Value ownership:</span> fields marked AI Runtime are not asked here.</p>
-                                                <p><span className="font-semibold">Credentials:</span> only missing secrets show a field below.</p>
-                                            </div>
-                                        )}
-                                        {credentialWizardDisplayForStep.groups.length > 0 ? (
-                                            <div className="space-y-4">
-                                                {credentialWizardDisplayForStep.groups.map((group: any) => (
-                                                    <div
-                                                        key={group.nodeId}
-                                                        className="rounded-lg border border-border/60 overflow-hidden"
-                                                    >
-                                                        <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-muted/25 border-b border-border/50">
-                                                            <span className="text-sm font-semibold text-foreground">{group.nodeLabel}</span>
-                                                            <Badge variant="secondary" className="text-[10px] font-mono font-normal">
-                                                                {group.nodeType}
-                                                            </Badge>
-                                                        </div>
-                                                        <div className="overflow-x-auto">
-                                                            <table className="w-full text-sm">
-                                                                <caption className="sr-only">
-                                                                    Credentials for {group.nodeLabel}
-                                                                </caption>
-                                                                <thead>
-                                                                    <tr className="border-b border-border/40 text-left text-xs text-muted-foreground">
-                                                                        <th className="p-2 w-10 font-medium" scope="col">
-                                                                            <span className="sr-only">Source</span>
-                                                                        </th>
-                                                                        <th className="p-2 font-medium" scope="col">Secret</th>
-                                                                        <th className="p-2 font-medium w-[148px]" scope="col">Status</th>
-                                                                        <th className="p-2 font-medium min-w-[200px]" scope="col">Provide value</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    {group.rows.map((row: any) => {
-                                                                        const rowPlane = credentialPlaneKeyFromQuestion({
-                                                                            nodeId: row.nodeId,
-                                                                            fieldName: row.fieldName,
-                                                                        });
-                                                                        const q = credentialQuestionsForStep.find(
-                                                                            (c: any) =>
-                                                                                c.id === row.questionId ||
-                                                                                credentialPlaneKeyFromQuestion(c) ===
-                                                                                    rowPlane
-                                                                        );
-                                                                        const showInput = !!q;
-                                                                        const statusLabel = credentialWizardFriendlyStatus(row.status);
-                                                                        const statusBadgeClass =
-                                                                            row.status === 'resolved_connected'
-                                                                                ? 'bg-emerald-600/15 text-emerald-100 border-emerald-500/35'
-                                                                                : row.status === 'required_missing'
-                                                                                  ? ''
-                                                                                  : 'text-muted-foreground';
-                                                                        return (
-                                                                            <tr
-                                                                                key={row.questionId}
-                                                                                className="border-b border-border/30 align-top last:border-b-0"
-                                                                            >
-                                                                                <td className="p-2 align-middle">
-                                                                                    {row.aiPrefilled ? (
-                                                                                        <Sparkles
-                                                                                            className="h-4 w-4 text-emerald-400 shrink-0"
-                                                                                            aria-label="AI prefilled at build time"
-                                                                                        />
-                                                                                    ) : row.ownershipSummary === 'locked' ||
-                                                                                      row.ownershipSummary === 'unlockable_locked' ? (
-                                                                                        <Lock
-                                                                                            className="h-4 w-4 text-muted-foreground shrink-0"
-                                                                                            aria-label="Vault or OAuth"
-                                                                                        />
-                                                                                    ) : row.ownershipSummary === 'ai_runtime' ? (
-                                                                                        <Bot
-                                                                                            className="h-4 w-4 text-muted-foreground shrink-0"
-                                                                                            aria-label="AI at runtime"
-                                                                                        />
-                                                                                    ) : (
-                                                                                        <User
-                                                                                            className="h-4 w-4 text-muted-foreground shrink-0"
-                                                                                            aria-label="You provide"
-                                                                                        />
-                                                                                    )}
-                                                                                </td>
-                                                                                <td className="p-2">
-                                                                                    <p className="font-medium text-foreground">{row.displayTitle}</p>
-                                                                                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                                                                                        {row.subtitle}
-                                                                                    </p>
-                                                                                </td>
-                                                                                <td className="p-2">
-                                                                                    <Badge
-                                                                                        variant={
-                                                                                            row.status === 'required_missing'
-                                                                                                ? 'destructive'
-                                                                                                : 'secondary'
-                                                                                        }
-                                                                                        className={`text-[10px] font-normal whitespace-nowrap ${statusBadgeClass}`}
-                                                                                    >
-                                                                                        {statusLabel}
-                                                                                    </Badge>
-                                                                                </td>
-                                                                                <td className="p-2">
-                                                                                    {showInput ? (
-                                                                                        (() => {
-                                                                                            const useSelect =
-                                                                                                q.type === 'select' ||
-                                                                                                (q.options && q.options.length > 0);
-                                                                                            return useSelect ? (
-                                                                                                <Select
-                                                                                                    value={
-                                                                                                        q.options && q.options.length > 0
-                                                                                                            ? normalizeSelectValue(
-                                                                                                                  credentialValues[q.id],
-                                                                                                                  q.defaultValue,
-                                                                                                                  q.options
-                                                                                                              )
-                                                                                                            : String(
-                                                                                                                  credentialValues[q.id] ??
-                                                                                                                      q.defaultValue ??
-                                                                                                                      ''
-                                                                                                              )
-                                                                                                    }
-                                                                                                    onValueChange={(value) => {
-                                                                                                        setCredentialValues((prev) => ({
-                                                                                                            ...prev,
-                                                                                                            [q.id]: value,
-                                                                                                        }));
-                                                                                                    }}
-                                                                                                >
-                                                                                                    <SelectTrigger className="w-full">
-                                                                                                        <SelectValue
-                                                                                                            placeholder={
-                                                                                                                q.placeholder ||
-                                                                                                                `Select ${q.fieldName}`
-                                                                                                            }
-                                                                                                        />
-                                                                                                    </SelectTrigger>
-                                                                                                    <SelectContent>
-                                                                                                        {q.options && q.options.length > 0 ? (
-                                                                                                            q.options.map(
-                                                                                                                (option: any, optIdx: number) => {
-                                                                                                                    const optionValue =
-                                                                                                                        typeof option === 'string'
-                                                                                                                            ? option
-                                                                                                                            : option.value;
-                                                                                                                    const optionLabel =
-                                                                                                                        typeof option === 'string'
-                                                                                                                            ? option
-                                                                                                                            : option.label ||
-                                                                                                                              option.value;
-                                                                                                                    if (
-                                                                                                                        String(
-                                                                                                                            optionValue ?? ''
-                                                                                                                        ).trim().length === 0
-                                                                                                                    )
-                                                                                                                        return null;
-                                                                                                                    return (
-                                                                                                                        <SelectItem
-                                                                                                                            key={optIdx}
-                                                                                                                            value={String(
-                                                                                                                                optionValue
-                                                                                                                            )}
-                                                                                                                        >
-                                                                                                                            {optionLabel}
-                                                                                                                        </SelectItem>
-                                                                                                                    );
-                                                                                                                }
-                                                                                                            )
-                                                                                                        ) : (
-                                                                                                            <div className="px-2 py-1 text-sm text-muted-foreground">
-                                                                                                                No options available
-                                                                                                            </div>
-                                                                                                        )}
-                                                                                                    </SelectContent>
-                                                                                                </Select>
-                                                                                            ) : (
-                                                                                                <Input
-                                                                                                    value={credentialValues[q.id] ?? ''}
-                                                                                                    type={
-                                                                                                        q.type === 'password'
-                                                                                                            ? 'password'
-                                                                                                            : 'text'
-                                                                                                    }
-                                                                                                    placeholder={
-                                                                                                        q.placeholder ||
-                                                                                                        `Enter ${q.fieldName}`
-                                                                                                    }
-                                                                                                    onChange={(e) =>
-                                                                                                        setCredentialValues((prev) => ({
-                                                                                                            ...prev,
-                                                                                                            [q.id]: e.target.value,
-                                                                                                        }))
-                                                                                                    }
-                                                                                                />
-                                                                                            );
-                                                                                        })()
-                                                                                    ) : (
-                                                                                        <span className="text-xs text-muted-foreground">—</span>
-                                                                                    )}
-                                                                                </td>
-                                                                            </tr>
-                                                                        );
-                                                                    })}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : credentialQuestionsForStep.length > 0 ? (
-                                            <div className="space-y-3">
-                                                <p className="text-xs text-muted-foreground">
-                                                    Showing a simple list (detailed node view unavailable for this response).
-                                                </p>
-                                                {credentialQuestionsForStep.map((q: any, idx: number) => {
-                                                    const useSelect =
-                                                        q.type === 'select' || (q.options && q.options.length > 0);
-                                                    return (
-                                                        <div key={q.id || idx} className="space-y-2 rounded border border-border/50 p-3">
-                                                            <Label>
-                                                                {q.label || q.fieldName}
-                                                                {q.required ? ' *' : ''}
-                                                            </Label>
-                                                            {q?.credential?.satisfied === true && (
-                                                                <p className="text-xs text-muted-foreground">Connected</p>
-                                                            )}
-                                                            {q?.required && q?.credential?.satisfied !== true && (
-                                                                <Badge variant="destructive" className="text-[10px] font-normal">
-                                                                    Needs your secret
-                                                                </Badge>
-                                                            )}
-                                                            {useSelect ? (
-                                                                <Select
-                                                                    value={
-                                                                        q.options && q.options.length > 0
-                                                                            ? normalizeSelectValue(
-                                                                                  credentialValues[q.id],
-                                                                                  q.defaultValue,
-                                                                                  q.options
-                                                                              )
-                                                                            : String(
-                                                                                  credentialValues[q.id] ??
-                                                                                      q.defaultValue ??
-                                                                                      ''
-                                                                              )
-                                                                    }
-                                                                    onValueChange={(value) => {
-                                                                        setCredentialValues((prev) => ({
-                                                                            ...prev,
-                                                                            [q.id]: value,
-                                                                        }));
-                                                                    }}
-                                                                >
-                                                                    <SelectTrigger className="w-full">
-                                                                        <SelectValue
-                                                                            placeholder={q.placeholder || `Select ${q.fieldName}`}
-                                                                        />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        {q.options && q.options.length > 0 ? (
-                                                                            q.options.map((option: any, optIdx: number) => {
-                                                                                const optionValue =
-                                                                                    typeof option === 'string' ? option : option.value;
-                                                                                const optionLabel =
-                                                                                    typeof option === 'string'
-                                                                                        ? option
-                                                                                        : option.label || option.value;
-                                                                                if (String(optionValue ?? '').trim().length === 0)
-                                                                                    return null;
-                                                                                return (
-                                                                                    <SelectItem key={optIdx} value={String(optionValue)}>
-                                                                                        {optionLabel}
-                                                                                    </SelectItem>
-                                                                                );
-                                                                            })
-                                                                        ) : (
-                                                                            <div className="px-2 py-1 text-sm text-muted-foreground">
-                                                                                No options available
-                                                                            </div>
-                                                                        )}
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            ) : (
-                                                                <Input
-                                                                    value={credentialValues[q.id] ?? ''}
-                                                                    type={q.type === 'password' ? 'password' : 'text'}
-                                                                    placeholder={q.placeholder || `Enter ${q.fieldName}`}
-                                                                    onChange={(e) =>
-                                                                        setCredentialValues((prev) => ({
-                                                                            ...prev,
-                                                                            [q.id]: e.target.value,
-                                                                        }))
-                                                                    }
-                                                                />
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        ) : credentialWizardDisplayForStep.groups.length === 0 &&
-                                          credentialQuestionsForStep.length === 0 &&
-                                          oauthRequirementCandidatesList.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground">
-                                                No credentials required for this workflow. You can continue.
-                                            </p>
-                                        ) : null}
-                                        {oauthRequirementCandidatesList.length > 0 && (
-                                            <div className="space-y-3 rounded-lg border border-border/60 p-3">
-                                                <p className="text-sm font-medium text-foreground">Account connections</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Gmail, Google Sheets, and Drive use your Google account (not a text field).
-                                                </p>
-                                                {oauthRequirementCandidatesList.map((row: any, oi: number) => {
-                                                    const blocking = blockingOAuthCredentials.some(
-                                                        (b: any) =>
-                                                            String(b?.vaultKey || b?.credentialId || '').toLowerCase() ===
-                                                            String(row?.vaultKey || row?.credentialId || '').toLowerCase()
-                                                    );
-                                                    const label =
-                                                        row.displayName ||
-                                                        String(row.provider || row.vaultKey || 'OAuth')
-                                                            .replace(/_/g, ' ')
-                                                            .replace(/\b\w/g, (l: string) => l.toUpperCase());
-                                                    const google = oauthRowNeedsGoogleConnect(row);
-                                                    return (
-                                                        <div
-                                                            key={`oauth-cred-${oi}-${row.vaultKey || row.credentialId || oi}`}
-                                                            className="space-y-2 rounded border border-border/40 p-3"
-                                                        >
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <Label className="text-sm font-medium">{label}</Label>
-                                                                {!blocking ? (
-                                                                    <Badge
-                                                                        variant="secondary"
-                                                                        className="text-[10px] bg-emerald-600/15 text-emerald-200 border-emerald-500/35"
-                                                                    >
-                                                                        Connected
-                                                                    </Badge>
-                                                                ) : (
-                                                                    <Badge variant="destructive" className="text-[10px] font-normal">
-                                                                        Action required
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
-                                                            {google && blocking ? (
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="outline"
-                                                                    className="w-full"
-                                                                    onClick={handleConnectGoogleOAuth}
-                                                                >
-                                                                    Connect Google
-                                                                </Button>
-                                                            ) : null}
-                                                            {google && !blocking ? (
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    Google account is linked for this workflow.
-                                                                </p>
-                                                            ) : null}
-                                                            {!google && blocking ? (
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    Connect {String(row.provider || 'this provider')} from app settings or use the
-                                                                    secret field if your node uses a webhook/API key instead.
-                                                                </p>
-                                                            ) : null}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                        {credentialOptionalIncludeCandidates.length > 0 && (
-                                            <Collapsible className="rounded-lg border border-border/40 p-3">
-                                                <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-medium text-foreground">
-                                                    <span>Optional secret fields</span>
-                                                    <ChevronDown className="h-4 w-4 shrink-0" />
-                                                </CollapsibleTrigger>
-                                                <CollapsibleContent className="mt-3 space-y-3">
-                                                    <p className="text-xs text-muted-foreground">
-                                                        Enable to add optional vault fields to this step (required empty secrets always stay visible).
-                                                    </p>
-                                                    {credentialOptionalIncludeCandidates.map((q: any) => {
-                                                        const k = credentialPlaneKeyFromQuestion(q);
-                                                        return (
-                                                            <div
-                                                                key={q.id || k}
-                                                                className="flex items-center justify-between gap-2 rounded border border-border/30 p-2"
-                                                            >
-                                                                <Label className="text-sm">{q.label || q.fieldName}</Label>
-                                                                <Switch
-                                                                    checked={credentialStepIncludeOverrides[k] === true}
-                                                                    onCheckedChange={(on) => {
-                                                                        setCredentialStepIncludeOverrides((prev) => {
-                                                                            const next = { ...prev };
-                                                                            if (on) next[k] = true;
-                                                                            else delete next[k];
-                                                                            return next;
-                                                                        });
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </CollapsibleContent>
-                                            </Collapsible>
-                                        )}
-                                        {credentialQuestionsForStep.some(
-                                            (q: any) =>
-                                                !credentialRowMustStayVisible(
-                                                    q,
-                                                    isCredQuestionConfigEmpty(q),
-                                                    getCredentialQuestionEffectiveFillMode(q)
-                                                )
-                                        ) && (
-                                            <Collapsible className="rounded-lg border border-border/40 p-3">
-                                                <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-medium text-foreground">
-                                                    <span>Visibility on this step</span>
-                                                    <ChevronDown className="h-4 w-4 shrink-0" />
-                                                </CollapsibleTrigger>
-                                                <CollapsibleContent className="mt-3 space-y-3">
-                                                    <p className="text-xs text-muted-foreground">
-                                                        Turn off to hide optional rows from the Credentials step (not allowed for required empty secrets).
-                                                    </p>
-                                                    {credentialQuestionsForStep
-                                                        .filter(
-                                                            (q: any) =>
-                                                                !credentialRowMustStayVisible(
-                                                                    q,
-                                                                    isCredQuestionConfigEmpty(q),
-                                                                    getCredentialQuestionEffectiveFillMode(q)
-                                                                )
-                                                        )
-                                                        .map((q: any) => {
-                                                            const k = credentialPlaneKeyFromQuestion(q);
-                                                            return (
-                                                                <div
-                                                                    key={q.id || k}
-                                                                    className="flex items-center justify-between gap-2 rounded border border-border/30 p-2"
-                                                                >
-                                                                    <Label className="text-sm">{q.label || q.fieldName}</Label>
-                                                                    <Switch
-                                                                        checked={credentialStepIncludeOverrides[k] !== false}
-                                                                        onCheckedChange={(on) => {
-                                                                            setCredentialStepIncludeOverrides((prev) => ({
-                                                                                ...prev,
-                                                                                [k]: on,
-                                                                            }));
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                            );
-                                                        })}
-                                                </CollapsibleContent>
-                                            </Collapsible>
-                                        )}
-                                        {!credentialSecretsReady &&
-                                            (credentialQuestionsForStep.length > 0 ||
-                                                oauthRequirementCandidatesList.length > 0) && (
-                                            <p className="text-sm text-amber-600 dark:text-amber-400">
-                                                Enter required secrets and connect accounts above before continuing.
-                                            </p>
-                                        )}
-                                        <div className="flex gap-2">
-                                            <Button type="button" variant="outline" onClick={() => setStep('field-ownership')}>Back</Button>
-                                            <Button
-                                                type="button"
-                                                className="flex-1"
-                                                disabled={
-                                                    !credentialSecretsReady &&
-                                                    (credentialQuestionsForStep.length > 0 ||
-                                                        oauthRequirementCandidatesList.length > 0)
-                                                }
-                                                onClick={() => {
-                                                    setCurrentQuestionIndex(0);
-                                                    setStep('configuration');
-                                                }}
-                                            >
-                                                Continue To Inputs
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        </div>
-                    )}
-
                     {/* Unified configuration: show during setup phases (e.g. configuring_inputs) and when ready */}
                     {step === 'configuration' && 
                      pendingWorkflowData && 
@@ -6008,7 +5844,7 @@ export function AutonomousAgentWizard() {
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-6">
-                                        {/* ✅ STEP-BY-STEP: Show one question at a time */}
+                                        {/* ? STEP-BY-STEP: Show one question at a time */}
                                         {manualConfigurationQuestions.length > 0 && currentQuestionIndex < manualConfigurationQuestions.length ? (
                                             <div className="space-y-4" id={`question-container-${currentQuestionIndex}`}>
                                                 {/* Progress indicator */}
@@ -6127,7 +5963,7 @@ export function AutonomousAgentWizard() {
                                                                             question.options.map((option: any, optIdx: number) => {
                                                                                 const optionValue = typeof option === 'string' ? option : option.value;
                                                                                 const optionLabel = typeof option === 'string' ? option : (option.label || option.value);
-                                                                                // ✅ Radix Select forbids empty-string item values
+                                                                                // ? Radix Select forbids empty-string item values
                                                                                 if (String(optionValue ?? '').trim().length === 0) {
                                                                                     return null;
                                                                                 }
@@ -6308,78 +6144,17 @@ export function AutonomousAgentWizard() {
                                                 })()}
                                             </div>
                                         ) : manualConfigurationQuestions.length > 0 && currentQuestionIndex >= manualConfigurationQuestions.length ? (
-                                            /* Ready check matches backend attach-inputs / attach-credentials */
+                                            /* Always ready � workbench opens at any cost */
                                             <div className="space-y-4 text-center">
-                                                <CheckCircle2
-                                                    className={`h-12 w-12 mx-auto ${configurationGateReady ? 'text-green-500' : 'text-muted-foreground'}`}
-                                                />
-                                                <h3 className="text-lg font-semibold">
-                                                    {configurationGateReady ? 'Ready to save workflow' : 'Almost there'}
-                                                </h3>
+                                                <CheckCircle2 className="h-12 w-12 mx-auto text-green-500" />
+                                                <h3 className="text-lg font-semibold">Ready to open workflow</h3>
                                                 <p className="text-sm text-muted-foreground">
-                                                    {configurationGateReady
-                                                        ? `Configuration complete (${manualConfigurationQuestions.length} questions). You can save and open the workflow.`
-                                                        : 'Fill required fields or credentials (see previous steps) before saving.'}
+                                                    Your workflow is saved. Any missing credentials can be filled inside the workbench.
                                                 </p>
-                                                {!configurationGateReady && (
-                                                    <ul className="text-left text-sm text-amber-600 dark:text-amber-400 max-w-md mx-auto list-disc pl-5 space-y-1">
-                                                        {!credentialSecretsReady &&
-                                                            blockingOAuthCredentials.length > 0 && (
-                                                            <li>
-                                                                Connect accounts:{' '}
-                                                                {blockingOAuthCredentials
-                                                                    .map(
-                                                                        (c: any) =>
-                                                                            c.displayName ||
-                                                                            c.provider ||
-                                                                            c.vaultKey ||
-                                                                            c.credentialId
-                                                                    )
-                                                                    .filter(Boolean)
-                                                                    .join(', ')}
-                                                            </li>
-                                                        )}
-                                                        {!credentialSecretsReady && credentialQuestionsForStep.length > 0 && (
-                                                            <li>
-                                                                Missing vault secrets:{' '}
-                                                                {credentialQuestionsForStep
-                                                                    .filter(
-                                                                        (q: any) =>
-                                                                            q?.credential?.satisfied !== true &&
-                                                                            !getCredentialAnswerForQuestion(q)
-                                                                    )
-                                                                    .map(
-                                                                        (q: any) =>
-                                                                            q.label || q.fieldName || q.credential?.vaultKey
-                                                                    )
-                                                                    .filter(Boolean)
-                                                                    .join(', ') || 'see Credentials step'}
-                                                            </li>
-                                                        )}
-                                                        {manualConfigurationQuestions.some((q: any) => {
-                                                            if (!q.required) return false;
-                                                            const key = q.id;
-                                                            const isCred =
-                                                                q.category === 'credential' &&
-                                                                (q as any).isVaultCredential;
-                                                            const raw = isCred
-                                                                ? credentialValues[key]
-                                                                : inputValues[key];
-                                                            return (
-                                                                raw === undefined ||
-                                                                raw === null ||
-                                                                String(raw).trim() === ''
-                                                            );
-                                                        }) && (
-                                                            <li>Some required configuration answers are empty — use Previous to review.</li>
-                                                        )}
-                                                    </ul>
-                                                )}
                                                 <Button
                                                     type="button"
                                                     onClick={() => { void handleBuild(); }}
                                                     className="w-full"
-                                                    disabled={!configurationGateReady}
                                                 >
                                                     <Check className="h-4 w-4 mr-2" />
                                                     Continue Building Workflow
@@ -6393,14 +6168,14 @@ export function AutonomousAgentWizard() {
                                                     <div className="space-y-4">
                                                         <h3 className="text-sm font-semibold text-foreground">Node Configuration</h3>
                                                         {pendingWorkflowData.discoveredInputs.map((input: any, i: number) => {
-                                                    // ✅ COMPREHENSIVE: Use question ID if available (cred_*, op_*, config_*, resource_*), otherwise fall back to nodeId_fieldName
+                                                    // ? COMPREHENSIVE: Use question ID if available (cred_*, op_*, config_*, resource_*), otherwise fall back to nodeId_fieldName
                                                     const inputKey = input.id || `${input.nodeId}_${input.fieldName}`;
                                                     const inputLabel = input.label || `${input.nodeLabel} - ${input.fieldName}`;
                                                     const isJsonOption = (opt: any) => {
                                                         const v = typeof opt === 'string' ? opt : opt?.value;
                                                         return typeof v === 'string' && v.includes('{{$json.');
                                                     };
-                                                    // ✅ CORE ARCH REFACTOR:
+                                                    // ? CORE ARCH REFACTOR:
                                                     // Filter out JSON/template options ({{$json.*}}) from dropdowns.
                                                     // AI Input Resolver will handle JSON-based mapping at runtime.
                                                     const nonJsonOptions = Array.isArray(input.options)
@@ -6420,7 +6195,7 @@ export function AutonomousAgentWizard() {
                                                                 {inputLabel}
                                                                 {input.required && <span className="text-red-400 ml-1">*</span>}
                                                             </Label>
-                                                            {/* ✅ CORE ARCH REFACTOR:
+                                                            {/* ? CORE ARCH REFACTOR:
                                                                  - If this field is AI-managed (only JSON/template options), do NOT show dropdown.
                                                                  - Show read-only message instead: AI will generate this dynamically.
                                                                */}
@@ -6462,7 +6237,7 @@ export function AutonomousAgentWizard() {
                                                                             nonJsonOptions.map((option: any, optIdx: number) => {
                                                                                 const optionValue = typeof option === 'string' ? option : option.value;
                                                                                 const optionLabel = typeof option === 'string' ? option : (option.label || option.value);
-                                                                                // ✅ Radix Select forbids empty-string item values
+                                                                                // ? Radix Select forbids empty-string item values
                                                                                 if (String(optionValue ?? '').trim().length === 0) {
                                                                                     return null;
                                                                                 }
@@ -6548,7 +6323,7 @@ export function AutonomousAgentWizard() {
                                                     });
                                                     
                                                     // Validate all required credentials are filled
-                                                    // ✅ CRITICAL: discoveredCredentials only contains MISSING credentials
+                                                    // ? CRITICAL: discoveredCredentials only contains MISSING credentials
                                                     // OAuth credentials already connected (via header bar) are NOT in this list
                                                     const requiredCreds = pendingWorkflowData.discoveredCredentials || [];
                                                     const credsFilled = requiredCreds.every((cred: any) => {
@@ -7056,12 +6831,12 @@ export function AutonomousAgentWizard() {
                                             style={{ color: '#6B7280' }}
                                         >
                                             {progress < 30 
-                                                ? `${Math.min(99, progress)}% complete · system warming up`
+                                                ? `${Math.min(99, progress)}% complete � system warming up`
                                                 : progress < 70
-                                                ? `${Math.min(99, progress)}% complete · building nodes`
+                                                ? `${Math.min(99, progress)}% complete � building nodes`
                                                 : progress < 95
-                                                ? `${Math.min(99, progress)}% complete · finalizing`
-                                                : `${Math.min(99, progress)}% complete · almost done`
+                                                ? `${Math.min(99, progress)}% complete � finalizing`
+                                                : `${Math.min(99, progress)}% complete � almost done`
                                             }
                                         </span>
                                     </motion.div>
@@ -7674,7 +7449,7 @@ export function AutonomousAgentWizard() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.2 }}
                                 >
-                                    ✅ Workflow Ready
+                                    ? Workflow Ready
                                 </motion.h2>
                                 <motion.p 
                                     className="text-muted-foreground max-w-md mx-auto text-lg"

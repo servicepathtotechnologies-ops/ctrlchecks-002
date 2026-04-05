@@ -51,7 +51,7 @@ function applyHierarchicalLayout(nodes: any[], edges: any[]): any[] {
 
     edges.forEach(edge => {
         const childList = children.get(edge.source) || [];
-        childList.push(edge.target);
+        if (!childList.includes(edge.target)) childList.push(edge.target);
         children.set(edge.source, childList);
     });
 
@@ -90,48 +90,22 @@ function applyHierarchicalLayout(nodes: any[], edges: any[]): any[] {
         nodesByLevel.get(level)!.push(nodeId);
     });
 
-    // Position nodes level by level with better spacing to prevent overlaps
-    const nodeWidth = 280; // Increased to account for wider nodes (AI Agent nodes are 280px)
-    const nodeHeight = 150;
-    const horizontalSpacing = 350; // Increased from 300 to prevent overlaps
-    const verticalSpacing = 220; // Increased from 200 to prevent overlaps
-
-    let maxNodesInLevel = 0;
-    nodesByLevel.forEach(nodeIds => {
-        maxNodesInLevel = Math.max(maxNodesInLevel, nodeIds.length);
-    });
-
-    const startX = -(maxNodesInLevel * horizontalSpacing) / 2;
+    // ✅ FIX: Position each level independently, centered around x=0
+    // Old code used maxNodesInLevel as a global anchor which caused diagonal drift.
+    const horizontalSpacing = 350;
+    const verticalSpacing = 220;
 
     nodesByLevel.forEach((nodeIds, level) => {
         const y = level * verticalSpacing + 100;
-        const levelWidth = nodeIds.length * horizontalSpacing;
-        const startXForLevel = startX + (maxNodesInLevel - nodeIds.length) * horizontalSpacing / 2;
+        // Center this level's nodes around x=0 regardless of other levels
+        const totalWidth = (nodeIds.length - 1) * horizontalSpacing;
+        const startXForLevel = -totalWidth / 2;
 
         nodeIds.forEach((nodeId, index) => {
             const x = startXForLevel + index * horizontalSpacing;
             nodePositions.set(nodeId, { x, y });
         });
     });
-
-    // Check for and fix any overlapping nodes
-    const positionArray = Array.from(nodePositions.entries());
-    for (let i = 0; i < positionArray.length; i++) {
-        const [nodeId1, pos1] = positionArray[i];
-        for (let j = i + 1; j < positionArray.length; j++) {
-            const [nodeId2, pos2] = positionArray[j];
-            const distanceX = Math.abs(pos1.x - pos2.x);
-            const distanceY = Math.abs(pos1.y - pos2.y);
-
-            // If nodes are too close (overlapping), adjust position
-            if (distanceX < nodeWidth && distanceY < nodeHeight) {
-                // Move node2 to the right
-                const newX = pos1.x + nodeWidth + 50; // Extra 50px padding
-                nodePositions.set(nodeId2, { x: newX, y: pos2.y });
-                positionArray[j] = [nodeId2, { x: newX, y: pos2.y }];
-            }
-        }
-    }
 
     // Apply positions to nodes - preserve existing valid positions, use layout for others
     return nodes.map(node => {
@@ -916,6 +890,31 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
                 normalizedSourceHandle = 'output'; // Standard output handle
             }
         } else {
+            // ✅ FIX: For switch nodes, map case_N positional handles to actual case values.
+            // The backend generates edges with sourceHandle="case_1","case_2",... but the
+            // WorkflowNode renders handles with id=c.value (e.g. "shipped","processing").
+            // We resolve the positional index to the actual case value so React Flow can
+            // connect the edge to the correct rendered handle — works for any N cases.
+            if (sourceType === 'switch') {
+                const caseIndexMatch = normalizedSourceHandle.match(/^case_(\d+)$/i);
+                if (caseIndexMatch) {
+                    const caseIndex = parseInt(caseIndexMatch[1], 10) - 1; // case_1 → index 0
+                    const switchConfig = sourceNode?.data?.config || {};
+                    const rawCases = switchConfig.cases ?? switchConfig.rules;
+                    let casesArray: Array<{ value: string }> = [];
+                    if (Array.isArray(rawCases)) {
+                        casesArray = rawCases;
+                    } else if (typeof rawCases === 'string') {
+                        try { casesArray = JSON.parse(rawCases); } catch { /* keep empty */ }
+                    }
+                    if (casesArray[caseIndex]?.value) {
+                        normalizedSourceHandle = casesArray[caseIndex].value;
+                    }
+                    // If no case value found, keep the original case_N handle as fallback
+                }
+                // Non-positional switch handles (already a case value) pass through unchanged
+            }
+
             // Map common backend field names to React handle IDs
             const sourceLower = normalizedSourceHandle.toLowerCase();
             const sourceMappings: Record<string, string> = {

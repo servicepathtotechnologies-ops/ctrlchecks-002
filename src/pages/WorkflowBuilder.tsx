@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useRef, Suspense, lazy } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useWorkflowStore, WorkflowNode } from '@/stores/workflowStore';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +16,7 @@ import { Json } from '@/integrations/supabase/types';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
 import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { enforceFrontendRenderContract, normalizeBackendWorkflow, validateNodeTypesRegistered } from '@/lib/node-type-normalizer';
+import { CredentialStatusPanel, type CredentialPanelData } from '@/components/workflow/CredentialStatusPanel';
 
 const NodeLibrary = lazy(() => import('@/components/workflow/NodeLibrary'));
 const WorkflowCanvas = lazy(() => import('@/components/workflow/WorkflowCanvas'));
@@ -31,6 +32,7 @@ type LastResolvedInputsMap = Record<
 export default function WorkflowBuilder() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
@@ -40,6 +42,8 @@ export default function WorkflowBuilder() {
   const [nodeLibraryOpen, setNodeLibraryOpen] = useState(true);
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
   const [lastResolvedInputs, setLastResolvedInputs] = useState<LastResolvedInputsMap>({});
+  // Credential status panel state removed — credentials are handled via the header Connections route
+  const credentialPanelData = null;
   const { debugNodeId } = useDebugStore();
   const hasAutoRun = useRef(false); // Track if we've already auto-run for this workflow load
   const {
@@ -53,6 +57,34 @@ export default function WorkflowBuilder() {
     resetWorkflow,
     resetAllNodeStatuses,
   } = useWorkflowStore();
+
+  // Open a node's property panel by selecting it in the store
+  const handleOpenNodePanel = useCallback((nodeId: string) => {
+    const node = useWorkflowStore.getState().nodes.find((n) => n.id === nodeId);
+    if (node) {
+      useWorkflowStore.getState().selectNode(node as WorkflowNode);
+      setPropertiesPanelOpen(true);
+    }
+  }, []);
+
+  // Auto-open the first missing credential's node panel when the workflow loads
+  useEffect(() => {
+    if (!credentialPanelData || credentialPanelData.missing.length === 0) return;
+    const firstMissing = credentialPanelData.missing[0];
+    if (!firstMissing?.nodeId) return;
+    // Wait for nodes to be loaded into the store before selecting
+    const trySelect = () => {
+      const node = useWorkflowStore.getState().nodes.find((n) => n.id === firstMissing.nodeId);
+      if (node) {
+        useWorkflowStore.getState().selectNode(node as WorkflowNode);
+        setPropertiesPanelOpen(true);
+      }
+    };
+    // Try immediately, then retry once after a short wait for async load
+    trySelect();
+    const t = setTimeout(trySelect, 600);
+    return () => clearTimeout(t);
+  }, [credentialPanelData]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -1089,7 +1121,7 @@ export default function WorkflowBuilder() {
       // Small delay to ensure workflow state is fully set
       setTimeout(() => {
         handleRun(false);
-      }, 500);
+      }, 100);
     }
   }, [user, isLoading, nodes.length, searchParams, setSearchParams, id, handleRun]);
 

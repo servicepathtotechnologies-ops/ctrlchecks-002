@@ -100,10 +100,19 @@ function isLogOutputLevelRow(q: Record<string, any>): boolean {
 }
 
 function isVaultCredentialRow(q: Record<string, any>): boolean {
-    return (
+    // Explicit vault credential flag with credential category/class
+    if (
         !!(q as any).isVaultCredential &&
         (q.category === 'credential' || q.ownershipClass === 'credential')
-    );
+    ) {
+        return true;
+    }
+    // Bug C fix: also exclude questions where type is 'credentialId' or category is 'credentials' (plural)
+    // These are credential questions that may not have isVaultCredential set (e.g. from workflow-analyzer)
+    if (q.type === 'credentialId' || q.category === 'credentials') {
+        return true;
+    }
+    return false;
 }
 
 /**
