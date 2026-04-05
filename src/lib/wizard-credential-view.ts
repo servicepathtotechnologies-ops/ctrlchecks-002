@@ -13,12 +13,13 @@ export type CredentialWizardOwnershipSummary =
   | 'unlockable_locked'
   | 'selectable';
 
+/** Rows from API may omit displayName on older workers — UI must tolerate undefined. */
 export interface CredentialStatusRow {
   nodeId: string;
   nodeType?: string;
   nodeLabel?: string;
   credentialId: string;
-  displayName: string;
+  displayName?: string;
   status: CredentialWizardStatus;
 }
 
@@ -65,8 +66,8 @@ export interface WizardCredentialQuestionLike {
   askOrder?: number;
 }
 
-function norm(s: string): string {
-  return String(s || '')
+function norm(s: string | undefined | null): string {
+  return String(s ?? '')
     .trim()
     .toLowerCase()
     .replace(/[_\s-]+/g, '');
@@ -122,7 +123,7 @@ export function matchCredentialStatusForQuestion(
     if (fn && (cid.includes(fn) || fn.includes(cid))) score += 5;
     if (fn && dn.includes(fn)) score += 4;
     if (text && dn && (text.includes(dn.slice(0, 12)) || dn.includes(text.slice(0, 12)))) score += 2;
-    if (q.fieldName === 'authType' && r.displayName.toLowerCase().includes('google')) score += 1;
+    if (q.fieldName === 'authType' && (dn.includes('google') || cid.includes('google'))) score += 1;
     return score;
   };
 
@@ -202,6 +203,41 @@ export function groupCredentialWizardRows(rows: CredentialWizardRow[]): Credenti
     byNode.get(r.nodeId)!.rows.push(r);
   }
   return Array.from(byNode.values()).sort((a, b) => a.nodeLabel.localeCompare(b.nodeLabel));
+}
+
+/**
+ * Normalizes API / cached payloads so buildCredentialWizardView never sees rows
+ * missing displayName or with invalid shape (older workers, partial JSON).
+ */
+export function sanitizeCredentialStatusesForWizardView(
+  rows: unknown[] | null | undefined
+): CredentialStatusRow[] {
+  if (!Array.isArray(rows)) return [];
+  const out: CredentialStatusRow[] = [];
+  for (const raw of rows) {
+    if (!raw || typeof raw !== 'object') continue;
+    const r = raw as Record<string, unknown>;
+    const nodeId = String(r.nodeId ?? '').trim();
+    const credentialId = String(r.credentialId ?? '').trim();
+    const st = String(r.status ?? '').trim();
+    if (!nodeId || !credentialId) continue;
+    if (st !== 'required_missing' && st !== 'resolved_connected' && st !== 'not_required') continue;
+    const displayNameRaw = r.displayName;
+    const displayName =
+      typeof displayNameRaw === 'string' && displayNameRaw.trim()
+        ? displayNameRaw.trim()
+        : credentialId;
+    const row: CredentialStatusRow = {
+      nodeId,
+      credentialId,
+      status: st as CredentialWizardStatus,
+      displayName,
+    };
+    if (typeof r.nodeType === 'string' && r.nodeType.trim()) row.nodeType = r.nodeType.trim();
+    if (typeof r.nodeLabel === 'string' && r.nodeLabel.trim()) row.nodeLabel = r.nodeLabel.trim();
+    out.push(row);
+  }
+  return out;
 }
 
 export function buildCredentialWizardView(

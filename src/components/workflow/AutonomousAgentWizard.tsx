@@ -1,4 +1,4 @@
-import { ENDPOINTS } from '@/config/endpoints';
+﻿import { ENDPOINTS } from '@/config/endpoints';
 import { AppBrand } from '@/components/brand/AppBrand';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -62,7 +62,11 @@ import {
     oauthRequirementCandidates,
     oauthRowNeedsGoogleConnect,
 } from '@/lib/wizard-oauth-credentials';
-import { buildCredentialWizardView, groupCredentialWizardRows } from '@/lib/wizard-credential-view';
+import {
+    buildCredentialWizardView,
+    groupCredentialWizardRows,
+    sanitizeCredentialStatusesForWizardView,
+} from '@/lib/wizard-credential-view';
 import { 
     WorkflowGenerationStateManager, 
     WorkflowGenerationState,
@@ -127,6 +131,79 @@ const ensureStateForBlueprint = (
 function isPipelineContractReady(data: { phase?: string; success?: boolean } | null | undefined): boolean {
     // Accept both 'ready' (legacy create pipeline) and 'complete' (AI-first pipeline)
     return (data?.phase === 'ready' || data?.phase === 'complete') && data?.success !== false;
+}
+
+const BACKEND_CREDENTIAL_FIELD_MAX_LEN = 256;
+
+function isNonEmptyTrimmedString(v: unknown): v is string {
+    return typeof v === 'string' && v.trim().length > 0;
+}
+
+/** Block control characters; vault keys never allow newlines. Display names allow newlines for rare multi-line labels. */
+function hasNoDisallowedCredentialChars(s: string, allowNewlines: boolean): boolean {
+    if (allowNewlines) {
+        return !/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(s);
+    }
+    return !/[\r\n\x00-\x1f]/.test(s);
+}
+
+/**
+ * Second-pass validation for `discoveredCredentials` rows from the backend.
+ * Invalid rows are omitted (no throw); callers should toast `invalidCount` if it is positive.
+ */
+function partitionValidatedDiscoveredCredentials(rows: unknown): { validRows: any[]; invalidCount: number } {
+    if (!Array.isArray(rows)) return { validRows: [], invalidCount: 0 };
+    const validRows: any[] = [];
+    let invalidCount = 0;
+    for (const cred of rows) {
+        if (!cred || typeof cred !== 'object') {
+            invalidCount++;
+            continue;
+        }
+        const c = cred as Record<string, unknown>;
+        const hasVk = isNonEmptyTrimmedString(c.vaultKey);
+        const hasDn = isNonEmptyTrimmedString(c.displayName);
+        if (!hasVk && !hasDn) {
+            invalidCount++;
+            continue;
+        }
+        if (hasVk) {
+            const t = (c.vaultKey as string).trim();
+            if (t.length > BACKEND_CREDENTIAL_FIELD_MAX_LEN || !hasNoDisallowedCredentialChars(t, false)) {
+                invalidCount++;
+                continue;
+            }
+        }
+        if (hasDn) {
+            const t = (c.displayName as string).trim();
+            if (t.length > BACKEND_CREDENTIAL_FIELD_MAX_LEN || !hasNoDisallowedCredentialChars(t, true)) {
+                invalidCount++;
+                continue;
+            }
+        }
+        validRows.push(cred);
+    }
+    return { validRows, invalidCount };
+}
+
+/** Validates `requiredCredentials` string entries from the backend. */
+function partitionValidatedRequiredCredentialStrings(arr: unknown): { strings: string[]; invalidCount: number } {
+    if (!Array.isArray(arr)) return { strings: [], invalidCount: 0 };
+    const strings: string[] = [];
+    let invalidCount = 0;
+    for (const item of arr) {
+        if (typeof item !== 'string') {
+            invalidCount++;
+            continue;
+        }
+        const t = item.trim();
+        if (t.length === 0 || t.length > BACKEND_CREDENTIAL_FIELD_MAX_LEN || !hasNoDisallowedCredentialChars(t, false)) {
+            invalidCount++;
+            continue;
+        }
+        strings.push(t);
+    }
+    return { strings, invalidCount };
 }
 
 function groupQuestionsByNode(questions: any[]) {
@@ -1195,12 +1272,14 @@ export function AutonomousAgentWizard() {
                     if (!cancelled) setGoogleOAuthConnectedLive(false);
                     return;
                 }
-                const { data } = await supabase
+                // Table exists in DB but is not in generated Supabase types — avoid deep instantiation errors.
+                const { data: googleRow } = await (supabase as any)
                     .from('google_oauth_tokens')
                     .select('access_token')
                     .eq('user_id', user.id)
                     .maybeSingle();
-                if (!cancelled) setGoogleOAuthConnectedLive(!!data?.access_token);
+                const token = googleRow as { access_token?: string } | null;
+                if (!cancelled) setGoogleOAuthConnectedLive(!!token?.access_token);
             } catch {
                 if (!cancelled) setGoogleOAuthConnectedLive(false);
             }
@@ -1334,7 +1413,32 @@ export function AutonomousAgentWizard() {
         const qs = pendingWorkflowData?.comprehensiveQuestions;
         const st = pendingWorkflowData?.credentialStatuses;
         if (Array.isArray(qs) && Array.isArray(st) && qs.length > 0) {
-            return buildCredentialWizardView(qs as any, st as any);
+            const statuses = sanitizeCredentialStatusesForWizardView(st);
+            const questionsSafe = (qs as any[])
+                .filter((q) => q && typeof q === 'object')
+                .map((q) => {
+                    const fieldName = String(q.fieldName ?? '').trim();
+                    const nodeId = String(q.nodeId ?? '').trim();
+                    const id = String(q.id ?? '').trim() || `${nodeId}::${fieldName}`;
+                    return {
+                        ...q,
+                        fieldName,
+                        nodeId,
+                        nodeType: String(q.nodeType ?? '').trim() || 'node',
+                        nodeLabel: String(q.nodeLabel ?? '').trim() || 'Node',
+                        id,
+                    };
+                })
+                .filter((q) => q.fieldName.length > 0 && q.nodeId.length > 0);
+            if (questionsSafe.length === 0) {
+                return { rows: [] as any[], groups: [] as any[] };
+            }
+            try {
+                return buildCredentialWizardView(questionsSafe as any, statuses);
+            } catch (e) {
+                console.error('[AutonomousAgentWizard] buildCredentialWizardView failed:', e);
+                return { rows: [] as any[], groups: [] as any[] };
+            }
         }
         return { rows: [] as any[], groups: [] as any[] };
     }, [pendingWorkflowData]);
@@ -2275,30 +2379,45 @@ export function AutonomousAgentWizard() {
             const data = await response.json();
             setRefinement(data);
             
+            // Optional validation pass: drop bad backend rows/strings (no throw — wizard keeps going).
+            const rawDiscovered = data.discoveredCredentials;
+            const hadDiscoveredPayload = Array.isArray(rawDiscovered) && rawDiscovered.length > 0;
+            const { validRows: discoveredSanitized, invalidCount: invalidDiscoveredRows } = hadDiscoveredPayload
+                ? partitionValidatedDiscoveredCredentials(rawDiscovered)
+                : { validRows: [] as any[], invalidCount: 0 };
+            const { strings: legacyCredsSanitized, invalidCount: invalidLegacyStrings } =
+                partitionValidatedRequiredCredentialStrings(data.requiredCredentials);
+
+            const droppedCredentialEntries = invalidDiscoveredRows + invalidLegacyStrings;
+            if (droppedCredentialEntries > 0) {
+                console.warn('[Frontend] Skipped invalid backend credential entries:', {
+                    invalidDiscoveredRows,
+                    invalidLegacyStrings,
+                });
+                toast({
+                    title: 'Credential data adjusted',
+                    description: `${droppedCredentialEntries} incomplete or invalid credential ${droppedCredentialEntries === 1 ? 'entry was' : 'entries were'} skipped so the wizard can continue.`,
+                });
+            }
+
             // ?? STRUCTURAL FIX: Handle discovered credentials from credential discovery phase
-            // Backend now returns discoveredCredentials array with complete credential information
-            if (data.discoveredCredentials && Array.isArray(data.discoveredCredentials) && data.discoveredCredentials.length > 0) {
-                console.log('?? [Frontend] Discovered credentials from backend:', data.discoveredCredentials);
+            if (discoveredSanitized.length > 0) {
+                console.log('?? [Frontend] Discovered credentials from backend (validated):', discoveredSanitized);
                 
-                // Extract credential names from discovered credentials
-                const discoveredCredNames = data.discoveredCredentials
+                const discoveredCredNames = discoveredSanitized
                     .filter((cred: any) => cred.required)
-                    .map((cred: any) => cred.vaultKey || cred.displayName);
+                    .map((cred: any) => cred.vaultKey || cred.displayName)
+                    .filter((name: unknown): name is string => typeof name === 'string' && name.trim().length > 0);
                 
-                // Merge with legacy requiredCredentials for backward compatibility
-                const allCreds = Array.from(new Set([
-                    ...discoveredCredNames,
-                    ...(data.requiredCredentials || [])
-                ]));
+                const allCreds = Array.from(new Set([...discoveredCredNames, ...legacyCredsSanitized]));
                 
                 setRequiredCredentials(allCreds);
                 stateManager.setRequiredCredentials(allCreds);
                 
                 console.log('? [Frontend] Set required credentials from discovery:', allCreds);
 
-                // ? FIX: Surface credentials in the building log immediately on discovery
-                const missingNow = data.discoveredCredentials.filter((c: any) => !c.satisfied);
-                const satisfiedNow = data.discoveredCredentials.filter((c: any) => c.satisfied);
+                const missingNow = discoveredSanitized.filter((c: any) => !c.satisfied);
+                const satisfiedNow = discoveredSanitized.filter((c: any) => c.satisfied);
                 setBuildingLogs(prev => {
                     const lines: string[] = [];
                     if (satisfiedNow.length > 0) lines.push(`? ${satisfiedNow.length} credential(s) connected`);
@@ -2306,11 +2425,9 @@ export function AutonomousAgentWizard() {
                     const newLines = lines.filter(l => !prev.includes(l));
                     return newLines.length > 0 ? [...prev, ...newLines] : prev;
                 });
-            } else if (data.requiredCredentials && Array.isArray(data.requiredCredentials)) {
-                // Fallback to legacy format
-                const detectedCredentials = data.requiredCredentials || [];
-                setRequiredCredentials(detectedCredentials);
-                stateManager.setRequiredCredentials(detectedCredentials);
+            } else if (legacyCredsSanitized.length > 0) {
+                setRequiredCredentials(legacyCredsSanitized);
+                stateManager.setRequiredCredentials(legacyCredsSanitized);
             }
             
             // CRITICAL FIX: Handle preview phase - show final prompt and allow node configuration
@@ -2387,7 +2504,7 @@ export function AutonomousAgentWizard() {
 
                         const { data: savedWorkflow, error: saveError } = await supabase
                             .from('workflows')
-                            .insert(workflowData)
+                            .insert(workflowData as any)
                             .select()
                             .single();
 
@@ -2447,7 +2564,7 @@ export function AutonomousAgentWizard() {
 
                         const { data: savedWorkflow, error: saveError } = await supabase
                             .from('workflows')
-                            .insert(workflowData)
+                            .insert(workflowData as any)
                             .select()
                             .single();
 
@@ -2569,8 +2686,10 @@ export function AutonomousAgentWizard() {
             if (data.phase === 'complete') {
                 console.log('? [Frontend] Complete phase - workflow fully built');
                 
-                // Extract credentials if provided (may be empty array)
-                const detectedCredentials = data.requiredCredentials || [];
+                // Extract credentials if provided (same validation as refine branch — no throw)
+                const { strings: detectedCredentials } = partitionValidatedRequiredCredentialStrings(
+                    data.requiredCredentials
+                );
                 setRequiredCredentials(detectedCredentials);
                 stateManager.setRequiredCredentials(detectedCredentials);
                 
@@ -2604,7 +2723,7 @@ export function AutonomousAgentWizard() {
 
                             const { data: savedWorkflow, error: saveError } = await supabase
                                 .from('workflows')
-                                .insert(workflowData)
+                                .insert(workflowData as any)
                                 .select()
                                 .single();
 
@@ -2654,8 +2773,8 @@ export function AutonomousAgentWizard() {
             
             if (data.requiredCredentials !== undefined && Array.isArray(data.requiredCredentials)) {
                 // Backend has provided credential analysis - trust it completely (even if empty array)
-                // Normalize credentials from backend
-                detectedCredentials = data.requiredCredentials.map((cred: string) => normalizeCredentialName(cred));
+                const { strings: validatedStrings } = partitionValidatedRequiredCredentialStrings(data.requiredCredentials);
+                detectedCredentials = validatedStrings.map((cred) => normalizeCredentialName(cred));
                 if (detectedCredentials.length > 0) {
                     console.log('?? Backend identified required credentials:', detectedCredentials);
                 } else {
@@ -3203,7 +3322,7 @@ export function AutonomousAgentWizard() {
                 
                 const { data: workflowResult, error: saveError } = await supabase
                     .from('workflows')
-                    .insert(workflowData)
+                    .insert(workflowData as any)
                     .select()
                     .single();
                 
@@ -3555,20 +3674,51 @@ export function AutonomousAgentWizard() {
         setIsComplete(false);
         setBuildingLogs(['Initializing Autonomous Agent...', 'Loading Node Library...', 'Synthesizing Requirements...']);
 
-        // Fallback: Gradually increase progress if backend doesn't send updates
-        // Paced to reflect real work: slow ramp so backend signals drive the actual jumps
+        // Realistic progress simulation: smooth animation that fills time between backend signals.
         let fallbackProgressInterval: NodeJS.Timeout | null = null;
+        let simulatedTarget = 5;
+
         const startFallbackProgress = () => {
+            const targetSchedule = [
+                { atMs: 0,      target: 8  },
+                { atMs: 3000,   target: 15 },
+                { atMs: 7000,   target: 25 },
+                { atMs: 12000,  target: 35 },
+                { atMs: 20000,  target: 45 },
+                { atMs: 30000,  target: 55 },
+                { atMs: 45000,  target: 65 },
+                { atMs: 65000,  target: 72 },
+                { atMs: 90000,  target: 78 },
+                { atMs: 120000, target: 83 },
+                { atMs: 150000, target: 86 },
+                { atMs: 180000, target: 88 },
+            ];
+            const startMs = Date.now();
             fallbackProgressInterval = setInterval(() => {
+                const elapsed = Date.now() - startMs;
+                let newTarget = 88;
+                for (let i = targetSchedule.length - 1; i >= 0; i--) {
+                    if (elapsed >= targetSchedule[i].atMs) {
+                        const curr = targetSchedule[i];
+                        const next = targetSchedule[i + 1];
+                        if (next) {
+                            const t = (elapsed - curr.atMs) / (next.atMs - curr.atMs);
+                            newTarget = curr.target + (next.target - curr.target) * Math.min(1, t);
+                        } else {
+                            newTarget = curr.target;
+                        }
+                        break;
+                    }
+                }
+                simulatedTarget = Math.min(88, newTarget);
                 setProgress(prev => {
-                    // Hard cap at 88% � only backend completion signals push past this
                     if (prev >= 88) return prev;
-                    // Very slow increments: fast early, crawls near cap
-                    const increment = prev < 20 ? 1.5 : prev < 50 ? 0.8 : prev < 75 ? 0.4 : 0.15;
-                    return Math.min(88, prev + increment);
+                    const gap = simulatedTarget - prev;
+                    if (gap <= 0.05) return prev;
+                    return Math.min(88, prev + Math.max(0.1, gap * 0.18));
                 });
-            }, 800);
-        };
+            }, 200);
+        }
 
         const stopFallbackProgress = () => {
             if (fallbackProgressInterval) {
@@ -3584,7 +3734,7 @@ export function AutonomousAgentWizard() {
                 // Keep original key
                 normalizedCredentials[key] = value;
                 // Also add uppercase version if it's a credential key
-                if (requiredCredentials.some(cred => cred === key || key.toLowerCase() === cred.toLowerCase())) {
+                if (requiredCredentials.some(cred => cred != null && (cred === key || key.toLowerCase() === String(cred).toLowerCase()))) {
                     const upperKey = key.toUpperCase();
                     if (!normalizedCredentials[upperKey]) {
                         normalizedCredentials[upperKey] = value;
@@ -4254,7 +4404,7 @@ export function AutonomousAgentWizard() {
 
                                     const { data: savedWorkflow, error: saveError } = await supabase
                                         .from('workflows')
-                                        .insert(workflowData)
+                                        .insert(workflowData as any)
                                         .select()
                                         .single();
 
@@ -4430,7 +4580,7 @@ export function AutonomousAgentWizard() {
 
                     const { data: savedWorkflow, error: saveError } = await supabase
                         .from('workflows')
-                        .insert(workflowData)
+                        .insert(workflowData as any)
                         .select()
                         .single();
 
@@ -4524,7 +4674,7 @@ export function AutonomousAgentWizard() {
 
                         const { data: savedWorkflow, error: saveError } = await supabase
                             .from('workflows')
-                            .insert(workflowData)
+                            .insert(workflowData as any)
                             .select()
                             .single();
 
@@ -5227,23 +5377,24 @@ export function AutonomousAgentWizard() {
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-6">
-                                            {[...new Set(requiredCredentials)].map((cred, i) => {
+                                            {[...new Set(requiredCredentials.filter((c): c is string => typeof c === 'string' && c.trim().length > 0))].map((cred, i) => {
                                                 const credKey = cred.toLowerCase().replace(/_/g, '_');
                                                 const credLabel = cred.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                                const isPassword = cred.toLowerCase().includes('key') || 
-                                                                 cred.toLowerCase().includes('token') || 
-                                                                 cred.toLowerCase().includes('password') ||
-                                                                 cred.toLowerCase().includes('secret');
+                                                const credLower = cred.toLowerCase();
+                                                const isPassword = credLower.includes('key') ||
+                                                                 credLower.includes('token') ||
+                                                                 credLower.includes('password') ||
+                                                                 credLower.includes('secret');
                                                 
                                                 // Determine field type for guide
                                                 let fieldType = 'credential';
-                                                if (cred.toLowerCase().includes('webhook') && cred.toLowerCase().includes('url')) {
+                                                if (credLower.includes('webhook') && credLower.includes('url')) {
                                                     fieldType = 'webhook_url';
-                                                } else if (cred.toLowerCase().includes('url')) {
+                                                } else if (credLower.includes('url')) {
                                                     fieldType = 'url';
-                                                } else if (cred.toLowerCase().includes('oauth') || cred.toLowerCase().includes('client')) {
+                                                } else if (credLower.includes('oauth') || credLower.includes('client')) {
                                                     fieldType = 'oauth';
-                                                } else if (cred.toLowerCase().includes('smtp')) {
+                                                } else if (credLower.includes('smtp')) {
                                                     fieldType = 'smtp';
                                                 }
                                                 
@@ -5301,10 +5452,12 @@ export function AutonomousAgentWizard() {
                                             <Button
                                                 onClick={async () => {
                                                     // Validate all credentials are filled
-                                                    const allFilled = requiredCredentials.every(cred => {
-                                                        const credKey = cred.toLowerCase().replace(/_/g, '_');
-                                                        return credentialValues[credKey] || credentialValues[cred];
-                                                    });
+                                                    const allFilled = requiredCredentials
+                                                        .filter((c): c is string => typeof c === 'string' && c.trim().length > 0)
+                                                        .every(cred => {
+                                                            const credKey = cred.toLowerCase().replace(/_/g, '_');
+                                                            return credentialValues[credKey] || credentialValues[cred];
+                                                        });
                                                     
                                                     if (!allFilled) {
                                                         toast({
@@ -6538,14 +6691,14 @@ export function AutonomousAgentWizard() {
                             initial={{ opacity: 0 }} 
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[60] w-screen h-screen p-4 sm:p-6 md:p-8 overflow-hidden flex flex-col"
+                            className="fixed inset-0 z-[60] w-screen h-screen overflow-y-auto"
                             style={{ 
                                 background: 'linear-gradient(180deg, #0B0F1A 0%, #111827 100%)',
                                 fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
                             }}
                         >
-                            {/* Full Screen Loading Container - Fit to window */}
-                            <div className="w-full max-w-4xl mx-auto space-y-6 sm:space-y-8 md:space-y-10 py-4 flex flex-col items-center justify-center flex-1 overflow-y-auto min-h-0">
+                            {/* Scrollable inner — constrained width, natural height so nothing clips */}
+                            <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6 flex flex-col items-center">
                                 {/* Status / Intelligence Area (Top) */}
                                 <div className="text-center space-y-4 sm:space-y-5 md:space-y-6">
                                     {/* Circle Loader with Variable Speed */}
@@ -6844,7 +6997,7 @@ export function AutonomousAgentWizard() {
 
                                 {/* Logs or Details (Bottom, Subdued) */}
                                 <div 
-                                    className="w-full overflow-hidden flex flex-col rounded-lg border max-h-[300px] sm:max-h-[350px]"
+                                    className="w-full overflow-hidden flex flex-col rounded-lg border max-h-48"
                                     style={{ 
                                         backgroundColor: 'rgba(17, 24, 39, 0.6)',
                                         borderColor: 'rgba(107, 114, 128, 0.2)',
