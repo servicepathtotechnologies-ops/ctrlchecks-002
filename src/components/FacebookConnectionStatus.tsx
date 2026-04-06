@@ -27,60 +27,47 @@ export default function FacebookConnectionStatus({
   const checkAuthStatus = useCallback(async () => {
     if (!user) {
       setIsAuthenticated(false);
+      setAccountLabel(null);
       setIsCheckingAuth(false);
       return;
     }
 
     try {
-      const { data, error } = await supabase
-        .from('social_tokens')
-        .select('id, expires_at, scope, provider_user_id')
-        .eq('user_id', user.id)
-        .eq('provider', 'facebook')
-        .maybeSingle();
-
-      if (error) {
-        if (error.code === 'PGRST116' || error.message?.includes('406')) {
-          setIsAuthenticated(false);
-        } else {
-          console.error('Error checking Facebook auth status:', error);
-          setIsAuthenticated(false);
-        }
-      } else if (!data) {
+      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!authToken) {
         setIsAuthenticated(false);
-      } else {
-        const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
-        const now = new Date();
-        setIsAuthenticated(expiresAt ? expiresAt > now : true);
+        setAccountLabel(null);
+        return;
       }
 
-      // Fetch additional metadata via backend status endpoint (non-fatal)
-      try {
-        const authToken = (await supabase.auth.getSession()).data.session?.access_token;
-        if (authToken) {
-          const backendUrl = getBackendUrl();
-          const resp = await fetch(`${backendUrl}/api/connections/facebook/status`, {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          });
-          if (resp.ok) {
-            const json = await resp.json();
-            if (json.connected && json.metadata?.name) {
-              setAccountLabel(`Facebook: ${json.metadata.name}`);
-            } else if (json.connected) {
-              setAccountLabel('Facebook Connected');
-            } else {
-              setAccountLabel(null);
-            }
-          }
-        }
-      } catch (metaErr) {
-        console.warn('Facebook status metadata fetch failed (non-fatal):', metaErr);
+      const backendUrl = getBackendUrl();
+      const resp = await fetch(`${backendUrl}/api/connections/facebook/status`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!resp.ok) {
+        setIsAuthenticated(false);
+        setAccountLabel(null);
+        return;
+      }
+
+      const json = await resp.json();
+      const connected = Boolean(json?.connected);
+      setIsAuthenticated(connected);
+
+      if (connected && json?.metadata?.name) {
+        setAccountLabel(`Facebook: ${json.metadata.name}`);
+      } else if (connected) {
+        setAccountLabel('Facebook Connected');
+      } else {
+        setAccountLabel(null);
       }
     } catch (error) {
       console.error('Error checking Facebook auth status:', error);
       setIsAuthenticated(false);
+      setAccountLabel(null);
     } finally {
       setIsCheckingAuth(false);
     }
@@ -122,7 +109,7 @@ export default function FacebookConnectionStatus({
         provider: 'facebook',
         options: {
           redirectTo: redirectUrl,
-          scopes: 'email,public_profile,pages_manage_posts,pages_read_engagement',
+          scopes: 'public_profile',
         },
       });
 
@@ -158,7 +145,7 @@ export default function FacebookConnectionStatus({
         throw new Error('No authentication token');
       }
 
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const backendUrl = getBackendUrl();
       const response = await fetch(`${backendUrl}/api/connections/facebook/disconnect`, {
         method: 'POST',
         headers: {

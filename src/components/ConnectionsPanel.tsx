@@ -432,7 +432,7 @@ export default function ConnectionsPanel() {
         provider: 'facebook',
         options: {
           redirectTo: redirectUrl,
-          scopes: 'email,public_profile,pages_manage_posts,pages_read_engagement',
+          scopes: 'public_profile',
         },
       });
 

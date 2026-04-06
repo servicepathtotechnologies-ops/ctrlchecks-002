@@ -71,7 +71,7 @@ export default function FacebookAuthCallback() {
             access_token: provider_token,
             refresh_token: provider_refresh_token || null,
             expires_at: expires_at ? new Date(expires_at * 1000).toISOString() : null,
-            scope: 'email,public_profile,pages_manage_posts,pages_read_engagement',
+            scope: 'public_profile',
             provider_user_id: null, // Can be fetched from Facebook API if needed
           }),
         });

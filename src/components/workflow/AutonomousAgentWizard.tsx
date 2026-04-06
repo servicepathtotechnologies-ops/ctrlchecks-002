@@ -6463,78 +6463,18 @@ export function AutonomousAgentWizard() {
                                                 </div>
                                             )}
                                         
-                                        {/* Continue Building Button - Only show in fallback mode */}
-                                        {allQuestions.length === 0 && (
-                                            <div className="flex gap-3 pt-4">
-                                                <Button
-                                                    onClick={async () => {
-                                                    // Validate all required inputs are filled
-                                                    const requiredInputs = pendingWorkflowData.discoveredInputs?.filter((i: any) => i.required) || [];
-                                                    const inputsFilled = requiredInputs.every((input: any) => {
-                                                        const inputKey = `${input.nodeId}_${input.fieldName}`;
-                                                        return inputValues[inputKey] || input.defaultValue;
-                                                    });
-                                                    
-                                                    // Validate all required credentials are filled
-                                                    // ? CRITICAL: discoveredCredentials only contains MISSING credentials
-                                                    // OAuth credentials already connected (via header bar) are NOT in this list
-                                                    const requiredCreds = pendingWorkflowData.discoveredCredentials || [];
-                                                    const credsFilled = requiredCreds.every((cred: any) => {
-                                                        // OAuth credentials are handled via "Connect" buttons
-                                                        // If they appear here, they need to be connected (but we can't validate button clicks here)
-                                                        // For now, OAuth credentials that appear need connection
-                                                        if (cred.type === 'oauth') {
-                                                            // OAuth must be connected via button - can't validate here
-                                                            // Assume user will connect if button is shown
-                                                            return true; // Allow OAuth to proceed (connection happens via button)
-                                                        }
-                                                        
-                                                        // Non-OAuth credentials must have values
-                                                        const credKey = cred.vaultKey || cred.credentialId;
-                                                        const normalizedKey = credKey?.toLowerCase().replace(/_/g, '_');
-                                                        return credentialValues[normalizedKey] || credentialValues[credKey] || credentialValues[cred.credentialId];
-                                                    });
-                                                    
-                                                    if (!inputsFilled) {
-                                                        toast({
-                                                            title: 'Missing Configuration',
-                                                            description: 'Please fill in all required node configuration fields.',
-                                                            variant: 'destructive',
-                                                        });
-                                                        return;
-                                                    }
-                                                    
-                                                    if (!credsFilled) {
-                                                        const missingOAuth = requiredCreds.filter((c: any) => c.type === 'oauth' && !c.resolved);
-                                                        const missingNonOAuth = requiredCreds.filter((c: any) => c.type !== 'oauth' && !credentialValues[c.vaultKey || c.credentialId]);
-                                                        
-                                                        let errorMsg = 'Please complete all required credentials.';
-                                                        if (missingOAuth.length > 0) {
-                                                            errorMsg = `Please connect ${missingOAuth.map((c: any) => c.provider || 'OAuth').join(', ')} account(s) using the Connect buttons.`;
-                                                        } else if (missingNonOAuth.length > 0) {
-                                                            errorMsg = 'Please fill in all required credential fields.';
-                                                        }
-                                                        
-                                                        toast({
-                                                            title: 'Missing Credentials',
-                                                            description: errorMsg,
-                                                            variant: 'destructive',
-                                                        });
-                                                        return;
-                                                    }
-                                                    
-                                                    // Submit unified configuration
-                                                    await handleBuild();
-                                                }}
-                                                className="flex-1"
-                                            >
-                                                        <Check className="h-4 w-4 mr-2" />
-                                                        Continue Building
-                                                    </Button>
-                                                </div>
-                                            )}
                                             </>
                                         )}
+
+                                        {/* Continue to Workflow — always visible */}
+                                        <div className="flex gap-3 pt-4 border-t border-border/60">
+                                            <Button
+                                                onClick={async () => { await handleBuild(); }}
+                                                className="flex-1 bg-indigo-600 hover:bg-indigo-500"
+                                            >
+                                                Continue to Workflow <ArrowRight className="ml-2 h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             </motion.div>
