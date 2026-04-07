@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Play } from "lucide-react";
 import { landingViewport, springSoft } from "@/components/landing/landing-motion";
@@ -8,6 +9,7 @@ const DEMO_VIDEO_URL =
 
 export function WorkflowDemoSection() {
   const reduceMotion = useReducedMotion();
+  const [videoFailed, setVideoFailed] = useState(false);
   const hasVideo = Boolean(DEMO_VIDEO_URL);
 
   return (
@@ -44,13 +46,14 @@ export function WorkflowDemoSection() {
         >
           <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-muted/20 shadow-lg dark:bg-muted/10">
             <div className="aspect-video w-full">
-              {hasVideo ? (
+              {hasVideo && !videoFailed ? (
                 <video
                   className="h-full w-full object-cover"
                   controls
                   playsInline
                   preload="metadata"
                   src={DEMO_VIDEO_URL}
+                  onError={() => setVideoFailed(true)}
                 >
                   <track kind="captions" />
                 </video>
@@ -63,11 +66,20 @@ export function WorkflowDemoSection() {
                     Demo video coming soon
                   </p>
                   <p className="max-w-md text-center text-xs text-muted-foreground sm:text-sm">
-                    Drop your asset in hosting and set{" "}
-                    <code className="rounded bg-muted px-1.5 py-0.5 text-[0.7rem] sm:text-xs">
-                      VITE_LANDING_DEMO_VIDEO_URL
-                    </code>{" "}
-                    to the file URL.
+                    {videoFailed ? "Could not load demo video from " : "Drop your asset in hosting and set "}
+                    {videoFailed ? (
+                      <code className="rounded bg-muted px-1.5 py-0.5 text-[0.7rem] sm:text-xs">
+                        {DEMO_VIDEO_URL}
+                      </code>
+                    ) : null}
+                    {!videoFailed ? (
+                      <>
+                        <code className="rounded bg-muted px-1.5 py-0.5 text-[0.7rem] sm:text-xs">
+                          VITE_LANDING_DEMO_VIDEO_URL
+                        </code>{" "}
+                        to the file URL.
+                      </>
+                    ) : null}
                   </p>
                 </div>
               )}
