@@ -2,12 +2,13 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Play } from "lucide-react";
 import { landingViewport, springSoft } from "@/components/landing/landing-motion";
 
-/** Slide 4 — product demo hook; video URL from env when available. */
-const DEMO_VIDEO_URL = import.meta.env.VITE_LANDING_DEMO_VIDEO_URL as string | undefined;
+/** Slide 4 — product demo hook; env override, then local public fallback. */
+const DEMO_VIDEO_URL =
+  (import.meta.env.VITE_LANDING_DEMO_VIDEO_URL as string | undefined)?.trim() || "/demo.mp4";
 
 export function WorkflowDemoSection() {
   const reduceMotion = useReducedMotion();
-  const hasVideo = Boolean(DEMO_VIDEO_URL?.trim());
+  const hasVideo = Boolean(DEMO_VIDEO_URL);
 
   return (
     <section id="demo" className="py-24 sm:py-32" aria-labelledby="demo-heading">

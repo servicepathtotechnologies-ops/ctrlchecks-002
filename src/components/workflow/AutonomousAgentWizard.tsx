@@ -3,7 +3,7 @@ import { AppBrand } from '@/components/brand/AppBrand';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
-    Bot, ArrowRight, AlertCircle,
+    ArrowRight, AlertCircle,
     Settings2, CheckCircle2, Play, RefreshCw, Layers, Sparkles, Loader2, Check, Sun, Moon, Brain, ChevronDown,
     User, Lock, KeyRound,
 } from 'lucide-react';
@@ -74,6 +74,8 @@ import {
     mapStateToWizardStep 
 } from '@/lib/workflow-generation-state';
 import { shouldRunAttachCredentialsAfterAttachInputs } from '@/lib/workflow-phase-contract';
+import FieldOwnershipGuidePanel from './FieldOwnershipGuidePanel';
+import { buildFieldOwnershipGuideContext } from '@/lib/field-ownership-guide-context';
 
 /**
  * Ensures proper state transitions before setting workflow blueprint.
@@ -674,10 +676,12 @@ export function AutonomousAgentWizard() {
     const [executionResult, setExecutionResult] = useState<any>(null);
     const [executionError, setExecutionError] = useState<string | null>(null);
     const [executionProgress, setExecutionProgress] = useState(0);
+    const [guideSelectedField, setGuideSelectedField] = useState<{ nodeId: string; fieldName: string } | null>(null);
     const { toast } = useToast();
-    const { setNodes, setEdges } = useWorkflowStore();
+    const { setNodes, setEdges, workflowId: activeWorkflowId } = useWorkflowStore();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+    const fieldOwnershipGuideEnabled = import.meta.env.VITE_ENABLE_FIELD_OWNERSHIP_GUIDE !== 'false';
     
     // Execution Flow Architecture (STEP-2): State Manager
     const stateManagerRef = useRef<WorkflowGenerationStateManager | null>(null);
@@ -1468,6 +1472,43 @@ export function AutonomousAgentWizard() {
         });
         return { rows: filtered, groups: groupCredentialWizardRows(filtered as any) };
     }, [credentialWizardDisplay, credentialQuestionsForStep]);
+
+    const selectedGuideQuestion = useMemo(() => {
+        if (!guideSelectedField) return null;
+        return ownershipQuestions.find(
+            (q: any) =>
+                String(q.nodeId || '') === guideSelectedField.nodeId &&
+                String(q.fieldName || '') === guideSelectedField.fieldName
+        ) || null;
+    }, [guideSelectedField, ownershipQuestions]);
+
+    const fieldOwnershipGuideContext = useMemo(() => {
+        return buildFieldOwnershipGuideContext({
+            prompt: (originalPrompt || prompt || '').trim(),
+            workflowId: confirmationData?.workflowId || activeWorkflowId || null,
+            nodes: (pendingWorkflowData?.nodes || []) as any[],
+            edges: (pendingWorkflowData?.edges || []) as any[],
+            ownershipQuestions: ownershipQuestions as any[],
+            fillModeValues,
+            effectiveModes: ownershipEffectiveModes.byModeKey,
+            credentialStatuses: pendingWorkflowData?.credentialStatuses || [],
+            credentialWizardRows: credentialWizardDisplayForStep.rows || [],
+            selectedField: guideSelectedField,
+        });
+    }, [
+        originalPrompt,
+        prompt,
+        confirmationData?.workflowId,
+        activeWorkflowId,
+        pendingWorkflowData?.nodes,
+        pendingWorkflowData?.edges,
+        pendingWorkflowData?.credentialStatuses,
+        ownershipQuestions,
+        fillModeValues,
+        ownershipEffectiveModes.byModeKey,
+        credentialWizardDisplayForStep.rows,
+        guideSelectedField,
+    ]);
 
     const configSeedKey = useMemo(() => {
         if (!pendingWorkflowData?.nodes?.length) return '';
@@ -4885,15 +4926,6 @@ export function AutonomousAgentWizard() {
             <div className="p-6 border-b border-border bg-card flex justify-between items-center shrink-0">
                 <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
                     <AppBrand context="app" size="sm" className="shrink-0" />
-                    <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                        <Bot className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                        <h2 className="text-lg font-semibold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                            Autonomous Workflow Agent
-                        </h2>
-                        <p className="text-xs text-muted-foreground">Multi-Agent System � v2.5</p>
-                    </div>
                 </div>
                 <div className="flex items-center gap-4">
                     <Button
@@ -5813,6 +5845,12 @@ export function AutonomousAgentWizard() {
                                                                                 <div
                                                                                     key={`${section.key}_${question.id || idx}`}
                                                                                     className="rounded border border-border/40 overflow-hidden"
+                                                                                    onClick={() =>
+                                                                                        setGuideSelectedField({
+                                                                                            nodeId: String(question.nodeId || ''),
+                                                                                            fieldName: String(question.fieldName || ''),
+                                                                                        })
+                                                                                    }
                                                                                 >
                                                                                     {/* -- Header row: label + on/off toggle -- */}
                                                                                     <div className="flex items-center justify-between gap-3 px-3 py-2 bg-muted/10">
@@ -7611,6 +7649,23 @@ export function AutonomousAgentWizard() {
                             </div>
                         </motion.div>
                     )}
+
+                    <FieldOwnershipGuidePanel
+                        enabled={fieldOwnershipGuideEnabled}
+                        isVisible={['field-ownership', 'credentials', 'configure'].includes(step)}
+                        contextPayload={fieldOwnershipGuideContext as Record<string, unknown>}
+                        selectedFieldLabel={
+                            selectedGuideQuestion
+                                ? String(
+                                      selectedGuideQuestion.text ||
+                                          selectedGuideQuestion.label ||
+                                          selectedGuideQuestion.fieldName ||
+                                          ''
+                                  )
+                                : undefined
+                        }
+                        floating
+                    />
 
                 </AnimatePresence>
             </div>
