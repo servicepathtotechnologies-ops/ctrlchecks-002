@@ -15,6 +15,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { filterStillBlockingOAuth } from '@/lib/wizard-oauth-credentials';
+import { shouldRunAttachCredentialsAfterAttachInputs } from '@/lib/workflow-phase-contract';
 
 // ---------------------------------------------------------------------------
 // Extracted decision logic — mirrors the exact logic in handleBuild
@@ -40,11 +41,10 @@ function computeCredentialSecretsReady(
 }
 
 /**
- * Mirrors the `shouldAttachCredentialsNow` logic in handleBuild.
+ * Mirrors the `shouldAttachCredentialsNow` logic in handleBuild (via workflow-phase-contract).
  */
 function computeShouldAttachCredentialsNow(inputPhase: string): boolean {
-  const p = inputPhase.toLowerCase();
-  return p === 'configuring_credentials' || p === 'ready_for_execution';
+  return shouldRunAttachCredentialsAfterAttachInputs(inputPhase);
 }
 
 /**
@@ -157,8 +157,8 @@ describe('Preservation: Non-Buggy Input Behavior Unchanged', () => {
   /**
    * Test 2 — Save error: credential check never attempted
    *
-   * When shouldAttachCredentialsNow = false (phase is not 'configuring_credentials'
-   * or 'ready_for_execution'), both current and fixed branches return 'skip'.
+   * When shouldAttachCredentialsNow = false (phase is not 'inputs_applied' or
+   * 'configuring_credentials'), both current and fixed branches return 'skip'.
    * This represents the case where the workflow save fails and the phase is not set.
    */
   it('save error / wrong phase: credential check never attempted — both branches return skip', () => {
@@ -186,17 +186,19 @@ describe('Preservation: Non-Buggy Input Behavior Unchanged', () => {
   });
 
   /**
-   * Test 3 — configuring_credentials phase gating: phase check logic unchanged
+   * Test 3 — attach-credentials phase gating (worker contract)
    *
-   * Verifies that the phase-to-shouldAttachCredentialsNow mapping is preserved:
-   * - 'configuring_credentials' → true
-   * - 'ready_for_execution'     → true
+   * Verifies the phase-to-shouldAttachCredentialsNow mapping matches attach-credentials:
+   * - 'inputs_applied'            → true (primary path after attach-inputs)
+   * - 'configuring_credentials' → true (legacy)
+   * - 'ready_for_execution'     → false (no attach-credentials POST; worker would 409)
    * - 'pending'                 → false
    * - ''                        → false
    */
-  it('configuring_credentials phase gating: phase check logic unchanged', () => {
+  it('attach-credentials phase gating matches worker contract', () => {
+    expect(computeShouldAttachCredentialsNow('inputs_applied')).toBe(true);
     expect(computeShouldAttachCredentialsNow('configuring_credentials')).toBe(true);
-    expect(computeShouldAttachCredentialsNow('ready_for_execution')).toBe(true);
+    expect(computeShouldAttachCredentialsNow('ready_for_execution')).toBe(false);
     expect(computeShouldAttachCredentialsNow('pending')).toBe(false);
     expect(computeShouldAttachCredentialsNow('')).toBe(false);
   });

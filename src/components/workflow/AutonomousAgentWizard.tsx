@@ -73,6 +73,7 @@ import {
     mapWizardStepToState,
     mapStateToWizardStep 
 } from '@/lib/workflow-generation-state';
+import { shouldRunAttachCredentialsAfterAttachInputs } from '@/lib/workflow-phase-contract';
 
 /**
  * Ensures proper state transitions before setting workflow blueprint.
@@ -3375,8 +3376,24 @@ export function AutonomousAgentWizard() {
                         });
                         
                         if (!inputsResponse.ok) {
-                            const errorData = await inputsResponse.json().catch(() => ({}));
-                            console.warn('?? Attach inputs non-fatal error:', errorData);
+                            const errorData = (await inputsResponse.json().catch(() => ({}))) as Record<string, unknown>;
+                            const code = typeof errorData.code === 'string' ? errorData.code : '';
+                            const message =
+                                typeof errorData.message === 'string'
+                                    ? errorData.message
+                                    : typeof errorData.error === 'string'
+                                      ? errorData.error
+                                      : `HTTP ${inputsResponse.status}`;
+                            console.warn('[AttachInputs] Request failed:', inputsResponse.status, {
+                                code: code || undefined,
+                                message,
+                                details: errorData.details,
+                            });
+                            toast({
+                                title: 'Could not save workflow inputs',
+                                description: [code && `Code: ${code}`, message].filter(Boolean).join(' — ').slice(0, 500),
+                                variant: 'destructive',
+                            });
                             // Non-blocking: continue to open workbench regardless
                         } else {
                             inputsResult = await inputsResponse.json();
@@ -3401,7 +3418,7 @@ export function AutonomousAgentWizard() {
                     let credentialsResult: any = null;
                     const inputPhase = String(inputsResult?.phase || '').toLowerCase();
                     const shouldAttachCredentialsNow =
-                        inputPhase === 'configuring_credentials' || inputPhase === 'ready_for_execution';
+                        shouldRunAttachCredentialsAfterAttachInputs(inputsResult?.phase);
                     // Send credentials object (possibly empty) so backend can revalidate readiness deterministically.
                     const credentialsToSend: Record<string, any> = {};
                     if (credentialValues && typeof credentialValues === 'object') {
@@ -3425,8 +3442,9 @@ export function AutonomousAgentWizard() {
                         // Backward-compatible fallback: include direct credential keys if user/config populated them.
                         Object.entries(credentialValues).forEach(([key, value]) => {
                             const k = String(key || '').trim();
-                            if (!k || k.startsWith('cred_') || k.startsWith('config_') || k.startsWith('mode_')) return;
+                            if (!k || k.startsWith('config_') || k.startsWith('mode_')) return;
                             if (value === undefined || value === null || String(value).trim() === '') return;
+                            // Include cred_<nodeId>_<field> so attach-credentials can inject per-node (vault-key map may omit these).
                             if (!(k in credentialsToSend)) credentialsToSend[k] = value;
                         });
                     }
@@ -3518,11 +3536,14 @@ export function AutonomousAgentWizard() {
                         ? JSON.parse(finalWorkflow.graph) 
                         : finalWorkflow.graph || finalWorkflow;
                     
-                    // ? CRITICAL: Normalize graph before state update
-                    const normalized = validateAndFixWorkflow({ 
-                        nodes: workflowGraph?.nodes || finalWorkflow.nodes || [], 
-                        edges: workflowGraph?.edges || finalWorkflow.edges || []
-                    });
+                    // Backend attach-* preserves topology; avoid frontend linearization here
+                    const normalized = validateAndFixWorkflow(
+                        {
+                            nodes: workflowGraph?.nodes || finalWorkflow.nodes || [],
+                            edges: workflowGraph?.edges || finalWorkflow.edges || [],
+                        },
+                        { preserveTopology: true }
+                    );
                     
                     // ? CRITICAL: Check if workflow is already ready before setting blueprint
                     // If already ready, skip blueprint setting (it's already set from initial generation)
@@ -6304,14 +6325,6 @@ export function AutonomousAgentWizard() {
                                                 <p className="text-sm text-muted-foreground">
                                                     Your workflow is saved. Any missing credentials can be filled inside the workbench.
                                                 </p>
-                                                <Button
-                                                    type="button"
-                                                    onClick={() => { void handleBuild(); }}
-                                                    className="w-full"
-                                                >
-                                                    <Check className="h-4 w-4 mr-2" />
-                                                    Continue Building Workflow
-                                                </Button>
                                             </div>
                                         ) : (
                                             /* Fallback: Show all questions at once if allQuestions is empty */
@@ -6462,19 +6475,23 @@ export function AutonomousAgentWizard() {
                                                     </p>
                                                 </div>
                                             )}
-                                        
+
                                             </>
                                         )}
 
-                                        {/* Continue to Workflow — always visible */}
-                                        <div className="flex gap-3 pt-4 border-t border-border/60">
-                                            <Button
-                                                onClick={async () => { await handleBuild(); }}
-                                                className="flex-1 bg-indigo-600 hover:bg-indigo-500"
-                                            >
-                                                Continue to Workflow <ArrowRight className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </div>
+                                        {(manualConfigurationQuestions.length === 0 ||
+                                            currentQuestionIndex >= manualConfigurationQuestions.length) && (
+                                            <div className="flex gap-3 pt-4 border-t border-border/60">
+                                                <Button
+                                                    type="button"
+                                                    onClick={() => { void handleBuild(); }}
+                                                    className="w-full"
+                                                >
+                                                    <Check className="h-4 w-4 mr-2" />
+                                                    Continue Building Workflow
+                                                </Button>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </motion.div>

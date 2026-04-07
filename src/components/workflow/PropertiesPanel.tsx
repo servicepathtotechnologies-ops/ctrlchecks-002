@@ -1265,6 +1265,16 @@ export default function PropertiesPanel({
     console.log(`[PropertiesPanel] 🎯 Rendering ${selectedNode.data.type} from backend schema (${schemaConfigFields.length} fields)`);
   }
 
+  /** Shown as "Type" — must match `data.type` (schema/fields), not `data.label` (planner display name can say "Email" while type is still ollama). */
+  const canonicalTypeDisplayName =
+    (backendSchema?.label && String(backendSchema.label).trim()) ||
+    (legacyNodeDefinition?.label && String(legacyNodeDefinition.label).trim()) ||
+    selectedNode.data.type;
+  const canvasLabel = (selectedNode.data.label && String(selectedNode.data.label).trim()) || '';
+  const canvasLabelDiffersFromImplementation =
+    canvasLabel.length > 0 &&
+    canvasLabel.toLowerCase() !== canonicalTypeDisplayName.toLowerCase() &&
+    canvasLabel.toLowerCase() !== String(selectedNode.data.type || '').toLowerCase();
 
   // Get operation-specific helpText for Instagram node
   const getInstagramOperationHelpText = (operation: string): string => {
@@ -1713,8 +1723,23 @@ export default function PropertiesPanel({
               <div className="space-y-3">
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground/70">Type</Label>
-                  <p className="text-xs font-medium text-foreground/90 mt-1">{selectedNode.data.label || selectedNode.data.type || 'Unknown'}</p>
+                  <p className="text-xs font-medium text-foreground/90 mt-1">{canonicalTypeDisplayName}</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5 font-mono">{selectedNode.data.type}</p>
                 </div>
+                {canvasLabelDiffersFromImplementation && (
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground/70">Canvas label</Label>
+                    <p className="text-xs text-foreground/80 mt-1">{canvasLabel}</p>
+                    <p className="text-[10px] text-amber-600/90 dark:text-amber-500/90 mt-1 leading-snug">
+                      Label text can differ from the implementation type. Fields and overview below follow{' '}
+                      <span className="font-mono">{selectedNode.data.type}</span>
+                      {legacyNodeDefinition?.category === 'ai' &&
+                      /\b(email|gmail|mail)\b/i.test(canvasLabel)
+                        ? ' — this is an AI/LLM node, not an email sender; use a Gmail (google_gmail) node to send mail, or regenerate the step.'
+                        : '.'}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground/70">Description</Label>
                   <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">{nodeDefinition?.description || 'No description available'}</p>

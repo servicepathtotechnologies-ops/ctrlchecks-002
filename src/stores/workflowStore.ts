@@ -116,18 +116,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     let targetHandle = connection.targetHandle;
     let sourceHandle = connection.sourceHandle;
     
-    // For AI Agent nodes, preserve the specific port handle (userInput, chat_model, memory, tool)
-    if (targetNode?.data?.type === 'ai_agent') {
-      // If targetHandle is provided (from React Flow), use it
-      // Otherwise, default to 'userInput' for left-side port
-      if (!targetHandle) {
-        targetHandle = 'userInput'; // Default to left-side port
-      }
-    } else {
-      // For other nodes, use default if not provided
-      if (!targetHandle) {
-        targetHandle = 'input';
-      }
+    // All nodes default to unified primary input handle.
+    if (!targetHandle) {
+      targetHandle = 'input';
     }
     
     // For source handle, use provided or default to 'output'
@@ -164,15 +155,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     let targetHandle = newConnection.targetHandle;
     let sourceHandle = newConnection.sourceHandle;
     
-    // For AI Agent nodes, preserve the specific port handle
-    if (targetNode?.data?.type === 'ai_agent') {
-      if (!targetHandle) {
-        targetHandle = 'userInput'; // Default to left-side port
-      }
-    } else {
-      if (!targetHandle) {
-        targetHandle = 'input';
-      }
+    if (!targetHandle) {
+      targetHandle = 'input';
     }
     
     if (!sourceHandle) {

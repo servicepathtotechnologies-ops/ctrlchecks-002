@@ -283,132 +283,212 @@ export function validateWorkflow(nodes: Node[], edges: Edge[]): WorkflowValidati
     return errors;
 }
 
-// Keep existing validateAndFixWorkflow for AI usage compatibility if needed, 
-// or repurpose it.
-// Enhanced fix function
-
-
-// ... (keep existing imports)
-
-// ...
-
 /**
- * Resolve node type alias to canonical type (frontend version)
- * Maps common aliases to canonical node types
+ * Resolve node type alias to canonical type.
+ * Mirrors the backend unified-node-registry ALIAS_MAP — single source of truth.
+ * Every entry here targets a type that exists in the frontend NODE_TYPES array.
+ * Returns null if no alias match — caller falls through to http_request fallback.
  */
 function resolveNodeTypeAlias(nodeType: string, validNodeTypes: Set<string>): string | null {
     if (!nodeType) return null;
-    
+
     const normalized = nodeType.toLowerCase().trim();
-    
-    // Alias mappings (frontend version - matches backend)
+
     const aliasMap: Record<string, string> = {
-        // AI Nodes
-        'ai': 'ai_service',
-        'openai': 'ai_service',
-        'llm': 'ai_service',
-        'ai_node': 'ai_service',
-        'summarize': 'text_summarizer',
-        'summary': 'text_summarizer',
-        'summarizer': 'text_summarizer',
-        
-        // Email Nodes
+        // ── Email ────────────────────────────────────────────────────────────
+        'email': 'google_gmail',
+        'mail': 'google_gmail',
         'gmail': 'google_gmail',
+        'send_email': 'google_gmail',
         'google_mail': 'google_gmail',
-        'mail': 'email',
-        'send_email': 'email',
-        
-        // Google Services
+        'gmail_send': 'google_gmail',
+        'email_send': 'google_gmail',
+        'google email': 'google_gmail',
+        'send via gmail': 'google_gmail',
+        'smtp': 'google_gmail',
+
+        // ── Google Services ──────────────────────────────────────────────────
         'sheets': 'google_sheets',
         'gsheets': 'google_sheets',
         'spreadsheet': 'google_sheets',
-        
-        // HTTP & API
-        'http': 'http_request',
-        'api': 'http_request',
-        'request': 'http_request',
-        'fetch': 'http_request',
-        'api_call': 'http_request',
-        
-        // Logic & Flow
-        'if': 'if_else',
-        'conditional': 'if_else',
-        'condition': 'if_else',
-        'loop': 'loop',
-        'for': 'loop',
-        'foreach': 'loop',
-        'iterate': 'loop',
-        
-        // Triggers
+        'sheet': 'google_sheets',
+        'google_sheet': 'google_sheets',
+        'gdoc': 'google_doc',
+        'google_document': 'google_doc',
+        'gdrive': 'google_drive',
+        'drive': 'google_drive',
+        'google_storage': 'google_drive',
+        'gcal': 'google_calendar',
+        'calendar': 'google_calendar',
+        'google_cal': 'google_calendar',
+        'bigquery': 'google_bigquery',
+        'bq': 'google_bigquery',
+        'google_tasks': 'google_tasks',
+        'tasks': 'google_tasks',
+        'google_contacts': 'google_contacts',
+        'contacts': 'google_contacts',
+
+        // ── AI Nodes ─────────────────────────────────────────────────────────
+        'ai': 'ai_agent',
+        'llm': 'ai_agent',
+        'ai_node': 'ai_agent',
+        'ai_service': 'ai_agent',
+        'ai_chat': 'ai_agent',
+        'ai_chat_model': 'ai_agent',
+        'chat_model': 'ai_agent',
+        'agent': 'ai_agent',
+        'summarize': 'text_summarizer',
+        'summary': 'text_summarizer',
+        'summarizer': 'text_summarizer',
+        'local_ai': 'ollama',
+        'local_llm': 'ollama',
+        'openai': 'openai_gpt',
+        'gpt': 'openai_gpt',
+        'chatgpt': 'openai_gpt',
+        'claude': 'anthropic_claude',
+        'anthropic': 'anthropic_claude',
+        'gemini': 'google_gemini',
+        'sentiment': 'sentiment_analyzer',
+        'sentiment_analysis': 'sentiment_analyzer',
+
+        // ── Communication ────────────────────────────────────────────────────
+        'slack': 'slack_message',
+        'slack_send': 'slack_message',
+        'send_slack': 'slack_message',
+        'slack_webhook': 'slack_webhook',
+        'telegram': 'telegram',
+        'telegram_send': 'telegram',
+        'discord': 'discord',
+        'discord_send': 'discord',
+        'discord_webhook': 'discord_webhook',
+        'teams': 'microsoft_teams',
+        'ms_teams': 'microsoft_teams',
+        'microsoft_teams': 'microsoft_teams',
+        'whatsapp': 'whatsapp_cloud',
+        'whatsapp_cloud': 'whatsapp_cloud',
+        'twilio': 'twilio',
+        'sms': 'twilio',
+
+        // ── Triggers ─────────────────────────────────────────────────────────
         'manual': 'manual_trigger',
         'on_demand': 'manual_trigger',
         'trigger': 'manual_trigger',
         'cron': 'schedule',
         'scheduled': 'schedule',
         'timer': 'schedule',
+        'webhook_trigger': 'webhook',
+        'http_trigger': 'webhook',
+        'schedule_trigger': 'schedule',
+        'interval_trigger': 'interval',
+        'form_trigger': 'form',
+        'form_submission': 'form',
+
+        // ── Logic & Flow ─────────────────────────────────────────────────────
+        'if': 'if_else',
+        'conditional': 'if_else',
+        'condition': 'if_else',
+        'switch_case': 'switch',
+        'loop': 'loop',
+        'for': 'loop',
+        'foreach': 'loop',
+        'iterate': 'loop',
+        'batch': 'split_in_batches',
+        'delay': 'wait',
+
+        // ── HTTP & API ───────────────────────────────────────────────────────
+        'http': 'http_request',
+        'api': 'http_request',
+        'request': 'http_request',
+        'fetch': 'http_request',
+        'api_call': 'http_request',
+        'gql': 'graphql',
+        'webhook_response': 'respond_to_webhook',
+        'response': 'respond_to_webhook',
+
+        // ── Database ─────────────────────────────────────────────────────────
+        'postgres': 'postgresql',
+        'postgresql': 'postgresql',
+        'pg': 'postgresql',
+        'mysql': 'mysql',
+        'mongo': 'mongodb',
+        'mongo_db': 'mongodb',
+        'mongodb': 'mongodb',
+        'supabase': 'supabase',
+        'redis': 'redis',
+
+        // ── Storage ──────────────────────────────────────────────────────────
+        's3': 'aws_s3',
+        'amazon_s3': 'aws_s3',
+        'aws_s3': 'aws_s3',
+        'dropbox': 'dropbox',
+        'dbx': 'dropbox',
+
+        // ── CRM ──────────────────────────────────────────────────────────────
+        'hubspot': 'hubspot',
+        'hub_spot': 'hubspot',
+        'salesforce': 'salesforce',
+        'sf': 'salesforce',
+        'airtable': 'airtable',
+        'air_table': 'airtable',
+        'notion': 'notion',
+        'jira': 'jira',
+
+        // ── Social Media ─────────────────────────────────────────────────────
+        'twitter': 'twitter',
+        'tweet': 'twitter',
+        'x': 'twitter',
+        'instagram': 'instagram',
+        'ig': 'instagram',
+        'insta': 'instagram',
+        'facebook': 'facebook',
+        'fb': 'facebook',
+
+        // ── DevOps ───────────────────────────────────────────────────────────
+        'github': 'github',
+        'gh': 'github',
+        'git_hub': 'github',
+        'gitlab': 'gitlab',
+        'git_lab': 'gitlab',
+
+        // ── E-commerce / Payment ─────────────────────────────────────────────
+        'stripe': 'stripe',
+        'shopify': 'shopify',
+
+        // ── Data Manipulation ────────────────────────────────────────────────
+        'csv': 'csv_processor',
+        'csv_parser': 'csv_processor',
+        'js': 'javascript',
+        'json': 'json_parser',
+        'log': 'log_output',
+        'logger': 'log_output',
     };
-    
-    // Check if alias exists and canonical type is valid
+
     const canonical = aliasMap[normalized];
     if (canonical && validNodeTypes.has(canonical)) {
         return canonical;
     }
-    
+
     return null;
 }
 
-/**
- * Get generic fallback type based on node type name patterns
- */
-function getGenericFallbackType(nodeType: string, validNodeTypes: Set<string>): string | null {
-    if (!nodeType) return null;
-    
-    const normalized = nodeType.toLowerCase();
-    
-    // Pattern-based fallbacks
-    // ✅ Updated: Use capability resolution instead of ai_service fallback
-    if (normalized.includes('ai') || normalized.includes('llm') || normalized.includes('gpt') || normalized.includes('claude')) {
-        // Try capability resolution (priority: ollama → openai_gpt → anthropic_claude → google_gemini)
-        const llmNodes = ['ollama', 'openai_gpt', 'anthropic_claude', 'google_gemini', 'text_summarizer'];
-        for (const llmNode of llmNodes) {
-            if (validNodeTypes.has(llmNode)) {
-                return llmNode;
-            }
-        }
-    }
-    
-    if (normalized.includes('email') || normalized.includes('mail') || normalized.includes('gmail')) {
-        if (validNodeTypes.has('google_gmail')) return 'google_gmail';
-        if (validNodeTypes.has('email')) return 'email';
-    }
-    
-    if (normalized.includes('http') || normalized.includes('api') || normalized.includes('request')) {
-        if (validNodeTypes.has('http_request')) return 'http_request';
-    }
-    
-    if (normalized.includes('sheet') || normalized.includes('spreadsheet')) {
-        if (validNodeTypes.has('google_sheets')) return 'google_sheets';
-    }
-    
-    if (normalized.includes('if') || normalized.includes('condition') || normalized.includes('else')) {
-        if (validNodeTypes.has('if_else')) return 'if_else';
-    }
-    
-    return null;
+export interface ValidateAndFixWorkflowOptions {
+  /** Skip linearization/layout/handle rewriting — use after attach-inputs/credentials when backend owns topology */
+  preserveTopology?: boolean;
 }
 
 // Enhanced fix function
-export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[], explanation?: string } {
+export function validateAndFixWorkflow(
+    data: any,
+    options?: ValidateAndFixWorkflowOptions
+): { nodes: any[], edges: any[], explanation?: string } {
     if (!data || typeof data !== 'object') {
         throw new Error('Invalid workflow data');
     }
     let nodes = Array.isArray(data.nodes) ? data.nodes : [];
     let edges = Array.isArray(data.edges) ? data.edges : [];
 
-    // 0. Validate and normalize nodes - ensure all nodes come from node library
-    // IMPROVED: Use resolver and fallback, never remove nodes
+    // 0. Validate and normalize nodes — resolve aliases, apply fallback, never remove nodes
     const validNodeTypes = new Set(NODE_TYPES.map((d: any) => d.type));
-    const resolvedNodes: Array<{ nodeId: string; originalType: string; resolvedType: string; method: string }> = [];
     
     nodes = nodes
         .map((node: any) => {
@@ -420,269 +500,117 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
                 return node;
             }
 
-            // If no node type, try to infer from context
+            // If no node type, try to infer from label
             if (!nodeType) {
-                // Try to infer from node label or other context
-                const inferredType = (() => {
-                    const label = (node.data?.label || node.label || '').toLowerCase();
-                    if (label.includes('email') || label.includes('mail') || label.includes('gmail')) {
-                        return validNodeTypes.has('google_gmail') ? 'google_gmail' : (validNodeTypes.has('email') ? 'email' : null);
+                const label = (node.data?.label || node.label || '').toLowerCase();
+                const inferredType =
+                    (label.includes('email') || label.includes('mail') || label.includes('gmail'))
+                        ? (validNodeTypes.has('google_gmail') ? 'google_gmail' : null)
+                    : (label.includes('sheet') || label.includes('spreadsheet'))
+                        ? (validNodeTypes.has('google_sheets') ? 'google_sheets' : null)
+                    : (label.includes('summarize') || label.includes('summarizer'))
+                        ? (validNodeTypes.has('text_summarizer') ? 'text_summarizer' : null)
+                    : (label.includes('ai') || label.includes('llm') || label.includes('agent'))
+                        ? (validNodeTypes.has('ai_agent') ? 'ai_agent' : null)
+                    : (label.includes('slack'))
+                        ? (validNodeTypes.has('slack_message') ? 'slack_message' : null)
+                    : (label.includes('telegram'))
+                        ? (validNodeTypes.has('telegram') ? 'telegram' : null)
+                    : (label.includes('discord'))
+                        ? (validNodeTypes.has('discord') ? 'discord' : null)
+                    : (label.includes('http') || label.includes('api') || label.includes('request'))
+                        ? (validNodeTypes.has('http_request') ? 'http_request' : null)
+                    : null;
+
+                const resolvedType = inferredType ?? 'http_request';
+                const definition = NODE_TYPES.find((d: any) => d.type === resolvedType);
+                const preservedLabel = node.data?.label || node.label;
+                if (node.data) {
+                    node.data.type = resolvedType;
+                    if (definition) {
+                        node.data.icon = definition.icon;
+                        node.data.category = definition.category;
+                        if (!preservedLabel) node.data.label = definition.label;
                     }
-                    if (label.includes('sheet') || label.includes('spreadsheet')) {
-                        return validNodeTypes.has('google_sheets') ? 'google_sheets' : null;
-                    }
-                    if (label.includes('ai') || label.includes('summarize') || label.includes('llm')) {
-                        return validNodeTypes.has('ai_service') ? 'ai_service' : null;
-                    }
-                    if (label.includes('http') || label.includes('api') || label.includes('request')) {
-                        return validNodeTypes.has('http_request') ? 'http_request' : null;
-                    }
-                    return null;
-                })();
-                if (inferredType) {
-                    // Get node definition to update icon, category, and label
-                    const definition = NODE_TYPES.find((d: any) => d.type === inferredType);
-                    const preservedLabel = node.data?.label || node.label;
-                    
-                    nodeType = inferredType;
-                    if (node.data) {
-                        node.data.type = inferredType;
-                        // Update icon, category, and label from definition if available
-                        if (definition) {
-                            node.data.icon = definition.icon;
-                            node.data.category = definition.category;
-                            // Preserve existing label if it exists, otherwise use definition label
-                            if (!preservedLabel) {
-                                node.data.label = definition.label;
-                            }
-                        }
-                    } else {
-                        node.data = { 
-                            type: inferredType,
-                            ...(definition ? {
-                                icon: definition.icon,
-                                category: definition.category,
-                                label: preservedLabel || definition.label
-                            } : {})
-                        };
-                    }
-                    resolvedNodes.push({ nodeId: node.id, originalType: 'missing', resolvedType: inferredType, method: 'inferred' });
                 } else {
-                    // Get node definition to update icon, category, and label
-                    const httpRequestDefinition = NODE_TYPES.find((d: any) => d.type === 'http_request');
-                    const preservedLabel = node.data?.label || node.label;
-                    
-                    nodeType = 'http_request';
-                    if (node.data) {
-                        node.data.type = 'http_request';
-                        // Update icon, category, and label from definition if available
-                        if (httpRequestDefinition) {
-                            node.data.icon = httpRequestDefinition.icon;
-                            node.data.category = httpRequestDefinition.category;
-                            // Preserve existing label if it exists, otherwise use definition label
-                            if (!preservedLabel) {
-                                node.data.label = httpRequestDefinition.label;
-                            }
-                        }
-                    } else {
-                        node.data = { 
-                            type: 'http_request',
-                            ...(httpRequestDefinition ? {
-                                icon: httpRequestDefinition.icon,
-                                category: httpRequestDefinition.category,
-                                label: preservedLabel || httpRequestDefinition.label
-                            } : {})
-                        };
-                    }
-                    resolvedNodes.push({ nodeId: node.id, originalType: 'missing', resolvedType: 'http_request', method: 'fallback' });
+                    node.data = {
+                        type: resolvedType,
+                        ...(definition ? { icon: definition.icon, category: definition.category, label: preservedLabel || definition.label } : {}),
+                    };
                 }
+                nodeType = resolvedType;
             }
 
-            // Step 1: Check if node type exists in node library
+            // Step 1: already a valid canonical type — keep as-is
             if (validNodeTypes.has(nodeType)) {
-                // Valid node type, keep as is
                 return node;
             }
 
-            // Step 2: Try to resolve using alias matching (simple frontend version)
+            // Step 2: resolve via alias map
             const resolved = resolveNodeTypeAlias(nodeType, validNodeTypes);
             if (resolved) {
-                // Get node definition to update icon, category, and label
                 const definition = NODE_TYPES.find((d: any) => d.type === resolved);
                 const preservedLabel = node.data?.label || node.label;
-                
                 if (node.data) {
                     node.data.type = resolved;
-                    // Update icon, category, and label from definition if available
                     if (definition) {
                         node.data.icon = definition.icon;
                         node.data.category = definition.category;
-                        // Preserve existing label if it exists, otherwise use definition label
-                        if (!preservedLabel) {
-                            node.data.label = definition.label;
-                        }
+                        if (!preservedLabel) node.data.label = definition.label;
                     }
                 } else {
-                    node.data = { 
+                    node.data = {
                         type: resolved,
-                        ...(definition ? {
-                            icon: definition.icon,
-                            category: definition.category,
-                            label: preservedLabel || definition.label
-                        } : {})
+                        ...(definition ? { icon: definition.icon, category: definition.category, label: preservedLabel || definition.label } : {}),
                     };
                 }
-                resolvedNodes.push({ nodeId: node.id, originalType: nodeType, resolvedType: resolved, method: 'alias' });
                 return node;
             }
 
-            // Step 3: Try generic fallback based on node type name
-            const fallbackType = getGenericFallbackType(nodeType, validNodeTypes);
-            if (fallbackType) {
-                // Get node definition to update icon, category, and label
-                const definition = NODE_TYPES.find((d: any) => d.type === fallbackType);
-                const preservedLabel = node.data?.label || node.label;
-                
-                if (node.data) {
-                    node.data.type = fallbackType;
-                    // Update icon, category, and label from definition if available
-                    if (definition) {
-                        node.data.icon = definition.icon;
-                        node.data.category = definition.category;
-                        // Preserve existing label if it exists, otherwise use definition label
-                        if (!preservedLabel) {
-                            node.data.label = definition.label;
-                        }
-                    }
-                } else {
-                    node.data = { 
-                        type: fallbackType,
-                        ...(definition ? {
-                            icon: definition.icon,
-                            category: definition.category,
-                            label: preservedLabel || definition.label
-                        } : {})
-                    };
-                }
-                resolvedNodes.push({ nodeId: node.id, originalType: nodeType, resolvedType: fallbackType, method: 'fallback' });
-                return node;
-            }
-
-            // Step 4: Last resort - use generic http_request
-            // ✅ FIX 5: Only convert to http_request if node type is truly unknown
-            // If node type matches a known pattern (e.g., "discord"), preserve it
+            // Step 3: known integration pattern — preserve type rather than clobber with http_request
             const knownNodePatterns = ['discord', 'slack', 'telegram', 'gmail', 'sheets', 'hubspot', 'salesforce', 'zoho'];
-            const isKnownPattern = knownNodePatterns.some(pattern => nodeType.toLowerCase().includes(pattern));
-            
-            if (isKnownPattern) {
-                // ✅ FIX 5: Don't convert known node types to http_request
-                // Instead, try to find a close match or preserve the original type
-                console.warn(`[WorkflowValidation] ⚠️  Node type "${nodeType}" not found in NODE_TYPES but matches known pattern. Preserving type.`);
-                if (node.data) {
-                    node.data.type = nodeType;
-                } else {
-                    node.data = { type: nodeType };
-                }
-                resolvedNodes.push({ nodeId: node.id, originalType: nodeType, resolvedType: nodeType, method: 'pattern_preserve' });
+            if (knownNodePatterns.some(pattern => nodeType.toLowerCase().includes(pattern))) {
+                if (node.data) { node.data.type = nodeType; } else { node.data = { type: nodeType }; }
                 return node;
             }
-            
-            // Get node definition to update icon, category, and label
-            const httpRequestDefinition = NODE_TYPES.find((d: any) => d.type === 'http_request');
-            // Distinct name from inner blocks — avoids TDZ with other `preservedLabel` in this map callback
-            const preservedLabelHttpFallback = node.data?.label || node.label;
-            
+
+            // Step 4: last resort — fall back to http_request
+            const httpDef = NODE_TYPES.find((d: any) => d.type === 'http_request');
+            const preservedLabelFallback = node.data?.label || node.label;
             if (node.data) {
                 node.data.type = 'http_request';
-                // Update icon, category, and label from definition if available
-                if (httpRequestDefinition) {
-                    node.data.icon = httpRequestDefinition.icon;
-                    node.data.category = httpRequestDefinition.category;
-                    // Preserve existing label if it exists, otherwise use definition label
-                    if (!preservedLabelHttpFallback) {
-                        node.data.label = httpRequestDefinition.label;
-                    }
+                if (httpDef) {
+                    node.data.icon = httpDef.icon;
+                    node.data.category = httpDef.category;
+                    if (!preservedLabelFallback) node.data.label = httpDef.label;
                 }
             } else {
-                node.data = { 
+                node.data = {
                     type: 'http_request',
-                    ...(httpRequestDefinition ? {
-                        icon: httpRequestDefinition.icon,
-                        category: httpRequestDefinition.category,
-                        label: preservedLabelHttpFallback || httpRequestDefinition.label
-                    } : {})
+                    ...(httpDef ? { icon: httpDef.icon, category: httpDef.category, label: preservedLabelFallback || httpDef.label } : {}),
                 };
             }
-            resolvedNodes.push({ nodeId: node.id, originalType: nodeType, resolvedType: 'http_request', method: 'generic_fallback' });
-            return node; // NEVER remove the node
-
-            // If node is already 'custom' but missing data fields, we need to fix it
-            const needsNormalization = node.type === 'custom'
-                ? (!node.data?.label || !node.data?.category || !node.data?.icon)
-                : node.type !== 'custom';
-
-            if (needsNormalization) {
-                const definition = NODE_TYPES.find((d: any) => d.type === nodeType);
-                // Preserve existing label if it exists (from AI generation)
-                const preservedNodeLabel = node.data?.label || node.label;
-
-                if (definition) {
-                    // ✅ CRITICAL: Preserve config from node before spreading node.data
-                    const preservedConfig = node.data?.config || node.config || {};
-                    return {
-                        ...node,
-                        type: 'custom',
-                        data: {
-                            label: preservedNodeLabel || definition.label, // Use preserved label if available
-                            type: definition.type,
-                            category: definition.category,
-                            icon: definition.icon,
-                            // ✅ CRITICAL: Spread other data fields first, then override with preserved config
-                            ...(node.data || {}), // Preserve any existing data fields
-                            executionStatus: node.data?.executionStatus, // Preserve execution status
-                            // ✅ CRITICAL: Re-apply config after spread to ensure it takes precedence
-                            config: {
-                                ...definition.defaultConfig,
-                                ...preservedConfig
-                            }, // Merge AI config
-                        }
-                    };
-                }
-            }
-            
-            // Ensure node has proper structure even if already normalized
-            if (!node.data || !node.data.type) {
-                const definition = NODE_TYPES.find((d: any) => d.type === nodeType);
-                if (definition) {
-                    return {
-                        ...node,
-                        type: 'custom',
-                        data: {
-                            ...node.data,
-                            type: definition.type,
-                            label: node.data?.label || definition.label,
-                            category: node.data?.category || definition.category,
-                            icon: node.data?.icon || definition.icon,
-                            config: {
-                                ...definition.defaultConfig,
-                                ...(node.data?.config || {})
-                            }
-                        }
-                    };
-                }
-            }
-            
             return node;
         })
-        .filter((node: any) => node !== null); // Filter out null nodes (shouldn't happen now, but keep for safety)
+        .filter((node: any) => node !== null);
 
-    // Resolution summary - handled internally, no logging needed
-
-    // 1. Ensure unique node/edge IDs while preserving stable IDs from DB (form URLs, bookmarks)
+    // 1. Ensure unique node/edge IDs
     const { nodes: regeneratedNodes, edges: regeneratedEdges } = ensureUniqueNodeIdsPreserveStable(
         nodes,
         edges
     );
+
+    if (options?.preserveTopology) {
+        const topoNodes = regeneratedNodes.map((node: any) => {
+            const c = coerceReactFlowPosition(node.position);
+            return c ? { ...node, position: c } : node;
+        });
+        return {
+            nodes: topoNodes,
+            edges: regeneratedEdges.map((e: any) => ({ ...e })),
+            explanation: 'preserve_topology_post_configuration',
+        };
+    }
 
     // 1.5 Enforce single-trigger, linear chain for simple AI-generated workflows
     // This mirrors backend normalizeWorkflowGraph logic so the canvas always sees
@@ -949,11 +877,7 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
 
         // Normalize target handle (input)
         if (!normalizedTargetHandle) {
-            if (targetType === 'ai_agent') {
-                normalizedTargetHandle = 'userInput'; // Default to userInput for AI Agent
-            } else {
-                normalizedTargetHandle = 'input'; // Standard input handle
-            }
+            normalizedTargetHandle = 'input'; // Standard input handle
         } else {
             // Map common backend field names to React handle IDs
             const targetLower = normalizedTargetHandle.toLowerCase();
@@ -966,24 +890,25 @@ export function validateAndFixWorkflow(data: any): { nodes: any[], edges: any[],
                 'content': 'input',
                 'userinput': 'userInput',
                 'user_input': 'userInput',
-                'chatmodel': 'chat_model',
-                'chat_model': 'chat_model',
-                'memory': 'memory',
-                'tool': 'tool',
+                'chatmodel': 'input',
+                'chat_model': 'input',
+                'memory': 'input',
+                'tool': 'input',
                 'values': 'input',
                 'json': 'input',
                 'template': 'input',
             };
             normalizedTargetHandle = targetMappings[targetLower] || normalizedTargetHandle;
             
-            // Validate against node type
-            if (targetType === 'ai_agent') {
-                const validAiHandles = ['userInput', 'chat_model', 'memory', 'tool'];
-                if (!validAiHandles.includes(normalizedTargetHandle)) {
-                    normalizedTargetHandle = 'userInput'; // Default to userInput for AI Agent
-                }
-            } else if (normalizedTargetHandle !== 'input') {
-                normalizedTargetHandle = 'input'; // Force to input for standard nodes
+            // Validate against node type — preserve 'userInput' for ai_agent
+            const targetNodeForHandle = nodes.find((n: any) => n.id === edge.target);
+            const targetNodeTypeForHandle = targetNodeForHandle?.data?.type || targetNodeForHandle?.type || '';
+            if (normalizedTargetHandle !== 'input' && normalizedTargetHandle !== 'userInput') {
+                normalizedTargetHandle = 'input';
+            }
+            // ai_agent uses 'userInput' as its primary input handle
+            if (targetNodeTypeForHandle === 'ai_agent' && normalizedTargetHandle === 'input') {
+                normalizedTargetHandle = 'userInput';
             }
         }
 

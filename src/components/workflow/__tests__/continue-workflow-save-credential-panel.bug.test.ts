@@ -20,6 +20,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { filterStillBlockingOAuth } from '@/lib/wizard-oauth-credentials';
+import { shouldRunAttachCredentialsAfterAttachInputs } from '@/lib/workflow-phase-contract';
 
 // ---------------------------------------------------------------------------
 // Extracted decision logic — mirrors the exact logic in handleBuild
@@ -44,11 +45,10 @@ function computeCredentialSecretsReady(
 }
 
 /**
- * Mirrors the `shouldAttachCredentialsNow` logic in handleBuild.
+ * Mirrors the `shouldAttachCredentialsNow` logic in handleBuild (via workflow-phase-contract).
  */
 function computeShouldAttachCredentialsNow(inputPhase: string): boolean {
-  const p = inputPhase.toLowerCase();
-  return p === 'configuring_credentials' || p === 'ready_for_execution';
+  return shouldRunAttachCredentialsAfterAttachInputs(inputPhase);
 }
 
 /**

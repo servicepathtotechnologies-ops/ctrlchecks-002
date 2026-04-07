@@ -238,15 +238,12 @@ function WorkflowCanvasInner() {
     // AI Agent special handles (must match exactly)
     if (nodeTypeLower === 'ai_agent') {
       if (isSource) {
-        // AI Agent has no output handles (it's a terminal node in some cases)
         return 'output';
       } else {
-        // AI Agent input handles
         if (handleIdLower === 'chat_model' || handleIdLower === 'chatmodel') return 'chat_model';
         if (handleIdLower === 'memory') return 'memory';
         if (handleIdLower === 'tool') return 'tool';
-        if (handleIdLower === 'userinput' || handleIdLower === 'user_input') return 'userInput';
-        // Default to userInput for AI Agent
+        if (handleIdLower === 'userinput' || handleIdLower === 'user_input' || handleIdLower === 'input') return 'userInput';
         return 'userInput';
       }
     }
@@ -341,7 +338,6 @@ function WorkflowCanvasInner() {
         normalizedSourceHandle = 'output';
       }
       if (!normalizedTargetHandle) {
-        // For AI Agent, default to userInput; for others, use input
         normalizedTargetHandle = targetNodeType === 'ai_agent' ? 'userInput' : 'input';
       }
 

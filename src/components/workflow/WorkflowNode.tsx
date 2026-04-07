@@ -15,7 +15,7 @@ import {
   FileText, DatabaseZap, Calendar, Users,
   Layers, Edit, Edit3, Tag, Code2, ListChecks,
   ArrowUpDown, List, Terminal, Calculator, Lock, Rss, Target, Bug, Bot,
-  AlertTriangle, Plus
+  AlertTriangle
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -110,8 +110,8 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
 
   const status = data.executionStatus || 'idle';
 
-  const nodeWidth = isAIAgentNode ? 280 : 240;
-  const nodeMinHeight = isAIAgentNode ? 120 : 70;
+  const nodeWidth = 240;
+  const nodeMinHeight = 70;
 
   const glowOverrides = useMemo(() => {
     let colors: string[] | undefined;
@@ -153,7 +153,6 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
       <div
         className={cn(
           'px-5 py-4 rounded-[inherit] bg-card transition-all relative',
-          isAIAgentNode && 'pb-16',
           status === 'running' && 'motion-safe:animate-pulse',
           isAiEditedHighlight && 'ring-2 ring-violet-500/70 ring-offset-2 ring-offset-background'
         )}
@@ -193,117 +192,23 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
         </>
       )}
 
-      {/* AI Agent has multiple input ports with labels */}
-      {isAIAgentNode ? (
-        <>
-          {/* Left side: General input handle with visual indicator (for userInput) */}
-          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1/2 flex items-center pointer-events-none z-0">
-            <Plus className="h-2 w-2 text-muted-foreground/50 mr-0.5" />
-            <div className="w-2 h-px bg-border/40"></div>
-          </div>
-          <Handle
-            type="target"
-            id="userInput"
-            position={Position.Left}
-            className="!w-3 !h-3 !bg-muted-foreground !border-2 !border-background"
-            style={{ top: '50%', transform: 'translateY(-50%)' }}
-          />
-
-          {/* Bottom Input Ports with Labels */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-between items-end px-2 pb-1">
-            {/* Chat Model* (left) */}
-            <div className="flex flex-col items-center relative" style={{ flex: 1 }}>
-              <div className="relative mb-1">
-                <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-                  <div className="w-2.5 h-2.5 bg-muted-foreground border-2 border-background rotate-45"></div>
-                </div>
-                <Handle
-                  type="target"
-                  id="chat_model"
-                  position={Position.Bottom}
-                  className="!w-2.5 !h-2.5 !bg-transparent !border-0"
-                />
-              </div>
-              <div className="text-[10px] text-foreground font-medium whitespace-nowrap text-center leading-tight mt-0.5">
-                Chat Model<span className="text-red-500 ml-0.5">*</span>
-              </div>
-              <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 flex flex-col items-center pointer-events-none">
-                <div className="w-px h-2.5 bg-border/40"></div>
-                <Plus className="h-2 w-2 text-muted-foreground/50 -mt-0.5" />
-              </div>
-            </div>
-
-            {/* Memory (middle) */}
-            <div className="flex flex-col items-center relative" style={{ flex: 1 }}>
-              <div className="relative mb-1">
-                <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-                  <div className="w-2.5 h-2.5 bg-muted-foreground border-2 border-background rotate-45"></div>
-                </div>
-                <Handle
-                  type="target"
-                  id="memory"
-                  position={Position.Bottom}
-                  className="!w-2.5 !h-2.5 !bg-transparent !border-0"
-                />
-              </div>
-              <div className="text-[10px] text-foreground font-medium whitespace-nowrap text-center leading-tight mt-0.5">
-                Memory
-              </div>
-              <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 flex flex-col items-center pointer-events-none">
-                <div className="w-px h-2.5 bg-border/40"></div>
-                <Plus className="h-2 w-2 text-muted-foreground/50 -mt-0.5" />
-              </div>
-            </div>
-
-            {/* Tool (right) */}
-            <div className="flex flex-col items-center relative" style={{ flex: 1 }}>
-              <div className="relative mb-1">
-                <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-                  <div className="w-2.5 h-2.5 bg-muted-foreground border-2 border-background rotate-45"></div>
-                </div>
-                <Handle
-                  type="target"
-                  id="tool"
-                  position={Position.Bottom}
-                  className="!w-2.5 !h-2.5 !bg-transparent !border-0"
-                />
-              </div>
-              <div className="text-[10px] text-foreground font-medium whitespace-nowrap text-center leading-tight mt-0.5">
-                Tool
-              </div>
-              <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 flex flex-col items-center pointer-events-none">
-                <div className="w-px h-2.5 bg-border/40"></div>
-                <Plus className="h-2 w-2 text-muted-foreground/50 -mt-0.5" />
-              </div>
-            </div>
-          </div>
-
-          {/* Output handle on right side (centered vertically) with visual connection indicator */}
-          <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 z-10">
-            <Handle
-              type="source"
-              id="output"
-              position={Position.Right}
-              className="!w-3 !h-3 !bg-muted-foreground !border-2 !border-background"
-            />
-          </div>
-          {/* Visual output connection indicator - horizontal line and plus sign extending to the right */}
-          <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-3 flex items-center pointer-events-none z-0">
-            <div className="w-3 h-px bg-border/40"></div>
-            <Plus className="h-2.5 w-2.5 text-muted-foreground/50 -ml-0.5" />
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Standard input handle for all non-AI nodes */}
-          <Handle
-            type="target"
-            id="input"
-            position={Position.Top}
-            isConnectable={true}
-            className="!w-4 !h-4 !bg-muted-foreground !border-2 !border-background"
-          />
-        </>
+      {/* Input handle — ai_agent uses 'userInput', all other nodes use 'input' */}
+      <Handle
+        type="target"
+        id={isAIAgentNode ? 'userInput' : 'input'}
+        position={Position.Top}
+        isConnectable={true}
+        className="!w-4 !h-4 !bg-muted-foreground !border-2 !border-background"
+      />
+      {/* Hidden alias handle so edges stored with 'input' still connect on ai_agent */}
+      {isAIAgentNode && (
+        <Handle
+          type="target"
+          id="input"
+          position={Position.Top}
+          isConnectable={false}
+          style={{ opacity: 0, pointerEvents: 'none', width: 0, height: 0 }}
+        />
       )}
 
       <div className={cn("flex items-center gap-3", isAIAgentNode && "justify-center")}>
@@ -399,7 +304,7 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
             className="!w-3 !h-3 !bg-muted-foreground !border-2 !border-background"
           />
         )
-      ) : isAIAgentNode ? null : (
+      ) : (
         <Handle
           type="source"
           id="output"

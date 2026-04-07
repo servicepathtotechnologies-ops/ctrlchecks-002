@@ -130,19 +130,32 @@ export function normalizeBackendEdge(backendEdge: any): Edge {
 }
 
 /**
- * Normalize entire workflow (nodes + edges) from backend format to frontend format
+ * Normalize entire workflow (nodes + edges) from backend format to frontend format.
+ * Handles ai_agent targetHandle normalization (input → userInput) using node context.
  */
 export function normalizeBackendWorkflow(backendWorkflow: {
   nodes: any[];
   edges: any[];
 }): { nodes: Node[]; edges: Edge[] } {
   const normalizedNodes = backendWorkflow.nodes.map(normalizeBackendNode);
-  const normalizedEdges = backendWorkflow.edges.map(normalizeBackendEdge);
-  
-  return {
-    nodes: normalizedNodes,
-    edges: normalizedEdges,
-  };
+
+  // Build a nodeId → type map so edges can resolve their target node type
+  const nodeTypeById = new Map<string, string>();
+  normalizedNodes.forEach(n => {
+    nodeTypeById.set(n.id, (n.data as any)?.type || n.type || '');
+  });
+
+  const normalizedEdges = backendWorkflow.edges.map(edge => {
+    const base = normalizeBackendEdge(edge);
+    // ai_agent uses 'userInput' as its React Flow target handle
+    const targetType = nodeTypeById.get(base.target) || '';
+    if (targetType === 'ai_agent' && base.targetHandle === 'input') {
+      return { ...base, targetHandle: 'userInput' };
+    }
+    return base;
+  });
+
+  return { nodes: normalizedNodes, edges: normalizedEdges };
 }
 
 /**
@@ -153,9 +166,8 @@ export function enforceFrontendRenderContract(workflow: {
   nodes: any[];
   edges: any[];
 }): { nodes: Node[]; edges: Edge[] } {
-  const nodes = (workflow.nodes || []).map(normalizeBackendNode);
-  const edges = (workflow.edges || []).map(normalizeBackendEdge);
-  return { nodes, edges };
+  // Reuse normalizeBackendWorkflow so ai_agent handle fix is applied here too
+  return normalizeBackendWorkflow(workflow);
 }
 
 /**

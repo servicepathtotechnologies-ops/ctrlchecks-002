@@ -1297,6 +1297,7 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     icon: 'Bot',
     description: 'Autonomous AI agent',
     defaultConfig: {
+      model: 'gemini-2.5-flash',
       systemPrompt: 'You are an autonomous intelligent agent inside an automation workflow. Understand user input, reason over context, use available tools when needed, and produce structured responses.',
       mode: 'chat',
       temperature: 0.7,
@@ -1314,10 +1315,22 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
       includeReasoning: false,
       errorHandlingMode: 'retry',
       enableValidation: true,
-      enableMemory: true,
-      enableTools: true,
     },
     configFields: [
+      {
+        key: 'model',
+        label: 'Model',
+        type: 'select',
+        options: [
+          { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
+          { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
+          { label: 'Claude 3.5 Sonnet', value: 'claude-3-5-sonnet' },
+          { label: 'GPT-4o', value: 'gpt-4o' },
+        ],
+        defaultValue: 'gemini-2.5-flash',
+        required: true,
+        helpText: 'Select the AI model used by this node. This works like the standard model dropdown on other AI nodes.',
+      },
       { 
         key: 'systemPrompt', 
         label: 'System Prompt / Instructions', 
@@ -1464,20 +1477,6 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         type: 'boolean', 
         defaultValue: true, 
         helpText: 'How to get Enable Output Validation:\n1) Set to "true" to validate agent outputs before returning (default, recommended)\n2) Set to "false" to skip validation and return raw agent output\n3) When enabled: Validates outputs against expected schema, checks for hallucinations, ensures format correctness\n4) When disabled: Returns agent output without validation checks\n5) Validation rules: Check for missing inputs, verify all nodes connected, ensure valid formats\n6) Prevents invalid outputs from breaking downstream nodes\n7) Always recommended for production workflows\n8) Disable only for debugging or when you trust the agent completely',
-      },
-      { 
-        key: 'enableMemory', 
-        label: 'Enable Memory (if connected)', 
-        type: 'boolean', 
-        defaultValue: true, 
-        helpText: 'How to get Enable Memory:\n1) Set to "true" to allow agent to use memory if a Memory node is connected (default)\n2) Set to "false" to disable memory usage even if Memory node is connected\n3) Memory modes: STATELESS (one-off tasks), SESSION (multi-step flows), PERSISTENT (long-running agents)\n4) When enabled: Agent remembers previous steps, maintains context across interactions\n5) When disabled: Agent operates without memory, each interaction is independent\n6) Requires: Connect a Memory node to the AI Agent node\'s memory port\n7) Use for: Multi-step conversations, context-aware responses, maintaining state\n8) Best practice: Enable for chat mode and autonomous agents that need context',
-      },
-      { 
-        key: 'enableTools', 
-        label: 'Enable Tools (if connected)', 
-        type: 'boolean', 
-        defaultValue: true, 
-        helpText: 'How to get Enable Tools:\n1) Set to "true" to allow agent to use tools if Tool/Function nodes are connected (default)\n2) Set to "false" to disable tool usage even if tools are connected\n3) Available tools: List of tools/nodes the agent is allowed to use (HTTP Request, Telegram, etc.)\n4) When enabled: Agent can call tools, execute actions, interact with external services\n5) When disabled: Agent can only generate text, cannot execute actions\n6) Requires: Connect Tool or Function nodes to the AI Agent node\'s tool port\n7) Tool usage rules: Define constraints on how tools should be used in system prompt\n8) Critical for autonomy: Prevents agent from calling non-existent tools, restricts to available tools only',
       },
     ],
   },
