@@ -66,9 +66,33 @@ export default function FieldOwnershipGuidePanel({
   const canRequest = enabled && isVisible;
   const endpoint = useMemo(() => `${ENDPOINTS.itemBackend}/api/ai/field-ownership-guide`, []);
 
+  const buildContextualQuestion = (
+    question: string,
+    source: "bootstrap" | "quick_action" | "manual"
+  ): string => {
+    const base = question.trim();
+    const focused = selectedFieldLabel?.trim();
+    if (!focused) {
+      return base;
+    }
+
+    // Force field-specific replies so quick actions don't collapse into generic guidance.
+    if (source === "quick_action" || source === "bootstrap") {
+      return [
+        `Focused field: ${focused}.`,
+        `Question: ${base}.`,
+        "Answer specifically for this field in this workflow.",
+        "Include: what to fill, where to get value, and whether to choose You, AI (build), or AI (runtime).",
+      ].join(" ");
+    }
+
+    return `Focused field: ${focused}. ${base}`;
+  };
+
   const send = async (question: string, source: "bootstrap" | "quick_action" | "manual") => {
     if (!canRequest || !question.trim()) return;
     setLoading(true);
+    const contextualQuestion = buildContextualQuestion(question, source);
     if (source !== "bootstrap") {
       setMessages((prev) => [...prev, { id: `u_${Date.now()}`, role: "user", content: question }]);
     }
@@ -80,7 +104,7 @@ export default function FieldOwnershipGuidePanel({
         method: "POST",
         headers,
         body: JSON.stringify({
-          question,
+          question: contextualQuestion,
           context: contextPayload,
         }),
       });
