@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
+import { getFacebookSupabaseOAuthOptions } from '@/lib/facebookSignInOptions';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -306,10 +307,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
         const redirectUrl = `${window.location.origin}/auth/facebook/callback`;
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'facebook',
-          options: {
-            redirectTo: redirectUrl,
-            scopes: 'public_profile',
-          },
+          options: getFacebookSupabaseOAuthOptions(redirectUrl),
         });
         if (error) throw error;
       } else if (service === 'notion') {

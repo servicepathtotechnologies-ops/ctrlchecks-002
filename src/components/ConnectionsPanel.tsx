@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
+import { getFacebookSupabaseOAuthOptions } from '@/lib/facebookSignInOptions';
 import ZohoConnectionStatus from './ZohoConnectionStatus';
 
 export default function ConnectionsPanel() {
@@ -430,10 +431,7 @@ export default function ConnectionsPanel() {
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
-        options: {
-          redirectTo: redirectUrl,
-          scopes: 'public_profile',
-        },
+        options: getFacebookSupabaseOAuthOptions(redirectUrl),
       });
 
       if (error) throw error;

@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
+import { getFacebookOAuthScopeString } from '@/lib/facebookSignInOptions';
 import { Loader2 } from 'lucide-react';
 import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -71,7 +72,7 @@ export default function FacebookAuthCallback() {
             access_token: provider_token,
             refresh_token: provider_refresh_token || null,
             expires_at: expires_at ? new Date(expires_at * 1000).toISOString() : null,
-            scope: 'public_profile',
+            scope: getFacebookOAuthScopeString(),
             provider_user_id: null, // Can be fetched from Facebook API if needed
           }),
         });

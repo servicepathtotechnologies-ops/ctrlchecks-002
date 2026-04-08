@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
+import { getFacebookSupabaseOAuthOptions } from '@/lib/facebookSignInOptions';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface FacebookConnectionStatusProps {
@@ -107,10 +108,7 @@ export default function FacebookConnectionStatus({
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
-        options: {
-          redirectTo: redirectUrl,
-          scopes: 'public_profile',
-        },
+        options: getFacebookSupabaseOAuthOptions(redirectUrl),
       });
 
       if (error) {

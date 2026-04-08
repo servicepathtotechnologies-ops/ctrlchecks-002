@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { getBackendUrl } from "@/lib/api/getBackendUrl";
+import { getFacebookSupabaseOAuthOptions } from "@/lib/facebookSignInOptions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -289,10 +290,7 @@ export default function Profile() {
         const redirectUrl = `${window.location.origin}/auth/facebook/callback`;
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'facebook',
-          options: {
-            redirectTo: redirectUrl,
-            scopes: 'public_profile',
-          },
+          options: getFacebookSupabaseOAuthOptions(redirectUrl),
         });
         if (error) throw error;
       } else if (service === 'notion') {
