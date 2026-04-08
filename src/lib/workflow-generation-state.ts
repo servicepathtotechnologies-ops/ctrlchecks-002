@@ -897,3 +897,32 @@ export function mapStateToWizardStep(state: WorkflowGenerationState): string {
   };
   return stateMap[state] || 'idle';
 }
+
+/**
+ * Deterministic backend phase → progress checkpoint mapping.
+ * Values represent completed milestones (monotonic checkpoints).
+ */
+export function mapBackendPhaseToProgress(phase: string): number {
+  const key = String(phase || '').trim().toLowerCase();
+  const phaseMap: Record<string, number> = {
+    understand: 20,
+    planning: 40,
+    construction: 65,
+    healing: 75,
+    validation: 80,
+    verification: 90,
+    credential_discovery: 92,
+    learning: 95,
+    completed: 100,
+  };
+  return phaseMap[key] ?? 10;
+}
+
+/**
+ * Clamp progress updates so UI never regresses.
+ */
+export function deriveMonotonicProgress(previous: number, next: number): number {
+  const safePrev = Math.min(100, Math.max(0, Number(previous) || 0));
+  const safeNext = Math.min(100, Math.max(0, Number(next) || 0));
+  return Math.max(safePrev, safeNext);
+}

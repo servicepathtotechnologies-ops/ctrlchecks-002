@@ -30,7 +30,7 @@ const footerLinks = {
   ],
   Legal: [
     { name: "Privacy Policy", href: "/privacy" },
-    { name: "Terms of Service", href: "#" },
+    { name: "Terms of Service", href: "/terms" },
     { name: "Cookie Policy", href: "#" },
     { name: "Trust", href: "#trust" },
     { name: "GDPR", href: "#" },
@@ -115,12 +115,12 @@ export function Footer() {
             >
               Privacy
             </Link>
-            <a
-              href="#"
+            <Link
+              to="/terms"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               Terms
-            </a>
+            </Link>
             <a
               href="#"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"

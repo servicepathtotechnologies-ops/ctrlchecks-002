@@ -5,7 +5,9 @@
 import { 
   WorkflowGenerationState, 
   WorkflowGenerationStateManager,
-  ALLOWED_TRANSITIONS 
+  ALLOWED_TRANSITIONS,
+  deriveMonotonicProgress,
+  mapBackendPhaseToProgress,
 } from '../workflow-generation-state';
 
 describe('WorkflowGenerationStateManager', () => {
@@ -231,5 +233,28 @@ describe('WorkflowGenerationStateManager', () => {
       expect(result.success).toBe(true);
       expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_6_WORKFLOW_VALIDATION);
     });
+  });
+});
+
+describe('workflow-generation progress helpers', () => {
+  it('maps backend understand phase to 20%', () => {
+    expect(mapBackendPhaseToProgress('understand')).toBe(20);
+  });
+
+  it('maps backend credential_discovery phase to 92%', () => {
+    expect(mapBackendPhaseToProgress('credential_discovery')).toBe(92);
+  });
+
+  it('defaults unknown phases to 10%', () => {
+    expect(mapBackendPhaseToProgress('mystery_phase')).toBe(10);
+  });
+
+  it('keeps progress monotonic when backend sends lower value', () => {
+    expect(deriveMonotonicProgress(65, 40)).toBe(65);
+  });
+
+  it('clamps and advances progress safely', () => {
+    expect(deriveMonotonicProgress(95, 140)).toBe(100);
+    expect(deriveMonotonicProgress(-5, 20)).toBe(20);
   });
 });

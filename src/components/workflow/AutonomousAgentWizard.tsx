@@ -70,10 +70,13 @@ import {
 import { 
     WorkflowGenerationStateManager, 
     WorkflowGenerationState,
+    deriveMonotonicProgress,
+    mapBackendPhaseToProgress,
     mapWizardStepToState,
     mapStateToWizardStep 
 } from '@/lib/workflow-generation-state';
 import { shouldRunAttachCredentialsAfterAttachInputs } from '@/lib/workflow-phase-contract';
+import { getPromptInputLayoutState } from '@/lib/prompt-input-layout';
 import FieldOwnershipGuidePanel from './FieldOwnershipGuidePanel';
 import { buildFieldOwnershipGuideContext } from '@/lib/field-ownership-guide-context';
 
@@ -1669,24 +1672,6 @@ export function AutonomousAgentWizard() {
         }
     }, [step, isComplete]);
 
-    // Map backend phases to progress ranges
-    const getProgressForPhase = (phase: string): number => {
-        // Progress milestones tied to real backend work:
-        // understand (prompt parsed) ? planning (graph designed) ?
-        // construction (nodes+edges built) ? validation (edges/types checked) ?
-        // verification (credentials/schema verified) ? learning (final save)
-        const phaseMap: Record<string, number> = {
-            'understand':   20,   // prompt parsed
-            'planning':     40,   // graph structure designed
-            'construction': 65,   // nodes + edges assembled
-            'validation':   80,   // structural validation done
-            'verification': 90,   // credential + schema checks done
-            'healing':      75,   // recovery � slightly behind construction
-            'learning':     95,   // final cleanup before save
-        };
-        return phaseMap[phase] ?? 10;
-    };
-
     // Map phases to user-friendly descriptions
     const getPhaseDescription = (phase: string): string => {
         const descriptions: Record<string, string> = {
@@ -1695,8 +1680,10 @@ export function AutonomousAgentWizard() {
             'construction': 'Building nodes, edges and config',
             'validation':   'Validating graph structure and edges',
             'verification': 'Verifying credentials and schemas',
+            'credential_discovery': 'Discovering and validating credentials',
             'healing':      'Resolving structural issues',
             'learning':     'Finalizing and saving workflow',
+            'completed':    'Workflow build complete',
         };
         return descriptions[phase] || 'Processing...';
     };
@@ -3736,50 +3723,14 @@ export function AutonomousAgentWizard() {
         setIsComplete(false);
         setBuildingLogs(['Initializing Autonomous Agent...', 'Loading Node Library...', 'Synthesizing Requirements...']);
 
-        // Realistic progress simulation: smooth animation that fills time between backend signals.
+        // Conservative fallback progress until backend phase events arrive.
+        // Keeps UI responsive without racing ahead of real backend milestones.
         let fallbackProgressInterval: NodeJS.Timeout | null = null;
-        let simulatedTarget = 5;
 
         const startFallbackProgress = () => {
-            const targetSchedule = [
-                { atMs: 0,      target: 8  },
-                { atMs: 3000,   target: 15 },
-                { atMs: 7000,   target: 25 },
-                { atMs: 12000,  target: 35 },
-                { atMs: 20000,  target: 45 },
-                { atMs: 30000,  target: 55 },
-                { atMs: 45000,  target: 65 },
-                { atMs: 65000,  target: 72 },
-                { atMs: 90000,  target: 78 },
-                { atMs: 120000, target: 83 },
-                { atMs: 150000, target: 86 },
-                { atMs: 180000, target: 88 },
-            ];
-            const startMs = Date.now();
             fallbackProgressInterval = setInterval(() => {
-                const elapsed = Date.now() - startMs;
-                let newTarget = 88;
-                for (let i = targetSchedule.length - 1; i >= 0; i--) {
-                    if (elapsed >= targetSchedule[i].atMs) {
-                        const curr = targetSchedule[i];
-                        const next = targetSchedule[i + 1];
-                        if (next) {
-                            const t = (elapsed - curr.atMs) / (next.atMs - curr.atMs);
-                            newTarget = curr.target + (next.target - curr.target) * Math.min(1, t);
-                        } else {
-                            newTarget = curr.target;
-                        }
-                        break;
-                    }
-                }
-                simulatedTarget = Math.min(88, newTarget);
-                setProgress(prev => {
-                    if (prev >= 88) return prev;
-                    const gap = simulatedTarget - prev;
-                    if (gap <= 0.05) return prev;
-                    return Math.min(88, prev + Math.max(0.1, gap * 0.18));
-                });
-            }, 200);
+                setProgress(prev => (prev < 10 ? prev + 1 : prev));
+            }, 2500);
         }
 
         const stopFallbackProgress = () => {
@@ -4257,9 +4208,8 @@ export function AutonomousAgentWizard() {
                         console.log('Received update:', update);
 
                         if (typeof update.progress_percentage === 'number') {
-                            setProgress(
-                                Math.min(100, Math.max(0, Number(update.progress_percentage)))
-                            );
+                            const next = Math.min(100, Math.max(0, Number(update.progress_percentage)));
+                            setProgress(prev => deriveMonotonicProgress(prev, next));
                         }
 
                         if (update.status === 'error') {
@@ -4297,10 +4247,10 @@ export function AutonomousAgentWizard() {
                                 if (update.progress_percentage !== undefined) {
                                     actualProgress = Math.min(99, Math.max(0, update.progress_percentage));
                                 } else {
-                                    actualProgress = Math.min(99, getProgressForPhase(update.current_phase));
+                                    actualProgress = Math.min(99, mapBackendPhaseToProgress(update.current_phase));
                                 }
 
-                                setProgress(prev => Math.max(prev, actualProgress));
+                                setProgress(prev => deriveMonotonicProgress(prev, actualProgress));
 
                                 const phaseDesc = getPhaseDescription(update.current_phase);
                                 setBuildingLogs(prev => {
@@ -4919,6 +4869,7 @@ export function AutonomousAgentWizard() {
         // Scroll back to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+    const promptLayout = getPromptInputLayoutState(prompt, step);
 
     return (
         <div className="fixed inset-0 z-50 bg-background text-foreground font-sans flex flex-col">
@@ -4978,10 +4929,17 @@ export function AutonomousAgentWizard() {
                                         }
                                     }}
                                 />
+                            </div>
+                            <div className="mt-3 flex items-center justify-between gap-3">
+                                {promptLayout.showShortcutHint ? (
+                                    <p className="text-xs text-muted-foreground">
+                                        Press <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted border border-border rounded">Ctrl/Cmd + Enter</kbd> to analyze
+                                    </p>
+                                ) : <span />}
                                 <Button
-                                    className="absolute bottom-4 right-4 bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20"
+                                    className="bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20"
                                     onClick={handleAnalyze}
-                                    disabled={!prompt.trim() || step === 'analyzing'}
+                                    disabled={promptLayout.disableAnalyzeButton}
                                 >
                                     {step === 'analyzing' ? (
                                         <>
@@ -4993,11 +4951,6 @@ export function AutonomousAgentWizard() {
                                         </>
                                     )}
                                 </Button>
-                                {prompt.trim() && step !== 'analyzing' && (
-                                    <p className="absolute bottom-2 left-4 text-xs text-muted-foreground">
-                                        Press <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted border border-border rounded">Ctrl/Cmd + Enter</kbd> to analyze
-                                    </p>
-                                )}
                             </div>
 
                             <div className="grid grid-cols-3 gap-4 mt-8">

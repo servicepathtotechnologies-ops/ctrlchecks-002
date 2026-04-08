@@ -47,6 +47,7 @@ const ChatTrigger = lazy(() => import("./pages/ChatTrigger"));
 const ModelTestingDashboard = lazy(() => import("./pages/ModelTestingDashboard"));
 const ModelTestPage = lazy(() => import("./pages/ModelTestPage"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 const Profile = lazy(() => import("./pages/Profile"));
 
 // Component to conditionally render Chatbot only on landing page
@@ -176,6 +177,7 @@ const App = () => (
                   <Route path="/model-testing" element={<ModelTestingDashboard />} />
                   <Route path="/model-testing/:category/:model" element={<ModelTestPage />} />
                   <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
