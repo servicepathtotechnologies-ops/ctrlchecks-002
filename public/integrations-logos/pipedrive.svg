@@ -1,0 +1,7 @@
+<svg width="120" height="120" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main P shape -->
+  <path d="M6 4H12C15 4 17 6 17 8.5C17 11 15 13 12 13H9V20H6V4Z" fill="#1F8DED"></path>
+
+  <!-- Inner cut (pipeline feel) -->
+  <rect x="9" y="7" width="4" height="2" fill="white"></rect>
+</svg>

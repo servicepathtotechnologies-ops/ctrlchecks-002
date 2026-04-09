@@ -1,0 +1,15 @@
+<svg width="120" height="120" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Head -->
+  <circle cx="12" cy="8" r="4" fill="#F2F2F2"></circle>
+
+  <!-- Body -->
+  <path d="M6 20C6 16.5 8.5 14 12 14C15.5 14 18 16.5 18 20V21H6V20Z" fill="#D32F2F"></path>
+
+  <!-- Tie -->
+  <polygon points="12,11 10.5,14 13.5,14" fill="#333"></polygon>
+
+  <!-- Face details -->
+  <circle cx="10.5" cy="7.5" r="0.5" fill="#333"></circle>
+  <circle cx="13.5" cy="7.5" r="0.5" fill="#333"></circle>
+  <path d="M10 9C10.5 9.5 11.5 9.5 12 9C12.5 9.5 13.5 9.5 14 9" stroke="#333" stroke-width="0.5" fill="none"></path>
+</svg>

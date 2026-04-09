@@ -1,0 +1,10 @@
+<svg width="120" height="120" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Top shape -->
+  <path d="M6 3H18L14 9H2L6 3Z" fill="#2684FF"></path>
+
+  <!-- Middle shape -->
+  <path d="M10 9H22L18 15H6L10 9Z" fill="#0052CC"></path>
+
+  <!-- Bottom shape -->
+  <path d="M6 15H18L14 21H2L6 15Z" fill="#4C9AFF"></path>
+</svg>

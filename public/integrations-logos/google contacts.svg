@@ -1,0 +1,10 @@
+<svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect x="2" y="2" width="20" height="20" rx="4" fill="#1A73E8"></rect>
+
+  <!-- Person head -->
+  <circle cx="12" cy="10" r="3" fill="white"></circle>
+
+  <!-- Person body -->
+  <path d="M6 18C6 15.7909 8.23858 14 12 14C15.7614 14 18 15.7909 18 18V19H6V18Z" fill="white"></path>
+</svg>

@@ -1,0 +1,7 @@
+<svg width="120" height="120" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Back P -->
+  <path d="M8 5H13C15.5 5 17 6.5 17 8.5C17 10.5 15.5 12 13 12H10.5L9.5 18H7L8 5Z" fill="#009CDE"></path>
+
+  <!-- Front P -->
+  <path d="M6 5H11C13.5 5 15 6.5 15 8.5C15 10.5 13.5 12 11 12H8.5L7.5 18H5L6 5Z" fill="#003087"></path>
+</svg>

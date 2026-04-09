@@ -1,6 +1,7 @@
 import { Header } from "@/components/landing/Header";
 import { LandingLightPillarBackground } from "@/components/landing/LandingLightPillarBackground";
 import { Hero } from "@/components/landing/Hero";
+import { IntegrationsMarqueeSection } from "@/components/landing/IntegrationsMarqueeSection";
 import { Features } from "@/components/landing/Features";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { WorkflowDemoSection } from "@/components/landing/WorkflowDemoSection";
@@ -24,6 +25,7 @@ const Index = () => {
         <Header />
         <main className="bg-transparent">
           <Hero />
+          <IntegrationsMarqueeSection />
           <HowItWorks />
           <WorkflowDemoSection />
           <BusinessValueSection />

@@ -1,0 +1,10 @@
+<svg width="120" height="120" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect x="2" y="2" width="20" height="20" rx="6" fill="#1F8DED"></rect>
+
+  <!-- Messenger bars -->
+  <rect x="7" y="8" width="1.8" height="8" rx="1" fill="white"></rect>
+  <rect x="10" y="6.5" width="1.8" height="11" rx="1" fill="white"></rect>
+  <rect x="13" y="6.5" width="1.8" height="11" rx="1" fill="white"></rect>
+  <rect x="16" y="8" width="1.8" height="8" rx="1" fill="white"></rect>
+</svg>

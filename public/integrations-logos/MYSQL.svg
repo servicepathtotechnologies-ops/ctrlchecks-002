@@ -1,0 +1,10 @@
+<svg width="120" height="120" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dolphin shape (simplified) -->
+  <path d="M4 14C6 10 10 8 14 9C16 9.5 18 11 20 10C19 12 17 14 14 15C10 16.5 7 16 4 14Z" fill="#00758F"></path>
+
+  <!-- Tail -->
+  <path d="M18 10C19.5 9 21 9.5 22 10.5C20.5 11 19.5 11 18 10Z" fill="#00758F"></path>
+
+  <!-- Eye -->
+  <circle cx="14" cy="11" r="0.4" fill="#FFFFFF"></circle>
+</svg>

@@ -1,0 +1,17 @@
+<svg width="120" height="120" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Face -->
+  <circle cx="12" cy="12" r="7" fill="#FFE01B"></circle>
+
+  <!-- Eyes -->
+  <circle cx="9.5" cy="11" r="1" fill="#333"></circle>
+  <circle cx="14.5" cy="11" r="1" fill="#333"></circle>
+
+  <!-- Smile -->
+  <path d="M9 14C10 15.5 14 15.5 15 14" stroke="#333" stroke-width="1" fill="none"></path>
+
+  <!-- Ear -->
+  <circle cx="6" cy="10" r="1.5" fill="#FFE01B"></circle>
+
+  <!-- Hat -->
+  <path d="M8 6C10 4 14 4 16 6" stroke="#333" stroke-width="1.5" fill="none"></path>
+</svg>

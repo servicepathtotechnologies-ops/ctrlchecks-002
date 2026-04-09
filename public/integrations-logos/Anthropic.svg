@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" role="img" aria-label="Anthropic">
+  <rect width="1200" height="320" fill="#ffffff"></rect>
+  
+  <!-- Icon -->
+  <g transform="translate(60,40)">
+    <circle cx="120" cy="120" r="92" fill="none" stroke="#111111" stroke-width="16"></circle>
+    <path d="M72 196 L120 60 L168 196" fill="none" stroke="#111111" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"></path>
+    <line x1="88" y1="152" x2="152" y2="152" stroke="#111111" stroke-width="16" stroke-linecap="round"></line>
+  </g>
+
+  <!-- Text -->
+  <text x="290" y="195" font-family="Georgia, 'Times New Roman', serif" font-size="108" fill="#111111" letter-spacing="1">
+    Anthropic
+  </text>
+</svg>

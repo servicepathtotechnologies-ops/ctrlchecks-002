@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Telegram logo">
+  <defs>
+    <linearGradient id="tgGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#37AEE2"></stop>
+      <stop offset="100%" stop-color="#1E96C8"></stop>
+    </linearGradient>
+  </defs>
+
+  <circle cx="120" cy="120" r="110" fill="url(#tgGradient)"></circle>
+
+  <path d="M55 118.5L172.5 73.5C177.8 71.5 182.4 74.8 180.7 82.3L160.7 176.4C159.2 183.1 154.8 184.7 149.3 181.6L118.9 159.2L104.2 173.4C102.6 175 101.3 176.3 98.2 176.3L100.4 145.2L156.9 94.2C159.4 92 156.3 90.8 153 93L83.2 137L53.1 127.6C46.6 125.5 46.5 121 55 118.5Z" fill="#ffffff"></path>
+</svg>
