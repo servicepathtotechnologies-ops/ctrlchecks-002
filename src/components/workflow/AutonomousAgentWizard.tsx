@@ -457,6 +457,7 @@ function buildGenerateWorkflowCreateBody(params: {
     planMandatoryNodeTypes: string[];
     planNodeHints: string[];
     selectedVariationMeta: WizardSelectedVariationMeta;
+    existingWorkflow?: { nodes: any[]; edges: any[] } | null;
 }): Record<string, unknown> {
     const {
         finalPrompt,
@@ -466,6 +467,7 @@ function buildGenerateWorkflowCreateBody(params: {
         planMandatoryNodeTypes,
         planNodeHints,
         selectedVariationMeta,
+        existingWorkflow,
     } = params;
 
     const chain = planNodeHints.filter((x) => typeof x === 'string' && x.trim().length > 0);
@@ -502,6 +504,11 @@ function buildGenerateWorkflowCreateBody(params: {
                       undefined,
               }
             : undefined,
+        // Pass existing workflow so the backend merges AI-assigned field values
+        // instead of regenerating from scratch on continuation requests.
+        ...(existingWorkflow && existingWorkflow.nodes && existingWorkflow.nodes.length > 0
+            ? { existingWorkflow: { nodes: existingWorkflow.nodes, edges: existingWorkflow.edges } }
+            : {}),
     };
 }
 
@@ -3320,6 +3327,13 @@ export function AutonomousAgentWizard() {
                     (typeof prompt === 'string' && prompt.trim()) ||
                     '';
 
+                // ? KEY FIX: If the workflow was already saved at pipeline-ready time (generatedWorkflowId exists),
+                // reuse that record instead of inserting a new one. This prevents regenerating the workflow
+                // from scratch when the user clicks "Continue Workflow" after the field-ownership step.
+                if (generatedWorkflowId) {
+                    console.log('? Reusing existing workflow:', generatedWorkflowId);
+                    savedWorkflow = { id: generatedWorkflowId };
+                } else {
                 // First, save the workflow without inputs/credentials
                 const buildAiFromGen = (pendingWorkflowData as any)?.update?.buildAiUsage;
                 const workflowMetadataCfg: Record<string, unknown> = {};
@@ -3360,7 +3374,8 @@ export function AutonomousAgentWizard() {
                 }
                 
                 savedWorkflow = workflowResult; // Store for catch block access
-                
+                } // end else (no generatedWorkflowId)
+
                 if (savedWorkflow?.id) {
                     const { data: { session } } = await supabase.auth.getSession();
                     
@@ -3802,6 +3817,13 @@ export function AutonomousAgentWizard() {
                 }
             }
 
+            // When pendingWorkflowData exists, the AI already built the workflow.
+            // Pass it as existingWorkflow so the backend merges field values instead
+            // of regenerating from scratch (fixes credential continuation regression).
+            const existingWorkflowForContinuation = pendingWorkflowData
+                ? { nodes: pendingWorkflowData.nodes, edges: pendingWorkflowData.edges }
+                : null;
+
             const createWorkflowBody = buildGenerateWorkflowCreateBody({
                 finalPrompt,
                 originalPrompt: originalPrompt || finalPrompt,
@@ -3810,6 +3832,7 @@ export function AutonomousAgentWizard() {
                 planMandatoryNodeTypes,
                 planNodeHints,
                 selectedVariationMeta,
+                existingWorkflow: existingWorkflowForContinuation,
             });
 
             // Use streaming mode to get real-time progress
@@ -4252,7 +4275,7 @@ export function AutonomousAgentWizard() {
 
                                 setProgress(prev => deriveMonotonicProgress(prev, actualProgress));
 
-                                const phaseDesc = getPhaseDescription(update.current_phase);
+                                const phaseDesc = update.log ?? getPhaseDescription(update.current_phase);
                                 setBuildingLogs(prev => {
                                     if (prev.includes(phaseDesc)) return prev;
                                     return [...prev, phaseDesc];
@@ -4317,6 +4340,39 @@ export function AutonomousAgentWizard() {
                                 }
 
                                 const contractReady = isPipelineContractReady(update);
+
+                                // ? KEY FIX: Save workflow to DB before showing field-ownership wizard.
+                                // This ensures generatedWorkflowId is set so "Continue Workflow" reuses
+                                // the existing record instead of inserting a new one from scratch.
+                                if (!workflowSaved && (update.nodes || update.workflow?.nodes)) {
+                                    try {
+                                        const wNodes = update.nodes || update.workflow?.nodes || [];
+                                        const wEdges = update.edges || update.workflow?.edges || [];
+                                        if (wNodes.length > 0) {
+                                            const { data: { user: wUser } } = await supabase.auth.getUser();
+                                            const { data: preSaved, error: preSaveErr } = await supabase
+                                                .from('workflows')
+                                                .insert({
+                                                    name: (analysis?.summary && typeof analysis.summary === 'string')
+                                                        ? analysis.summary.substring(0, 50)
+                                                        : 'AI Generated Workflow',
+                                                    nodes: wNodes,
+                                                    edges: wEdges,
+                                                    user_id: wUser?.id,
+                                                    updated_at: new Date().toISOString(),
+                                                } as any)
+                                                .select()
+                                                .single();
+                                            if (!preSaveErr && preSaved?.id) {
+                                                setGeneratedWorkflowId(preSaved.id);
+                                                workflowSaved = true;
+                                                console.log('? Pre-saved workflow before field-ownership wizard:', preSaved.id);
+                                            }
+                                        }
+                                    } catch (preSaveError: any) {
+                                        console.warn('[PreSave] Non-blocking pre-save failed:', preSaveError?.message);
+                                    }
+                                }
 
                                 if (applyUnifiedWizardFromGenerateUpdate(update)) {
                                     return;
@@ -4529,6 +4585,37 @@ export function AutonomousAgentWizard() {
                 }
 
                 stopFallbackProgress();
+
+                // ? KEY FIX: Save workflow to DB before showing field-ownership wizard (non-streaming path).
+                if (!workflowSaved && (finalData.nodes || finalData.workflow?.nodes)) {
+                    try {
+                        const wNodes = finalData.nodes || finalData.workflow?.nodes || [];
+                        const wEdges = finalData.edges || finalData.workflow?.edges || [];
+                        if (wNodes.length > 0) {
+                            const { data: { user: wUser } } = await supabase.auth.getUser();
+                            const { data: preSaved, error: preSaveErr } = await supabase
+                                .from('workflows')
+                                .insert({
+                                    name: (analysis?.summary && typeof analysis.summary === 'string')
+                                        ? analysis.summary.substring(0, 50)
+                                        : 'AI Generated Workflow',
+                                    nodes: wNodes,
+                                    edges: wEdges,
+                                    user_id: wUser?.id,
+                                    updated_at: new Date().toISOString(),
+                                } as any)
+                                .select()
+                                .single();
+                            if (!preSaveErr && preSaved?.id) {
+                                setGeneratedWorkflowId(preSaved.id);
+                                workflowSaved = true;
+                                console.log('? Pre-saved workflow (non-streaming) before field-ownership wizard:', preSaved.id);
+                            }
+                        }
+                    } catch (preSaveError: any) {
+                        console.warn('[PreSave] Non-blocking pre-save failed (non-streaming):', preSaveError?.message);
+                    }
+                }
 
                 if (applyUnifiedWizardFromGenerateUpdate(finalData)) {
                     return;
@@ -6636,6 +6723,7 @@ export function AutonomousAgentWizard() {
                     {/* STEP 5+: BUILDING */}
                     {step === 'building' && (
                         <motion.div
+                            key="building"
                             initial={{ opacity: 0 }} 
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}

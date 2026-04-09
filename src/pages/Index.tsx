@@ -10,6 +10,7 @@ import { OpenCoreSection } from "@/components/landing/OpenCoreSection";
 import { PluginsApiSection } from "@/components/landing/PluginsApiSection";
 import { IndustryVerticalsSection } from "@/components/landing/IndustryVerticalsSection";
 import { WhyCtrlChecksSection } from "@/components/landing/WhyCtrlChecksSection";
+import { Pricing } from "@/components/landing/Pricing";
 import { SubscriptionSection } from "@/components/landing/SubscriptionSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { CTA } from "@/components/landing/CTA";
@@ -32,6 +33,7 @@ const Index = () => {
           <IndustryVerticalsSection />
           <WhyCtrlChecksSection />
           <Features />
+          <Pricing />
           <SubscriptionSection />
           <FaqSection />
           <CTA />

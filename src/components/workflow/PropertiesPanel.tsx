@@ -31,6 +31,15 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
+import { extractNodeConfigForAttachInputs } from '@/lib/attach-inputs-payload';
+
+/** Stable JSON for deduping attach-inputs auto-persist (sorted keys). */
+function stableStringifyForAttachInputs(obj: Record<string, unknown>): string {
+  const keys = Object.keys(obj).sort();
+  const sorted: Record<string, unknown> = {};
+  for (const k of keys) sorted[k] = obj[k];
+  return JSON.stringify(sorted);
+}
 import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { useRole } from '@/hooks/useRole';
 import { mergeCapabilityHints } from '@/lib/aiEditorPermissions';
@@ -1020,12 +1029,25 @@ export default function PropertiesPanel({
   // Auto-persist node config changes to backend.
   // Debounced so rapid typing doesn't flood the API — fires 1.5s after the last change.
   const autoPersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Skip auto-persist briefly after workflow load / navigation so canvas state matches server. */
+  const suppressAutoPersistUntilRef = useRef(0);
+  /** Per-node hash of last successful attach-inputs payload (non-credential keys only). */
+  const lastSuccessfulAttachInputsRef = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    if (!workflowId) return;
+    suppressAutoPersistUntilRef.current = Date.now() + 650;
+    lastSuccessfulAttachInputsRef.current.clear();
+  }, [workflowId]);
+
   useEffect(() => {
     if (!selectedNode || !workflowId) return;
     // Only auto-persist when the workflow is already saved (has an ID)
     if (autoPersistTimerRef.current) clearTimeout(autoPersistTimerRef.current);
     autoPersistTimerRef.current = setTimeout(async () => {
       try {
+        if (Date.now() < suppressAutoPersistUntilRef.current) return;
+
         const { supabase } = await import('@/integrations/supabase/client');
         const { data: sessionData } = await supabase.auth.getSession();
         if (!sessionData?.session?.access_token) return;
@@ -1035,26 +1057,24 @@ export default function PropertiesPanel({
 
         // ✅ REGISTRY-DRIVEN: Get field ownership from the node schema (no hardcoding)
         // Fields with ownership='credential' go to attach-credentials
-        // All other fields go to attach-inputs
+        // All other fields go to attach-inputs (including _fillMode / _ownershipUnlock via shared helper)
         const cachedSchemas = nodeSchemaService.getCachedSchemas();
         const nodeDef = cachedSchemas?.find((s) => s.type === nodeType);
         const inputSchema = nodeDef?.inputSchema ?? {};
 
+        const extracted = extractNodeConfigForAttachInputs(nodeConfig as Record<string, unknown>);
         const nodeInputs: Record<string, any> = {};
         const credentialInputs: Record<string, any> = {};
 
-        Object.keys(nodeConfig).forEach((key) => {
-          const value = nodeConfig[key];
+        Object.keys(extracted).forEach((key) => {
+          const value = extracted[key];
           if (value === undefined || value === null) return;
-          if (key.startsWith('_')) return; // internal meta keys
 
           const fieldOwnership = (inputSchema[key] as any)?.ownership;
 
           if (fieldOwnership === 'credential') {
-            // ✅ Route credential fields to attach-credentials
             if (value !== '') credentialInputs[key] = value;
           } else {
-            // ✅ Route all other fields (structural, value, unknown) to attach-inputs
             nodeInputs[key] = value;
           }
         });
@@ -1064,11 +1084,37 @@ export default function PropertiesPanel({
 
         // Send config inputs
         if (Object.keys(nodeInputs).length > 0) {
-          await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-inputs`, {
+          const inputsKey = stableStringifyForAttachInputs(nodeInputs as Record<string, unknown>);
+          if (lastSuccessfulAttachInputsRef.current.get(selectedNode.id) === inputsKey) {
+            return;
+          }
+
+          const attachRes = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-inputs`, {
             method: 'POST',
             headers,
             body: JSON.stringify({ inputs: { [selectedNode.id]: nodeInputs } }),
           });
+          if (!attachRes.ok) {
+            const errJson = await attachRes.json().catch(() => ({}));
+            const msg =
+              typeof errJson?.message === 'string'
+                ? errJson.message
+                : typeof errJson?.error === 'string'
+                  ? errJson.error
+                  : `HTTP ${attachRes.status}`;
+            toast({
+              title: 'Could not save node configuration',
+              description: msg.slice(0, 400),
+              variant: 'destructive',
+            });
+          } else {
+            lastSuccessfulAttachInputsRef.current.set(selectedNode.id, inputsKey);
+            const body = await attachRes.json().catch(() => ({}));
+            const invalid = body?.diagnostics?.invalidBareNodeIdInputKeys as string[] | undefined;
+            if (Array.isArray(invalid) && invalid.length > 0) {
+              console.warn('[PropertiesPanel] attach-inputs ignored invalid keys:', invalid);
+            }
+          }
         }
 
         // Send credential inputs (keyed by nodeId so backend knows which node they belong to)

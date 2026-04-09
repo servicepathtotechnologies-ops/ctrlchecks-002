@@ -2,6 +2,18 @@
  * Workflow phase strings aligned with the worker attach-inputs / attach-credentials contract.
  * Worker: attach-credentials accepts only workflows in `inputs_applied` after attach-inputs.
  * See worker/src/api/attach-credentials.ts phase guard.
+ *
+ * ## Freeze boundary (`metadata.freezeBoundary`)
+ *
+ * After the workflow reaches `ready_for_ownership` / `ready_for_execution`, `freezeBoundary.frozen`
+ * is set by attach-inputs. **Freeze policy is topology-only** (see worker attach-inputs):
+ *
+ * - **Enforced:** graph structure must not change (node/edge identity and wiring vs baseline topology fingerprint).
+ * - **Not enforced for persistence:** non-credential node config values may still be updated via attach-inputs
+ *   (AI build-time fields, templates, ownership fill modes). This keeps configuration editable until execution
+ *   without spurious 409s from protected-config hashing.
+ *
+ * Credential injection still must not change topology (attach-credentials).
  */
 
 export const PHASE_INPUTS_APPLIED = 'inputs_applied' as const;

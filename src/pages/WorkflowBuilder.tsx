@@ -14,6 +14,7 @@ import { useDebugStore } from '@/stores/debugStore';
 import { Edge } from '@xyflow/react';
 import { Json } from '@/integrations/supabase/types';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
+import { extractNodeConfigForAttachInputs } from '@/lib/attach-inputs-payload';
 import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { enforceFrontendRenderContract, normalizeBackendWorkflow, validateNodeTypesRegistered } from '@/lib/node-type-normalizer';
 import { CredentialStatusPanel, type CredentialPanelData } from '@/components/workflow/CredentialStatusPanel';
@@ -383,6 +384,9 @@ export default function WorkflowBuilder() {
       // ✅ CRITICAL: After saving, automatically attach inputs and set status to ready_for_execution
       if (savedWorkflowId) {
         try {
+          // Yield so React/Zustand can flush saved graph state before attach-inputs (avoids racing a thin snapshot).
+          await new Promise((r) => setTimeout(r, 80));
+
           const { data: currentSessionData } = await supabase.auth.getSession();
           
           // Extract inputs from current nodes
@@ -390,22 +394,11 @@ export default function WorkflowBuilder() {
           
           nodes.forEach((node: any) => {
             const nodeConfig = node.data?.config || {};
-            const nodeInputs: Record<string, any> = {};
-            
-            // Extract all config values as inputs — include empty strings so user-cleared
-            // fields (e.g. recipientEmails = "") are persisted, not silently dropped.
-            // Only skip undefined/null and internal _prefixed fields.
-            // Credential/oauth keys (e.g. credentialId, apiKey) are legitimate node config
-            // that must be persisted. The attach-inputs API already strips raw OAuth tokens
-            // at the API boundary.
-            Object.keys(nodeConfig).forEach((key) => {
-              const value = nodeConfig[key];
-              if (value === undefined || value === null) return;
-              if (key.startsWith('_')) return;
-              nodeInputs[key] = value;
-            });
-            
-            // Only add node if it has inputs
+            const nodeInputs = extractNodeConfigForAttachInputs(nodeConfig as Record<string, unknown>) as Record<
+              string,
+              any
+            >;
+
             if (Object.keys(nodeInputs).length > 0) {
               inputsToAttach[node.id] = nodeInputs;
             }
@@ -895,16 +888,16 @@ export default function WorkflowBuilder() {
             nodeInputs.conditions = nodeConfig.conditions;
           }
         } else {
-          // Other nodes: extract all non-empty config values as inputs
-          Object.keys(nodeConfig).forEach((key) => {
-            const value = nodeConfig[key];
-            // Skip empty values, credentials, and internal fields
-            if (value !== undefined && value !== null && value !== '' && 
-                !key.startsWith('_') && 
-                !key.includes('credential') && 
-                !key.includes('oauth')) {
+          const extracted = extractNodeConfigForAttachInputs(nodeConfig as Record<string, unknown>);
+          Object.keys(extracted).forEach((key) => {
+            const value = extracted[key];
+            if (value === undefined || value === null || value === '') return;
+            if (key.startsWith('_')) {
               nodeInputs[key] = value;
+              return;
             }
+            if (key.includes('credential') || key.includes('oauth')) return;
+            nodeInputs[key] = value;
           });
         }
         
