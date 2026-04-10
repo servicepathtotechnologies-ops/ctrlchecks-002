@@ -8,28 +8,30 @@ type IntegrationLogo = {
 
 const integrationFiles = [
   "ActiveCampaign.svg",
-  "airtable.svg",
+  "Airtable.svg",
   "Anthropic.svg",
   "AWS S3.svg",
   "bitbucket.svg",
   "ClickUp.svg",
-  "claude.svg",
+  "Claude.svg",
   "Discord.svg",
   "Dropbox.svg",
   "facebook.svg",
   "Freshdesk.svg",
   "FTP.svg",
-  "github-sign.svg",
-  "gmail.svg",
-  "Google-Contacts.svg",
-  "google-calendar.svg",
-  "google-docs.svg",
-  "Google-Drive.svg",
-  "Google-Gemini.svg",
-  "google.svg",
-  "instagram.svg",
+  "Github.svg",
+  "Gmail.svg",
+  "Google Contacts.svg",
+  "Google Calender.svg",
+  "Google Docs.svg",
+  "Google Drive.svg",
+  "Google Gemini.svg",
+  "Google Sheets.svg",
+  "Google Bigquery.svg",
+  "Google.svg",
+  "Instagram.svg",
   "Intercom.svg",
-  "jenkins.svg",
+  "Jenkins.svg",
   "Jira.svg",
   "linkedin.svg",
   "Mailchimp.svg",
@@ -43,20 +45,24 @@ const integrationFiles = [
   "Outlook.svg",
   "PayPal.svg",
   "Pipedrive.svg",
-  "postgre.svg",
+  "Postgre Sql.svg",
   "Redis.svg",
   "Salesforce.svg",
   "SFTP.svg",
-  "shopify.svg",
+  "Shopify.svg",
   "Slack.svg",
   "Stripe.svg",
   "Supabase.svg",
   "Telegram.svg",
-  "twitter.svg",
+  "Twilio.svg",
+  "Twitter.svg",
+  "Whatsapp Cloude.svg",
   "WooCommerce.svg",
-  "youtube.svg",
-  "Zoho CRM.svg",
+  "Youtube.svg",
   "Zoho.svg",
+  "Zoho CRM.svg",
+  "Gitlab.svg",
+  "Hubspot.svg",
 ];
 
 const formatNameFromFile = (file: string) =>
@@ -67,24 +73,34 @@ const formatNameFromFile = (file: string) =>
     .trim();
 
 const displayNameByFile: Record<string, string> = {
-  "github-sign.svg": "GitHub",
-  "gmail.svg": "Gmail",
-  "Google-Contacts.svg": "Google Contacts",
-  "google-calendar.svg": "Google Calendar",
-  "google-docs.svg": "Google Docs",
-  "Google-Drive.svg": "Google Drive",
-  "Google-Gemini.svg": "Google Gemini",
-  "google.svg": "Google",
+  "Github.svg": "GitHub",
+  "Hubspot.svg": "HubSpot",
+  "Gmail.svg": "Gmail",
+  "Google Contacts.svg": "Google Contacts",
+  "Google Calender.svg": "Google Calendar",
+  "Google Docs.svg": "Google Docs",
+  "Google Drive.svg": "Google Drive",
+  "Google Gemini.svg": "Google Gemini",
+  "Google Bigquery.svg": "Google BigQuery",
+  "Google Sheets.svg": "Google Sheets",
+  "Google.svg": "Google",
   "MongoDB.svg": "MongoDB",
   "MySQL.svg": "MySQL",
   "OpenAI GPT.svg": "OpenAI GPT",
   "WooCommerce.svg": "WooCommerce",
-  "twitter.svg": "Twitter/X",
+  "Twitter.svg": "Twitter/X",
   "Zoho CRM.svg": "Zoho CRM",
   "AWS S3.svg": "AWS S3",
   "SFTP.svg": "SFTP",
   "FTP.svg": "FTP",
   "OneDrive.svg": "OneDrive",
+  "Postgre Sql.svg": "PostgreSQL",
+  "Whatsapp Cloude.svg": "WhatsApp Cloud",
+  "Youtube.svg": "YouTube",
+  "linkedin.svg": "LinkedIn",
+  "facebook.svg": "Facebook",
+  "bitbucket.svg": "Bitbucket",
+  "Gitlab.svg": "GitLab",
 };
 
 const integrations: IntegrationLogo[] = integrationFiles.map((file) => ({
@@ -103,10 +119,9 @@ const splitIntoRows = <T,>(items: T[], rowCount: number): T[][] => {
 };
 
 const rowDirections = [false, true, false];
-const rowDurations = [34, 38, 36];
+const rowDurations = [46, 52, 49];
 
 function normalizeDisplayName(name: string) {
-  if (name === "postgre") return "PostgreSQL";
   return name;
 }
 
@@ -119,16 +134,16 @@ const normalizedRows = splitIntoRows(normalizedIntegrations, 3);
 
 function LogoTile({ item }: { item: IntegrationLogo }) {
   return (
-    <div className="w-36 shrink-0 rounded-xl border border-border/50 bg-background/70 px-4 py-4 text-center backdrop-blur-sm sm:w-40 dark:bg-white/5">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-white p-2 shadow-sm ring-1 ring-black/5 sm:h-18 sm:w-18 dark:bg-white dark:ring-white/10">
+    <div className="w-36 shrink-0 rounded-xl border border-border/50 bg-background/70 px-4 py-4 text-center shadow-sm backdrop-blur-sm transition-transform duration-300 hover:-translate-y-0.5 sm:w-40 dark:bg-white/5">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-white p-2.5 shadow-sm ring-1 ring-black/5 dark:bg-white dark:ring-white/10">
         <img
           src={encodeURI(item.src)}
           alt={item.name}
           loading="lazy"
-          className="h-12 w-12 object-contain [image-rendering:-webkit-optimize-contrast] sm:h-14 sm:w-14"
+          className="h-11 w-11 object-contain [image-rendering:-webkit-optimize-contrast]"
         />
       </div>
-      <p className="mt-3 line-clamp-2 min-h-10 text-xs font-medium text-muted-foreground sm:text-sm">
+      <p className="mt-3 line-clamp-2 min-h-10 text-sm font-medium text-muted-foreground">
         {item.name}
       </p>
     </div>
@@ -148,7 +163,7 @@ function MarqueeRow({
   return (
     <div className="relative overflow-hidden">
       <motion.div
-        className="flex w-max gap-4 py-2"
+        className="flex w-max gap-4 py-2.5"
         animate={{ x: reverse ? ["-50%", "0%"] : ["0%", "-50%"] }}
         transition={{ duration, ease: "linear", repeat: Infinity }}
       >
@@ -166,7 +181,7 @@ export function IntegrationsMarqueeSection() {
   return (
     <section
       id="integrations"
-      className="relative py-8 sm:py-10"
+      className="relative py-10 sm:py-12"
       aria-labelledby="integrations-heading"
     >
       <div className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
@@ -202,7 +217,7 @@ export function IntegrationsMarqueeSection() {
               ))}
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {normalizedRows.map((row, index) => (
                 <MarqueeRow
                   key={`row-${index}`}
