@@ -14,19 +14,30 @@ interface ZohoConnectionStatusProps {
   onConnect?: () => void;
   onDisconnect?: () => void;
   compact?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function ZohoConnectionStatus({ 
   onConnect, 
   onDisconnect,
-  compact = false 
+  compact = false,
+  open,
+  onOpenChange,
 }: ZohoConnectionStatusProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpenInternal, setIsDialogOpenInternal] = useState(false);
+  const isDialogOpen = open !== undefined ? open : isDialogOpenInternal;
+  const setIsDialogOpen = (value: boolean) => {
+    if (open === undefined) {
+      setIsDialogOpenInternal(value);
+    }
+    onOpenChange?.(value);
+  };
   const [region, setRegion] = useState<string>('US');
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
@@ -251,13 +262,112 @@ export default function ZohoConnectionStatus({
 
   if (compact) {
     return (
-      <div className="flex items-center gap-2">
-        {isAuthenticated ? (
-          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-        ) : (
-          <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+      <>
+        {open !== undefined && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Connect Zoho Account</DialogTitle>
+                <DialogDescription>
+                  Enter your Zoho OAuth credentials to connect your account. You can get these from your Zoho Developer Console.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="region">Region *</Label>
+                  <Select value={region} onValueChange={setRegion}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="US">United States (US)</SelectItem>
+                      <SelectItem value="EU">Europe (EU)</SelectItem>
+                      <SelectItem value="IN">India (IN)</SelectItem>
+                      <SelectItem value="AU">Australia (AU)</SelectItem>
+                      <SelectItem value="CN">China (CN)</SelectItem>
+                      <SelectItem value="JP">Japan (JP)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="clientId-compact">Client ID *</Label>
+                  <Input
+                    id="clientId-compact"
+                    type="text"
+                    placeholder="1000.xxxxxxxxxxxxx"
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
+                    disabled={isConnecting}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="clientSecret-compact">Client Secret *</Label>
+                  <Input
+                    id="clientSecret-compact"
+                    type="password"
+                    placeholder="Enter your client secret"
+                    value={clientSecret}
+                    onChange={(e) => setClientSecret(e.target.value)}
+                    disabled={isConnecting}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="accessToken-compact">Access Token *</Label>
+                  <Input
+                    id="accessToken-compact"
+                    type="text"
+                    placeholder="1000.xxxxxxxxxxxxx"
+                    value={accessToken}
+                    onChange={(e) => setAccessToken(e.target.value)}
+                    disabled={isConnecting}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="refreshToken-compact">Refresh Token (Optional)</Label>
+                  <Input
+                    id="refreshToken-compact"
+                    type="text"
+                    placeholder="1000.xxxxxxxxxxxxx"
+                    value={refreshToken}
+                    onChange={(e) => setRefreshToken(e.target.value)}
+                    disabled={isConnecting}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Refresh token is recommended for automatic token renewal
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                    disabled={isConnecting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleConnect}
+                    disabled={isConnecting || !clientId || !clientSecret || !accessToken}
+                  >
+                    {isConnecting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      'Connect'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
-      </div>
+      </>
     );
   }
 

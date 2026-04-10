@@ -21,7 +21,6 @@ export const USER_PRIMARY_NAV: UserNavItem[] = [
   { title: 'Templates', path: '/templates', icon: LayoutTemplate },
   { title: 'Workflows', path: '/workflows', icon: GitBranch },
   { title: 'Executions', path: '/executions', icon: Play },
-  { title: 'Profile', path: '/profile', icon: User },
 ];
 
 export interface AdminNavItem {

@@ -5,8 +5,6 @@ import { IntegrationsMarqueeSection } from "@/components/landing/IntegrationsMar
 import { Features } from "@/components/landing/Features";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { WorkflowDemoSection } from "@/components/landing/WorkflowDemoSection";
-import { BusinessValueSection } from "@/components/landing/BusinessValueSection";
-import { TrustSection } from "@/components/landing/TrustSection";
 import { OpenCoreSection } from "@/components/landing/OpenCoreSection";
 import { PluginsApiSection } from "@/components/landing/PluginsApiSection";
 import { IndustryVerticalsSection } from "@/components/landing/IndustryVerticalsSection";
@@ -28,8 +26,6 @@ const Index = () => {
           <IntegrationsMarqueeSection />
           <HowItWorks />
           <WorkflowDemoSection />
-          <BusinessValueSection />
-          <TrustSection />
           <OpenCoreSection />
           <PluginsApiSection />
           <IndustryVerticalsSection />

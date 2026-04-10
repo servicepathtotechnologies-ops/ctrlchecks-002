@@ -9,7 +9,7 @@ export function CTA() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="py-24 sm:py-32" aria-labelledby="cta-heading">
+    <section className="py-12 sm:py-16" aria-labelledby="cta-heading">
       <div className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 28, scale: 0.98 }}

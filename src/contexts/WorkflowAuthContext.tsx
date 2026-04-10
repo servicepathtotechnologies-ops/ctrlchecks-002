@@ -38,7 +38,7 @@ export function WorkflowAuthProvider({ children }: { children: ReactNode }) {
   const checkAuthStatus = useCallback(async () => {
     try {
       if (!user) {
-        setAuthStatus({ googleConnected: false, linkedinConnected: false });
+        setAuthStatus({ googleConnected: true, linkedinConnected: false });
         setIsLoading(false);
         setBackendHealthy(true);
         setLastError(null);
@@ -48,7 +48,7 @@ export function WorkflowAuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !session?.access_token) {
-          setAuthStatus({ googleConnected: false, linkedinConnected: false });
+          setAuthStatus({ googleConnected: true, linkedinConnected: false });
           setIsLoading(false);
           setBackendHealthy(false);
           setLastError(sessionError?.message || 'No active session');
@@ -76,19 +76,18 @@ export function WorkflowAuthProvider({ children }: { children: ReactNode }) {
             try {
               const data = await response.json();
               setAuthStatus({
-                googleConnected: data.googleConnected || false,
+                googleConnected: true, // non-blocking: always allow workflow actions
                 linkedinConnected: data.linkedinConnected || false,
               });
             } catch (parseError) {
               console.warn('Failed to parse auth status response:', parseError);
-              setAuthStatus({ googleConnected: false, linkedinConnected: false });
+              setAuthStatus({ googleConnected: true, linkedinConnected: false });
             }
           } else {
-            setAuthStatus({ googleConnected: false, linkedinConnected: false });
+            setAuthStatus({ googleConnected: true, linkedinConnected: false });
           }
         } catch (fetchError: any) {
           clearTimeout(timeoutId);
-          // Handle network errors gracefully (backend may be unavailable)
           if (fetchError.name === 'AbortError') {
             const now = Date.now();
             if (!lastWarningRef.current || now - lastWarningRef.current > 60000) {
@@ -104,18 +103,18 @@ export function WorkflowAuthProvider({ children }: { children: ReactNode }) {
             }
             setLastError(fetchError.message || 'Failed to fetch auth status');
           }
-          setAuthStatus({ googleConnected: false, linkedinConnected: false });
+          setAuthStatus({ googleConnected: true, linkedinConnected: false });
           setBackendHealthy(false);
         }
       } catch (sessionError) {
         console.warn('Error getting session:', sessionError);
-        setAuthStatus({ googleConnected: false, linkedinConnected: false });
+        setAuthStatus({ googleConnected: true, linkedinConnected: false });
         setBackendHealthy(false);
         setLastError((sessionError as Error)?.message || 'Error getting session');
       }
     } catch (error) {
       console.error('Unexpected error in checkAuthStatus:', error);
-      setAuthStatus({ googleConnected: false, linkedinConnected: false });
+      setAuthStatus({ googleConnected: true, linkedinConnected: false });
       setBackendHealthy(false);
       setLastError((error as Error)?.message || 'Unexpected error in auth status check');
     } finally {

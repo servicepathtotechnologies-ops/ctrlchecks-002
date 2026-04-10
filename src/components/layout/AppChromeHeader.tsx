@@ -6,7 +6,8 @@ import { useAuth } from '@/lib/auth';
 import { useRole } from '@/hooks/useRole';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
-import { Moon, Sun, Shield } from 'lucide-react';
+import { Moon, Sun, Shield, UserCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { USER_PRIMARY_NAV } from './nav-config';
 
 export interface AppChromeHeaderProps {
@@ -83,9 +84,14 @@ export function AppChromeHeader({
             </Button>
           )}
           {user?.email && (
-            <span className="hidden max-w-[160px] truncate text-xs text-muted-foreground xl:inline">
-              {user.email}
-            </span>
+            <Link
+              to="/profile"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              title="Go to profile"
+            >
+              <UserCircle className="h-5 w-5 shrink-0" />
+              <span className="hidden max-w-[160px] truncate xl:inline">{user.email}</span>
+            </Link>
           )}
         </div>
       </div>

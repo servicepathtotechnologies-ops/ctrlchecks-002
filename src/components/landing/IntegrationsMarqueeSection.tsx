@@ -70,7 +70,7 @@ export function IntegrationsMarqueeSection() {
   return (
     <section
       id="integrations"
-      className="relative py-16 sm:py-20"
+      className="relative py-8 sm:py-10"
       aria-labelledby="integrations-heading"
     >
       <div className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">

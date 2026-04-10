@@ -27,7 +27,7 @@ export function HowItWorks() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section id="how-it-works" className="py-24 sm:py-32" aria-labelledby="how-heading">
+    <section id="how-it-works" className="py-12 sm:py-16" aria-labelledby="how-heading">
       <div className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 28 }}

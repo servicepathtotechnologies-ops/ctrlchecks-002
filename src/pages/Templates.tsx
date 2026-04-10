@@ -81,19 +81,20 @@ export default function Templates() {
           <p className="text-sm text-muted-foreground">Loading templates...</p>
         ) : (
       <WorkflowAuthGate>
-        <div>
-          <h1 className="text-3xl font-bold">Workflow Templates</h1>
-          <p className="text-muted-foreground mt-1">
-            Browse pre-built workflow templates. Copy any template to start customizing.
-          </p>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Workflow Templates</h1>
+            <p className="text-muted-foreground mt-1">
+              Browse pre-built workflow templates. Copy any template to start customizing.
+            </p>
+          </div>
+          <Input
+            placeholder="Search templates..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full md:w-96"
+          />
         </div>
-
-        <Input
-          placeholder="Search templates..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-md"
-        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTemplates.map((template) => (

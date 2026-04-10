@@ -32,6 +32,7 @@ export default function ConnectionsPanel() {
   const [isNotionConnecting, setIsNotionConnecting] = useState(false);
   const [isTwitterConnecting, setIsTwitterConnecting] = useState(false);
   const [isZohoConnecting, setIsZohoConnecting] = useState(false);
+  const [isZohoDialogOpen, setIsZohoDialogOpen] = useState(false);
 
   const checkConnections = useCallback(async () => {
     if (!user) {
@@ -631,7 +632,7 @@ export default function ConnectionsPanel() {
 
           <div className="space-y-3">
             {/* Google Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950">
                   <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -655,7 +656,10 @@ export default function ConnectionsPanel() {
                 </div>
                 <div>
                   <div className="font-medium">Google</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {!isChecking && (
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${googleConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                    )}
                     {isChecking ? 'Checking...' : googleConnected ? 'Connected' : 'Not connected'}
                   </div>
                 </div>
@@ -701,7 +705,7 @@ export default function ConnectionsPanel() {
             </div>
 
             {/* LinkedIn Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
@@ -710,7 +714,10 @@ export default function ConnectionsPanel() {
                 </div>
                 <div>
                   <div className="font-medium">LinkedIn</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {!isChecking && (
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${linkedInConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                    )}
                     {isChecking ? 'Checking...' : linkedInConnected ? 'Connected' : 'Not connected'}
                   </div>
                 </div>
@@ -756,7 +763,7 @@ export default function ConnectionsPanel() {
             </div>
 
             {/* GitHub Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-950">
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -765,7 +772,10 @@ export default function ConnectionsPanel() {
                 </div>
                 <div>
                   <div className="font-medium">GitHub</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {!isChecking && (
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${githubConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                    )}
                     {isChecking ? 'Checking...' : githubConnected ? 'Connected' : 'Not connected'}
                   </div>
                 </div>
@@ -811,7 +821,7 @@ export default function ConnectionsPanel() {
             </div>
 
             {/* Facebook Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
                   <svg className="h-5 w-5" fill="#1877F2" viewBox="0 0 24 24">
@@ -820,7 +830,10 @@ export default function ConnectionsPanel() {
                 </div>
                 <div>
                   <div className="font-medium">Facebook</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {!isChecking && (
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${facebookConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                    )}
                     {isChecking ? 'Checking...' : facebookConnected ? 'Connected' : 'Not connected'}
                   </div>
                 </div>
@@ -866,7 +879,7 @@ export default function ConnectionsPanel() {
             </div>
 
             {/* Notion Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-950">
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -875,7 +888,10 @@ export default function ConnectionsPanel() {
                 </div>
                 <div>
                   <div className="font-medium">Notion</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {!isChecking && (
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${notionConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                    )}
                     {isChecking ? 'Checking...' : notionConnected ? 'Connected' : 'Not connected'}
                   </div>
                 </div>
@@ -921,7 +937,7 @@ export default function ConnectionsPanel() {
             </div>
 
             {/* Twitter Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#1DA1F2]/10 dark:bg-[#1DA1F2]/20">
                   <svg className="h-5 w-5" fill="#1DA1F2" viewBox="0 0 24 24">
@@ -930,7 +946,10 @@ export default function ConnectionsPanel() {
                 </div>
                 <div>
                   <div className="font-medium">Twitter/X</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {!isChecking && (
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${twitterConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                    )}
                     {isChecking ? 'Checking...' : twitterConnected ? 'Connected' : 'Not connected'}
                   </div>
                 </div>
@@ -976,7 +995,7 @@ export default function ConnectionsPanel() {
             </div>
 
             {/* Zoho Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E42529]/10 dark:bg-[#E42529]/20">
                   <svg className="h-5 w-5" fill="#E42529" viewBox="0 0 24 24">
@@ -985,13 +1004,63 @@ export default function ConnectionsPanel() {
                 </div>
                 <div>
                   <div className="font-medium">Zoho</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {!isChecking && (
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${zohoConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                    )}
                     {isChecking ? 'Checking...' : zohoConnected ? 'Connected' : 'Not connected'}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {isChecking ? (
+                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : zohoConnected ? (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (!user) return;
+                        try {
+                          const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+                          if (!authToken) throw new Error('No authentication token');
+                          const backendUrl = getBackendUrl();
+                          const response = await fetch(`${backendUrl}/api/connections/zoho`, {
+                            method: 'DELETE',
+                            headers: { Authorization: `Bearer ${authToken}` },
+                          });
+                          if (!response.ok) throw new Error('Failed to disconnect');
+                          setZohoConnected(false);
+                          toast({ title: 'Disconnected', description: 'Zoho account disconnected successfully' });
+                          checkConnections();
+                        } catch (error) {
+                          toast({ title: 'Error', description: 'Failed to disconnect Zoho account', variant: 'destructive' });
+                        }
+                      }}
+                      className="h-8"
+                    >
+                      Disconnect
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setIsZohoDialogOpen(true)}
+                      disabled={isZohoConnecting}
+                      className="h-8"
+                    >
+                      Connect
+                    </Button>
+                  </>
+                )}
                 <ZohoConnectionStatus
+                  open={isZohoDialogOpen}
+                  onOpenChange={setIsZohoDialogOpen}
+                  compact={true}
                   onConnect={() => {
                     setZohoConnected(true);
                     checkConnections();
@@ -1000,7 +1069,6 @@ export default function ConnectionsPanel() {
                     setZohoConnected(false);
                     checkConnections();
                   }}
-                  compact={false}
                 />
               </div>
             </div>

@@ -22,7 +22,7 @@ export function PluginsApiSection() {
   return (
     <section
       id="plugins-api"
-      className="py-24 sm:py-32"
+      className="py-12 sm:py-16"
       aria-labelledby="plugins-heading"
     >
       <div className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
