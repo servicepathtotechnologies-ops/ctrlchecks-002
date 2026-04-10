@@ -1,9 +1,0 @@
-<svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Document background -->
-  <path d="M6 2H14L20 8V22H6V2Z" fill="#1A73E8"></path>
-
-  <!-- Folded corner -->
-  <path d="M14 2V8H20" fill="#8AB4F8"></path>
-
-  <!-- Text lines -->
-  </svg>

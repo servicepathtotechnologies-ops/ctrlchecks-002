@@ -2,7 +2,6 @@ import { Header } from "@/components/landing/Header";
 import { LandingLightPillarBackground } from "@/components/landing/LandingLightPillarBackground";
 import { Hero } from "@/components/landing/Hero";
 import { IntegrationsMarqueeSection } from "@/components/landing/IntegrationsMarqueeSection";
-import { Features } from "@/components/landing/Features";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { WorkflowDemoSection } from "@/components/landing/WorkflowDemoSection";
 import { OpenCoreSection } from "@/components/landing/OpenCoreSection";
@@ -10,7 +9,6 @@ import { PluginsApiSection } from "@/components/landing/PluginsApiSection";
 import { IndustryVerticalsSection } from "@/components/landing/IndustryVerticalsSection";
 import { WhyCtrlChecksSection } from "@/components/landing/WhyCtrlChecksSection";
 import { Pricing } from "@/components/landing/Pricing";
-import { SubscriptionSection } from "@/components/landing/SubscriptionSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { CTA } from "@/components/landing/CTA";
 import { Footer } from "@/components/landing/Footer";
@@ -30,9 +28,7 @@ const Index = () => {
           <PluginsApiSection />
           <IndustryVerticalsSection />
           <WhyCtrlChecksSection />
-          <Features />
           <Pricing />
-          <SubscriptionSection />
           <FaqSection />
           <CTA />
         </main>

@@ -6,32 +6,128 @@ type IntegrationLogo = {
   src: string;
 };
 
-const integrations: IntegrationLogo[] = [
-  { name: "Anthropic", src: "/integrations-logos/Anthropic.svg" },
-  { name: "Claude", src: "/integrations-logos/claude.svg" },
-  { name: "Salesforce", src: "/integrations-logos/salesforce.svg.svg" },
-  { name: "Shopify", src: "/integrations-logos/shopify.svg" },
-  { name: "Slack", src: "/integrations-logos/slack.svg" },
-  { name: "Stripe", src: "/integrations-logos/stripe.svg" },
-  { name: "Supabase", src: "/integrations-logos/supabase.svg" },
-  { name: "Telegram", src: "/integrations-logos/telegram.svg" },
-  { name: "Twilio", src: "/integrations-logos/twilio.svg" },
-  { name: "Twitter/X", src: "/integrations-logos/twitter.svg" },
-  { name: "WhatsApp", src: "/integrations-logos/whatsapp.svg" },
-  { name: "WooCommerce", src: "/integrations-logos/woocommerce.svg" },
-  { name: "YouTube", src: "/integrations-logos/youtube.svg" },
-  { name: "Zoho CRM", src: "/integrations-logos/zoho.svg" },
+const integrationFiles = [
+  "ActiveCampaign.svg",
+  "airtable.svg",
+  "Anthropic.svg",
+  "AWS S3.svg",
+  "bitbucket.svg",
+  "ClickUp.svg",
+  "claude.svg",
+  "Discord.svg",
+  "Dropbox.svg",
+  "facebook.svg",
+  "Freshdesk.svg",
+  "FTP.svg",
+  "github-sign.svg",
+  "gmail.svg",
+  "Google-Contacts.svg",
+  "google-calendar.svg",
+  "google-docs.svg",
+  "Google-Drive.svg",
+  "Google-Gemini.svg",
+  "google.svg",
+  "instagram.svg",
+  "Intercom.svg",
+  "jenkins.svg",
+  "Jira.svg",
+  "linkedin.svg",
+  "Mailchimp.svg",
+  "Microsoft Teams.svg",
+  "MongoDB.svg",
+  "MySQL.svg",
+  "Notion.svg",
+  "Ollama.svg",
+  "OneDrive.svg",
+  "OpenAI GPT.svg",
+  "Outlook.svg",
+  "PayPal.svg",
+  "Pipedrive.svg",
+  "postgre.svg",
+  "Redis.svg",
+  "Salesforce.svg",
+  "SFTP.svg",
+  "shopify.svg",
+  "Slack.svg",
+  "Stripe.svg",
+  "Supabase.svg",
+  "Telegram.svg",
+  "twitter.svg",
+  "WooCommerce.svg",
+  "youtube.svg",
+  "Zoho CRM.svg",
+  "Zoho.svg",
 ];
+
+const formatNameFromFile = (file: string) =>
+  file
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const displayNameByFile: Record<string, string> = {
+  "github-sign.svg": "GitHub",
+  "gmail.svg": "Gmail",
+  "Google-Contacts.svg": "Google Contacts",
+  "google-calendar.svg": "Google Calendar",
+  "google-docs.svg": "Google Docs",
+  "Google-Drive.svg": "Google Drive",
+  "Google-Gemini.svg": "Google Gemini",
+  "google.svg": "Google",
+  "MongoDB.svg": "MongoDB",
+  "MySQL.svg": "MySQL",
+  "OpenAI GPT.svg": "OpenAI GPT",
+  "WooCommerce.svg": "WooCommerce",
+  "twitter.svg": "Twitter/X",
+  "Zoho CRM.svg": "Zoho CRM",
+  "AWS S3.svg": "AWS S3",
+  "SFTP.svg": "SFTP",
+  "FTP.svg": "FTP",
+  "OneDrive.svg": "OneDrive",
+};
+
+const integrations: IntegrationLogo[] = integrationFiles.map((file) => ({
+  name: displayNameByFile[file] ?? formatNameFromFile(file),
+  src: `/integrations-logos/${file}`,
+}));
+
+const splitIntoRows = <T,>(items: T[], rowCount: number): T[][] => {
+  const perRow = Math.ceil(items.length / rowCount);
+  const rows: T[][] = [];
+  for (let i = 0; i < rowCount; i += 1) {
+    const rowItems = items.slice(i * perRow, (i + 1) * perRow);
+    if (rowItems.length > 0) rows.push(rowItems);
+  }
+  return rows;
+};
+
+const rowDirections = [false, true, false];
+const rowDurations = [34, 38, 36];
+
+function normalizeDisplayName(name: string) {
+  if (name === "postgre") return "PostgreSQL";
+  return name;
+}
+
+const normalizedIntegrations = integrations.map((item) => ({
+  ...item,
+  name: normalizeDisplayName(item.name),
+}));
+
+const normalizedRows = splitIntoRows(normalizedIntegrations, 3);
 
 function LogoTile({ item }: { item: IntegrationLogo }) {
   return (
     <div className="w-36 shrink-0 rounded-xl border border-border/50 bg-background/70 px-4 py-4 text-center backdrop-blur-sm sm:w-40 dark:bg-white/5">
-      <img
-        src={item.src}
-        alt={item.name}
-        loading="lazy"
-        className="mx-auto h-12 w-12 object-contain sm:h-14 sm:w-14"
-      />
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-white p-2 shadow-sm ring-1 ring-black/5 sm:h-18 sm:w-18 dark:bg-white dark:ring-white/10">
+        <img
+          src={encodeURI(item.src)}
+          alt={item.name}
+          loading="lazy"
+          className="h-12 w-12 object-contain [image-rendering:-webkit-optimize-contrast] sm:h-14 sm:w-14"
+        />
+      </div>
       <p className="mt-3 line-clamp-2 min-h-10 text-xs font-medium text-muted-foreground sm:text-sm">
         {item.name}
       </p>
@@ -42,9 +138,11 @@ function LogoTile({ item }: { item: IntegrationLogo }) {
 function MarqueeRow({
   items,
   reverse = false,
+  duration = 30,
 }: {
   items: IntegrationLogo[];
   reverse?: boolean;
+  duration?: number;
 }) {
   const duplicated = [...items, ...items];
   return (
@@ -52,7 +150,7 @@ function MarqueeRow({
       <motion.div
         className="flex w-max gap-4 py-2"
         animate={{ x: reverse ? ["-50%", "0%"] : ["0%", "-50%"] }}
-        transition={{ duration: 30, ease: "linear", repeat: Infinity }}
+        transition={{ duration, ease: "linear", repeat: Infinity }}
       >
         {duplicated.map((item, i) => (
           <LogoTile key={`${item.name}-${i}`} item={item} />
@@ -64,8 +162,6 @@ function MarqueeRow({
 
 export function IntegrationsMarqueeSection() {
   const reduceMotion = useReducedMotion();
-  const firstRow = integrations.slice(0, Math.ceil(integrations.length / 2));
-  const secondRow = integrations.slice(Math.ceil(integrations.length / 2));
 
   return (
     <section
@@ -101,14 +197,20 @@ export function IntegrationsMarqueeSection() {
 
           {reduceMotion ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {integrations.map((item) => (
+              {normalizedIntegrations.map((item) => (
                 <LogoTile key={item.name} item={item} />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
-              <MarqueeRow items={firstRow} />
-              <MarqueeRow items={secondRow} reverse />
+              {normalizedRows.map((row, index) => (
+                <MarqueeRow
+                  key={`row-${index}`}
+                  items={row}
+                  reverse={rowDirections[index] ?? false}
+                  duration={rowDurations[index] ?? 34}
+                />
+              ))}
             </div>
           )}
         </motion.div>

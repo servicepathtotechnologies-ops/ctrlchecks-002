@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
+import { INTEGRATION_SCOPES } from '@/lib/google-scopes';
 import {
   Tooltip,
   TooltipContent,
@@ -79,7 +80,7 @@ export default function GoogleConnectionStatus() {
     setIsAuthenticating(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/google/callback`;
+      const redirectUrl = `${window.location.origin}/auth/google/callback?mode=connector`;
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -88,7 +89,7 @@ export default function GoogleConnectionStatus() {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-            scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/bigquery https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/contacts email profile',
+            scope: INTEGRATION_SCOPES,
           },
         },
       });

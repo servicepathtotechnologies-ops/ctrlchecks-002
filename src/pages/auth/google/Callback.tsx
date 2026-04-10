@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { INTEGRATION_SCOPES } from '@/lib/google-scopes';
 
 export default function GoogleAuthCallback() {
   const navigate = useNavigate();
@@ -19,23 +20,26 @@ export default function GoogleAuthCallback() {
     let authSubscription: { unsubscribe: () => void } | null = null;
     let timeoutId: NodeJS.Timeout;
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const isConnectorMode = urlParams.get('mode') === 'connector';
+
     const processSession = async (session: Session | null) => {
       if (!session) return false;
-
-      // Prevent multiple processings for the same session if possible
       if (processedRef.current) return true;
       processedRef.current = true;
 
+      // If this is a login callback (not connector mode), just redirect to dashboard
+      if (!isConnectorMode) {
+        navigate('/dashboard');
+        return true;
+      }
+
+      // Connector mode: save tokens
       try {
         setStatus('tokens found. Saving...');
-
-        // Extract tokens
         const { provider_token, provider_refresh_token } = session;
 
         if (!provider_token) {
-          console.warn('No provider_token in session. Is this a Google OAuth session?');
-          // If we are already signed in but just re-connected, maybe we need to check if the tokens were updated anyway?
-          // But usually provider_token is present in the session object immediately after OAuth sign-in.
           throw new Error('Google access token not found in session.');
         }
 
@@ -48,9 +52,9 @@ export default function GoogleAuthCallback() {
             user_id: session.user.id,
             access_token: provider_token,
             refresh_token: provider_refresh_token || null,
-            expires_at: new Date(Date.now() + 3600 * 1000).toISOString(), // Approx 1 hour default
+            expires_at: new Date(Date.now() + 3600 * 1000).toISOString(),
             token_type: 'Bearer',
-            scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/bigquery https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/contacts',
+            scope: INTEGRATION_SCOPES,
             updated_at: new Date().toISOString()
           }, {
             onConflict: 'user_id'
@@ -63,17 +67,8 @@ export default function GoogleAuthCallback() {
           description: 'Google connected successfully!',
         });
 
-        // Check if we should return to a specific page (e.g., workflow wizard)
-        const urlParams = new URLSearchParams(window.location.search);
         const returnTo = urlParams.get('returnTo');
-        
-        if (returnTo) {
-          // Return to the page that initiated OAuth
-          navigate(returnTo);
-        } else {
-          // Default redirect
-          navigate('/workflows');
-        }
+        navigate(returnTo || '/workflows');
         return true;
 
       } catch (err) {
