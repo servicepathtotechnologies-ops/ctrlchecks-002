@@ -179,6 +179,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    // Login flow invariant: redirectTo is always /dashboard with no scopes.
+    // This means GitHubAuthCallback at /auth/github/callback is never reached during login —
+    // Supabase redirects directly to /dashboard after session creation.
+    const signInWithGitHub = async () => {
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: "github",
+                options: {
+                    redirectTo: `${window.location.origin}/dashboard`,
+                    // No scopes — Supabase defaults to read:user, user:email
+                },
+            });
+
+            if (error) {
+                console.error('GitHub OAuth error:', error);
+                return { error: error as Error | null };
+            }
+
+            // OAuth redirect will happen automatically
+            return { error: null };
+        } catch (err) {
+            console.error('GitHub sign-in exception:', err);
+            return { error: err as Error };
+        }
+    };
+
     const signOut = async () => {
         await supabase.auth.signOut();
         setUser(null);
@@ -194,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 signUp,
                 signIn,
                 signInWithGoogle,
+                signInWithGitHub,
                 signOut,
             }}
         >
