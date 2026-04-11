@@ -205,6 +205,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    // Login flow invariant: redirectTo is always /dashboard. No FacebookAuthCallback
+    // component exists — Supabase redirects directly to /dashboard after session creation.
+    // Facebook requires scopes to be explicitly declared (unlike Google/GitHub).
+    const signInWithFacebook = async () => {
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: "facebook",
+                options: {
+                    redirectTo: `${window.location.origin}/dashboard`,
+                    queryParams: {
+                        scope: 'public_profile',
+                    },
+                },
+            });
+
+            if (error) {
+                console.error('Facebook OAuth error:', error);
+                return { error: error as Error };
+            }
+
+            // OAuth redirect will happen automatically
+            return { error: null };
+        } catch (err) {
+            console.error('Facebook sign-in exception:', err);
+            return { error: err as Error };
+        }
+    };
+
     const signOut = async () => {
         await supabase.auth.signOut();
         setUser(null);
@@ -221,6 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 signIn,
                 signInWithGoogle,
                 signInWithGitHub,
+                signInWithFacebook,
                 signOut,
             }}
         >

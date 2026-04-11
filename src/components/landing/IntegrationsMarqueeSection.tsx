@@ -108,18 +108,21 @@ const integrations: IntegrationLogo[] = integrationFiles.map((file) => ({
   src: `/integrations-logos/${file}`,
 }));
 
-const splitIntoRows = <T,>(items: T[], rowCount: number): T[][] => {
-  const perRow = Math.ceil(items.length / rowCount);
-  const rows: T[][] = [];
-  for (let i = 0; i < rowCount; i += 1) {
-    const rowItems = items.slice(i * perRow, (i + 1) * perRow);
-    if (rowItems.length > 0) rows.push(rowItems);
+const splitIntoColumns = <T,>(items: T[], columnCount: number): T[][] => {
+  const baseSize = Math.floor(items.length / columnCount);
+  const remainder = items.length % columnCount;
+  const columns: T[][] = [];
+  let offset = 0;
+  for (let i = 0; i < columnCount; i += 1) {
+    const size = i < remainder ? baseSize + 1 : baseSize;
+    columns.push(items.slice(offset, offset + size));
+    offset += size;
   }
-  return rows;
+  return columns;
 };
 
-const rowDirections = [false, true, false];
-const rowDurations = [46, 52, 49];
+const COLUMN_DIRECTIONS: Array<'up' | 'down'> = ['up', 'down', 'up', 'down'];
+const COLUMN_DURATION = 30;
 
 function normalizeDisplayName(name: string) {
   return name;
@@ -130,47 +133,62 @@ const normalizedIntegrations = integrations.map((item) => ({
   name: normalizeDisplayName(item.name),
 }));
 
-const normalizedRows = splitIntoRows(normalizedIntegrations, 3);
+const columns = splitIntoColumns(normalizedIntegrations, 4);
 
 function LogoTile({ item }: { item: IntegrationLogo }) {
   return (
-    <div className="w-36 shrink-0 rounded-xl border border-border/50 bg-background/70 px-4 py-4 text-center shadow-sm backdrop-blur-sm transition-transform duration-300 hover:-translate-y-0.5 sm:w-40 dark:bg-white/5">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-white p-2.5 shadow-sm ring-1 ring-black/5 dark:bg-white dark:ring-white/10">
+    <div className="flex flex-row items-center gap-3 rounded-xl bg-background/70 px-3 py-2.5 shadow-sm backdrop-blur-sm dark:bg-white/5">
+      <div className="h-10 w-10 shrink-0 rounded-lg bg-white p-1.5 shadow-sm ring-1 ring-black/5 dark:bg-white dark:ring-white/10">
         <img
           src={encodeURI(item.src)}
           alt={item.name}
           loading="lazy"
-          className="h-11 w-11 object-contain [image-rendering:-webkit-optimize-contrast]"
+          className="h-full w-full object-contain [image-rendering:-webkit-optimize-contrast]"
         />
       </div>
-      <p className="mt-3 line-clamp-2 min-h-10 text-sm font-medium text-muted-foreground">
+      <p className="min-w-0 truncate text-sm font-medium text-muted-foreground">
         {item.name}
       </p>
     </div>
   );
 }
 
-function MarqueeRow({
+const marqueeStyles = `
+@keyframes marquee-up {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+@keyframes marquee-down {
+  from { transform: translateY(-50%); }
+  to   { transform: translateY(0); }
+}
+`;
+
+function MarqueeColumn({
   items,
-  reverse = false,
-  duration = 30,
+  direction,
+  duration,
 }: {
   items: IntegrationLogo[];
-  reverse?: boolean;
-  duration?: number;
+  direction: 'up' | 'down';
+  duration: number;
 }) {
   const duplicated = [...items, ...items];
   return (
-    <div className="relative overflow-hidden">
-      <motion.div
-        className="flex w-max gap-4 py-2.5"
-        animate={{ x: reverse ? ["-50%", "0%"] : ["0%", "-50%"] }}
-        transition={{ duration, ease: "linear", repeat: Infinity }}
+    <div className="overflow-hidden">
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          animation: `marquee-${direction} ${duration}s linear infinite`,
+          willChange: 'transform',
+        }}
       >
         {duplicated.map((item, i) => (
           <LogoTile key={`${item.name}-${i}`} item={item} />
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -179,9 +197,11 @@ export function IntegrationsMarqueeSection() {
   const reduceMotion = useReducedMotion();
 
   return (
+    <>
+    <style dangerouslySetInnerHTML={{ __html: marqueeStyles }} />
     <section
       id="integrations"
-      className="relative py-10 sm:py-12"
+      className="relative py-6 sm:py-8"
       aria-labelledby="integrations-heading"
     >
       <div className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
@@ -205,25 +225,25 @@ export function IntegrationsMarqueeSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={landingViewport}
           transition={reduceMotion ? { duration: 0.35 } : { ...springSoft, delay: 0.08 }}
-          className="relative mx-auto mt-10 max-w-6xl rounded-2xl border border-border/50 bg-background/10 p-4 backdrop-blur-md dark:border-white/10 dark:bg-white/5 sm:p-6"
+          className="relative mx-auto mt-10 max-w-6xl overflow-hidden rounded-2xl border border-border/50 bg-background/10 p-4 backdrop-blur-md dark:border-white/10 dark:bg-white/5 sm:p-6"
         >
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-background to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-background to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-16 bg-gradient-to-b from-background to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-background to-transparent" />
 
           {reduceMotion ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {normalizedIntegrations.map((item) => (
                 <LogoTile key={item.name} item={item} />
               ))}
             </div>
           ) : (
-            <div className="space-y-3">
-              {normalizedRows.map((row, index) => (
-                <MarqueeRow
-                  key={`row-${index}`}
-                  items={row}
-                  reverse={rowDirections[index] ?? false}
-                  duration={rowDurations[index] ?? 34}
+            <div className="grid grid-cols-4 gap-3" style={{ height: '332px' }}>
+              {columns.map((colItems, index) => (
+                <MarqueeColumn
+                  key={`col-${index}`}
+                  items={colItems}
+                  direction={COLUMN_DIRECTIONS[index] ?? 'up'}
+                  duration={COLUMN_DURATION}
                 />
               ))}
             </div>
@@ -231,5 +251,6 @@ export function IntegrationsMarqueeSection() {
         </motion.div>
       </div>
     </section>
+    </>
   );
 }

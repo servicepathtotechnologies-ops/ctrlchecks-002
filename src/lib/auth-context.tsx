@@ -9,6 +9,7 @@ export interface AuthContextType {
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
     signInWithGoogle: () => Promise<{ error: Error | null }>;
     signInWithGitHub: () => Promise<{ error: Error | null }>;
+    signInWithFacebook: () => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
 }
 
