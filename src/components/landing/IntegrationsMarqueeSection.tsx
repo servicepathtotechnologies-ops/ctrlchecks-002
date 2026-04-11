@@ -105,7 +105,7 @@ const displayNameByFile: Record<string, string> = {
 
 const integrations: IntegrationLogo[] = integrationFiles.map((file) => ({
   name: displayNameByFile[file] ?? formatNameFromFile(file),
-  src: `/integrations-logos/${file}`,
+  src: `/integrations-logos/${encodeURIComponent(file)}`,
 }));
 
 const splitIntoColumns = <T,>(items: T[], columnCount: number): T[][] => {
@@ -140,7 +140,7 @@ function LogoTile({ item }: { item: IntegrationLogo }) {
     <div className="flex flex-row items-center gap-3 rounded-xl bg-background/70 px-3 py-2.5 shadow-sm backdrop-blur-sm dark:bg-white/5">
       <div className="h-10 w-10 shrink-0 rounded-lg bg-white p-1.5 shadow-sm ring-1 ring-black/5 dark:bg-white dark:ring-white/10">
         <img
-          src={encodeURI(item.src)}
+          src={item.src}
           alt={item.name}
           loading="lazy"
           className="h-full w-full object-contain [image-rendering:-webkit-optimize-contrast]"
