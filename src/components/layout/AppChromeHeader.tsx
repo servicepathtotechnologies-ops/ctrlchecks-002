@@ -2,19 +2,24 @@ import { AppBrand } from '@/components/brand/AppBrand';
 import { NavLink } from '@/components/NavLink';
 import ConnectionsPanel from '@/components/ConnectionsPanel';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/auth';
 import { useRole } from '@/hooks/useRole';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
-import { Moon, Sun, Shield, UserCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Moon, Sun, Shield, UserCircle, LogOut, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { USER_PRIMARY_NAV } from './nav-config';
 
 export interface AppChromeHeaderProps {
   className?: string;
-  /** Extra content on the right, before theme / user actions */
   endSlot?: React.ReactNode;
-  /** When false, hides ConnectionsPanel (rare) */
   showConnections?: boolean;
   showThemeToggle?: boolean;
 }
@@ -25,16 +30,18 @@ export function AppChromeHeader({
   showConnections = true,
   showThemeToggle = true,
 }: AppChromeHeaderProps) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { canAccessAdmin } = useRole();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
-    <header
-      className={cn(
-        'border-b border-border bg-card',
-        className
-      )}
-    >
+    <header className={cn('border-b border-border bg-card', className)}>
       <div className="container mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3">
         <AppBrand context="app" />
 
@@ -76,22 +83,41 @@ export function AppChromeHeader({
               className="rounded-full"
               title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
             >
-              {theme === 'light' ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
+              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </Button>
           )}
           {user?.email && (
-            <Link
-              to="/profile"
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-              title="Go to profile"
-            >
-              <UserCircle className="h-5 w-5 shrink-0" />
-              <span className="hidden max-w-[160px] truncate xl:inline">{user.email}</span>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                  title="Account menu"
+                >
+                  <UserCircle className="h-5 w-5 shrink-0" />
+                  <span className="hidden max-w-[160px] truncate xl:inline">{user.email}</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <div className="px-2 py-1.5">
+                  <p className="text-xs font-medium truncate">{user.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                    <User className="h-4 w-4" />
+                    My Account
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>

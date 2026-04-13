@@ -13,6 +13,8 @@ import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { getFacebookSupabaseOAuthOptions } from '@/lib/facebookSignInOptions';
 import { INTEGRATION_SCOPES } from '@/lib/google-scopes';
 import ZohoConnectionStatus from './ZohoConnectionStatus';
+import InstagramConnectGuide from './InstagramConnectGuide';
+import WhatsAppOnboardingGuide from './WhatsAppOnboardingGuide';
 
 export default function ConnectionsPanel() {
   const { user } = useAuth();
@@ -24,7 +26,15 @@ export default function ConnectionsPanel() {
   const [facebookConnected, setFacebookConnected] = useState(false);
   const [notionConnected, setNotionConnected] = useState(false);
   const [twitterConnected, setTwitterConnected] = useState(false);
+  const [instagramConnected, setInstagramConnected] = useState(false);
+  const [instagramNeedsReconnect, setInstagramNeedsReconnect] = useState(false);
+  const [instagramUsername, setInstagramUsername] = useState<string | null>(null);
+  const [whatsappConnected, setWhatsappConnected] = useState(false);
+  const [whatsappNeedsReconnect, setWhatsappNeedsReconnect] = useState(false);
+  const [whatsappPhone, setWhatsappPhone] = useState<string | null>(null);
   const [zohoConnected, setZohoConnected] = useState(false);
+  const [salesforceConnected, setSalesforceConnected] = useState(false);
+  const [isSalesforceConnecting, setIsSalesforceConnecting] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [isGoogleConnecting, setIsGoogleConnecting] = useState(false);
   const [isLinkedInConnecting, setIsLinkedInConnecting] = useState(false);
@@ -32,6 +42,10 @@ export default function ConnectionsPanel() {
   const [isFacebookConnecting, setIsFacebookConnecting] = useState(false);
   const [isNotionConnecting, setIsNotionConnecting] = useState(false);
   const [isTwitterConnecting, setIsTwitterConnecting] = useState(false);
+  const [isInstagramConnecting, setIsInstagramConnecting] = useState(false);
+  const [isWhatsappConnecting, setIsWhatsappConnecting] = useState(false);
+  const [showInstagramGuide, setShowInstagramGuide] = useState(false);
+  const [showWhatsappGuide, setShowWhatsappGuide] = useState(false);
   const [isZohoConnecting, setIsZohoConnecting] = useState(false);
   const [isZohoDialogOpen, setIsZohoDialogOpen] = useState(false);
 
@@ -150,6 +164,50 @@ export default function ConnectionsPanel() {
         setTwitterConnected(false);
       }
 
+      // Check Instagram connection
+      const { data: instagramData, error: instagramError } = await supabase
+        .from('instagram_oauth_tokens' as any)
+        .select('id, expires_at, username')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (instagramError && instagramError.code !== 'PGRST116') {
+        setInstagramConnected(false);
+        setInstagramNeedsReconnect(false);
+      } else if (instagramData) {
+        const expiresAt = instagramData.expires_at ? new Date(instagramData.expires_at) : null;
+        const isValid = expiresAt ? expiresAt > new Date() : true;
+        setInstagramConnected(isValid);
+        setInstagramNeedsReconnect(!isValid);
+        setInstagramUsername(instagramData.username ?? null);
+      } else {
+        setInstagramConnected(false);
+        setInstagramNeedsReconnect(false);
+        setInstagramUsername(null);
+      }
+
+      // Check WhatsApp connection
+      const { data: whatsappData, error: whatsappError } = await supabase
+        .from('whatsapp_oauth_tokens' as any)
+        .select('id, expires_at, phone_number')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (whatsappError && whatsappError.code !== 'PGRST116') {
+        setWhatsappConnected(false);
+        setWhatsappNeedsReconnect(false);
+      } else if (whatsappData) {
+        const expiresAt = whatsappData.expires_at ? new Date(whatsappData.expires_at) : null;
+        const isValid = expiresAt ? expiresAt > new Date() : true;
+        setWhatsappConnected(isValid);
+        setWhatsappNeedsReconnect(!isValid);
+        setWhatsappPhone(whatsappData.phone_number ?? null);
+      } else {
+        setWhatsappConnected(false);
+        setWhatsappNeedsReconnect(false);
+        setWhatsappPhone(null);
+      }
+
       // Check Zoho connection
       const { data: zohoData, error: zohoError } = await supabase
         .from('zoho_oauth_tokens' as any)
@@ -167,6 +225,24 @@ export default function ConnectionsPanel() {
       } else {
         setZohoConnected(false);
       }
+
+      // Check Salesforce connection
+      const { data: salesforceData, error: salesforceError } = await supabase
+        .from('salesforce_oauth_tokens' as any)
+        .select('id, expires_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (salesforceError && salesforceError.code !== 'PGRST116' && !salesforceError.message?.includes('406')) {
+        console.error('Error checking Salesforce connection:', salesforceError);
+        setSalesforceConnected(false);
+      } else if (salesforceData) {
+        const expiresAt = salesforceData.expires_at ? new Date(salesforceData.expires_at) : null;
+        const now = new Date();
+        setSalesforceConnected(expiresAt ? expiresAt > now : true);
+      } else {
+        setSalesforceConnected(false);
+      }
     } catch (error) {
       console.error('Error checking connections:', error);
       setGoogleConnected(false);
@@ -176,6 +252,7 @@ export default function ConnectionsPanel() {
       setNotionConnected(false);
       setTwitterConnected(false);
       setZohoConnected(false);
+      setSalesforceConnected(false);
     } finally {
       setIsChecking(false);
     }
@@ -603,9 +680,96 @@ export default function ConnectionsPanel() {
     }
   };
 
-  const totalConnected = (googleConnected ? 1 : 0) + (linkedInConnected ? 1 : 0) + (githubConnected ? 1 : 0) + (facebookConnected ? 1 : 0) + (notionConnected ? 1 : 0) + (twitterConnected ? 1 : 0) + (zohoConnected ? 1 : 0);
+  const handleInstagramConnect = () => {
+    setShowInstagramGuide(true);
+    setOpen(false);
+  };
+
+  const handleInstagramDisconnect = async () => {
+    if (!user) return;
+    try {
+      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!authToken) throw new Error('No authentication token');
+      const backendUrl = getBackendUrl();
+      await fetch(`${backendUrl}/api/connections/instagram`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      setInstagramConnected(false);
+      setInstagramUsername(null);
+      toast({ title: 'Disconnected', description: 'Instagram account disconnected' });
+      checkConnections();
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to disconnect Instagram', variant: 'destructive' });
+    }
+  };
+
+  const handleWhatsappConnect = () => {
+    setShowWhatsappGuide(true);
+    setOpen(false);
+  };
+
+  const handleWhatsappDisconnect = async () => {
+    if (!user) return;
+    try {
+      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!authToken) throw new Error('No authentication token');
+      const backendUrl = getBackendUrl();
+      await fetch(`${backendUrl}/api/connections/whatsapp`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      setWhatsappConnected(false);
+      setWhatsappPhone(null);
+      toast({ title: 'Disconnected', description: 'WhatsApp account disconnected' });
+      checkConnections();
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to disconnect WhatsApp', variant: 'destructive' });
+    }
+  };
+
+  const handleSalesforceConnect = async () => {
+    if (!user) {
+      toast({ title: 'Error', description: 'Please sign in first', variant: 'destructive' });
+      return;
+    }
+    setIsSalesforceConnecting(true);
+    try {
+      const backendUrl = getBackendUrl();
+      const redirectUri = `${window.location.origin}/auth/salesforce/callback`;
+      window.location.href = `${backendUrl}/api/oauth/salesforce/authorize?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    } catch (error) {
+      console.error('Salesforce OAuth error:', error);
+      toast({
+        title: 'Authentication Failed',
+        description: error instanceof Error ? error.message : 'Failed to initiate Salesforce authentication',
+        variant: 'destructive',
+      });
+      setIsSalesforceConnecting(false);
+    }
+  };
+
+  const handleSalesforceDisconnect = async () => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('salesforce_oauth_tokens' as any)
+        .delete()
+        .eq('user_id', user.id);
+      if (error) throw error;
+      setSalesforceConnected(false);
+      toast({ title: 'Disconnected', description: 'Salesforce account disconnected successfully' });
+      checkConnections();
+    } catch (error) {
+      console.error('Error disconnecting Salesforce:', error);
+      toast({ title: 'Error', description: 'Failed to disconnect Salesforce account', variant: 'destructive' });
+    }
+  };
+
+  const totalConnected = (googleConnected ? 1 : 0) + (linkedInConnected ? 1 : 0) + (githubConnected ? 1 : 0) + (facebookConnected ? 1 : 0) + (notionConnected ? 1 : 0) + (twitterConnected ? 1 : 0) + (zohoConnected ? 1 : 0) + (instagramConnected ? 1 : 0) + (whatsappConnected ? 1 : 0) + (salesforceConnected ? 1 : 0);
 
   return (
+  <>
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
@@ -622,460 +786,234 @@ export default function ConnectionsPanel() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80" align="end">
+      <PopoverContent className="w-[520px]" align="end">
         <div className="space-y-4">
-          <div className="space-y-2">
-            <h4 className="font-medium leading-none">Integrations</h4>
-            <p className="text-sm text-muted-foreground">
-              Connect your accounts to use in workflows
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium leading-none">Integrations</h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Connect your accounts to use in workflows
+              </p>
+            </div>
+            {totalConnected > 0 && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                {totalConnected} connected
+              </span>
+            )}
           </div>
 
-          <div className="space-y-3">
-            {/* Google Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950">
-                  <svg className="h-5 w-5" viewBox="0 0 24 24">
-                    <path
-                      fill="currentColor"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.54 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium">Google</div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {!isChecking && (
-                      <span className={`h-2 w-2 rounded-full shrink-0 ${googleConnected ? 'bg-green-500' : 'bg-red-400'}`} />
-                    )}
-                    {isChecking ? 'Checking...' : googleConnected ? 'Connected' : 'Not connected'}
-                  </div>
-                </div>
+          <div className="grid grid-cols-4 gap-2">
+            {/* Google */}
+            <button
+              type="button"
+              onClick={googleConnected ? handleGoogleDisconnect : handleGoogleConnect}
+              disabled={isChecking || isGoogleConnecting}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${googleConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+                <img src="/integrations-logos/Google.svg" alt="Google" className="h-5 w-5 object-contain" />
               </div>
-              <div className="flex items-center gap-2">
-                {isChecking ? (
-                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : googleConnected ? (
-                  <>
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGoogleDisconnect}
-                      disabled={isGoogleConnecting}
-                      className="h-8"
-                    >
-                      Disconnect
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={handleGoogleConnect}
-                      disabled={isGoogleConnecting}
-                      className="h-8"
-                    >
-                      {isGoogleConnecting ? (
-                        <>
-                          <RefreshCw className="mr-2 h-3 w-3 animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        'Connect'
-                      )}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
+              <span className="text-xs font-medium leading-tight">Google</span>
+              <span className={`flex items-center gap-1 text-[10px] ${googleConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${googleConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                {isChecking ? '...' : googleConnected ? 'Connected' : 'Connect'}
+              </span>
+            </button>
 
-            {/* LinkedIn Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .771 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .771 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium">LinkedIn</div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {!isChecking && (
-                      <span className={`h-2 w-2 rounded-full shrink-0 ${linkedInConnected ? 'bg-green-500' : 'bg-red-400'}`} />
-                    )}
-                    {isChecking ? 'Checking...' : linkedInConnected ? 'Connected' : 'Not connected'}
-                  </div>
-                </div>
+            {/* LinkedIn */}
+            <button
+              type="button"
+              onClick={linkedInConnected ? handleLinkedInDisconnect : handleLinkedInConnect}
+              disabled={isChecking || isLinkedInConnecting}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${linkedInConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+                <img src="/integrations-logos/linkedin.svg" alt="LinkedIn" className="h-5 w-5 object-contain" />
               </div>
-              <div className="flex items-center gap-2">
-                {isChecking ? (
-                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : linkedInConnected ? (
-                  <>
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleLinkedInDisconnect}
-                      disabled={isLinkedInConnecting}
-                      className="h-8"
-                    >
-                      Disconnect
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={handleLinkedInConnect}
-                      disabled={isLinkedInConnecting}
-                      className="h-8"
-                    >
-                      {isLinkedInConnecting ? (
-                        <>
-                          <RefreshCw className="mr-2 h-3 w-3 animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        'Connect'
-                      )}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
+              <span className="text-xs font-medium leading-tight">LinkedIn</span>
+              <span className={`flex items-center gap-1 text-[10px] ${linkedInConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${linkedInConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                {isChecking ? '...' : linkedInConnected ? 'Connected' : 'Connect'}
+              </span>
+            </button>
 
-            {/* GitHub Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-950">
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium">GitHub</div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {!isChecking && (
-                      <span className={`h-2 w-2 rounded-full shrink-0 ${githubConnected ? 'bg-green-500' : 'bg-red-400'}`} />
-                    )}
-                    {isChecking ? 'Checking...' : githubConnected ? 'Connected' : 'Not connected'}
-                  </div>
-                </div>
+            {/* GitHub */}
+            <button
+              type="button"
+              onClick={githubConnected ? handleGithubDisconnect : handleGithubConnect}
+              disabled={isChecking || isGithubConnecting}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${githubConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+                <img src="/integrations-logos/Github.svg" alt="GitHub" className="h-5 w-5 object-contain" />
               </div>
-              <div className="flex items-center gap-2">
-                {isChecking ? (
-                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : githubConnected ? (
-                  <>
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGithubDisconnect}
-                      disabled={isGithubConnecting}
-                      className="h-8"
-                    >
-                      Disconnect
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={handleGithubConnect}
-                      disabled={isGithubConnecting}
-                      className="h-8"
-                    >
-                      {isGithubConnecting ? (
-                        <>
-                          <RefreshCw className="mr-2 h-3 w-3 animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        'Connect'
-                      )}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
+              <span className="text-xs font-medium leading-tight">GitHub</span>
+              <span className={`flex items-center gap-1 text-[10px] ${githubConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${githubConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                {isChecking ? '...' : githubConnected ? 'Connected' : 'Connect'}
+              </span>
+            </button>
 
-            {/* Facebook Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
-                  <svg className="h-5 w-5" fill="#1877F2" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium">Facebook</div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {!isChecking && (
-                      <span className={`h-2 w-2 rounded-full shrink-0 ${facebookConnected ? 'bg-green-500' : 'bg-red-400'}`} />
-                    )}
-                    {isChecking ? 'Checking...' : facebookConnected ? 'Connected' : 'Not connected'}
-                  </div>
-                </div>
+            {/* Facebook */}
+            <button
+              type="button"
+              onClick={facebookConnected ? handleFacebookDisconnect : handleFacebookConnect}
+              disabled={isChecking || isFacebookConnecting}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${facebookConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+                <img src="/integrations-logos/facebook.svg" alt="Facebook" className="h-5 w-5 object-contain" />
               </div>
-              <div className="flex items-center gap-2">
-                {isChecking ? (
-                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : facebookConnected ? (
-                  <>
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleFacebookDisconnect}
-                      disabled={isFacebookConnecting}
-                      className="h-8"
-                    >
-                      Disconnect
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={handleFacebookConnect}
-                      disabled={isFacebookConnecting}
-                      className="h-8"
-                    >
-                      {isFacebookConnecting ? (
-                        <>
-                          <RefreshCw className="mr-2 h-3 w-3 animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        'Connect'
-                      )}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
+              <span className="text-xs font-medium leading-tight">Facebook</span>
+              <span className={`flex items-center gap-1 text-[10px] ${facebookConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${facebookConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                {isChecking ? '...' : facebookConnected ? 'Connected' : 'Connect'}
+              </span>
+            </button>
 
-            {/* Notion Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-950">
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M4.459 4.208c.746.606 1.026.56 2.547.56l.09-.002h10.396c1.521 0 1.8.046 2.546-.56.747-.606.747-1.664 0-2.27-.746-.606-1.025-.56-2.546-.56l-10.396.001c-1.521 0-1.8-.046-2.547.56-.747.606-.747 1.664 0 2.27zm15.04 1.67c-.746.606-1.025.56-2.546.56l-10.396.001c-1.521 0-1.8-.046-2.547-.56-.747-.606-.747-1.664 0-2.27.746-.606 1.025-.56 2.546-.56l10.396.001c1.521 0 1.8-.046 2.547.56.747.606.747 1.664 0 2.27zm-2.546 3.39c1.521 0 1.8.046 2.546-.56.747-.606.747-1.664 0-2.27-.746-.606-1.025-.56-2.546-.56l-10.396.001c-1.521 0-1.8-.046-2.547.56-.747.606-.747 1.664 0 2.27.746.606 1.025.56 2.546.56l10.396-.001zm-2.546 3.39c1.521 0 1.8.046 2.546-.56.747-.606.747-1.664 0-2.27-.746-.606-1.025-.56-2.546-.56l-10.396.001c-1.521 0-1.8-.046-2.547.56-.747.606-.747 1.664 0 2.27.746.606 1.025.56 2.546.56l10.396-.001zm-2.546 3.39c1.521 0 1.8.046 2.546-.56.747-.606.747-1.664 0-2.27-.746-.606-1.025-.56-2.546-.56l-10.396.001c-1.521 0-1.8-.046-2.547.56-.747.606-.747 1.664 0 2.27.746.606 1.025.56 2.546.56l10.396-.001z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium">Notion</div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {!isChecking && (
-                      <span className={`h-2 w-2 rounded-full shrink-0 ${notionConnected ? 'bg-green-500' : 'bg-red-400'}`} />
-                    )}
-                    {isChecking ? 'Checking...' : notionConnected ? 'Connected' : 'Not connected'}
-                  </div>
-                </div>
+            {/* Notion */}
+            <button
+              type="button"
+              onClick={notionConnected ? handleNotionDisconnect : handleNotionConnect}
+              disabled={isChecking || isNotionConnecting}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${notionConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+                <img src="/integrations-logos/Notion.svg" alt="Notion" className="h-5 w-5 object-contain" />
               </div>
-              <div className="flex items-center gap-2">
-                {isChecking ? (
-                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : notionConnected ? (
-                  <>
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleNotionDisconnect}
-                      disabled={isNotionConnecting}
-                      className="h-8"
-                    >
-                      Disconnect
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={handleNotionConnect}
-                      disabled={isNotionConnecting}
-                      className="h-8"
-                    >
-                      {isNotionConnecting ? (
-                        <>
-                          <RefreshCw className="mr-2 h-3 w-3 animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        'Connect'
-                      )}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
+              <span className="text-xs font-medium leading-tight">Notion</span>
+              <span className={`flex items-center gap-1 text-[10px] ${notionConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${notionConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                {isChecking ? '...' : notionConnected ? 'Connected' : 'Connect'}
+              </span>
+            </button>
 
-            {/* Twitter Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#1DA1F2]/10 dark:bg-[#1DA1F2]/20">
-                  <svg className="h-5 w-5" fill="#1DA1F2" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium">Twitter/X</div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {!isChecking && (
-                      <span className={`h-2 w-2 rounded-full shrink-0 ${twitterConnected ? 'bg-green-500' : 'bg-red-400'}`} />
-                    )}
-                    {isChecking ? 'Checking...' : twitterConnected ? 'Connected' : 'Not connected'}
-                  </div>
-                </div>
+            {/* Twitter/X */}
+            <button
+              type="button"
+              onClick={twitterConnected ? handleTwitterDisconnect : handleTwitterConnect}
+              disabled={isChecking || isTwitterConnecting}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${twitterConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+                <img src="/integrations-logos/Twitter.svg" alt="Twitter/X" className="h-5 w-5 object-contain" />
               </div>
-              <div className="flex items-center gap-2">
-                {isChecking ? (
-                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : twitterConnected ? (
-                  <>
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleTwitterDisconnect}
-                      disabled={isTwitterConnecting}
-                      className="h-8"
-                    >
-                      Disconnect
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={handleTwitterConnect}
-                      disabled={isTwitterConnecting}
-                      className="h-8"
-                    >
-                      {isTwitterConnecting ? (
-                        <>
-                          <RefreshCw className="mr-2 h-3 w-3 animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        'Connect'
-                      )}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
+              <span className="text-xs font-medium leading-tight">Twitter/X</span>
+              <span className={`flex items-center gap-1 text-[10px] ${twitterConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${twitterConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                {isChecking ? '...' : twitterConnected ? 'Connected' : 'Connect'}
+              </span>
+            </button>
 
-            {/* Zoho Connection */}
-            <div className="flex items-center justify-between rounded-lg border p-3 transition-transform hover:scale-[1.02]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E42529]/10 dark:bg-[#E42529]/20">
-                  <svg className="h-5 w-5" fill="#E42529" viewBox="0 0 24 24">
-                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 8.16c-.169 0-.315.063-.441.189l-1.431 1.431-2.819 2.819-1.431 1.431c-.126.126-.272.189-.441.189s-.315-.063-.441-.189l-1.431-1.431-2.819-2.819-1.431-1.431c-.126-.126-.272-.189-.441-.189s-.315.063-.441.189l-1.431 1.431c-.126.126-.189.272-.189.441s.063.315.189.441l1.431 1.431 2.819 2.819-2.819 2.819-1.431 1.431c-.126.126-.189.272-.189.441s.063.315.189.441l1.431 1.431c.126.126.272.189.441.189s.315-.063.441-.189l1.431-1.431 2.819-2.819 1.431-1.431c.126-.126.272-.189.441-.189s.315.063.441.189l1.431 1.431 2.819 2.819 1.431 1.431c.126.126.272.189.441.189s.315-.063.441-.189l1.431-1.431c.126-.126.189-.272.189-.441s-.063-.315-.189-.441l-1.431-1.431-2.819-2.819 2.819-2.819 1.431-1.431c.126-.126.189-.272.189-.441s-.063-.315-.189-.441l-1.431-1.431c-.126-.126-.272-.189-.441-.189z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium">Zoho</div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {!isChecking && (
-                      <span className={`h-2 w-2 rounded-full shrink-0 ${zohoConnected ? 'bg-green-500' : 'bg-red-400'}`} />
-                    )}
-                    {isChecking ? 'Checking...' : zohoConnected ? 'Connected' : 'Not connected'}
-                  </div>
-                </div>
+            {/* Instagram */}
+            <button
+              type="button"
+              onClick={instagramConnected ? handleInstagramDisconnect : handleInstagramConnect}
+              disabled={isChecking || isInstagramConnecting}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${instagramConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+                <img src="/integrations-logos/Instagram.svg" alt="Instagram" className="h-5 w-5 object-contain" />
               </div>
-              <div className="flex items-center gap-2">
-                {isChecking ? (
-                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : zohoConnected ? (
-                  <>
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        if (!user) return;
-                        try {
-                          const authToken = (await supabase.auth.getSession()).data.session?.access_token;
-                          if (!authToken) throw new Error('No authentication token');
-                          const backendUrl = getBackendUrl();
-                          const response = await fetch(`${backendUrl}/api/connections/zoho`, {
-                            method: 'DELETE',
-                            headers: { Authorization: `Bearer ${authToken}` },
-                          });
-                          if (!response.ok) throw new Error('Failed to disconnect');
-                          setZohoConnected(false);
-                          toast({ title: 'Disconnected', description: 'Zoho account disconnected successfully' });
-                          checkConnections();
-                        } catch (error) {
-                          toast({ title: 'Error', description: 'Failed to disconnect Zoho account', variant: 'destructive' });
-                        }
-                      }}
-                      className="h-8"
-                    >
-                      Disconnect
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => setIsZohoDialogOpen(true)}
-                      disabled={isZohoConnecting}
-                      className="h-8"
-                    >
-                      Connect
-                    </Button>
-                  </>
-                )}
-                <ZohoConnectionStatus
-                  open={isZohoDialogOpen}
-                  onOpenChange={setIsZohoDialogOpen}
-                  compact={true}
-                  onConnect={() => {
-                    setZohoConnected(true);
-                    checkConnections();
-                  }}
-                  onDisconnect={() => {
-                    setZohoConnected(false);
-                    checkConnections();
-                  }}
-                />
+              <span className="text-xs font-medium leading-tight">Instagram</span>
+              <span className={`flex items-center gap-1 text-[10px] ${instagramConnected ? 'text-green-600 dark:text-green-400' : instagramNeedsReconnect ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${instagramConnected ? 'bg-green-500' : instagramNeedsReconnect ? 'bg-amber-400' : 'bg-red-400'}`} />
+                {isChecking ? '...' : instagramConnected ? 'Connected' : instagramNeedsReconnect ? 'Reconnect' : 'Connect'}
+              </span>
+            </button>
+
+            {/* WhatsApp */}
+            <button
+              type="button"
+              onClick={whatsappConnected ? handleWhatsappDisconnect : handleWhatsappConnect}
+              disabled={isChecking || isWhatsappConnecting}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${whatsappConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+                <img src="/integrations-logos/Whatsapp-Cloude.svg" alt="WhatsApp" className="h-5 w-5 object-contain" />
               </div>
-            </div>
+              <span className="text-xs font-medium leading-tight">WhatsApp</span>
+              <span className={`flex items-center gap-1 text-[10px] ${whatsappConnected ? 'text-green-600 dark:text-green-400' : whatsappNeedsReconnect ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${whatsappConnected ? 'bg-green-500' : whatsappNeedsReconnect ? 'bg-amber-400' : 'bg-red-400'}`} />
+                {isChecking ? '...' : whatsappConnected ? 'Connected' : whatsappNeedsReconnect ? 'Reconnect' : 'Connect'}
+              </span>
+            </button>
+
+            {/* Zoho */}
+            <button
+              type="button"
+              onClick={() => !zohoConnected && setIsZohoDialogOpen(true)}
+              disabled={isChecking || isZohoConnecting}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${zohoConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+                <img src="/integrations-logos/Zoho.svg" alt="Zoho" className="h-5 w-5 object-contain" />
+              </div>
+              <span className="text-xs font-medium leading-tight">Zoho</span>
+              <span className={`flex items-center gap-1 text-[10px] ${zohoConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${zohoConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                {isChecking ? '...' : zohoConnected ? 'Connected' : 'Connect'}
+              </span>
+              <ZohoConnectionStatus
+                open={isZohoDialogOpen}
+                onOpenChange={setIsZohoDialogOpen}
+                compact={true}
+                onConnect={() => {
+                  setZohoConnected(true);
+                  checkConnections();
+                }}
+                onDisconnect={() => {
+                  setZohoConnected(false);
+                  checkConnections();
+                }}
+              />
+            </button>
+
+            {/* Salesforce */}
+            <button
+              type="button"
+              onClick={salesforceConnected ? handleSalesforceDisconnect : handleSalesforceConnect}
+              disabled={isChecking || isSalesforceConnecting}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${salesforceConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                  <path d="M9.95 4.5C10.9 3.57 12.18 3 13.6 3c2.1 0 3.93 1.2 4.87 2.97.7-.3 1.47-.47 2.28-.47C23.1 5.5 25 7.4 25 9.75c0 .18-.01.36-.03.54C25.6 11.1 26 12.1 26 13.2c0 2.65-2.15 4.8-4.8 4.8H8.5C5.46 18 3 15.54 3 12.5c0-2.7 1.88-4.96 4.4-5.55.3-1.1.9-2.08 1.7-2.85" fill="#00A1E0"/>
+                  <path d="M9.95 4.5C10.9 3.57 12.18 3 13.6 3c2.1 0 3.93 1.2 4.87 2.97.7-.3 1.47-.47 2.28-.47C23.1 5.5 25 7.4 25 9.75c0 .18-.01.36-.03.54C25.6 11.1 26 12.1 26 13.2c0 2.65-2.15 4.8-4.8 4.8H8.5C5.46 18 3 15.54 3 12.5c0-2.7 1.88-4.96 4.4-5.55.3-1.1.9-2.08 1.7-2.85z" fill="#00A1E0"/>
+                </svg>
+              </div>
+              <span className="text-xs font-medium leading-tight">Salesforce</span>
+              <span className={`flex items-center gap-1 text-[10px] ${salesforceConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${salesforceConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                {isChecking ? '...' : salesforceConnected ? 'Connected' : 'Connect'}
+              </span>
+            </button>
           </div>
         </div>
       </PopoverContent>
     </Popover>
+
+    {/* Instagram onboarding guide modal */}
+    {showInstagramGuide && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="w-full max-w-md rounded-xl border bg-background p-6 shadow-xl">
+          <InstagramConnectGuide onCancel={() => setShowInstagramGuide(false)} />
+        </div>
+      </div>
+    )}
+
+    {/* WhatsApp onboarding guide modal */}
+    {showWhatsappGuide && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="w-full max-w-md rounded-xl border bg-background p-6 shadow-xl">
+          <WhatsAppOnboardingGuide
+            isReconnect={whatsappNeedsReconnect}
+            onConnected={() => { setShowWhatsappGuide(false); checkConnections(); }}
+            onCancel={() => setShowWhatsappGuide(false)}
+          />
+        </div>
+      </div>
+    )}
+  </>
   );
 }

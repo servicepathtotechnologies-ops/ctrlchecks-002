@@ -7,6 +7,7 @@ import { useWorkflowStore } from '@/stores/workflowStore';
 import { useDebugStore } from '@/stores/debugStore';
 import { useTheme } from '@/hooks/useTheme';
 import { ThemedBorderGlow } from '@/components/ui/themed-border-glow';
+import { getIntegrationLogo } from '@/lib/integrationLogos';
 import {
   Play, Webhook, Clock, Globe, Brain, Sparkles, Gem, Link, GitBranch,
   GitMerge, Repeat, Timer, ShieldAlert, Code, Braces, Table, Type,
@@ -60,6 +61,7 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
 
   const category = NODE_CATEGORIES.find((c) => c.id === nodeCategory);
   const IconComponent = iconMap[nodeIcon] || Box;
+  const logoSrc = getIntegrationLogo(nodeType);
   const isIfElseNode = nodeType === 'if_else';
   const isSwitchNode = nodeType === 'switch';
   const isAIAgentNode = nodeType === 'ai_agent';
@@ -152,7 +154,7 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
     >
       <div
         className={cn(
-          'px-5 py-4 rounded-[inherit] bg-card transition-all relative',
+          'px-5 py-4 rounded-xl bg-card transition-all relative',
           status === 'running' && 'motion-safe:animate-pulse',
           isAiEditedHighlight && 'ring-2 ring-violet-500/70 ring-offset-2 ring-offset-background'
         )}
@@ -214,9 +216,13 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
       <div className={cn("flex items-center gap-3", isAIAgentNode && "justify-center")}>
         <div
           className="flex h-8 w-8 items-center justify-center rounded-md flex-shrink-0"
-          style={{ backgroundColor: category?.color + '20', color: category?.color }}
+          style={{ backgroundColor: logoSrc ? '#fff' : category?.color + '20', color: category?.color }}
         >
-          <IconComponent className="h-4 w-4" />
+          {logoSrc ? (
+            <img src={logoSrc} alt={nodeLabel} className="h-5 w-5 object-contain" />
+          ) : (
+            <IconComponent className="h-4 w-4" />
+          )}
         </div>
         {isAIAgentNode ? (
           <div className="flex-1 min-w-0 text-center">

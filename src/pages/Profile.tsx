@@ -517,14 +517,58 @@ export default function Profile() {
       <main className="container mx-auto px-4 py-4 max-w-6xl">
         <div className="space-y-4">
           {/* Page Header */}
-          <div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <UserIcon className="h-5 w-5" />
-              Profile & Connections
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage your profile information and connected accounts
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-bold flex items-center gap-2">
+                <UserIcon className="h-5 w-5" />
+                Profile & Connections
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage your profile information and connected accounts
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                disabled={loading || saving || deleting}
+                className="h-8 text-sm"
+              >
+                <LogOut className="mr-1.5 h-3.5 w-3.5" />
+                Sign Out
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={loading || saving || deleting}
+                    className="h-8 text-sm"
+                  >
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                    Delete Account
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action is permanent and cannot be undone. All your data will be permanently deleted.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete Account
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -692,53 +736,6 @@ export default function Profile() {
             </Card>
           </div>
 
-          {/* Sign Out Section */}
-          <Card className="border-destructive/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-destructive">Account</CardTitle>
-              <CardDescription className="text-xs">Manage your account</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2 sm:flex-row">
-              <Button
-                variant="destructive"
-                onClick={handleSignOut}
-                disabled={loading || saving || deleting}
-                className="flex-1"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    disabled={loading || saving || deleting}
-                    className="flex-1"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Account
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Account</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action is permanent and cannot be undone. All your data will be permanently deleted.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteAccount}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Delete Account
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardContent>
-          </Card>
         </div>
       </main>
     </div>

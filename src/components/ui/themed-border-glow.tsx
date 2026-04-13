@@ -99,7 +99,7 @@ export function ThemedBorderGlow({
   const isLight = theme === 'light';
   const isCanvas = variant === 'canvas-node';
 
-  const borderRadius = borderRadiusProp ?? (isCanvas ? 8 : 12);
+  const borderRadius = borderRadiusProp ?? (isCanvas ? 12 : 12);
   const glowRadius = glowRadiusProp ?? (isCanvas ? 52 : 36);
   const fillOpacity =
     fillOpacityProp ?? (isCanvas ? (isLight ? 0.44 : 0.54) : isLight ? 0.3 : 0.48);
