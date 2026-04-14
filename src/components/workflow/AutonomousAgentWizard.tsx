@@ -81,6 +81,8 @@ import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
 import { buildConnectorCallbackUrl, rememberOAuthReturnTo } from '@/lib/oauth-return';
 import FieldOwnershipGuidePanel from './FieldOwnershipGuidePanel';
 import { buildFieldOwnershipGuideContext } from '@/lib/field-ownership-guide-context';
+import { GuidedStatusCard } from '@/components/ui/guided-status-card';
+import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
 
 /**
  * Ensures proper state transitions before setting workflow blueprint.
@@ -602,6 +604,7 @@ export function AutonomousAgentWizard() {
     const [configureCredentials, setConfigureCredentials] = useState<Record<string, Record<string, any>>>({});
     const [configureInputs, setConfigureInputs] = useState<Array<{ nodeId: string; fieldName: string; value: any }>>([]);
     const [isConfiguring, setIsConfiguring] = useState(false);
+    const [configureGuidance, setConfigureGuidance] = useState<GuidedStatusContent | null>(null);
     const [workflowReady, setWorkflowReady] = useState(false);
     // ? STEP-BY-STEP: Track current question index for wizard flow
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -742,6 +745,12 @@ export function AutonomousAgentWizard() {
             fetchMissingItems();
         }
     }, [step, generatedWorkflowId, missingItems]);
+
+    useEffect(() => {
+        if (step !== 'configure' && configureGuidance) {
+            setConfigureGuidance(null);
+        }
+    }, [step, configureGuidance]);
 
     // Debug: Log when requiredCredentials changes
     useEffect(() => {
@@ -7266,6 +7275,16 @@ export function AutonomousAgentWizard() {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
+                                    {configureGuidance && (
+                                        <GuidedStatusCard
+                                            title={configureGuidance.title}
+                                            description={configureGuidance.description}
+                                            resolution={configureGuidance.resolution}
+                                            details={configureGuidance.details}
+                                            tone={configureGuidance.tone}
+                                            onDismiss={() => setConfigureGuidance(null)}
+                                        />
+                                    )}
                                     {!missingItems ? (
                                         <div className="flex items-center justify-center py-8">
                                             <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
@@ -7501,22 +7520,33 @@ export function AutonomousAgentWizard() {
                                                             );
 
                                                             if (!response.ok) {
-                                                                const error = await response.json();
-                                                                throw new Error(error.message || 'Configuration failed');
+                                                                const error = await response.json().catch(() => ({}));
+                                                                const guidance = mapWorkflowIssueToGuidance(error);
+                                                                setConfigureGuidance(guidance);
+                                                                toast({
+                                                                    title: guidance.title,
+                                                                    description: guidance.description,
+                                                                });
+                                                                return;
                                                             }
 
                                                             const result = await response.json();
+                                                            void result;
                                                             setWorkflowReady(true);
+                                                            setConfigureGuidance(null);
                                                             toast({
                                                                 title: 'Success',
                                                                 description: 'Workflow configured successfully!',
                                                             });
                                                             setStep('complete');
                                                         } catch (error: any) {
+                                                            const guidance = mapWorkflowIssueToGuidance({
+                                                                message: error?.message || 'Failed to configure workflow',
+                                                            });
+                                                            setConfigureGuidance(guidance);
                                                             toast({
-                                                                title: 'Error',
-                                                                description: error.message || 'Failed to configure workflow',
-                                                                variant: 'destructive',
+                                                                title: guidance.title,
+                                                                description: guidance.description,
                                                             });
                                                         } finally {
                                                             setIsConfiguring(false);

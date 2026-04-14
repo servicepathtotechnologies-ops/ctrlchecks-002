@@ -32,6 +32,8 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
 import { extractNodeConfigForAttachInputs } from '@/lib/attach-inputs-payload';
+import { GuidedStatusCard } from '@/components/ui/guided-status-card';
+import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
 
 /** Stable JSON for deduping attach-inputs auto-persist (sorted keys). */
 function stableStringifyForAttachInputs(obj: Record<string, unknown>): string {
@@ -148,6 +150,7 @@ export default function PropertiesPanel({
   const { role: appRole } = useRole();
   const { toast } = useToast();
   const { pendingExpression, clearPendingExpression } = useExpressionDropStore();
+  const [guidedStatus, setGuidedStatus] = useState<GuidedStatusContent | null>(null);
 
   /** Canonical form URL from graph (not selection) — matches persisted workflow node id */
   const formPublicUrl = useMemo(
@@ -1041,6 +1044,10 @@ export default function PropertiesPanel({
   }, [workflowId]);
 
   useEffect(() => {
+    setGuidedStatus(null);
+  }, [selectedNode?.id, workflowId]);
+
+  useEffect(() => {
     if (!selectedNode || !workflowId) return;
     // Only auto-persist when the workflow is already saved (has an ID)
     if (autoPersistTimerRef.current) clearTimeout(autoPersistTimerRef.current);
@@ -1096,19 +1103,23 @@ export default function PropertiesPanel({
           });
           if (!attachRes.ok) {
             const errJson = await attachRes.json().catch(() => ({}));
-            const msg =
-              typeof errJson?.message === 'string'
-                ? errJson.message
-                : typeof errJson?.error === 'string'
-                  ? errJson.error
-                  : `HTTP ${attachRes.status}`;
+            const guidance = mapWorkflowIssueToGuidance({
+              ...errJson,
+              message:
+                typeof errJson?.message === 'string'
+                  ? errJson.message
+                  : typeof errJson?.error === 'string'
+                    ? errJson.error
+                    : `HTTP ${attachRes.status}`,
+            });
+            setGuidedStatus(guidance);
             toast({
-              title: 'Could not save node configuration',
-              description: msg.slice(0, 400),
-              variant: 'destructive',
+              title: guidance.title,
+              description: guidance.description,
             });
           } else {
             lastSuccessfulAttachInputsRef.current.set(selectedNode.id, inputsKey);
+            setGuidedStatus(null);
             const body = await attachRes.json().catch(() => ({}));
             const invalid = body?.diagnostics?.invalidBareNodeIdInputKeys as string[] | undefined;
             if (Array.isArray(invalid) && invalid.length > 0) {
@@ -1119,13 +1130,24 @@ export default function PropertiesPanel({
 
         // Send credential inputs (keyed by nodeId so backend knows which node they belong to)
         if (Object.keys(credentialInputs).length > 0) {
-          await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-credentials`, {
+          const attachCredsRes = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-credentials`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
               credentials: { [`node_${selectedNode.id}`]: credentialInputs },
             }),
           });
+          if (!attachCredsRes.ok) {
+            const errJson = await attachCredsRes.json().catch(() => ({}));
+            const guidance = mapWorkflowIssueToGuidance(errJson);
+            setGuidedStatus(guidance);
+            toast({
+              title: guidance.title,
+              description: guidance.description,
+            });
+          } else {
+            setGuidedStatus(null);
+          }
         }
       } catch {
         // Non-fatal — user can still manually save
@@ -1755,6 +1777,16 @@ export default function PropertiesPanel({
         <>
           <ScrollArea className="flex-1">
             <div className="px-4 py-4 space-y-5">
+              {guidedStatus && (
+                <GuidedStatusCard
+                  title={guidedStatus.title}
+                  description={guidedStatus.description}
+                  resolution={guidedStatus.resolution}
+                  details={guidedStatus.details}
+                  tone={guidedStatus.tone}
+                  onDismiss={() => setGuidedStatus(null)}
+                />
+              )}
               {/* Usage Guide Card - For All Nodes */}
               {NODE_USAGE_GUIDES[selectedNode.data.type] && (
                 <div className="mb-1">
