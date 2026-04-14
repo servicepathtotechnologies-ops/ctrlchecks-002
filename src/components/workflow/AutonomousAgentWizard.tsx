@@ -57,6 +57,7 @@ import {
     selectOwnershipQuestionsFromPlane,
     selectVaultCredentialQuestionsFromPlane,
 } from '@/lib/wizard-field-plane';
+import { normalizeAndDedupeQuestions } from '@/lib/wizard-question-normalizer';
 import {
     filterStillBlockingOAuth,
     oauthRequirementCandidates,
@@ -76,6 +77,7 @@ import {
     mapStateToWizardStep 
 } from '@/lib/workflow-generation-state';
 import { shouldRunAttachCredentialsAfterAttachInputs } from '@/lib/workflow-phase-contract';
+import { buildScopedCredentialPayload } from '@/lib/attach-inputs-payload';
 import { getPromptInputLayoutState } from '@/lib/prompt-input-layout';
 import FieldOwnershipGuidePanel from './FieldOwnershipGuidePanel';
 import { buildFieldOwnershipGuideContext } from '@/lib/field-ownership-guide-context';
@@ -2706,7 +2708,7 @@ export function AutonomousAgentWizard() {
                             if (comprehensiveQuestions.length > 0 || discoveredCreds.length > 0) {
                                 // Questions exist � show questions UI and wait for user to submit answers.
                                 // The 'refining' overlay is skipped; user goes directly to field-ownership.
-                                setAllQuestions(comprehensiveQuestions.map((q: any) => {
+                                setAllQuestions(normalizeAndDedupeQuestions(comprehensiveQuestions.map((q: any) => {
                                     const fieldName = String(q.fieldName || '').trim() || 'credential';
                                     const isCredentialQ = q.category === 'credential' || q.ownershipClass === 'credential';
                                     // Augment fillModeDefault from fieldOwnershipMap if not already set.
@@ -2721,7 +2723,7 @@ export function AutonomousAgentWizard() {
                                         isVaultCredential: isCredentialQ,
                                         fillModeDefault: q.fillModeDefault || fomFillMode || undefined,
                                     };
-                                }));
+                                })));
                                 setStep('field-ownership');
                             } else if (data.fieldOwnershipMap && typeof data.fieldOwnershipMap === 'object' && Object.keys(data.fieldOwnershipMap).length > 0) {
                                 // Bug B fix: no comprehensiveQuestions but fieldOwnershipMap is non-empty � synthesize field rows.
@@ -2767,7 +2769,7 @@ export function AutonomousAgentWizard() {
                                         });
                                     }
                                 }
-                                setAllQuestions(synthesized);
+                                setAllQuestions(normalizeAndDedupeQuestions(synthesized));
                                 setStep('field-ownership');
                             } else {
                                 // No questions � user has nothing to answer, proceed directly.
@@ -3554,6 +3556,13 @@ export function AutonomousAgentWizard() {
                                 String(q?.fieldName || '').trim();
                             if (!key) return;
                             credentialsToSend[key] = raw;
+
+                            // Canonical per-node key keeps credential injection stable across repeated node types.
+                            const scoped = buildScopedCredentialPayload(
+                                String(q?.nodeId || ''),
+                                { [String(q?.fieldName || key).trim()]: raw }
+                            );
+                            Object.assign(credentialsToSend, scoped);
                         });
                         // Backward-compatible fallback: include direct credential keys if user/config populated them.
                         Object.entries(credentialValues).forEach(([key, value]) => {
@@ -4201,34 +4210,7 @@ export function AutonomousAgentWizard() {
                         });
                     }
 
-                    // Deduplicate to prevent duplicate credential prompts from mixed sources.
-                    const dedupe = new Map<string, any>();
-                    combinedQuestions.forEach((q: any) => {
-                        const isCredentialQ = q.questionType === 'credential' || q.category === 'credential' || q.isVaultCredential;
-                        const key = isCredentialQ
-                            ? `cred:${q.nodeId || 'global'}:${String(q.credential?.vaultKey || q.credential?.credentialId || q.fieldName || '').toLowerCase()}`
-                            : `field:${q.nodeId || 'global'}:${String(q.fieldName || '').toLowerCase()}`;
-                        const existing = dedupe.get(key);
-                        if (!existing) {
-                            dedupe.set(key, q);
-                            return;
-                        }
-                        const scoreQuestion = (candidate: any): number => {
-                            let score = 0;
-                            if (candidate?.credential?.vaultKey) score += 100;
-                            if (candidate?.type === 'select' || (Array.isArray(candidate?.options) && candidate.options.length > 0)) score += 10;
-                            if (candidate?.type === 'textarea' || candidate?.type === 'number' || candidate?.type === 'password') score += 5;
-                            if (typeof candidate?.description === 'string' && !candidate.description.startsWith('Input field ')) score += 2;
-                            return score;
-                        };
-                        // Prefer richer schema-driven questions over generic ownership fallback rows.
-                        const existingScore = scoreQuestion(existing);
-                        const nextScore = scoreQuestion(q);
-                        if (nextScore > existingScore) {
-                            dedupe.set(key, q);
-                        }
-                    });
-                    combinedQuestions = Array.from(dedupe.values());
+                    combinedQuestions = normalizeAndDedupeQuestions(combinedQuestions);
 
                     console.log(
                         `[Frontend] Combined ${combinedQuestions.length} questions for step-by-step wizard`

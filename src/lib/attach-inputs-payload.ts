@@ -46,3 +46,37 @@ export function buildNestedAttachInputsFromNodes(
   }
   return out;
 }
+
+/** Build flat attach-inputs payload keys (`config_<nodeId>_<field>`). */
+export function buildFlatAttachInputsForNode(
+  nodeId: string,
+  nodeConfig: Record<string, unknown>,
+  options?: { includeOwnershipMeta?: boolean }
+): Record<string, unknown> {
+  const extracted = extractNodeConfigForAttachInputs(nodeConfig, options);
+  const out: Record<string, unknown> = {};
+  const normalizedNodeId = String(nodeId || '').trim();
+  if (!normalizedNodeId) return out;
+
+  for (const [field, value] of Object.entries(extracted)) {
+    if (value === undefined || value === null) continue;
+    out[`config_${normalizedNodeId}_${field}`] = value;
+  }
+  return out;
+}
+
+/** Build scoped credential payload keys (`cred_<nodeId>_<field>`). */
+export function buildScopedCredentialPayload(
+  nodeId: string,
+  credentials: Record<string, unknown>
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  const normalizedNodeId = String(nodeId || '').trim();
+  if (!normalizedNodeId) return out;
+
+  for (const [field, value] of Object.entries(credentials || {})) {
+    if (value === undefined || value === null || value === '') continue;
+    out[`cred_${normalizedNodeId}_${field}`] = value;
+  }
+  return out;
+}

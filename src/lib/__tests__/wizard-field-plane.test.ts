@@ -107,3 +107,31 @@ describe('selectOwnershipQuestionsFromPlane — Bug C filter', () => {
         expect(result).toHaveLength(0);
     });
 });
+
+describe('buildFieldPlaneRows deduplication', () => {
+    it('keeps one row per node/field and prefers richer schema question', () => {
+        const duplicatePlain = {
+            id: 'q_plain',
+            nodeId: 'n_function',
+            fieldName: 'timeout',
+            type: 'text',
+            category: 'configuration',
+            description: 'Input field timeout',
+            ownershipClass: 'value',
+        };
+        const duplicateRich = {
+            id: 'q_rich',
+            nodeId: 'n_function',
+            fieldName: 'timeout',
+            type: 'number',
+            category: 'configuration',
+            description: 'Timeout in milliseconds (optional)',
+            ownershipClass: 'value',
+        };
+
+        const rows = buildFieldPlaneRows([duplicatePlain, duplicateRich], undefined);
+        expect(rows).toHaveLength(1);
+        expect(rows[0].question.id).toBe('q_rich');
+        expect(rows[0].question.type).toBe('number');
+    });
+});
