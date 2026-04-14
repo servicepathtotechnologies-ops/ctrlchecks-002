@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { getFacebookSupabaseOAuthOptions } from '@/lib/facebookSignInOptions';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { buildConnectorCallbackUrl } from '@/lib/oauth-return';
 
 interface FacebookConnectionStatusProps {
   onConnect?: () => void;
@@ -104,7 +105,7 @@ export default function FacebookConnectionStatus({
     setIsAuthenticating(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/facebook/callback`;
+      const redirectUrl = buildConnectorCallbackUrl('/auth/facebook/callback');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',

@@ -7,10 +7,9 @@
  */
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { INTEGRATION_SCOPES } from '@/lib/google-scopes';
+import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
 
-// Identity-only scope tokens that must never appear in the connector flow
-const IDENTITY_ONLY_SCOPES = ['openid', 'profile', 'email'];
+const REQUIRED_IDENTITY_SCOPES = ['openid', 'profile', 'email'];
 
 /**
  * Mirrors the options object that handleGoogleAuth() passes to
@@ -22,12 +21,12 @@ function buildConnectorOAuthOptions(origin: string) {
     queryParams: {
       access_type: 'offline',
       prompt: 'consent',
-      scope: INTEGRATION_SCOPES,
+      scope: GOOGLE_CONNECTOR_SCOPES,
     },
   };
 }
 
-describe('Property 4: GoogleConnectionStatus connector flow uses only integration scopes', () => {
+describe('Property 4: GoogleConnectionStatus connector flow uses connector + identity scopes', () => {
   it('handleGoogleAuth redirectTo always contains mode=connector', () => {
     fc.assert(
       fc.property(
@@ -46,7 +45,7 @@ describe('Property 4: GoogleConnectionStatus connector flow uses only integratio
     );
   });
 
-  it('handleGoogleAuth scope equals INTEGRATION_SCOPES exactly', () => {
+  it('handleGoogleAuth scope equals GOOGLE_CONNECTOR_SCOPES exactly', () => {
     fc.assert(
       fc.property(
         fc.oneof(
@@ -55,14 +54,14 @@ describe('Property 4: GoogleConnectionStatus connector flow uses only integratio
         ),
         (origin) => {
           const options = buildConnectorOAuthOptions(origin);
-          return options.queryParams.scope === INTEGRATION_SCOPES;
+          return options.queryParams.scope === GOOGLE_CONNECTOR_SCOPES;
         },
       ),
       { numRuns: 100 },
     );
   });
 
-  it('handleGoogleAuth scope does not contain identity-only scopes', () => {
+  it('handleGoogleAuth scope contains required identity scopes', () => {
     fc.assert(
       fc.property(
         fc.oneof(
@@ -73,8 +72,8 @@ describe('Property 4: GoogleConnectionStatus connector flow uses only integratio
           const options = buildConnectorOAuthOptions(origin);
           const scopeTokens = options.queryParams.scope.split(' ');
 
-          return IDENTITY_ONLY_SCOPES.every(
-            (identityScope) => !scopeTokens.includes(identityScope),
+          return REQUIRED_IDENTITY_SCOPES.every(
+            (identityScope) => scopeTokens.includes(identityScope),
           );
         },
       ),

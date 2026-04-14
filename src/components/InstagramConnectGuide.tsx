@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Instagram, Loader2, CheckCircle2 } from 'lucide-react';
+import { rememberOAuthReturnTo } from '@/lib/oauth-return';
 
 interface Props {
   onCancel: () => void;
@@ -20,6 +21,7 @@ export default function InstagramConnectGuide({ onCancel }: Props) {
 
   const handleConnect = () => {
     setConnecting(true);
+    rememberOAuthReturnTo();
     const backendUrl = getBackendUrl();
     const redirectUri = `${window.location.origin}/auth/instagram/callback`;
     window.location.href = `${backendUrl}/api/oauth/instagram/authorize?redirect_uri=${encodeURIComponent(redirectUri)}`;

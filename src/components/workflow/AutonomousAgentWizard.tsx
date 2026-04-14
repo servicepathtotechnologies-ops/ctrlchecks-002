@@ -77,6 +77,8 @@ import {
 } from '@/lib/workflow-generation-state';
 import { shouldRunAttachCredentialsAfterAttachInputs } from '@/lib/workflow-phase-contract';
 import { getPromptInputLayoutState } from '@/lib/prompt-input-layout';
+import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
+import { buildConnectorCallbackUrl, rememberOAuthReturnTo } from '@/lib/oauth-return';
 import FieldOwnershipGuidePanel from './FieldOwnershipGuidePanel';
 import { buildFieldOwnershipGuideContext } from '@/lib/field-ownership-guide-context';
 
@@ -2391,6 +2393,20 @@ export function AutonomousAgentWizard() {
             console.log('Submitting workflow prompt:', promptToUse);
             console.log('Mode:', 'refine');
             console.log('Answers:', fa);
+            // Keep UI responsive while waiting for first backend stage events.
+            let refineFallbackInterval: ReturnType<typeof setInterval> | null = null;
+            const startFallbackProgress = () => {
+                if (refineFallbackInterval) return;
+                refineFallbackInterval = setInterval(() => {
+                    setProgress(prev => deriveMonotonicProgress(prev, prev < 12 ? prev + 1 : prev));
+                }, 2500);
+            };
+            const stopFallbackProgress = () => {
+                if (refineFallbackInterval) {
+                    clearInterval(refineFallbackInterval);
+                    refineFallbackInterval = null;
+                }
+            };
             // Get the current user's ID so the backend can check vault tables for connected accounts.
             // Without userId the backend defaults to 'anonymous' and all vault checks return false,
             // causing connected OAuth accounts (LinkedIn, Notion, etc.) to show "Action required".
@@ -2400,12 +2416,14 @@ export function AutonomousAgentWizard() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'x-stream-progress': 'true',
                     ...(refineSession?.access_token ? { Authorization: `Bearer ${refineSession.access_token}` } : {}),
                 },
                 body: JSON.stringify({ prompt: promptToUse, mode: 'refine', answers: fa, ...(refineUserId ? { userId: refineUserId } : {}) })
             });
 
             if (!response.ok) {
+                stopFallbackProgress();
                 const error = await response.json().catch(() => ({ error: 'Refinement failed' }));
                 const errorMessage = error.error || error.message || error.details || 'Refinement failed';
                 console.error('[Refinement Error]', error);
@@ -2415,10 +2433,49 @@ export function AutonomousAgentWizard() {
             // Read NDJSON stream — collect stage progress events and extract terminal payload as `data`
             let data: any = null;
             {
+                startFallbackProgress();
+                const contentType = String(response.headers.get('content-type') || '').toLowerCase();
                 const refineReader = response.body?.getReader();
                 const refineDecoder = new TextDecoder();
                 let refineBuffer = '';
-                if (refineReader) {
+                const handleUpdate = async (update: any) => {
+                    // Stage progress event
+                    if (update.current_phase && !update.success && !update.workflow) {
+                        stopFallbackProgress();
+                        setCurrentPhase(update.current_phase);
+                        const pct = typeof update.progress_percentage === 'number'
+                            ? Math.min(99, Math.max(0, update.progress_percentage))
+                            : Math.min(99, mapBackendPhaseToProgress(update.current_phase));
+                        setProgress(prev => deriveMonotonicProgress(prev, pct));
+                        const label = update.log ?? getPhaseDescription(update.current_phase);
+                        setBuildingLogs(prev => prev.includes(label) ? prev : [...prev, label]);
+                        // Yield to browser event loop so React flushes this render
+                        // before processing the next stage event
+                        await new Promise(resolve => setTimeout(resolve, 0));
+                        return;
+                    }
+
+                    // Error event
+                    if (update.status === 'error') {
+                        stopFallbackProgress();
+                        throw new Error(typeof update.error === 'string' ? update.error : 'Workflow generation failed');
+                    }
+
+                    // Terminal payload (has success:true or workflow)
+                    if (update.success || update.workflow || update.phase) {
+                        stopFallbackProgress();
+                        data = update;
+                    }
+                };
+
+                // Some paths can still respond with application/json (non-streaming fallback).
+                if (!refineReader || contentType.includes('application/json')) {
+                    const jsonPayload = await response.json().catch(() => null);
+                    if (jsonPayload) {
+                        await handleUpdate(jsonPayload);
+                        if (!data) data = jsonPayload;
+                    }
+                } else {
                     while (true) {
                         const { done, value } = await refineReader.read();
                         if (done) break;
@@ -2429,37 +2486,17 @@ export function AutonomousAgentWizard() {
                             if (!line.trim()) continue;
                             let update: any;
                             try { update = JSON.parse(line); } catch { continue; }
-
-                            // Stage progress event
-                            if (update.current_phase && !update.success && !update.workflow) {
-                                stopFallbackProgress();
-                                setCurrentPhase(update.current_phase);
-                                const pct = typeof update.progress_percentage === 'number'
-                                    ? Math.min(99, Math.max(0, update.progress_percentage))
-                                    : Math.min(99, mapBackendPhaseToProgress(update.current_phase));
-                                setProgress(prev => deriveMonotonicProgress(prev, pct));
-                                const label = update.log ?? getPhaseDescription(update.current_phase);
-                                setBuildingLogs(prev => prev.includes(label) ? prev : [...prev, label]);
-                                // Yield to browser event loop so React flushes this render
-                                // before processing the next stage event
-                                await new Promise(resolve => setTimeout(resolve, 0));
-                                continue;
-                            }
-
-                            // Error event
-                            if (update.status === 'error') {
-                                stopFallbackProgress();
-                                throw new Error(typeof update.error === 'string' ? update.error : 'Workflow generation failed');
-                            }
-
-                            // Terminal payload (has success:true or workflow)
-                            if (update.success || update.workflow || update.phase) {
-                                stopFallbackProgress();
-                                data = update;
-                            }
+                            await handleUpdate(update);
                         }
                     }
+
+                    // Parse any final line without trailing newline.
+                    if (!data && refineBuffer.trim()) {
+                        const trailingUpdate = JSON.parse(refineBuffer.trim());
+                        await handleUpdate(trailingUpdate);
+                    }
                 }
+                stopFallbackProgress();
                 if (!data) throw new Error('No workflow data received from backend');
             }
             setRefinement(data);
@@ -3334,8 +3371,8 @@ export function AutonomousAgentWizard() {
                     })
                 );
             }
-            const currentPath = window.location.pathname;
-            const redirectUrl = `${window.location.origin}/auth/google/callback?returnTo=${encodeURIComponent(currentPath)}`;
+            rememberOAuthReturnTo();
+            const redirectUrl = buildConnectorCallbackUrl('/auth/google/callback');
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
@@ -3343,8 +3380,7 @@ export function AutonomousAgentWizard() {
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',
-                        scope:
-                            'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/bigquery https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/contacts email profile',
+                        scope: GOOGLE_CONNECTOR_SCOPES,
                     },
                 },
             });

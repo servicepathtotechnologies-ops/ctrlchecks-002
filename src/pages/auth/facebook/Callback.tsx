@@ -14,6 +14,7 @@ import { getFacebookOAuthScopeString } from '@/lib/facebookSignInOptions';
 import { Loader2 } from 'lucide-react';
 import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
+import { resolveOAuthReturnTo } from '@/lib/oauth-return';
 
 export default function FacebookAuthCallback() {
   const navigate = useNavigate();
@@ -28,17 +29,17 @@ export default function FacebookAuthCallback() {
 
     let authSubscription: { unsubscribe: () => void } | null = null;
     let timeoutId: NodeJS.Timeout;
+    const searchParams = new URLSearchParams(window.location.search);
+    const returnTo = resolveOAuthReturnTo(searchParams, '/workflows');
+    const oauthError = searchParams.get('error_description') || searchParams.get('error');
 
     const processSession = async (session: Session | null) => {
       if (!session) return false;
 
       // Prevent multiple processings for the same session
       if (processedRef.current) return true;
-      processedRef.current = true;
 
       try {
-        setStatus('Facebook tokens found. Saving...');
-
         // Extract tokens from Supabase session
         const { provider_token, provider_refresh_token, expires_at } = session as Session & {
           provider_token?: string | null;
@@ -47,10 +48,12 @@ export default function FacebookAuthCallback() {
         };
 
         if (!provider_token) {
-          console.warn('No provider_token in session. Is this a Facebook OAuth session?');
-          throw new Error('Facebook access token not found in session.');
+          setStatus('Waiting for Facebook OAuth tokens...');
+          return false;
         }
 
+        processedRef.current = true;
+        setStatus('Facebook tokens found. Saving...');
         console.log('Got Facebook tokens. Saving to database via backend API...');
 
         // Get current session token for API authentication
@@ -88,14 +91,7 @@ export default function FacebookAuthCallback() {
         });
 
         // Check if we should return to a specific page
-        const urlParams = new URLSearchParams(window.location.search);
-        const returnTo = urlParams.get('returnTo');
-        
-        if (returnTo) {
-          navigate(returnTo);
-        } else {
-          navigate('/workflows');
-        }
+        navigate(returnTo);
         return true;
 
       } catch (err) {
@@ -106,12 +102,24 @@ export default function FacebookAuthCallback() {
           description: err instanceof Error ? err.message : 'Failed to save connection',
           variant: 'destructive',
         });
-        setTimeout(() => navigate('/workflows'), 3000);
+        setTimeout(() => navigate(returnTo), 3000);
         return true;
       }
     };
 
     const setupAuthListener = async () => {
+      if (oauthError) {
+        setError(oauthError);
+        toast({
+          title: 'Connection Failed',
+          description: oauthError,
+          variant: 'destructive',
+        });
+        processedRef.current = true;
+        setTimeout(() => navigate(returnTo), 3000);
+        return;
+      }
+
       // 1. Check if we already have a session
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -158,7 +166,7 @@ export default function FacebookAuthCallback() {
           <p>URL: {window.location.href}</p>
           <p>Status: {status}</p>
         </div>
-        <Button onClick={() => navigate('/workflows')} variant="outline">
+        <Button onClick={() => navigate(returnTo)} variant="outline">
           Return to Workflows
         </Button>
       </div>

@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { resolveOAuthReturnTo } from '@/lib/oauth-return';
 
 export default function TwitterAuthCallback() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function TwitterAuthCallback() {
 
   useEffect(() => {
     if (processedRef.current) return;
+    const returnTo = resolveOAuthReturnTo(searchParams, '/workflows');
 
     const processCallback = async () => {
       try {
@@ -125,7 +127,7 @@ export default function TwitterAuthCallback() {
           description: `Twitter connected successfully${tokenData.username ? ` as @${tokenData.username}` : ''}!`,
         });
 
-        navigate('/workflows');
+        navigate(returnTo);
       } catch (err) {
         console.error('Error in Twitter callback processing:', err);
         setError(err instanceof Error ? err.message : 'Failed to save Twitter connection');
@@ -134,7 +136,7 @@ export default function TwitterAuthCallback() {
           description: err instanceof Error ? err.message : 'Failed to save connection',
           variant: 'destructive',
         });
-        setTimeout(() => navigate('/workflows'), 3000);
+        setTimeout(() => navigate(returnTo), 3000);
       }
     };
 
@@ -151,7 +153,7 @@ export default function TwitterAuthCallback() {
           <p>URL: {window.location.href}</p>
           <p>Status: {status}</p>
         </div>
-        <Button onClick={() => navigate('/workflows')} variant="outline">
+        <Button onClick={() => navigate(returnTo)} variant="outline">
           Return to Workflows
         </Button>
       </div>

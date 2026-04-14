@@ -3,6 +3,8 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { getFacebookSupabaseOAuthOptions } from '@/lib/facebookSignInOptions';
+import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
+import { buildConnectorCallbackUrl, rememberOAuthReturnTo } from '@/lib/oauth-return';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -268,7 +270,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
 
     try {
       if (service === 'google') {
-        const redirectUrl = `${window.location.origin}/auth/google/callback`;
+        const redirectUrl = buildConnectorCallbackUrl('/auth/google/callback');
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
@@ -276,13 +278,13 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
             queryParams: {
               access_type: 'offline',
               prompt: 'consent',
-              scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/bigquery https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/contacts email profile',
+              scope: GOOGLE_CONNECTOR_SCOPES,
             },
           },
         });
         if (error) throw error;
       } else if (service === 'linkedin') {
-        const redirectUrl = `${window.location.origin}/auth/linkedin/callback`;
+        const redirectUrl = buildConnectorCallbackUrl('/auth/linkedin/callback');
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'linkedin_oidc',
           options: {
@@ -294,7 +296,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
         });
         if (error) throw error;
       } else if (service === 'github') {
-        const redirectUrl = `${window.location.origin}/auth/github/callback`;
+        const redirectUrl = buildConnectorCallbackUrl('/auth/github/callback');
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'github',
           options: {
@@ -304,7 +306,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
         });
         if (error) throw error;
       } else if (service === 'facebook') {
-        const redirectUrl = `${window.location.origin}/auth/facebook/callback`;
+        const redirectUrl = buildConnectorCallbackUrl('/auth/facebook/callback');
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'facebook',
           options: getFacebookSupabaseOAuthOptions(redirectUrl),
@@ -312,6 +314,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
         if (error) throw error;
       } else if (service === 'notion') {
         const backendUrl = getBackendUrl();
+        rememberOAuthReturnTo();
         const redirectUrl = `${window.location.origin}/auth/notion/callback`;
         window.location.href = `${backendUrl}/api/oauth/notion/authorize?redirect_uri=${encodeURIComponent(redirectUrl)}`;
         return;

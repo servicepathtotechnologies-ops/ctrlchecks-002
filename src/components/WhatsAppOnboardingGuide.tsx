@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
+import { rememberOAuthReturnTo } from '@/lib/oauth-return';
 import {
   ChevronRight,
   ExternalLink,
@@ -97,6 +98,7 @@ export default function WhatsAppOnboardingGuide({ isReconnect = false, onConnect
     localStorage.removeItem(STORAGE_KEY);
 
     setConnecting(true);
+    rememberOAuthReturnTo();
     const backendUrl = getBackendUrl();
     const redirectUri = `${window.location.origin}/auth/whatsapp/callback`;
     window.location.href = `${backendUrl}/api/oauth/whatsapp/authorize?redirect_uri=${encodeURIComponent(redirectUri)}`;

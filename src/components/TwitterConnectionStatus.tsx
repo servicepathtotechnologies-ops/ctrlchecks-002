@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { Loader2, CheckCircle2, XCircle, Twitter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { rememberOAuthReturnTo } from '@/lib/oauth-return';
 
 interface TwitterConnectionStatusProps {
   onStatusChange?: (connected: boolean) => void;
@@ -71,6 +72,7 @@ export default function TwitterConnectionStatus({ onStatusChange }: TwitterConne
 
       // Get current origin for redirect URI
       const redirectUri = `${window.location.origin}/auth/twitter/callback`;
+      rememberOAuthReturnTo();
       
       // Initiate OAuth flow
       const response = await fetch(

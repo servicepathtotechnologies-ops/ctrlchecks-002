@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { resolveOAuthReturnTo } from '@/lib/oauth-return';
 
 export default function WhatsAppAuthCallback() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function WhatsAppAuthCallback() {
 
   useEffect(() => {
     if (processedRef.current) return;
+    const returnTo = resolveOAuthReturnTo(searchParams, '/profile');
 
     const processCallback = async () => {
       try {
@@ -112,12 +114,12 @@ export default function WhatsAppAuthCallback() {
             : 'WhatsApp Business account connected successfully',
         });
 
-        navigate('/profile');
+        navigate(returnTo);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to connect WhatsApp';
         setError(msg);
         toast({ title: 'Connection Failed', description: msg, variant: 'destructive' });
-        setTimeout(() => navigate('/profile'), 4000);
+        setTimeout(() => navigate(returnTo), 4000);
       }
     };
 
@@ -129,7 +131,7 @@ export default function WhatsAppAuthCallback() {
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-8 text-center">
         <div className="text-destructive font-semibold text-lg">WhatsApp Connection Failed</div>
         <p className="text-muted-foreground max-w-md">{error}</p>
-        <Button onClick={() => navigate('/profile')} variant="outline">
+        <Button onClick={() => navigate(returnTo)} variant="outline">
           Back to Profile
         </Button>
       </div>

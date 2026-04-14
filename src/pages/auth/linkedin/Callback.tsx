@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { resolveOAuthReturnTo } from '@/lib/oauth-return';
 
 export default function LinkedInAuthCallback() {
   const navigate = useNavigate();
@@ -19,28 +20,31 @@ export default function LinkedInAuthCallback() {
 
     let authSubscription: { unsubscribe: () => void } | null = null;
     let timeoutId: NodeJS.Timeout;
+    const searchParams = new URLSearchParams(window.location.search);
+    const returnTo = resolveOAuthReturnTo(searchParams, '/workflows');
+    const oauthError = searchParams.get('error_description') || searchParams.get('error');
 
     const processSession = async (session: Session | null) => {
       if (!session) return false;
 
       // Prevent multiple processings for the same session if possible
       if (processedRef.current) return true;
-      processedRef.current = true;
 
       try {
-        setStatus('LinkedIn tokens found. Saving...');
-
         // Extract tokens
         const { provider_token, provider_refresh_token, expires_at } = session as Session & {
           provider_token?: string | null;
           provider_refresh_token?: string | null;
+          expires_at?: number;
         };
 
         if (!provider_token) {
-          console.warn('No provider_token in session. Is this a LinkedIn OAuth session?');
-          throw new Error('LinkedIn access token not found in session.');
+          setStatus('Waiting for LinkedIn OAuth tokens...');
+          return false;
         }
 
+        processedRef.current = true;
+        setStatus('LinkedIn tokens found. Saving...');
         console.log('Got LinkedIn tokens. Saving to database...');
 
         // Compute expiry (LinkedIn typically returns expires_in seconds on the OAuth token,
@@ -96,7 +100,7 @@ export default function LinkedInAuthCallback() {
         });
 
         // Successful redirect
-        navigate('/workflows');
+        navigate(returnTo);
         return true;
 
       } catch (err) {
@@ -108,12 +112,24 @@ export default function LinkedInAuthCallback() {
           variant: 'destructive',
         });
         // Still redirect after a bit so they aren't stuck
-        setTimeout(() => navigate('/workflows'), 3000);
+        setTimeout(() => navigate(returnTo), 3000);
         return true;
       }
     };
 
     const setupAuthListener = async () => {
+      if (oauthError) {
+        setError(oauthError);
+        toast({
+          title: 'Connection Failed',
+          description: oauthError,
+          variant: 'destructive',
+        });
+        processedRef.current = true;
+        setTimeout(() => navigate(returnTo), 3000);
+        return;
+      }
+
       // 1. Check if we already have a session (e.g. if exchange happened very fast)
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -160,7 +176,7 @@ export default function LinkedInAuthCallback() {
           <p>URL: {window.location.href}</p>
           <p>Status: {status}</p>
         </div>
-        <Button onClick={() => navigate('/workflows')} variant="outline">
+        <Button onClick={() => navigate(returnTo)} variant="outline">
           Return to Workflows
         </Button>
       </div>

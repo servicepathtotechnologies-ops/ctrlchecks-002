@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { INTEGRATION_SCOPES } from '@/lib/google-scopes';
+import { resolveOAuthReturnTo } from '@/lib/oauth-return';
 
 export default function GoogleAuthCallback() {
   const navigate = useNavigate();
@@ -21,28 +22,37 @@ export default function GoogleAuthCallback() {
     let timeoutId: NodeJS.Timeout;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const isConnectorMode = urlParams.get('mode') === 'connector';
+    const returnTo = resolveOAuthReturnTo(urlParams, '/workflows');
+    const isConnectorMode = urlParams.get('mode') === 'connector' || urlParams.has('returnTo');
+    const oauthError = urlParams.get('error_description') || urlParams.get('error');
 
     const processSession = async (session: Session | null) => {
       if (!session) return false;
       if (processedRef.current) return true;
-      processedRef.current = true;
 
       // If this is a login callback (not connector mode), just redirect to dashboard
       if (!isConnectorMode) {
+        processedRef.current = true;
         navigate('/dashboard');
         return true;
       }
 
       // Connector mode: save tokens
       try {
-        setStatus('tokens found. Saving...');
-        const { provider_token, provider_refresh_token } = session;
+        const { provider_token, provider_refresh_token } = session as Session & {
+          provider_token?: string | null;
+          provider_refresh_token?: string | null;
+        };
 
         if (!provider_token) {
-          throw new Error('Google access token not found in session.');
+          // getSession() can return an existing app session before OAuth provider tokens arrive.
+          // Keep listening for the OAuth SIGNED_IN event instead of failing early.
+          setStatus('Waiting for Google OAuth tokens...');
+          return false;
         }
 
+        processedRef.current = true;
+        setStatus('tokens found. Saving...');
         console.log('Got Google tokens. Saving to database...');
 
         // Upsert into google_oauth_tokens table
@@ -67,8 +77,7 @@ export default function GoogleAuthCallback() {
           description: 'Google connected successfully!',
         });
 
-        const returnTo = urlParams.get('returnTo');
-        navigate(returnTo || '/workflows');
+        navigate(returnTo);
         return true;
 
       } catch (err) {
@@ -80,12 +89,24 @@ export default function GoogleAuthCallback() {
           variant: 'destructive',
         });
         // Still redirect after a bit so they aren't stuck
-        setTimeout(() => navigate('/workflows'), 3000);
+        setTimeout(() => navigate(returnTo), 3000);
         return true;
       }
     };
 
     const setupAuthListener = async () => {
+      if (isConnectorMode && oauthError) {
+        setError(oauthError);
+        toast({
+          title: 'Connection Failed',
+          description: oauthError,
+          variant: 'destructive',
+        });
+        processedRef.current = true;
+        setTimeout(() => navigate(returnTo), 3000);
+        return;
+      }
+
       // 1. Check if we already have a session (e.g. if exchange happened very fast)
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -132,7 +153,7 @@ export default function GoogleAuthCallback() {
           <p>URL: {window.location.href}</p>
           <p>Status: {status}</p>
         </div>
-        <Button onClick={() => navigate('/workflows')} variant="outline">
+        <Button onClick={() => navigate(returnTo)} variant="outline">
           Return to Workflows
         </Button>
       </div>

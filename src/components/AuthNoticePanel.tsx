@@ -5,6 +5,8 @@ import { AlertCircle, CheckCircle, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
+import { buildConnectorCallbackUrl } from '@/lib/oauth-return';
 
 interface AuthStatus {
   googleConnected: boolean;
@@ -93,7 +95,7 @@ export function AuthNoticePanel({
 
     setIsConnecting(true);
     try {
-      const redirectUrl = `${window.location.origin}/auth/google/callback`;
+      const redirectUrl = buildConnectorCallbackUrl('/auth/google/callback');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -102,7 +104,7 @@ export function AuthNoticePanel({
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-            scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/bigquery https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/contacts email profile',
+            scope: GOOGLE_CONNECTOR_SCOPES,
           },
         },
       });
@@ -133,7 +135,7 @@ export function AuthNoticePanel({
 
     setIsConnecting(true);
     try {
-      const redirectUrl = `${window.location.origin}/auth/linkedin/callback`;
+      const redirectUrl = buildConnectorCallbackUrl('/auth/linkedin/callback');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',

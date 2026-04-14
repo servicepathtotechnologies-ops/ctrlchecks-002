@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { buildConnectorCallbackUrl } from '@/lib/oauth-return';
 
 interface LinkedInConnectionStatusProps {
   onConnect?: () => void;
@@ -119,7 +120,7 @@ export default function LinkedInConnectionStatus({
     setIsAuthenticating(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/linkedin/callback`;
+      const redirectUrl = buildConnectorCallbackUrl('/auth/linkedin/callback');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         // IMPORTANT: Supabase exposes two LinkedIn providers:

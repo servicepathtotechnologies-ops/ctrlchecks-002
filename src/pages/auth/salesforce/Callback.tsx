@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { resolveOAuthReturnTo } from '@/lib/oauth-return';
 
 export default function SalesforceAuthCallback() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function SalesforceAuthCallback() {
 
   useEffect(() => {
     if (processedRef.current) return;
+    const returnTo = resolveOAuthReturnTo(searchParams, '/workflows');
 
     const processCallback = async () => {
       try {
@@ -26,7 +28,7 @@ export default function SalesforceAuthCallback() {
 
         if (errorParam === 'access_denied') {
           toast({ title: 'Cancelled', description: 'Salesforce authorization was cancelled.' });
-          navigate('/workflows');
+          navigate(returnTo);
           return;
         }
 
@@ -71,13 +73,13 @@ export default function SalesforceAuthCallback() {
         setStatus('Salesforce connected!');
 
         toast({ title: 'Success', description: 'Salesforce account connected successfully!' });
-        navigate('/workflows');
+        navigate(returnTo);
       } catch (err) {
         console.error('Salesforce callback error:', err);
         const msg = err instanceof Error ? err.message : 'Failed to connect Salesforce';
         setError(msg);
         toast({ title: 'Connection Failed', description: msg, variant: 'destructive' });
-        setTimeout(() => navigate('/workflows'), 3000);
+        setTimeout(() => navigate(returnTo), 3000);
       }
     };
 
@@ -89,7 +91,7 @@ export default function SalesforceAuthCallback() {
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-8 text-center">
         <div className="text-destructive font-semibold">Connection Failed</div>
         <p className="text-muted-foreground">{error}</p>
-        <Button onClick={() => navigate('/workflows')} variant="outline">
+        <Button onClick={() => navigate(returnTo)} variant="outline">
           Return to Workflows
         </Button>
       </div>

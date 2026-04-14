@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { resolveOAuthReturnTo } from '@/lib/oauth-return';
 
 export default function NotionAuthCallback() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function NotionAuthCallback() {
 
   useEffect(() => {
     if (processedRef.current) return;
+    const returnTo = resolveOAuthReturnTo(searchParams, '/workflows');
 
     const processCallback = async () => {
       try {
@@ -126,7 +128,7 @@ export default function NotionAuthCallback() {
           description: 'Notion connected successfully!',
         });
 
-        navigate('/workflows');
+        navigate(returnTo);
       } catch (err) {
         console.error('Error in Notion callback processing:', err);
         setError(err instanceof Error ? err.message : 'Failed to save Notion connection');
@@ -135,7 +137,7 @@ export default function NotionAuthCallback() {
           description: err instanceof Error ? err.message : 'Failed to save connection',
           variant: 'destructive',
         });
-        setTimeout(() => navigate('/workflows'), 3000);
+        setTimeout(() => navigate(returnTo), 3000);
       }
     };
 
@@ -152,7 +154,7 @@ export default function NotionAuthCallback() {
           <p>URL: {window.location.href}</p>
           <p>Status: {status}</p>
         </div>
-        <Button onClick={() => navigate('/workflows')} variant="outline">
+        <Button onClick={() => navigate(returnTo)} variant="outline">
           Return to Workflows
         </Button>
       </div>

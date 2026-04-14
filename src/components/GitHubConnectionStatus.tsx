@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { buildConnectorCallbackUrl } from '@/lib/oauth-return';
 
 interface GitHubConnectionStatusProps {
   onConnect?: () => void;
@@ -116,7 +117,7 @@ export default function GitHubConnectionStatus({
     setIsAuthenticating(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/github/callback`;
+      const redirectUrl = buildConnectorCallbackUrl('/auth/github/callback');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'github',

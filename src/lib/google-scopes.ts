@@ -1,3 +1,9 @@
+export const GOOGLE_IDENTITY_SCOPES = [
+  'openid',
+  'email',
+  'profile',
+].join(' ');
+
 export const INTEGRATION_SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
   'https://www.googleapis.com/auth/documents',
@@ -9,3 +15,5 @@ export const INTEGRATION_SCOPES = [
   'https://www.googleapis.com/auth/tasks',
   'https://www.googleapis.com/auth/contacts',
 ].join(' ');
+
+export const GOOGLE_CONNECTOR_SCOPES = `${GOOGLE_IDENTITY_SCOPES} ${INTEGRATION_SCOPES}`;

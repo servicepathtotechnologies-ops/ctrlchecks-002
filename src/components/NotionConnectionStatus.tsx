@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { rememberOAuthReturnTo } from '@/lib/oauth-return';
 
 interface NotionConnectionStatusProps {
   onConnect?: () => void;
@@ -93,6 +94,7 @@ export default function NotionConnectionStatus({
       // Notion OAuth uses a custom flow - redirect to backend OAuth endpoint
       const backendUrl = getBackendUrl();
       const redirectUrl = `${window.location.origin}/auth/notion/callback`;
+      rememberOAuthReturnTo();
       
       // Redirect to backend OAuth initiation endpoint
       window.location.href = `${backendUrl}/api/oauth/notion/authorize?redirect_uri=${encodeURIComponent(redirectUrl)}`;

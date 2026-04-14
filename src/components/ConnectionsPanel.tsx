@@ -11,7 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { getFacebookSupabaseOAuthOptions } from '@/lib/facebookSignInOptions';
-import { INTEGRATION_SCOPES } from '@/lib/google-scopes';
+import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
+import { buildConnectorCallbackUrl, rememberOAuthReturnTo } from '@/lib/oauth-return';
 import ZohoConnectionStatus from './ZohoConnectionStatus';
 import InstagramConnectGuide from './InstagramConnectGuide';
 import WhatsAppOnboardingGuide from './WhatsAppOnboardingGuide';
@@ -282,7 +283,7 @@ export default function ConnectionsPanel() {
     setIsGoogleConnecting(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/google/callback?mode=connector`;
+      const redirectUrl = buildConnectorCallbackUrl('/auth/google/callback');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -291,7 +292,7 @@ export default function ConnectionsPanel() {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-            scope: INTEGRATION_SCOPES,
+            scope: GOOGLE_CONNECTOR_SCOPES,
           },
         },
       });
@@ -354,7 +355,7 @@ export default function ConnectionsPanel() {
     setIsLinkedInConnecting(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/linkedin/callback`;
+      const redirectUrl = buildConnectorCallbackUrl('/auth/linkedin/callback');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         // Supabase settings: linkedin=false, linkedin_oidc=true
@@ -426,7 +427,7 @@ export default function ConnectionsPanel() {
     setIsGithubConnecting(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/github/callback`;
+      const redirectUrl = buildConnectorCallbackUrl('/auth/github/callback');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
@@ -506,7 +507,7 @@ export default function ConnectionsPanel() {
     setIsFacebookConnecting(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/facebook/callback`;
+      const redirectUrl = buildConnectorCallbackUrl('/auth/facebook/callback');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
@@ -584,6 +585,7 @@ export default function ConnectionsPanel() {
 
     try {
       const backendUrl = getBackendUrl();
+      rememberOAuthReturnTo();
       const redirectUrl = `${window.location.origin}/auth/notion/callback`;
       
       window.location.href = `${backendUrl}/api/oauth/notion/authorize?redirect_uri=${encodeURIComponent(redirectUrl)}`;
@@ -639,6 +641,7 @@ export default function ConnectionsPanel() {
 
     try {
       const backendUrl = getBackendUrl();
+      rememberOAuthReturnTo();
       const redirectUrl = `${window.location.origin}/auth/twitter/callback`;
       
       window.location.href = `${backendUrl}/api/oauth/twitter/authorize?redirect_uri=${encodeURIComponent(redirectUrl)}`;
@@ -681,6 +684,7 @@ export default function ConnectionsPanel() {
   };
 
   const handleInstagramConnect = () => {
+    rememberOAuthReturnTo();
     setShowInstagramGuide(true);
     setOpen(false);
   };
@@ -705,6 +709,7 @@ export default function ConnectionsPanel() {
   };
 
   const handleWhatsappConnect = () => {
+    rememberOAuthReturnTo();
     setShowWhatsappGuide(true);
     setOpen(false);
   };
@@ -736,6 +741,7 @@ export default function ConnectionsPanel() {
     setIsSalesforceConnecting(true);
     try {
       const backendUrl = getBackendUrl();
+      rememberOAuthReturnTo();
       const redirectUri = `${window.location.origin}/auth/salesforce/callback`;
       window.location.href = `${backendUrl}/api/oauth/salesforce/authorize?redirect_uri=${encodeURIComponent(redirectUri)}`;
     } catch (error) {
