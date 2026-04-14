@@ -99,7 +99,7 @@ function isLogOutputLevelRow(q: Record<string, any>): boolean {
     return norm(q.nodeType) === 'log_output' && norm(q.fieldName) === 'level';
 }
 
-export function isVaultCredentialQuestion(q: Record<string, any>): boolean {
+function isVaultCredentialRow(q: Record<string, any>): boolean {
     // Explicit vault credential flag with credential category/class
     if (
         !!(q as any).isVaultCredential &&
@@ -115,23 +115,12 @@ export function isVaultCredentialQuestion(q: Record<string, any>): boolean {
     return false;
 }
 
-function scorePlaneQuestion(q: Record<string, any>): number {
-    let score = 0;
-    if (q?.credential?.vaultKey) score += 100;
-    if (q?.type === 'select' || (Array.isArray(q?.options) && q.options.length > 0)) score += 15;
-    if (q?.type === 'textarea' || q?.type === 'number' || q?.type === 'password') score += 8;
-    if (typeof q?.description === 'string' && !q.description.startsWith('Input field ')) score += 4;
-    if (q?.ownershipClass === 'structural') score += 2;
-    if (typeof q?.askOrder === 'number') score += 1;
-    return score;
-}
-
 /**
  * Build one row per comprehensive question with live config snapshot from workflow nodes.
  */
 export function buildFieldPlaneRows(questions: any[], nodes: any[] | undefined): WizardFieldPlaneRow[] {
     const list = Array.isArray(questions) ? questions : [];
-    const byPlaneKey = new Map<string, WizardFieldPlaneRow>();
+    const out: WizardFieldPlaneRow[] = [];
     for (const q of list) {
         if (!q || typeof q !== 'object') continue;
         const nodeId = String(q.nodeId || '').trim();
@@ -140,36 +129,26 @@ export function buildFieldPlaneRows(questions: any[], nodes: any[] | undefined):
         const planeKey = `${nodeId}::${norm(fieldName)}`;
         const valueSnapshot = getConfigValueForField(nodes, nodeId, fieldName);
         const isEmpty = isConfigValueEmpty(valueSnapshot);
-        const nextRow: WizardFieldPlaneRow = {
+        out.push({
             question: q,
             planeKey,
             valueSnapshot,
             isEmpty,
-        };
-        const existing = byPlaneKey.get(planeKey);
-        if (!existing) {
-            byPlaneKey.set(planeKey, nextRow);
-            continue;
-        }
-        const existingScore = scorePlaneQuestion(existing.question);
-        const nextScore = scorePlaneQuestion(q);
-        if (nextScore > existingScore) {
-            byPlaneKey.set(planeKey, nextRow);
-        }
+        });
     }
-    return Array.from(byPlaneKey.values());
+    return out;
 }
 
 /** Field Ownership step: every row except vault secrets and log level noise. */
 export function selectOwnershipQuestionsFromPlane(rows: WizardFieldPlaneRow[]): any[] {
     return rows
-        .filter((r) => !isLogOutputLevelRow(r.question) && !isVaultCredentialQuestion(r.question))
+        .filter((r) => !isLogOutputLevelRow(r.question) && !isVaultCredentialRow(r.question))
         .map((r) => r.question);
 }
 
 /** Vault credential questions for Credentials step filtering (same set as before). */
 export function selectVaultCredentialQuestionsFromPlane(rows: WizardFieldPlaneRow[]): any[] {
-    return rows.filter((r) => isVaultCredentialQuestion(r.question)).map((r) => r.question);
+    return rows.filter((r) => isVaultCredentialRow(r.question)).map((r) => r.question);
 }
 
 export function findPlaneRow(rows: WizardFieldPlaneRow[], nodeId: string, fieldName: string): WizardFieldPlaneRow | undefined {

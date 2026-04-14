@@ -154,13 +154,10 @@ export default function WorkflowBuilder() {
         const normalizedBackend = normalizeBackendWorkflow(backendWorkflow);
         
         // Step 2: Validate and fix workflow (regenerate IDs, validate types, etc.)
-        const normalized = validateAndFixWorkflow(
-          {
-            nodes: normalizedBackend.nodes,
-            edges: normalizedBackend.edges,
-          },
-          { preserveTopology: true }
-        );
+        const normalized = validateAndFixWorkflow({
+          nodes: normalizedBackend.nodes,
+          edges: normalizedBackend.edges,
+        });
         
         // ✅ WORLD-CLASS FIX: Verify node count after normalization
         if (normalized.nodes.length !== expectedNodeCount && expectedNodeCount > 0) {

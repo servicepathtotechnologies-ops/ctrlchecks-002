@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   ATTACH_INPUTS_PERSISTABLE_META_KEYS,
-  buildFlatAttachInputsForNode,
   extractNodeConfigForAttachInputs,
   buildNestedAttachInputsFromNodes,
-  buildScopedCredentialPayload,
 } from '../attach-inputs-payload';
 
 describe('attach-inputs-payload', () => {
@@ -37,28 +35,5 @@ describe('attach-inputs-payload', () => {
 
   it('documents known meta keys set', () => {
     expect(ATTACH_INPUTS_PERSISTABLE_META_KEYS.has('_fillMode')).toBe(true);
-  });
-
-  it('buildFlatAttachInputsForNode emits config_<nodeId>_<field> keys', () => {
-    const out = buildFlatAttachInputsForNode('node_a', {
-      subject: 'hello',
-      _fillMode: { subject: 'manual_static' },
-      _internal: 'skip',
-    });
-    expect(out).toEqual({
-      config_node_a_subject: 'hello',
-      config_node_a__fillMode: { subject: 'manual_static' },
-    });
-  });
-
-  it('buildScopedCredentialPayload emits cred_<nodeId>_<field> keys', () => {
-    const out = buildScopedCredentialPayload('node_1', {
-      apiKey: 'secret',
-      webhookUrl: '',
-      token: undefined,
-    });
-    expect(out).toEqual({
-      cred_node_1_apiKey: 'secret',
-    });
   });
 });

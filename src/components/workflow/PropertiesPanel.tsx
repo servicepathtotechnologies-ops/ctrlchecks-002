@@ -31,12 +31,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
-import {
-  buildFlatAttachInputsForNode,
-  buildScopedCredentialPayload,
-  extractNodeConfigForAttachInputs,
-} from '@/lib/attach-inputs-payload';
-import { shouldRunAttachCredentialsAfterAttachInputs } from '@/lib/workflow-phase-contract';
+import { extractNodeConfigForAttachInputs } from '@/lib/attach-inputs-payload';
 
 /** Stable JSON for deduping attach-inputs auto-persist (sorted keys). */
 function stableStringifyForAttachInputs(obj: Record<string, unknown>): string {
@@ -1087,8 +1082,6 @@ export default function PropertiesPanel({
         const token = sessionData.session.access_token;
         const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
-        let latestWorkflowPhase: string | undefined;
-
         // Send config inputs
         if (Object.keys(nodeInputs).length > 0) {
           const inputsKey = stableStringifyForAttachInputs(nodeInputs as Record<string, unknown>);
@@ -1099,7 +1092,7 @@ export default function PropertiesPanel({
           const attachRes = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-inputs`, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ inputs: buildFlatAttachInputsForNode(selectedNode.id, nodeInputs) }),
+            body: JSON.stringify({ inputs: { [selectedNode.id]: nodeInputs } }),
           });
           if (!attachRes.ok) {
             const errJson = await attachRes.json().catch(() => ({}));
@@ -1117,7 +1110,6 @@ export default function PropertiesPanel({
           } else {
             lastSuccessfulAttachInputsRef.current.set(selectedNode.id, inputsKey);
             const body = await attachRes.json().catch(() => ({}));
-            latestWorkflowPhase = typeof body?.phase === 'string' ? body.phase : undefined;
             const invalid = body?.diagnostics?.invalidBareNodeIdInputKeys as string[] | undefined;
             if (Array.isArray(invalid) && invalid.length > 0) {
               console.warn('[PropertiesPanel] attach-inputs ignored invalid keys:', invalid);
@@ -1125,36 +1117,13 @@ export default function PropertiesPanel({
           }
         }
 
-        // Send credential inputs only when workflow is in an allowed credential phase.
+        // Send credential inputs (keyed by nodeId so backend knows which node they belong to)
         if (Object.keys(credentialInputs).length > 0) {
-          if (!latestWorkflowPhase) {
-            try {
-              const { data: phaseRow } = await supabase
-                .from('workflows')
-                .select('*')
-                .eq('id', workflowId)
-                .single();
-              const phaseValue = (phaseRow as any)?.phase;
-              latestWorkflowPhase = typeof phaseValue === 'string' ? phaseValue : undefined;
-            } catch {
-              // Non-fatal: we will just skip credential auto-persist.
-            }
-          }
-
-          if (!shouldRunAttachCredentialsAfterAttachInputs(latestWorkflowPhase)) {
-            return;
-          }
-
-          const scopedCredentialPayload = buildScopedCredentialPayload(selectedNode.id, credentialInputs);
-          if (Object.keys(scopedCredentialPayload).length === 0) {
-            return;
-          }
-
           await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-credentials`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
-              credentials: scopedCredentialPayload,
+              credentials: { [`node_${selectedNode.id}`]: credentialInputs },
             }),
           });
         }
@@ -1554,25 +1523,19 @@ export default function PropertiesPanel({
                   const textValue = e.target.value;
                   // ✅ UNIVERSAL FIX: Parse JSON strings for object/json fields
                   // Check if this field expects an object/json type from backend schema
-                  const schemaType = backendSchema?.inputSchema?.[field.key]?.type;
-                  if (schemaType === 'object' || schemaType === 'json' || schemaType === 'array') {
+                  if (backendSchema?.inputSchema?.[field.key]?.type === 'object' || 
+                      backendSchema?.inputSchema?.[field.key]?.type === 'json') {
                     // Try to parse JSON string, but keep as string if invalid (user might be typing)
                     if (textValue.trim() === '' || textValue.trim() === '{}' || textValue.trim() === '[]') {
                       handleConfigChange(field.key, textValue.trim() === '' ? '' : textValue);
                     } else {
                       try {
                         const parsed = JSON.parse(textValue);
-                        // Keep exact JSON shape from schema contract (object or array).
-                        if (
-                          (schemaType === 'array' && Array.isArray(parsed)) ||
-                          ((schemaType === 'object' || schemaType === 'json') &&
-                            typeof parsed === 'object' &&
-                            parsed !== null &&
-                            !Array.isArray(parsed))
-                        ) {
+                        // Only save parsed object if it's actually an object (not array)
+                        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
                           handleConfigChange(field.key, parsed);
                         } else {
-                          // Keep as string if parsed type does not match schema expectation.
+                          // Keep as string if parsed to array or other type
                           handleConfigChange(field.key, textValue);
                         }
                       } catch {
