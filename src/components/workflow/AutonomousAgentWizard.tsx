@@ -2389,20 +2389,6 @@ export function AutonomousAgentWizard() {
             answer: answers[q.id],
         })) || [];
 
-        // Local fallback progress helpers — hoisted above try/catch so catch can stop the interval
-        let refineFallbackInterval: ReturnType<typeof setInterval> | null = null;
-        const startFallbackProgress = () => {
-            refineFallbackInterval = setInterval(() => {
-                setProgress(prev => (prev < 10 ? prev + 1 : prev));
-            }, 2500);
-        };
-        const stopFallbackProgress = () => {
-            if (refineFallbackInterval) {
-                clearInterval(refineFallbackInterval);
-                refineFallbackInterval = null;
-            }
-        };
-
         try {
             console.log('Submitting workflow prompt:', promptToUse);
             console.log('Mode:', 'refine');
@@ -2412,101 +2398,23 @@ export function AutonomousAgentWizard() {
             // causing connected OAuth accounts (LinkedIn, Notion, etc.) to show "Action required".
             const { data: { session: refineSession } } = await supabase.auth.getSession();
             const refineUserId = refineSession?.user?.id;
-
-            // Start fallback progress while waiting for first stage event
-            startFallbackProgress();
-
             const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-stream-progress': 'true',
                     ...(refineSession?.access_token ? { Authorization: `Bearer ${refineSession.access_token}` } : {}),
                 },
                 body: JSON.stringify({ prompt: promptToUse, mode: 'refine', answers: fa, ...(refineUserId ? { userId: refineUserId } : {}) })
             });
 
             if (!response.ok) {
-                stopFallbackProgress();
                 const error = await response.json().catch(() => ({ error: 'Refinement failed' }));
                 const errorMessage = error.error || error.message || error.details || 'Refinement failed';
                 console.error('[Refinement Error]', error);
                 throw new Error(errorMessage);
             }
 
-            // Read NDJSON stream — collect stage progress events and extract terminal payload as `data`
-            let data: any = null;
-            {
-                const contentType = String(response.headers.get('content-type') || '').toLowerCase();
-                const refineReader = response.body?.getReader();
-                const refineDecoder = new TextDecoder();
-                let refineBuffer = '';
-
-                const handleUpdate = async (update: any) => {
-                    // Stage progress event
-                    if (update.current_phase && !update.success && !update.workflow) {
-                        stopFallbackProgress();
-                        setCurrentPhase(update.current_phase);
-                        const pct = typeof update.progress_percentage === 'number'
-                            ? Math.min(99, Math.max(0, update.progress_percentage))
-                            : Math.min(99, mapBackendPhaseToProgress(update.current_phase));
-                        setProgress(prev => deriveMonotonicProgress(prev, pct));
-                        const label = update.log ?? getPhaseDescription(update.current_phase);
-                        setBuildingLogs(prev => prev.includes(label) ? prev : [...prev, label]);
-                        // Yield to browser event loop so React flushes this render
-                        // before processing the next stage event
-                        await new Promise(resolve => setTimeout(resolve, 0));
-                        return;
-                    }
-
-                    // Error event
-                    if (update.status === 'error') {
-                        stopFallbackProgress();
-                        throw new Error(typeof update.error === 'string' ? update.error : 'Workflow generation failed');
-                    }
-
-                    // Terminal payload (has success:true or workflow)
-                    if (update.success || update.workflow || update.phase) {
-                        stopFallbackProgress();
-                        data = update;
-                    }
-                };
-
-                if (!refineReader || contentType.includes('application/json')) {
-                    const jsonPayload = await response.json().catch(() => null);
-                    if (jsonPayload) {
-                        await handleUpdate(jsonPayload);
-                        if (!data) data = jsonPayload;
-                    }
-                } else {
-                    while (true) {
-                        const { done, value } = await refineReader.read();
-                        if (done) break;
-                        refineBuffer += refineDecoder.decode(value, { stream: true });
-                        const lines = refineBuffer.split('\n');
-                        refineBuffer = lines.pop() || '';
-                        for (const line of lines) {
-                            if (!line.trim()) continue;
-                            let update: any;
-                            try { update = JSON.parse(line); } catch { continue; }
-                            await handleUpdate(update);
-                        }
-                    }
-
-                    // Parse trailing buffer when stream ends without newline.
-                    if (!data && refineBuffer.trim()) {
-                        try {
-                            const trailingUpdate = JSON.parse(refineBuffer.trim());
-                            await handleUpdate(trailingUpdate);
-                            if (!data) data = trailingUpdate;
-                        } catch {
-                            // Ignore trailing non-JSON fragments.
-                        }
-                    }
-                }
-
-                if (!data) throw new Error('No workflow data received from backend');
-            }
+            const data = await response.json();
             setRefinement(data);
             
             // Optional validation pass: drop bad backend rows/strings (no throw — wizard keeps going).
@@ -2968,7 +2876,6 @@ export function AutonomousAgentWizard() {
                 }, 0); // state is already set synchronously
             }
         } catch (err: any) {
-            stopFallbackProgress();
             console.error(err);
             toast({ title: 'Refinement Failed', description: err.message, variant: 'destructive' });
             setHasWorkflowPlan(true);
@@ -3410,10 +3317,7 @@ export function AutonomousAgentWizard() {
 
     const handleBuild = async (explicitPrompt?: string) => {
         // ? PRODUCTION FLOW: Unified configuration submission (inputs + credentials)
-        // Guard covers all post-generation steps where pendingWorkflowData is populated:
-        // 'field-ownership' (questions UI), 'credentials', 'configure', and 'configuration'.
-        const isPostGenerationStep = ['field-ownership', 'credentials', 'configure', 'configuration'].includes(step);
-        if (pendingWorkflowData && isPostGenerationStep) {
+        if (pendingWorkflowData && step === 'configuration') {
             console.log('? Submitting unified configuration (inputs + credentials)');
             let savedWorkflow: any = null; // Declare outside try block for catch access
             try {
@@ -4365,10 +4269,6 @@ export function AutonomousAgentWizard() {
                                     if (prev.includes(phaseDesc)) return prev;
                                     return [...prev, phaseDesc];
                                 });
-
-                                // Yield to browser event loop so React flushes this render
-                                // before processing the next stage event
-                                await new Promise(resolve => setTimeout(resolve, 0));
 
                                 // ? FIX: Surface credential discovery immediately when the backend
                                 // reports it � don't wait for the full pipeline to finish.
