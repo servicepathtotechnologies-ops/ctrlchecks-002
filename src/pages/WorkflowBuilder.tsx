@@ -18,6 +18,8 @@ import { extractNodeConfigForAttachInputs } from '@/lib/attach-inputs-payload';
 import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { enforceFrontendRenderContract, normalizeBackendWorkflow, validateNodeTypesRegistered } from '@/lib/node-type-normalizer';
 import { CredentialStatusPanel, type CredentialPanelData } from '@/components/workflow/CredentialStatusPanel';
+import { GuidedStatusCard } from '@/components/ui/guided-status-card';
+import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
 
 const NodeLibrary = lazy(() => import('@/components/workflow/NodeLibrary'));
 const WorkflowCanvas = lazy(() => import('@/components/workflow/WorkflowCanvas'));
@@ -39,6 +41,7 @@ export default function WorkflowBuilder() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [executionGuidance, setExecutionGuidance] = useState<GuidedStatusContent | null>(null);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
   const [nodeLibraryOpen, setNodeLibraryOpen] = useState(true);
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
@@ -542,6 +545,7 @@ export default function WorkflowBuilder() {
   }, [setWorkflowName, setNodes, setEdges, setIsDirty, resetWorkflow]);
 
   const handleRun = useCallback(async (autoSave = false) => {
+    setExecutionGuidance(null);
     const workflowId = useWorkflowStore.getState().workflowId;
 
     if (nodes.length === 0) {
@@ -1023,8 +1027,18 @@ export default function WorkflowBuilder() {
         if (errorHint) {
           detailedMessage += `\n\n💡 ${errorHint}`;
         }
-        
-        throw new Error(detailedMessage);
+
+        const guidance = mapWorkflowIssueToGuidance({
+          ...errorData,
+          message: detailedMessage,
+        });
+        setExecutionGuidance(guidance);
+        toast({
+          title: guidance.title,
+          description: guidance.description,
+          duration: 9000,
+        });
+        return;
       }
 
       const data = await response.json();
@@ -1045,9 +1059,20 @@ export default function WorkflowBuilder() {
           : data.status === 'waiting'
           ? `Workflow paused at form node. Form URL: ${data.formUrl || 'N/A'}`
           : data.error || 'Unknown error',
-        variant: data.status === 'success' ? 'default' : data.status === 'waiting' ? 'default' : 'destructive',
+        variant: 'default',
         duration: data.status === 'waiting' ? 10000 : 5000,
       });
+
+      if (data.status !== 'success' && data.status !== 'waiting') {
+        const guidance = mapWorkflowIssueToGuidance({
+          message: data.error || 'Execution could not be completed.',
+          code: data.code,
+          details: data.details,
+        });
+        setExecutionGuidance(guidance);
+      } else {
+        setExecutionGuidance(null);
+      }
 
       // Don't navigate away - logs will show in console
       // The ExecutionConsole component will auto-update via realtime subscription
@@ -1079,11 +1104,16 @@ export default function WorkflowBuilder() {
           errorDescription = errorMessage.split('\n\n')[0];
         }
       }
+
+      const guidance = mapWorkflowIssueToGuidance({
+        message: errorDescription || errorMessage,
+        code: errorTitle.replace(/\s+/g, '_').toUpperCase(),
+      });
+      setExecutionGuidance(guidance);
       
       toast({
-        title: errorTitle,
-        description: errorDescription,
-        variant: 'destructive',
+        title: guidance.title,
+        description: guidance.description,
         duration: 10000, // Show longer for detailed errors
       });
     } finally {
@@ -1156,6 +1186,18 @@ export default function WorkflowBuilder() {
         }
       >
         <div className="flex-1 flex flex-col overflow-hidden relative">
+          {executionGuidance && (
+            <div className="absolute right-4 top-4 z-[70] w-[min(420px,calc(100%-2rem))]">
+              <GuidedStatusCard
+                title={executionGuidance.title}
+                description={executionGuidance.description}
+                resolution={executionGuidance.resolution}
+                details={executionGuidance.details}
+                tone={executionGuidance.tone}
+                onDismiss={() => setExecutionGuidance(null)}
+              />
+            </div>
+          )}
           <div className="flex-1 flex overflow-hidden">
             {/* Left Panel - Node Library */}
             {nodeLibraryOpen ? (

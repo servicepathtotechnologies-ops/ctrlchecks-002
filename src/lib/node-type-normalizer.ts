@@ -71,7 +71,11 @@ const NODE_TYPE_MAP: Record<string, string> = {
  * Normalize backend node to frontend React Flow node format
  */
 export function normalizeBackendNode(backendNode: any): Node {
-  const actualNodeType = backendNode.data?.type || backendNode.type || 'unknown';
+  const rawNodeType = backendNode.data?.type || backendNode.type || 'unknown';
+  const legacyTypeAliases: Record<string, string> = {
+    csv_processor: 'csv',
+  };
+  const actualNodeType = legacyTypeAliases[rawNodeType] || rawNodeType;
   
   // Map to frontend React Flow component type
   const frontendType = NODE_TYPE_MAP[actualNodeType] || 'custom';

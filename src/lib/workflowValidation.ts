@@ -198,8 +198,8 @@ export function validateWorkflow(nodes: Node[], edges: Edge[]): WorkflowValidati
     // 1. Check for Independent/Orphan Nodes (except triggers)
     nodes.forEach(node => {
         // Skip triggers - use category-based trigger detection
-        const nodeType = node.data?.type || '';
-        const category = node.data?.category || '';
+        const nodeType = String(node.data?.type || '');
+        const category = String(node.data?.category || '');
         const isTrigger = category.toLowerCase() === 'triggers' || 
                          category.toLowerCase() === 'trigger' ||
                          nodeType.includes('trigger') ||
@@ -455,8 +455,9 @@ function resolveNodeTypeAlias(nodeType: string, validNodeTypes: Set<string>): st
         'shopify': 'shopify',
 
         // ── Data Manipulation ────────────────────────────────────────────────
-        'csv': 'csv_processor',
-        'csv_parser': 'csv_processor',
+        'csv': 'csv',
+        'csv_parser': 'csv',
+        'csv_processor': 'csv',
         'js': 'javascript',
         'json': 'json_parser',
         'log': 'log_output',

@@ -862,6 +862,23 @@ Each step uses output from previous step.`,
     tips: ['Use {{previous}} to reference last output', 'Build complex reasoning chains', 'Each step can use different prompts'],
   },
 
+  csv: {
+    overview: 'Parse and process CSV data. Converts CSV text to JSON array for further processing.',
+    inputs: ['CSV text'],
+    outputs: ['rows', 'headers', 'count'],
+    example: `Input CSV:
+"name,email,age
+John,john@test.com,30
+Jane,jane@test.com,25"
+
+Output: [
+  {name: "John", email: "john@test.com", age: "30"},
+  {name: "Jane", email: "jane@test.com", age: "25"}
+]`,
+    tips: ['Set correct delimiter (comma, tab, etc)', 'Enable "has header" for column names', 'Output is JSON array'],
+  },
+
+  // Backward-compatibility alias for legacy workflows saved before canonical CSV migration.
   csv_processor: {
     overview: 'Parse and process CSV data. Converts CSV text to JSON array for further processing.',
     inputs: ['CSV text'],

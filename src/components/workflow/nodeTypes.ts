@@ -557,7 +557,7 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     ],
   },
   {
-    type: 'csv_processor',
+    type: 'csv',
     label: 'CSV Processor',
     category: 'data',
     icon: 'Table',
