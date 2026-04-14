@@ -1,11 +1,6 @@
 import { Header } from "@/components/landing/Header";
 import { LandingLightPillarBackground } from "@/components/landing/LandingLightPillarBackground";
 import { Hero } from "@/components/landing/Hero";
-<<<<<<< HEAD
-import { IntegrationsMarqueeSection } from "@/components/landing/IntegrationsMarqueeSection";
-=======
-import { Features } from "@/components/landing/Features";
->>>>>>> parent of 490aa03 (feat: add integrations marquee section and logo assets)
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { WorkflowDemoSection } from "@/components/landing/WorkflowDemoSection";
 import { OpenCoreSection } from "@/components/landing/OpenCoreSection";
