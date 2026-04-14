@@ -3936,11 +3936,27 @@ export function AutonomousAgentWizard() {
                 throw new Error(error.error || error.message || 'Failed to generate workflow');
             }
 
-            const reader = response.body?.getReader();
+            const responseContentType = (response.headers.get('content-type') || '').toLowerCase();
+            const isNdjsonStream = responseContentType.includes('application/x-ndjson');
+            const reader = isNdjsonStream ? response.body?.getReader() : null;
             const decoder = new TextDecoder();
             let buffer = '';
             let finalData: any = null;
             let workflowSaved = false; // Track if workflow has been saved
+
+            // Production fallback: some proxies may collapse streaming responses into one JSON payload.
+            // Handle that shape directly instead of waiting for NDJSON events.
+            if (!isNdjsonStream) {
+                console.warn('[Frontend] generate-workflow did not return NDJSON stream; falling back to JSON payload mode.', {
+                    contentType: responseContentType,
+                });
+                finalData = await response.json();
+                if (finalData?.workflow && !finalData?.nodes) {
+                    finalData.nodes = finalData.workflow.nodes;
+                    finalData.edges = finalData.workflow.edges;
+                }
+                stopFallbackProgress();
+            }
 
             /** Opens field-ownership / credential wizard when backend returns ready or configuring_inputs with questions. */
             const applyUnifiedWizardFromGenerateUpdate = (update: any): boolean => {
@@ -4640,6 +4656,20 @@ export function AutonomousAgentWizard() {
                                 }
                                 return;
                             }
+                    }
+                }
+
+                // Process trailing chunk if stream ended without a final newline.
+                if (!finalData && buffer.trim()) {
+                    try {
+                        const trailingUpdate = JSON.parse(buffer.trim());
+                        if (trailingUpdate?.workflow && !trailingUpdate?.nodes) {
+                            trailingUpdate.nodes = trailingUpdate.workflow.nodes;
+                            trailingUpdate.edges = trailingUpdate.workflow.edges;
+                        }
+                        finalData = trailingUpdate;
+                    } catch {
+                        console.warn('[Frontend] Unable to parse trailing generate-workflow stream chunk');
                     }
                 }
             }
