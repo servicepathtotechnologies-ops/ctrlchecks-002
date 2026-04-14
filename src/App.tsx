@@ -42,6 +42,9 @@ const FacebookAuthCallback = lazy(() => import("./pages/auth/facebook/Callback")
 const GitHubAuthCallback = lazy(() => import("./pages/auth/github/Callback"));
 const NotionAuthCallback = lazy(() => import("./pages/auth/notion/Callback"));
 const TwitterAuthCallback = lazy(() => import("./pages/auth/twitter/Callback"));
+const SalesforceAuthCallback = lazy(() => import("./pages/auth/salesforce/Callback"));
+const InstagramAuthCallback = lazy(() => import("./pages/auth/instagram/Callback"));
+const WhatsAppAuthCallback = lazy(() => import("./pages/auth/whatsapp/Callback"));
 const FormTrigger = lazy(() => import("./pages/FormTrigger"));
 const ChatTrigger = lazy(() => import("./pages/ChatTrigger"));
 const ModelTestingDashboard = lazy(() => import("./pages/ModelTestingDashboard"));
@@ -172,6 +175,9 @@ const App = () => (
                   <Route path="/auth/github/callback" element={<GitHubAuthCallback />} />
                   <Route path="/auth/notion/callback" element={<NotionAuthCallback />} />
                   <Route path="/auth/twitter/callback" element={<TwitterAuthCallback />} />
+                  <Route path="/auth/salesforce/callback" element={<SalesforceAuthCallback />} />
+                  <Route path="/auth/instagram/callback" element={<InstagramAuthCallback />} />
+                  <Route path="/auth/whatsapp/callback" element={<WhatsAppAuthCallback />} />
                   <Route path="/form/:workflowId/:nodeId" element={<FormTrigger />} />
                   <Route path="/chat/:workflowId/:nodeId" element={<ChatTrigger />} />
                   <Route path="/model-testing" element={<ModelTestingDashboard />} />

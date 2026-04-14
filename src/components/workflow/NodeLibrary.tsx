@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, X, 
+import { Search, X, ChevronDown,
   Play, Webhook, Clock, Globe, Brain, Sparkles, Gem, Link, GitBranch, 
   GitMerge, Repeat, Timer, ShieldAlert, Code, Braces, Table, Type, 
   Combine, Send, Mail, MessageSquare, Database, Box, FileText, Heart,
@@ -11,7 +11,6 @@ import { Search, X,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { NODE_CATEGORIES, NODE_TYPES, NodeTypeDefinition } from './nodeTypes';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +32,16 @@ interface NodeLibraryProps {
 
 export default function NodeLibrary({ onDragStart, onClose }: NodeLibraryProps) {
   const [search, setSearch] = useState('');
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
+
+  const toggleCategory = (id: string) => {
+    setOpenCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const filteredNodes = useMemo(() => 
     search
@@ -89,75 +98,83 @@ export default function NodeLibrary({ onDragStart, onClose }: NodeLibraryProps) 
       </div>
 
       <ScrollArea className="flex-1">
-        <Accordion type="multiple" className="px-2.5 py-2 w-full min-w-0 overflow-hidden">
+        <div className="px-2.5 py-2 w-full">
           {sortedCategories.map((category) => {
             const nodes = getNodesByCategory(category.id);
             if (nodes.length === 0) return null;
+            const isOpen = openCategories.has(category.id);
 
             return (
-              <AccordionItem 
-                key={category.id} 
-                value={category.id} 
-                className="border-0 mb-0.5 w-full min-w-0 overflow-hidden"
-              >
-                <AccordionTrigger 
+              <div key={category.id} className="mb-0.5 w-full">
+                {/* Category trigger — fixed width, no layout shift */}
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(category.id)}
                   className={cn(
-                    "py-1.5 px-2 hover:no-underline rounded-sm transition-colors duration-150",
-                    "w-full min-w-0 overflow-hidden hover:bg-muted/40"
+                    "w-full flex items-center gap-2.5 py-1.5 px-2 rounded-sm",
+                    "hover:bg-muted/40 transition-colors duration-150",
+                    "text-left"
                   )}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 overflow-hidden w-full">
-                    <div
-                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    <span className="text-xs font-medium text-foreground/80 truncate min-w-0 flex-1">
-                      {category.label}
-                    </span>
-                    <span className="text-xs text-muted-foreground/70 flex-shrink-0">
-                      {nodes.length}
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-1.5 pb-2 px-2 overflow-hidden">
-                  <div className="space-y-0.5">
-                    {nodes.map((node) => {
-                      const IconComponent = iconMap[node.icon] || Box;
-                      
-                      return (
-                        <div
-                          key={node.type}
-                          draggable
-                          onDragStart={(e) => onDragStart(e, node)}
-                          className={cn(
-                            "flex items-start gap-2.5 p-2 rounded-sm cursor-grab",
-                            "hover:bg-muted/50 transition-colors duration-150",
-                            "active:cursor-grabbing group w-full min-w-0 overflow-hidden"
-                          )}
-                        >
+                  <div
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: category.color }}
+                  />
+                  <span className="text-xs font-medium text-foreground/80 truncate flex-1 min-w-0">
+                    {category.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground/70 flex-shrink-0 mr-1">
+                    {nodes.length}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-3 w-3 flex-shrink-0 text-muted-foreground/60 transition-transform duration-200",
+                      isOpen && "rotate-180"
+                    )}
+                  />
+                </button>
+
+                {/* Category content — expands in-place, no width change */}
+                {isOpen && (
+                  <div className="pt-1 pb-1.5 px-1 w-full">
+                    <div className="space-y-0.5">
+                      {nodes.map((node) => {
+                        const IconComponent = iconMap[node.icon] || Box;
+                        return (
                           <div
-                            className="flex h-6 w-6 items-center justify-center rounded flex-shrink-0 mt-0.5"
-                            style={{ backgroundColor: category.color + '15', color: category.color }}
+                            key={node.type}
+                            draggable
+                            onDragStart={(e) => onDragStart(e, node)}
+                            className={cn(
+                              "flex items-start gap-2.5 p-2 rounded-sm cursor-grab",
+                              "hover:bg-muted/50 transition-colors duration-150",
+                              "active:cursor-grabbing w-full"
+                            )}
                           >
-                            <IconComponent className="h-3 w-3" />
-                          </div>
-                          <div className="flex-1 min-w-0 pt-0.5 overflow-hidden">
-                            <div className="text-xs font-medium text-foreground/90 truncate leading-tight block">
-                              {node.label}
+                            <div
+                              className="flex h-6 w-6 items-center justify-center rounded flex-shrink-0 mt-0.5"
+                              style={{ backgroundColor: category.color + '15', color: category.color }}
+                            >
+                              <IconComponent className="h-3 w-3" />
                             </div>
-                            <div className="text-xs text-muted-foreground/70 truncate leading-tight mt-0.5 block">
-                              {node.description}
+                            <div className="flex-1 min-w-0 pt-0.5">
+                              <div className="text-xs font-medium text-foreground/90 truncate leading-tight">
+                                {node.label}
+                              </div>
+                              <div className="text-xs text-muted-foreground/70 truncate leading-tight mt-0.5">
+                                {node.description}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
+                )}
+              </div>
             );
           })}
-        </Accordion>
+        </div>
       </ScrollArea>
     </div>
   );
