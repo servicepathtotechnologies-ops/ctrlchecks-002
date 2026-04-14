@@ -150,9 +150,9 @@ function isNonEmptyTrimmedString(v: unknown): v is string {
 /** Block control characters; vault keys never allow newlines. Display names allow newlines for rare multi-line labels. */
 function hasNoDisallowedCredentialChars(s: string, allowNewlines: boolean): boolean {
     if (allowNewlines) {
-        return !/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(s);
+        return !/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(s);
     }
-    return !/[\r\n\u0000-\u001F]/.test(s);
+    return !/[\r\n\x00-\x1f]/.test(s);
 }
 
 /**
@@ -2414,7 +2414,56 @@ export function AutonomousAgentWizard() {
                 throw new Error(errorMessage);
             }
 
-            const data = await response.json();
+            // Read NDJSON stream — collect stage progress events and extract terminal payload as `data`
+            let data: any = null;
+            {
+                const refineReader = response.body?.getReader();
+                const refineDecoder = new TextDecoder();
+                let refineBuffer = '';
+                if (refineReader) {
+                    while (true) {
+                        const { done, value } = await refineReader.read();
+                        if (done) break;
+                        refineBuffer += refineDecoder.decode(value, { stream: true });
+                        const lines = refineBuffer.split('\n');
+                        refineBuffer = lines.pop() || '';
+                        for (const line of lines) {
+                            if (!line.trim()) continue;
+                            let update: any;
+                            try { update = JSON.parse(line); } catch { continue; }
+
+                            // Stage progress event
+                            if (update.current_phase && !update.success && !update.workflow) {
+                                stopFallbackProgress();
+                                setCurrentPhase(update.current_phase);
+                                const pct = typeof update.progress_percentage === 'number'
+                                    ? Math.min(99, Math.max(0, update.progress_percentage))
+                                    : Math.min(99, mapBackendPhaseToProgress(update.current_phase));
+                                setProgress(prev => deriveMonotonicProgress(prev, pct));
+                                const label = update.log ?? getPhaseDescription(update.current_phase);
+                                setBuildingLogs(prev => prev.includes(label) ? prev : [...prev, label]);
+                                // Yield to browser event loop so React flushes this render
+                                // before processing the next stage event
+                                await new Promise(resolve => setTimeout(resolve, 0));
+                                continue;
+                            }
+
+                            // Error event
+                            if (update.status === 'error') {
+                                stopFallbackProgress();
+                                throw new Error(typeof update.error === 'string' ? update.error : 'Workflow generation failed');
+                            }
+
+                            // Terminal payload (has success:true or workflow)
+                            if (update.success || update.workflow || update.phase) {
+                                stopFallbackProgress();
+                                data = update;
+                            }
+                        }
+                    }
+                }
+                if (!data) throw new Error('No workflow data received from backend');
+            }
             setRefinement(data);
             
             // Optional validation pass: drop bad backend rows/strings (no throw — wizard keeps going).
@@ -3860,7 +3909,6 @@ export function AutonomousAgentWizard() {
                 throw new Error(error.error || error.message || 'Failed to generate workflow');
             }
 
-            const contentType = String(response.headers.get('content-type') || '').toLowerCase();
             const reader = response.body?.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
@@ -4191,13 +4239,7 @@ export function AutonomousAgentWizard() {
             // Start fallback progress if streaming doesn't provide updates
             startFallbackProgress();
 
-            if (!reader || contentType.includes('application/json')) {
-                finalData = await response.json().catch(() => null);
-                if (finalData?.workflow && !finalData?.nodes) {
-                    finalData.nodes = finalData.workflow.nodes;
-                    finalData.edges = finalData.workflow.edges;
-                }
-            } else {
+            if (reader) {
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
@@ -4276,10 +4318,10 @@ export function AutonomousAgentWizard() {
                                     const missing = update.discoveredCredentials.filter((c: any) => !c.satisfied);
                                     const satisfied = update.discoveredCredentials.filter((c: any) => c.satisfied);
                                     setBuildingLogs(prev => {
-                                        const statusLines: string[] = [];
-                                        if (satisfied.length > 0) statusLines.push(`? ${satisfied.length} credential(s) connected`);
-                                        if (missing.length > 0) statusLines.push(`?? ${missing.length} credential(s) required: ${missing.map((c: any) => c.displayName || c.vaultKey).join(', ')}`);
-                                        const newLines = statusLines.filter(l => !prev.includes(l));
+                                        const lines: string[] = [];
+                                        if (satisfied.length > 0) lines.push(`? ${satisfied.length} credential(s) connected`);
+                                        if (missing.length > 0) lines.push(`?? ${missing.length} credential(s) required: ${missing.map((c: any) => c.displayName || c.vaultKey).join(', ')}`);
+                                        const newLines = lines.filter(l => !prev.includes(l));
                                         return newLines.length > 0 ? [...prev, ...newLines] : prev;
                                     });
                                 }
@@ -4544,20 +4586,6 @@ export function AutonomousAgentWizard() {
                                 }
                                 return;
                             }
-                    }
-                }
-
-                // Parse trailing buffer when stream ends without newline.
-                if (!finalData && buffer.trim()) {
-                    try {
-                        const trailingUpdate = JSON.parse(buffer.trim());
-                        finalData = trailingUpdate;
-                        if (trailingUpdate.workflow && !trailingUpdate.nodes) {
-                            finalData.nodes = trailingUpdate.workflow.nodes;
-                            finalData.edges = trailingUpdate.workflow.edges;
-                        }
-                    } catch {
-                        // Ignore non-JSON trailing fragments.
                     }
                 }
             }
