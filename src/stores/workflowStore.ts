@@ -10,7 +10,6 @@ import {
   addEdge,
 } from '@xyflow/react';
 import { normalizeIfElseConfig } from '@/lib/ifElseConditions';
-import { normalizeFormFieldsIdentity } from '@/lib/formFieldIdentity';
 
 export type NodeCategory = 'triggers' | 'ai' | 'logic' | 'data' | 'database' | 'storage' | 'output' | 'http_api' | 'google' | 'devops' | 'social_media' | 'crm' | 'utility' | 'productivity' | 'authentication' | 'payment' | 'ecommerce' | 'analytics';
 
@@ -39,6 +38,15 @@ interface WorkflowState {
   /** Node ids to highlight after AI editor apply (short-lived UX cue) */
   aiEditedNodeIds: string[];
 
+  /**
+   * User-initiated field ownership overrides.
+   * nodeId → fieldName → mode ('user' | 'ai_built' | 'ai_runtime').
+   * Only fields where the user changed from the build-time default are stored here.
+   * Persisted in the save payload alongside the workflow.
+   * Read-only after Stage 3 delivers the workflow — only changed via setFieldOwnershipOverride.
+   */
+  fieldOwnershipOverrides: Record<string, Record<string, string>>;
+
   // Undo/Redo Stacks
   undoStack: { nodes: WorkflowNode[]; edges: Edge[] }[];
   redoStack: { nodes: WorkflowNode[]; edges: Edge[] }[];
@@ -64,6 +72,11 @@ interface WorkflowState {
   setIsDirty: (dirty: boolean) => void;
   resetWorkflow: () => void;
 
+  /** Upsert a single field ownership override. Only called by user-initiated UI actions. */
+  setFieldOwnershipOverride: (nodeId: string, fieldName: string, mode: string) => void;
+  /** Reset all overrides (called on workflow reset). */
+  resetFieldOwnershipOverrides: () => void;
+
   // History & Clipboard
   undo: () => void;
   redo: () => void;
@@ -85,6 +98,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   isDirty: false,
   copiedNode: null,
   aiEditedNodeIds: [],
+  fieldOwnershipOverrides: {},
   undoStack: [],
   redoStack: [],
 
@@ -201,11 +215,67 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       const finalConfig =
         (node.data?.type || node.type) === 'if_else'
           ? normalizeIfElseConfig(mergedConfig)
-          : (node.data?.type || node.type) === 'form' && Array.isArray((mergedConfig as any).fields)
-            ? { ...mergedConfig, fields: normalizeFormFieldsIdentity((mergedConfig as any).fields) }
           : mergedConfig;
       return { ...node, data: { ...node.data, config: finalConfig } };
     });
+    const updatedNode = updatedNodes.find((node) => node.id === nodeId);
+    const updatedNodeType = updatedNode?.data?.type || updatedNode?.type;
+
+    const updatedEdges =
+      updatedNodeType === 'switch'
+        ? (() => {
+            const switchConfig = updatedNode?.data?.config || {};
+            const rawCases = switchConfig.cases ?? switchConfig.rules;
+            let caseValues: string[] = [];
+            if (Array.isArray(rawCases)) {
+              caseValues = rawCases
+                .map((item: any) => String(item?.value ?? '').trim())
+                .filter((value: string) => value.length > 0);
+            } else if (typeof rawCases === 'string') {
+              try {
+                const parsed = JSON.parse(rawCases);
+                if (Array.isArray(parsed)) {
+                  caseValues = parsed
+                    .map((item: any) => String(item?.value ?? '').trim())
+                    .filter((value: string) => value.length > 0);
+                }
+              } catch {
+                caseValues = [];
+              }
+            }
+
+            if (caseValues.length === 0) {
+              return edges;
+            }
+
+            const outgoing = edges.filter((edge) => edge.source === nodeId);
+            const ordinalByEdgeId = new Map<string, number>();
+            outgoing.forEach((edge, idx) => {
+              ordinalByEdgeId.set(edge.id, idx);
+            });
+
+            return edges.map((edge) => {
+              if (edge.source !== nodeId) return edge;
+              const currentHandle = String(edge.sourceHandle || edge.type || '').trim();
+              let nextHandle = currentHandle;
+              const positionalMatch = /^case_(\d+)$/i.exec(currentHandle);
+              if (positionalMatch) {
+                const caseIndex = parseInt(positionalMatch[1], 10) - 1;
+                nextHandle = caseValues[caseIndex] || caseValues[0];
+              } else if (!caseValues.includes(currentHandle)) {
+                const ordinal = ordinalByEdgeId.get(edge.id) ?? 0;
+                nextHandle = caseValues[Math.min(ordinal, caseValues.length - 1)];
+              }
+              if (!nextHandle || nextHandle === currentHandle) return edge;
+              return {
+                ...edge,
+                sourceHandle: nextHandle,
+                type: nextHandle,
+              };
+            });
+          })()
+        : edges;
+
     const selectedNode = get().selectedNode;
     const updatedSelectedNode = selectedNode?.id === nodeId
       ? updatedNodes.find(n => n.id === nodeId) || null
@@ -213,6 +283,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
     set({
       nodes: updatedNodes,
+      edges: updatedEdges,
       selectedNode: updatedSelectedNode,
       isDirty: true,
       undoStack: newUndoStack,
@@ -459,6 +530,21 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   setWorkflowName: (name) => set({ workflowName: name, isDirty: true }),
   setIsDirty: (dirty) => set({ isDirty: dirty }),
 
+  setFieldOwnershipOverride: (nodeId, fieldName, mode) => {
+    const current = get().fieldOwnershipOverrides;
+    set({
+      fieldOwnershipOverrides: {
+        ...current,
+        [nodeId]: {
+          ...(current[nodeId] || {}),
+          [fieldName]: mode,
+        },
+      },
+    });
+  },
+
+  resetFieldOwnershipOverrides: () => set({ fieldOwnershipOverrides: {} }),
+
   setAiEditedNodeIds: (ids) => set({ aiEditedNodeIds: [...new Set(ids)] }),
 
   clearAiEditedNodeHighlight: () => set({ aiEditedNodeIds: [] }),
@@ -477,6 +563,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       redoStack: [],
       copiedNode: null,
       aiEditedNodeIds: [],
+      fieldOwnershipOverrides: {},
     });
   },
 }));

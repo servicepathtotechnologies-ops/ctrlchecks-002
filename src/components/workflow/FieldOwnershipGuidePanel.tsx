@@ -23,6 +23,9 @@ type Message = {
   content: string;
 };
 
+/** nodeId → fieldName → fillMode string (read-only snapshot from buildManifest). */
+export type ManifestFieldOwnershipSnapshot = Record<string, Record<string, string>>;
+
 type Props = {
   enabled: boolean;
   isVisible: boolean;
@@ -30,6 +33,18 @@ type Props = {
   selectedFieldLabel?: string;
   onQuickAction?: (label: string) => void;
   floating?: boolean;
+  /**
+   * Read-only reference to the build manifest field ownership snapshot.
+   * This component MUST NOT mutate this object.
+   * After Stage 3 delivers the workflow, ownership changes are exclusively user-initiated.
+   */
+  buildManifestSnapshot?: ManifestFieldOwnershipSnapshot;
+  /**
+   * The ONLY path through which ownership state changes.
+   * Called when the user clicks a three-button ownership control.
+   * This component never changes ownership autonomously.
+   */
+  onOwnershipChange?: (nodeId: string, fieldName: string, mode: 'user' | 'ai_built' | 'ai_runtime') => void;
 };
 
 const QUICK_ACTIONS = [
@@ -57,6 +72,8 @@ export default function FieldOwnershipGuidePanel({
   selectedFieldLabel,
   onQuickAction,
   floating = false,
+  buildManifestSnapshot,
+  onOwnershipChange,
 }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -175,6 +192,15 @@ export default function FieldOwnershipGuidePanel({
               size="sm"
               onClick={() => {
                 trackFieldOwnershipGuideEvent("suggestion_clicked", { label });
+                // Route ownership-related quick actions through onOwnershipChange
+                // so ownership state is always user-initiated, never autonomous.
+                const nodeId = String(contextPayload?.nodeId || '');
+                const fieldName = String(contextPayload?.fieldName || '');
+                if (onOwnershipChange && nodeId && fieldName) {
+                  if (label === "What happens if I choose AI runtime?") {
+                    onOwnershipChange(nodeId, fieldName, 'ai_runtime');
+                  }
+                }
                 onQuickAction?.(label);
                 void send(label, "quick_action");
               }}

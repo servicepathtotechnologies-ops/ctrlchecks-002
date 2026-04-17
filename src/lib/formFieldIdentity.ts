@@ -96,9 +96,21 @@ export function normalizeFormFieldIdentity(
 ): CanonicalFormField {
   const sourceLabel = String(field.label || field.name || field.key || 'Field');
   const sourceKey = String(field.key || field.name || sourceLabel);
-  const key = ensureKey(sourceKey, used);
+
+  // ✅ Preserve existing key/name if already valid — only regenerate if missing/invalid
+  const existingKey = typeof field.key === 'string' && field.key.trim() ? field.key.trim() : null;
+  const existingName = typeof field.name === 'string' && field.name.trim() ? field.name.trim() : null;
+  const stableKey = existingKey || existingName || null;
+
+  const key = stableKey && !RESERVED_KEYS.has(stableKey) && !used.has(stableKey)
+    ? (used.add(stableKey), stableKey)
+    : ensureKey(sourceKey, used);
+
+  // ✅ Preserve existing id — only generate if missing
+  const existingId = typeof field.id === 'string' && field.id.trim() ? field.id.trim() : null;
+
   return {
-    id: String(field.id || `field_${key}`),
+    id: existingId || `field_${key}`,
     key,
     name: key,
     label: shortenLabel(sourceLabel),

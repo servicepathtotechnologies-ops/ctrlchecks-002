@@ -8,6 +8,7 @@ import {
   ALLOWED_TRANSITIONS,
   deriveMonotonicProgress,
   mapBackendPhaseToProgress,
+  mapWizardStepToState,
 } from '../workflow-generation-state';
 
 describe('WorkflowGenerationStateManager', () => {
@@ -18,110 +19,100 @@ describe('WorkflowGenerationStateManager', () => {
   });
 
   describe('New State Transitions', () => {
-    it('should transition from STATE_5_WORKFLOW_BUILDING to STATE_WORKFLOW_BUILT', () => {
+    it('should transition from STATE_5_WORKFLOW_BUILDING to STATE_6_WORKFLOW_VALIDATION', () => {
       // Setup: Move to building state
       stateManager.setUserPrompt('test prompt');
       stateManager.setClarifyingQuestions([]);
       stateManager.confirmUnderstanding('test understanding');
       stateManager.startBuilding();
 
-      // Test: Set workflow blueprint should move to STATE_WORKFLOW_BUILT
+      // Test: Set workflow blueprint should move to validation
       const result = stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
-      
-      expect(result.success).toBe(true);
-      expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_WORKFLOW_BUILT);
-    });
-
-    it('should transition from STATE_WORKFLOW_BUILT to STATE_WAITING_CONFIRMATION', () => {
-      // Setup: Move to built state
-      stateManager.setUserPrompt('test prompt');
-      stateManager.setClarifyingQuestions([]);
-      stateManager.confirmUnderstanding('test understanding');
-      stateManager.startBuilding();
-      stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
-
-      // Test: Mark waiting for confirmation
-      const result = stateManager.markWaitingForConfirmation();
-      
-      expect(result.success).toBe(true);
-      expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_WAITING_CONFIRMATION);
-    });
-
-    it('should transition from STATE_WAITING_CONFIRMATION to STATE_CONFIRMED', () => {
-      // Setup: Move to waiting confirmation state
-      stateManager.setUserPrompt('test prompt');
-      stateManager.setClarifyingQuestions([]);
-      stateManager.confirmUnderstanding('test understanding');
-      stateManager.startBuilding();
-      stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
-      stateManager.markWaitingForConfirmation();
-
-      // Test: Confirm workflow
-      const result = stateManager.confirmWorkflow();
-      
-      expect(result.success).toBe(true);
-      expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_CONFIRMED);
-    });
-
-    it('should transition from STATE_WAITING_CONFIRMATION to STATE_REJECTED', () => {
-      // Setup: Move to waiting confirmation state
-      stateManager.setUserPrompt('test prompt');
-      stateManager.setClarifyingQuestions([]);
-      stateManager.confirmUnderstanding('test understanding');
-      stateManager.startBuilding();
-      stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
-      stateManager.markWaitingForConfirmation();
-
-      // Test: Reject workflow
-      const result = stateManager.rejectWorkflow();
-      
-      expect(result.success).toBe(true);
-      expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_REJECTED);
-      expect(stateManager.isTerminalState()).toBe(true);
-    });
-
-    it('should transition from STATE_CONFIRMED to STATE_6_WORKFLOW_VALIDATION', () => {
-      // Setup: Move to confirmed state
-      stateManager.setUserPrompt('test prompt');
-      stateManager.setClarifyingQuestions([]);
-      stateManager.confirmUnderstanding('test understanding');
-      stateManager.startBuilding();
-      stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
-      stateManager.markWaitingForConfirmation();
-      stateManager.confirmWorkflow();
-
-      // Test: Move to validation
-      const result = stateManager.moveToValidationFromConfirmed();
       
       expect(result.success).toBe(true);
       expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_6_WORKFLOW_VALIDATION);
     });
-  });
 
-  describe('Invalid Transitions', () => {
-    it('should reject transition from STATE_WORKFLOW_BUILT to STATE_CONFIRMED (must go through STATE_WAITING_CONFIRMATION)', () => {
+    it('should reject markWaitingForConfirmation from validation state', () => {
+      // Setup: Move to validation state
       stateManager.setUserPrompt('test prompt');
       stateManager.setClarifyingQuestions([]);
       stateManager.confirmUnderstanding('test understanding');
       stateManager.startBuilding();
       stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
 
-      // Try to confirm directly from built state (should fail)
+      // Test: Legacy waiting confirmation transition should fail
+      const result = stateManager.markWaitingForConfirmation();
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Must be in STATE_WORKFLOW_BUILT');
+    });
+
+    it('should reject confirmWorkflow from validation state', () => {
+      stateManager.setUserPrompt('test prompt');
+      stateManager.setClarifyingQuestions([]);
+      stateManager.confirmUnderstanding('test understanding');
+      stateManager.startBuilding();
+      stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
+
+      // Test: Legacy confirmation transition should fail
       const result = stateManager.confirmWorkflow();
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Must be in STATE_WAITING_CONFIRMATION');
     });
 
-    it('should reject transition from STATE_WAITING_CONFIRMATION to STATE_6_WORKFLOW_VALIDATION (must go through STATE_CONFIRMED)', () => {
+    it('should reject rejectWorkflow from validation state', () => {
       stateManager.setUserPrompt('test prompt');
       stateManager.setClarifyingQuestions([]);
       stateManager.confirmUnderstanding('test understanding');
       stateManager.startBuilding();
       stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
-      stateManager.markWaitingForConfirmation();
 
-      // Try to move to validation directly from waiting (should fail)
+      // Test: Legacy rejection transition should fail
+      const result = stateManager.rejectWorkflow();
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Must be in STATE_WAITING_CONFIRMATION');
+    });
+
+    it('should reject moveToValidationFromConfirmed when not in confirmed state', () => {
+      stateManager.setUserPrompt('test prompt');
+      stateManager.setClarifyingQuestions([]);
+      stateManager.confirmUnderstanding('test understanding');
+      stateManager.startBuilding();
+      stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
+
+      // Test: Legacy helper requires confirmed state
+      const result = stateManager.moveToValidationFromConfirmed();
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Must be in STATE_CONFIRMED');
+    });
+  });
+
+  describe('Invalid Transitions', () => {
+    it('should reject transition to confirm workflow unless in waiting state', () => {
+      stateManager.setUserPrompt('test prompt');
+      stateManager.setClarifyingQuestions([]);
+      stateManager.confirmUnderstanding('test understanding');
+      stateManager.startBuilding();
+      stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
+
+      // Try to confirm directly from validation state (should fail)
+      const result = stateManager.confirmWorkflow();
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Must be in STATE_WAITING_CONFIRMATION');
+    });
+
+    it('should reject direct moveToValidationFromConfirmed unless in confirmed state', () => {
+      stateManager.setUserPrompt('test prompt');
+      stateManager.setClarifyingQuestions([]);
+      stateManager.confirmUnderstanding('test understanding');
+      stateManager.startBuilding();
+      stateManager.setWorkflowBlueprint({ nodes: [], edges: [] });
+
       const result = stateManager.moveToValidationFromConfirmed();
       
       expect(result.success).toBe(false);
@@ -133,15 +124,15 @@ describe('WorkflowGenerationStateManager', () => {
     it('should have correct allowed transitions for STATE_5_WORKFLOW_BUILDING', () => {
       const allowed = ALLOWED_TRANSITIONS[WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING];
       
-      expect(allowed).toContain(WorkflowGenerationState.STATE_WORKFLOW_BUILT);
-      expect(allowed).toContain(WorkflowGenerationState.STATE_4_CREDENTIAL_COLLECTION);
-      expect(allowed).not.toContain(WorkflowGenerationState.STATE_6_WORKFLOW_VALIDATION);
+      expect(allowed).toContain(WorkflowGenerationState.STATE_6_WORKFLOW_VALIDATION);
+      expect(allowed).toContain(WorkflowGenerationState.STATE_ERROR_HANDLING);
+      expect(allowed.length).toBe(2);
     });
 
     it('should have correct allowed transitions for STATE_WORKFLOW_BUILT', () => {
       const allowed = ALLOWED_TRANSITIONS[WorkflowGenerationState.STATE_WORKFLOW_BUILT];
       
-      expect(allowed).toContain(WorkflowGenerationState.STATE_WAITING_CONFIRMATION);
+      expect(allowed).toContain(WorkflowGenerationState.STATE_ERROR_HANDLING);
       expect(allowed.length).toBe(1);
     });
 
@@ -150,14 +141,16 @@ describe('WorkflowGenerationStateManager', () => {
       
       expect(allowed).toContain(WorkflowGenerationState.STATE_CONFIRMED);
       expect(allowed).toContain(WorkflowGenerationState.STATE_REJECTED);
-      expect(allowed.length).toBe(2);
+      expect(allowed).toContain(WorkflowGenerationState.STATE_ERROR_HANDLING);
+      expect(allowed.length).toBe(3);
     });
 
     it('should have correct allowed transitions for STATE_CONFIRMED', () => {
       const allowed = ALLOWED_TRANSITIONS[WorkflowGenerationState.STATE_CONFIRMED];
       
       expect(allowed).toContain(WorkflowGenerationState.STATE_6_WORKFLOW_VALIDATION);
-      expect(allowed.length).toBe(1);
+      expect(allowed).toContain(WorkflowGenerationState.STATE_ERROR_HANDLING);
+      expect(allowed.length).toBe(2);
     });
 
     it('should have STATE_REJECTED as terminal state', () => {
@@ -168,53 +161,34 @@ describe('WorkflowGenerationStateManager', () => {
   });
 
   describe('Complete Flow', () => {
-    it('should complete full flow: BUILDING → BUILT → WAITING → CONFIRMED → VALIDATION', () => {
+    it('should complete streamlined flow: BUILDING → VALIDATION → READY', () => {
       // Setup
       stateManager.setUserPrompt('test prompt');
       stateManager.setClarifyingQuestions([]);
       stateManager.confirmUnderstanding('test understanding');
       stateManager.startBuilding();
 
-      // Step 1: BUILDING → BUILT
+      // Step 1: BUILDING → VALIDATION
       let result = stateManager.setWorkflowBlueprint({ nodes: [{ id: '1' }], edges: [] });
-      expect(result.success).toBe(true);
-      expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_WORKFLOW_BUILT);
-
-      // Step 2: BUILT → WAITING
-      result = stateManager.markWaitingForConfirmation();
-      expect(result.success).toBe(true);
-      expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_WAITING_CONFIRMATION);
-
-      // Step 3: WAITING → CONFIRMED
-      result = stateManager.confirmWorkflow();
-      expect(result.success).toBe(true);
-      expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_CONFIRMED);
-
-      // Step 4: CONFIRMED → VALIDATION
-      result = stateManager.moveToValidationFromConfirmed();
       expect(result.success).toBe(true);
       expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_6_WORKFLOW_VALIDATION);
+
+      // Step 2: VALIDATION → READY
+      result = stateManager.markWorkflowReady();
+      expect(result.success).toBe(true);
+      expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_7_WORKFLOW_READY);
     });
 
-    it('should handle rejection flow: BUILDING → BUILT → WAITING → REJECTED', () => {
+    it('should handle error flow: BUILDING → ERROR', () => {
       // Setup
       stateManager.setUserPrompt('test prompt');
       stateManager.setClarifyingQuestions([]);
       stateManager.confirmUnderstanding('test understanding');
       stateManager.startBuilding();
 
-      // Step 1: BUILDING → BUILT
-      let result = stateManager.setWorkflowBlueprint({ nodes: [{ id: '1' }], edges: [] });
+      let result = stateManager.handleError('forced failure');
       expect(result.success).toBe(true);
-
-      // Step 2: BUILT → WAITING
-      result = stateManager.markWaitingForConfirmation();
-      expect(result.success).toBe(true);
-
-      // Step 3: WAITING → REJECTED
-      result = stateManager.rejectWorkflow();
-      expect(result.success).toBe(true);
-      expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_REJECTED);
+      expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_ERROR_HANDLING);
       expect(stateManager.isTerminalState()).toBe(true);
     });
   });
@@ -237,12 +211,20 @@ describe('WorkflowGenerationStateManager', () => {
 });
 
 describe('workflow-generation progress helpers', () => {
-  it('maps backend understand phase to 20%', () => {
-    expect(mapBackendPhaseToProgress('understand')).toBe(20);
+  it('maps backend intent phase to 10%', () => {
+    expect(mapBackendPhaseToProgress('intent')).toBe(10);
   });
 
-  it('maps backend credential_discovery phase to 92%', () => {
-    expect(mapBackendPhaseToProgress('credential_discovery')).toBe(92);
+  it('maps backend node_selection phase to 35%', () => {
+    expect(mapBackendPhaseToProgress('node_selection')).toBe(40);
+  });
+
+  it('maps backend capability_selection phase to 18%', () => {
+    expect(mapBackendPhaseToProgress('capability_selection')).toBe(18);
+  });
+
+  it('maps backend credential_discovery phase to 85%', () => {
+    expect(mapBackendPhaseToProgress('credential_discovery')).toBe(85);
   });
 
   it('defaults unknown phases to 10%', () => {
@@ -256,5 +238,9 @@ describe('workflow-generation progress helpers', () => {
   it('clamps and advances progress safely', () => {
     expect(deriveMonotonicProgress(95, 140)).toBe(100);
     expect(deriveMonotonicProgress(-5, 20)).toBe(20);
+  });
+
+  it('maps capability-selection wizard step to pre-confirmation state', () => {
+    expect(mapWizardStepToState('capability-selection')).toBe(WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE);
   });
 });

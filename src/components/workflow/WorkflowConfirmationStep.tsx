@@ -2,11 +2,8 @@
  * Workflow Confirmation Step Component
  * 
  * Displays workflow confirmation UI with:
- * - Workflow goal
- * - Tools used
- * - Step-by-step flow
- * - Assumptions
- * - Confidence score
+ * - Structural prompt (new: numbered steps, conditions, trigger description)
+ * - Legacy workflow explanation (backward-compatible fallback)
  * - Action buttons (Confirm, Change Tools, Regenerate)
  */
 
@@ -30,6 +27,31 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+
+// ─── StructuralPrompt types (mirrors pipeline-contracts.ts) ──────────────────
+
+interface StructuralStep {
+  stepNumber: number;
+  nodeType: string;
+  displayName: string;
+  description: string;
+}
+
+interface StructuralCondition {
+  branchNodeType: string;
+  trueOutcome: string;
+  falseOutcome: string;
+}
+
+interface StructuralPrompt {
+  text: string;
+  steps: StructuralStep[];
+  conditions: StructuralCondition[];
+  triggerDescription: string;
+  terminalAction: string;
+}
+
+// ─── Legacy shape (backward-compatible) ──────────────────────────────────────
 
 interface WorkflowExplanation {
   goal: string;
@@ -62,6 +84,9 @@ interface WorkflowExplanation {
 
 interface WorkflowConfirmationStepProps {
   workflowId: string;
+  /** New: typed structural prompt from WorkflowGenerationPipeline. */
+  structuralPrompt?: StructuralPrompt;
+  /** Legacy: kept for backward compatibility. Used when structuralPrompt is absent. */
   workflowExplanation?: WorkflowExplanation;
   confidenceScore?: number;
   workflow: {
@@ -76,6 +101,7 @@ interface WorkflowConfirmationStepProps {
 
 export function WorkflowConfirmationStep({
   workflowId,
+  structuralPrompt,
   workflowExplanation,
   confidenceScore,
   workflow,
@@ -103,11 +129,148 @@ export function WorkflowConfirmationStep({
     }
   };
 
+  // Use structural prompt when available; fall back to legacy shape
+  const useStructuralPrompt = !!structuralPrompt;
+
   const goal = workflowExplanation?.goal || 'Automate workflow based on your requirements';
   const servicesUsed = workflowExplanation?.services_used || [];
   const steps = workflowExplanation?.steps || [];
   const assumptions = workflowExplanation?.assumptions || [];
   const dataFlow = workflowExplanation?.data_flow?.description || 'Data flows through the workflow nodes sequentially';
+
+  // ─── Structural prompt rendering ─────────────────────────────────────────
+
+  if (useStructuralPrompt && structuralPrompt) {
+    const branchingStepNumbers = new Set(
+      structuralPrompt.conditions.map((c) => {
+        const step = structuralPrompt.steps.find((s) => s.nodeType === c.branchNodeType);
+        return step?.stepNumber;
+      }).filter(Boolean)
+    );
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="w-full max-w-4xl mx-auto space-y-6"
+      >
+        <Card className="border-2">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <Zap className="h-6 w-6 text-primary" />
+                  {structuralPrompt.triggerDescription}
+                </CardTitle>
+                <CardDescription className="mt-2">
+                  Review the workflow steps below before confirming.
+                </CardDescription>
+              </div>
+              {confidenceScore !== undefined && (
+                <Badge
+                  variant={confidenceScore >= 0.9 ? 'default' : confidenceScore >= 0.7 ? 'secondary' : 'outline'}
+                  className="text-sm px-3 py-1"
+                >
+                  Confidence: {(confidenceScore * 100).toFixed(0)}%
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <ScrollArea className="h-[calc(100vh-400px)] pr-4">
+              <div className="space-y-4">
+                {/* Numbered steps */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-lg font-semibold">
+                    <Workflow className="h-5 w-5 text-primary" />
+                    Workflow Steps
+                  </div>
+                  <div className="space-y-3 pl-7">
+                    {structuralPrompt.steps.map((step) => {
+                      const condition = structuralPrompt.conditions.find(
+                        (c) => c.branchNodeType === step.nodeType
+                      );
+                      return (
+                        <motion.div
+                          key={`${step.nodeType}-${step.stepNumber}`}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: step.stepNumber * 0.05 }}
+                          className="border-l-2 border-primary/30 pl-4 py-2 space-y-1"
+                        >
+                          <div className="flex items-start gap-2">
+                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
+                              {step.stepNumber}
+                            </div>
+                            <div>
+                              <span className="font-medium">{step.displayName}</span>
+                              <p className="text-sm text-muted-foreground">{step.description}</p>
+                              {/* Branch conditions as sub-items */}
+                              {condition && (
+                                <div className="mt-2 space-y-1 pl-2 border-l border-muted">
+                                  <p className="text-xs text-muted-foreground">
+                                    <span className="font-medium">{step.stepNumber}a.</span> If {condition.trueOutcome}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    <span className="font-medium">{step.stepNumber}b.</span> Otherwise, {condition.falseOutcome}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Terminal action */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {structuralPrompt.terminalAction}
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+              <Button
+                onClick={handleConfirm}
+                disabled={isConfirming || isLoading}
+                className="flex-1"
+                size="lg"
+              >
+                {isConfirming ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Building Workflow...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Confirm & Build
+                  </>
+                )}
+              </Button>
+              <Button variant="outline" onClick={onChangeTools} disabled={isConfirming || isLoading} size="lg">
+                <Settings2 className="mr-2 h-4 w-4" />
+                Change Tools
+              </Button>
+              <Button variant="ghost" onClick={onRegenerate} disabled={isConfirming || isLoading} size="lg">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Regenerate
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  // ─── Legacy rendering (backward-compatible fallback) ─────────────────────
 
   return (
     <motion.div

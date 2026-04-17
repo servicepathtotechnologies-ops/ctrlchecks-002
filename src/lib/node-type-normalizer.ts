@@ -82,7 +82,22 @@ export function normalizeBackendNode(backendNode: any): Node {
   
   // ✅ CRITICAL: Preserve config from multiple possible locations
   // Config can be in: node.data.config, node.config, or node.data (spread)
-  const preservedConfig = backendNode.data?.config || backendNode.config || {};
+  const rawConfig = backendNode.data?.config || backendNode.config || {};
+
+  // ✅ Parse JSON strings for array/object fields (backend may store them as strings)
+  const preservedConfig: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(rawConfig)) {
+    if (typeof value === 'string' && value.trim().length > 1) {
+      const t = value.trim();
+      if ((t.startsWith('[') && t.endsWith(']')) || (t.startsWith('{') && t.endsWith('}'))) {
+        try {
+          preservedConfig[key] = JSON.parse(t);
+          continue;
+        } catch { /* keep as string */ }
+      }
+    }
+    preservedConfig[key] = value;
+  }
   
   const coercedPos = coerceReactFlowPosition(backendNode.position);
 
@@ -133,6 +148,30 @@ export function normalizeBackendEdge(backendEdge: any): Edge {
   return normalizedEdge;
 }
 
+function parseSwitchCaseValues(config: Record<string, unknown> | undefined): string[] {
+  const rawCases = config?.cases ?? config?.rules;
+  let cases: any[] = [];
+  if (Array.isArray(rawCases)) {
+    cases = rawCases;
+  } else if (typeof rawCases === 'string') {
+    try {
+      const parsed = JSON.parse(rawCases);
+      if (Array.isArray(parsed)) {
+        cases = parsed;
+      }
+    } catch {
+      return [];
+    }
+  }
+  const seen = new Set<string>();
+  for (const c of cases) {
+    const value = String(c?.value ?? c ?? '').trim();
+    if (!value) continue;
+    seen.add(value);
+  }
+  return Array.from(seen);
+}
+
 /**
  * Normalize entire workflow (nodes + edges) from backend format to frontend format.
  * Handles ai_agent targetHandle normalization (input → userInput) using node context.
@@ -149,13 +188,54 @@ export function normalizeBackendWorkflow(backendWorkflow: {
     nodeTypeById.set(n.id, (n.data as any)?.type || n.type || '');
   });
 
-  const normalizedEdges = backendWorkflow.edges.map(edge => {
+  const nodeById = new Map<string, Node>();
+  normalizedNodes.forEach((n) => nodeById.set(n.id, n));
+  const switchEdgeOrdinalById = new Map<string, number>();
+  const sourceRunningIndex = new Map<string, number>();
+  backendWorkflow.edges.forEach((edge: any, idx: number) => {
+    const source = String(edge?.source || '');
+    if (!source) return;
+    const ordinal = sourceRunningIndex.get(source) || 0;
+    switchEdgeOrdinalById.set(String(edge?.id || `${source}-${idx}`), ordinal);
+    sourceRunningIndex.set(source, ordinal + 1);
+  });
+
+  const normalizedEdges = backendWorkflow.edges.map((edge, edgeIndex) => {
     const base = normalizeBackendEdge(edge);
     // ai_agent uses 'userInput' as its React Flow target handle
     const targetType = nodeTypeById.get(base.target) || '';
     if (targetType === 'ai_agent' && base.targetHandle === 'input') {
       return { ...base, targetHandle: 'userInput' };
     }
+
+    const sourceType = nodeTypeById.get(base.source) || '';
+    if (sourceType === 'switch') {
+      const sourceNode = nodeById.get(base.source);
+      const caseValues = parseSwitchCaseValues((sourceNode?.data as any)?.config || {});
+      const currentHandle = String(base.sourceHandle || edge?.type || '').trim();
+
+      if (caseValues.length > 0) {
+        const edgeKey = String(edge?.id || `${base.source}-${edgeIndex}`);
+        const edgeOrdinal = switchEdgeOrdinalById.get(edgeKey) ?? 0;
+        const positionalMatch = /^case_(\d+)$/i.exec(currentHandle);
+        if (positionalMatch) {
+          const idx = parseInt(positionalMatch[1], 10) - 1;
+          const semantic = caseValues[idx] || caseValues[Math.min(edgeOrdinal, caseValues.length - 1)];
+          if (semantic) {
+            return { ...base, sourceHandle: semantic, type: semantic };
+          }
+        }
+
+        if (currentHandle && !caseValues.includes(currentHandle)) {
+          // Stale semantic handle: deterministically map by edge index for this normalization pass.
+          const semantic = caseValues[Math.min(edgeOrdinal, caseValues.length - 1)];
+          if (semantic) {
+            return { ...base, sourceHandle: semantic, type: semantic };
+          }
+        }
+      }
+    }
+
     return base;
   });
 

@@ -20,6 +20,9 @@ import { enforceFrontendRenderContract, normalizeBackendWorkflow, validateNodeTy
 import { CredentialStatusPanel, type CredentialPanelData } from '@/components/workflow/CredentialStatusPanel';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
 import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
+import { useExecutionNotifications } from '../hooks/useExecutionNotifications';
+import { ExecutionResultNotification } from '../components/workflow/ExecutionResultNotification';
+import type { ExecutionResult } from '../lib/executionNotifications';
 
 const NodeLibrary = lazy(() => import('@/components/workflow/NodeLibrary'));
 const WorkflowCanvas = lazy(() => import('@/components/workflow/WorkflowCanvas'));
@@ -42,6 +45,7 @@ export default function WorkflowBuilder() {
   const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [executionGuidance, setExecutionGuidance] = useState<GuidedStatusContent | null>(null);
+  const [executionNotificationResult, setExecutionNotificationResult] = useState<ExecutionResult | null>(null);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
   const [nodeLibraryOpen, setNodeLibraryOpen] = useState(true);
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
@@ -544,6 +548,88 @@ export default function WorkflowBuilder() {
     }
   }, [setWorkflowName, setNodes, setEdges, setIsDirty, resetWorkflow]);
 
+  // ---------------------------------------------------------------------------
+  // Execution notification helpers
+  // ---------------------------------------------------------------------------
+
+  /** Maps the raw API response + current node statuses into the ExecutionResult shape. */
+  const buildExecutionNotificationResult = useCallback(
+    (data: any, currentNodes: typeof nodes): ExecutionResult => {
+      const uiNodeStatuses: Record<string, string> = {};
+      currentNodes.forEach((n: any) => {
+        const status = n.data?.status;
+        if (status) uiNodeStatuses[n.id] = status;
+      });
+      return {
+        id: data.executionId ?? data.id ?? `exec-${Date.now()}`,
+        status: data.status ?? 'failed',
+        logs: data.logs ?? data.nodeLogs ?? null,
+        error: data.error ?? null,
+        uiNodeStatuses,
+      };
+    },
+    [],
+  );
+
+  /** Reloads execution console data; fires stuck notification if refresh takes > 5 s. */
+  const handleRefresh = useCallback(() => {
+    const timeoutId = setTimeout(() => {
+      setExecutionNotificationResult({
+        id: `stuck-${Date.now()}`,
+        status: 'success',
+        logs: null,
+        uiNodeStatuses: { _stuck: 'running' },
+      });
+    }, 5000);
+
+    // Signal the console to reload
+    window.dispatchEvent(new CustomEvent('workflow-execution-refresh'));
+
+    // Resolve the timeout when the console confirms it has refreshed
+    const onRefreshed = () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('workflow-execution-refreshed', onRefreshed);
+    };
+    window.addEventListener('workflow-execution-refreshed', onRefreshed);
+  }, []);
+
+  // Listen for terminal execution events dispatched by ExecutionConsole
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const execution = customEvent.detail?.execution;
+      if (!execution) return;
+      setExecutionNotificationResult({
+        id: execution.id ?? `exec-${Date.now()}`,
+        status: execution.status ?? 'failed',
+        logs: execution.logs ?? execution.node_logs ?? null,
+        error: execution.error ?? null,
+      });
+    };
+    window.addEventListener('workflow-execution-terminal', handler);
+    return () => window.removeEventListener('workflow-execution-terminal', handler);
+  }, []);
+
+  /** Dismiss a notification by clearing the result (the hook will return []). */
+  const handleDismiss = useCallback((_notificationId: string) => {
+    setExecutionNotificationResult(null);
+  }, []);
+
+  const notificationConfigs = useExecutionNotifications(executionNotificationResult, {
+    onViewLogs: (nodeId?: string) => {
+      setConsoleExpanded(true);
+      if (nodeId) {
+        // Scroll the console to the specific node log
+        window.dispatchEvent(new CustomEvent('workflow-console-scroll-to-node', { detail: { nodeId } }));
+      }
+    },
+    onReconnect: (service: string) => {
+      navigate(`/connections?service=${encodeURIComponent(service)}`);
+    },
+    onRefresh: handleRefresh,
+    onDismiss: handleDismiss,
+  });
+
   const handleRun = useCallback(async (autoSave = false) => {
     setExecutionGuidance(null);
     const workflowId = useWorkflowStore.getState().workflowId;
@@ -1043,6 +1129,9 @@ export default function WorkflowBuilder() {
 
       const data = await response.json();
 
+      // Build and set the execution notification result
+      setExecutionNotificationResult(buildExecutionNotificationResult(data, nodes));
+
       // Force refresh execution console to show new execution immediately
       // The realtime subscription will handle updates, but we trigger a refresh for immediate feedback
       setTimeout(() => {
@@ -1186,16 +1275,19 @@ export default function WorkflowBuilder() {
         }
       >
         <div className="flex-1 flex flex-col overflow-hidden relative">
-          {executionGuidance && (
-            <div className="absolute right-4 top-4 z-[70] w-[min(420px,calc(100%-2rem))]">
-              <GuidedStatusCard
-                title={executionGuidance.title}
-                description={executionGuidance.description}
-                resolution={executionGuidance.resolution}
-                details={executionGuidance.details}
-                tone={executionGuidance.tone}
-                onDismiss={() => setExecutionGuidance(null)}
-              />
+          {(executionGuidance || notificationConfigs.length > 0) && (
+            <div className="absolute right-4 top-4 z-[70] w-[min(420px,calc(100%-2rem))] flex flex-col gap-3">
+              {executionGuidance && (
+                <GuidedStatusCard
+                  title={executionGuidance.title}
+                  description={executionGuidance.description}
+                  resolution={executionGuidance.resolution}
+                  details={executionGuidance.details}
+                  tone={executionGuidance.tone}
+                  onDismiss={() => setExecutionGuidance(null)}
+                />
+              )}
+              <ExecutionResultNotification configs={notificationConfigs} onDismiss={handleDismiss} />
             </div>
           )}
           <div className="flex-1 flex overflow-hidden">

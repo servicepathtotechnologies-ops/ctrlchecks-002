@@ -782,27 +782,14 @@ export class WorkflowGenerationStateManager {
     if (currentState === WorkflowGenerationState.STATE_5_WORKFLOW_BUILDING) {
       // Set blueprint first
       this.executionState.workflow_blueprint = blueprint;
-      
-      // If skipping confirmation, go directly to validation
-      if (skipConfirmation) {
-        return this.transitionTo(WorkflowGenerationState.STATE_6_WORKFLOW_VALIDATION, 'Workflow built, moving directly to validation');
-      }
-      
-      // Otherwise, use confirmation flow
-      const builtResult = this.setWorkflowBlueprint(blueprint, false);
-      if (!builtResult.success) return builtResult;
-      
-      // Then move to waiting confirmation
-      const waitingResult = this.markWaitingForConfirmation();
-      if (!waitingResult.success) return waitingResult;
-      
-      // Note: Auto-confirmation disabled - user must explicitly confirm
-      // For backward compatibility, we still allow the transition but it should be user-initiated
-      const confirmResult = this.confirmWorkflow();
-      if (!confirmResult.success) return confirmResult;
-      
-      // Finally move to validation
-      return this.moveToValidationFromConfirmed();
+
+      // Primary pipeline now validates immediately after build.
+      // Keep skipConfirmation for backward-compatible callsites, but both paths
+      // converge to the same deterministic transition.
+      const reason = skipConfirmation
+        ? 'Workflow built, moving directly to validation'
+        : 'Workflow built, moving to validation';
+      return this.transitionTo(WorkflowGenerationState.STATE_6_WORKFLOW_VALIDATION, reason);
     }
     
     // If already in built state, can skip to validation
@@ -865,6 +852,8 @@ export function mapWizardStepToState(step: string): WorkflowGenerationState {
     'idle': WorkflowGenerationState.STATE_0_IDLE,
     'analyzing': WorkflowGenerationState.STATE_1_USER_PROMPT_RECEIVED,
     'questioning': WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE,
+    // Capability selection is an intermediate understanding step before confirmation.
+    'capability-selection': WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE,
     'refining': WorkflowGenerationState.STATE_2_CLARIFICATION_ACTIVE,
     'confirmation': WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED,
     'field-ownership': WorkflowGenerationState.STATE_3_UNDERSTANDING_CONFIRMED,
@@ -905,14 +894,17 @@ export function mapStateToWizardStep(state: WorkflowGenerationState): string {
 export function mapBackendPhaseToProgress(phase: string): number {
   const key = String(phase || '').trim().toLowerCase();
   const phaseMap: Record<string, number> = {
-    understand: 20,
-    planning: 40,
-    construction: 65,
-    healing: 75,
-    validation: 80,
-    verification: 90,
-    credential_discovery: 92,
-    learning: 95,
+    intent: 10,
+    capability_selection: 18,
+    structural_prompt: 28,
+    node_selection: 40,
+    edge_reasoning: 50,
+    validation: 62,
+    property_population: 74,
+    credential_discovery: 85,
+    field_ownership: 93,
+    finalizing: 99,
+    ready: 100,
     completed: 100,
   };
   return phaseMap[key] ?? 10;

@@ -306,6 +306,7 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
           // No cases configured yet - show single default handle
           <Handle
             type="source"
+            id="output"
             position={Position.Bottom}
             className="!w-3 !h-3 !bg-muted-foreground !border-2 !border-background"
           />

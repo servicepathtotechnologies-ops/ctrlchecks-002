@@ -1,4 +1,4 @@
-﻿import { ENDPOINTS } from '@/config/endpoints';
+import { ENDPOINTS } from '@/config/endpoints';
 import { AppBrand } from '@/components/brand/AppBrand';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -30,6 +30,9 @@ import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';
 import { ThemedBorderGlow } from '@/components/ui/themed-border-glow';
 import { WorkflowConfirmationStep } from './WorkflowConfirmationStep';
 import { CredentialStatusPanel } from './CredentialStatusPanel';
+import { CapabilityStage } from './CapabilityStage';
+import { CapabilityReviewStep } from './CapabilityReviewStep';
+import type { CapabilityContainer, NodeSelectionMap } from '../../types/capability-selection';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
 import { generateFieldGuide } from './guideGenerator';
 import {
@@ -75,6 +78,10 @@ import {
     mapWizardStepToState,
     mapStateToWizardStep 
 } from '@/lib/workflow-generation-state';
+import {
+    normalizeGenerateWorkflowUiError,
+    buildGenerateWorkflowUiErrorMessage,
+} from '@/lib/generate-workflow-error';
 import { shouldRunAttachCredentialsAfterAttachInputs } from '@/lib/workflow-phase-contract';
 import { getPromptInputLayoutState } from '@/lib/prompt-input-layout';
 import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
@@ -245,7 +252,10 @@ function credentialWizardFriendlyStatus(status: string): string {
     }
 }
 
-type WizardStep = 'idle' | 'analyzing' | 'summarize' | 'questioning' | 'refining' | 'confirmation' | 'workflow-confirmation' | 'field-ownership' | 'credentials' | 'configure' | 'configuration' | 'building' | 'executing' | 'complete';
+type WizardStep = 'idle' | 'analyzing' | 'summarize' | 'questioning' | 'capability-selection' | 'refining' | 'confirmation' | 'workflow-confirmation' | 'field-ownership' | 'credentials' | 'configure' | 'configuration' | 'building' | 'executing' | 'complete'
+    // New capability-node-selection-flow steps (tasks 10.1, 10.2)
+    | 'capability-node-selection'   // CapabilityStage: user selects one node per container
+    | 'capability-review';          // CapabilityReviewStep: user reviews structural prompt before Backend_Generation
 
 interface AgentQuestion {
     id: string;
@@ -304,6 +314,18 @@ interface RefinementResult {
     }>;
     validationIssues?: Array<{ severity: string; description: string }>;
     fieldOwnershipMap?: Record<string, Record<string, string>>;
+}
+
+interface CapabilityOptionStep {
+    stepId: string;
+    stepText: string;
+    intentClass: 'trigger' | 'data_source' | 'communication' | 'logic' | 'transformation' | 'generic_action';
+    candidateNodeTypes: string[];
+    defaultSuggestedNodeType: string | null;
+    selectionPolicy: {
+        multiSelectAllowed: boolean;
+        required: boolean;
+    };
 }
 
 /** Mirrors selectedVariationMeta shape in AutonomousAgentWizard */
@@ -396,6 +418,7 @@ function PipelineStageTrace({ stageTrace }: { stageTrace: Array<{ stage: string;
 
     const stageIcons: Record<string, string> = {
         intent: '??',
+        capability_selection: '??',
         structural_prompt: '???',
         node_selection: '??',
         edge_reasoning: '??',
@@ -406,6 +429,7 @@ function PipelineStageTrace({ stageTrace }: { stageTrace: Array<{ stage: string;
 
     const stageLabels: Record<string, string> = {
         intent: 'Intent Extraction',
+        capability_selection: 'Capability Selection',
         structural_prompt: 'Structural Blueprint',
         node_selection: 'Node Selection',
         edge_reasoning: 'Edge Reasoning',
@@ -448,6 +472,38 @@ function PipelineStageTrace({ stageTrace }: { stageTrace: Array<{ stage: string;
     );
 }
 
+function initializeCapabilitySelections(steps: CapabilityOptionStep[]): Record<string, string[]> {
+    const out: Record<string, string[]> = {};
+    steps.forEach((step) => {
+        // Pre-select trigger default only; all other required steps must be user-reviewed.
+        if (step.intentClass === 'trigger' && step.defaultSuggestedNodeType) {
+            out[step.stepId] = [step.defaultSuggestedNodeType];
+        } else {
+            out[step.stepId] = [];
+        }
+    });
+    return out;
+}
+
+type CapabilitySelectionResolution = {
+    byStep: Record<string, string[]>;
+};
+
+function resolveCapabilitySelections(
+    steps: CapabilityOptionStep[],
+    selectionsByStep: Record<string, string[]>,
+): CapabilitySelectionResolution {
+    const byStep: Record<string, string[]> = {};
+
+    for (const step of steps) {
+        const allowed = new Set(step.candidateNodeTypes);
+        const raw = Array.isArray(selectionsByStep[step.stepId]) ? selectionsByStep[step.stepId] : [];
+        byStep[step.stepId] = [...new Set(raw.filter((x) => allowed.has(x)))];
+    }
+
+    return { byStep };
+}
+
 /**
  * Single source of truth for POST /api/generate-workflow (mode: create).
  * Must match for streaming and non-streaming fallback so plan-driven create is not dropped.
@@ -461,6 +517,8 @@ function buildGenerateWorkflowCreateBody(params: {
     planMandatoryNodeTypes: string[];
     planNodeHints: string[];
     selectedVariationMeta: WizardSelectedVariationMeta;
+    capabilitySelectionsByStep: Record<string, string[]>;
+    capabilityDefaultConfirmStepIds: string[];
     existingWorkflow?: { nodes: any[]; edges: any[] } | null;
 }): Record<string, unknown> {
     const {
@@ -471,6 +529,8 @@ function buildGenerateWorkflowCreateBody(params: {
         planMandatoryNodeTypes,
         planNodeHints,
         selectedVariationMeta,
+        capabilitySelectionsByStep,
+        capabilityDefaultConfirmStepIds,
         existingWorkflow,
     } = params;
 
@@ -508,6 +568,8 @@ function buildGenerateWorkflowCreateBody(params: {
                       undefined,
               }
             : undefined,
+        capabilitySelectionsByStep,
+        capabilityDefaultConfirmStepIds,
         // Pass existing workflow so the backend merges AI-assigned field values
         // instead of regenerating from scratch on continuation requests.
         ...(existingWorkflow && existingWorkflow.nodes && existingWorkflow.nodes.length > 0
@@ -621,6 +683,7 @@ export function AutonomousAgentWizard() {
     const [elapsedTime, setElapsedTime] = useState(0);
     const [cognitiveTextIndex, setCognitiveTextIndex] = useState(0);
     const [originalPrompt, setOriginalPrompt] = useState<string>('');
+    const [intentSnapshot, setIntentSnapshot] = useState<any | null>(null);
     const [isSummarizeLayerProcessing, setIsSummarizeLayerProcessing] = useState<boolean>(false);
     const [circleTextIndex, setCircleTextIndex] = useState(0);
     // Bug A fix: gate "Refining" overlay behind questions completion
@@ -631,6 +694,14 @@ export function AutonomousAgentWizard() {
     const [confirmationData, setConfirmationData] = useState<{
         workflowId: string;
         workflowExplanation?: string;
+        /** New: typed structural prompt from WorkflowGenerationPipeline — renders non-repetitive numbered steps. */
+        structuralPrompt?: {
+            text: string;
+            steps: Array<{ stepNumber: number; nodeType: string; displayName: string; description: string }>;
+            conditions: Array<{ branchNodeType: string; trueOutcome: string; falseOutcome: string }>;
+            triggerDescription: string;
+            terminalAction: string;
+        };
         confidenceScore?: number;
         workflow: { nodes: any[]; edges: any[] };
     } | null>(null);
@@ -682,7 +753,25 @@ export function AutonomousAgentWizard() {
     const [planBranchingOverview, setPlanBranchingOverview] = useState('');
     const [planMandatoryNodeTypes, setPlanMandatoryNodeTypes] = useState<string[]>([]);
     const [planRegistryTags, setPlanRegistryTags] = useState<string[]>([]);
+    const [capabilityOptions, setCapabilityOptions] = useState<CapabilityOptionStep[]>([]);
+    const [capabilitySelectionsByStep, setCapabilitySelectionsByStep] = useState<Record<string, string[]>>({});
+    const [capabilitySelectionsApplied, setCapabilitySelectionsApplied] = useState(false);
+    const [capabilityDefaultConfirmStepIds, setCapabilityDefaultConfirmStepIds] = useState<string[]>([]);
     const [planDiagnosticsOpen, setPlanDiagnosticsOpen] = useState(false);
+
+    // ── Capability-Node-Selection-Flow state (tasks 10.1, 10.2) ──────────────
+    /** Containers returned by Phase 1 (/api/capability-selection/analyze) */
+    const [capNodeContainers, setCapNodeContainers] = useState<CapabilityContainer[]>([]);
+    /** correlationId returned by Phase 1, threaded through Phase 2 and Phase 3 */
+    const [capNodeCorrelationId, setCapNodeCorrelationId] = useState<string>('');
+    /** Selections made by the user in CapabilityStage (containerId → nodeType) */
+    const [capNodeSelections, setCapNodeSelections] = useState<NodeSelectionMap>({});
+    /** Structural prompt returned by Phase 2 (/api/capability-selection/generate) */
+    const [capNodeStructuralPrompt, setCapNodeStructuralPrompt] = useState<string>('');
+    /** Workflow returned by Phase 2 */
+    const [capNodeWorkflow, setCapNodeWorkflow] = useState<any>(null);
+    // ─────────────────────────────────────────────────────────────────────────
+
     /** User toggles for unlockable credential fields (`unlock_<nodeId>_<field>` on attach-inputs). */
     const [credentialUnlockOverrides, setCredentialUnlockOverrides] = useState<Record<string, boolean>>({});
     /** Per plane key: force-include optional vault row on Credentials; false = hide when allowed. */
@@ -693,7 +782,7 @@ export function AutonomousAgentWizard() {
     const [executionProgress, setExecutionProgress] = useState(0);
     const [guideSelectedField, setGuideSelectedField] = useState<{ nodeId: string; fieldName: string } | null>(null);
     const { toast } = useToast();
-    const { setNodes, setEdges, workflowId: activeWorkflowId } = useWorkflowStore();
+    const { setNodes, setEdges, workflowId: activeWorkflowId, fieldOwnershipOverrides, setFieldOwnershipOverride, resetFieldOwnershipOverrides } = useWorkflowStore();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const fieldOwnershipGuideEnabled = import.meta.env.VITE_ENABLE_FIELD_OWNERSHIP_GUIDE !== 'false';
@@ -1694,6 +1783,7 @@ export function AutonomousAgentWizard() {
     const getPhaseDescription = (phase: string): string => {
         const descriptions: Record<string, string> = {
             'understand':   'Analyzing prompt and extracting intent',
+            'capability_selection': 'Preparing capability node options',
             'planning':     'Designing node graph and connections',
             'construction': 'Building nodes, edges and config',
             'validation':   'Validating graph structure and edges',
@@ -1708,6 +1798,10 @@ export function AutonomousAgentWizard() {
 
     const handleAnalyze = async () => {
         if (!prompt.trim()) return;
+
+        // Always use the new 3-phase capability-node-selection flow.
+        await handleCapabilityNodeSelectionAnalyze();
+        return;
         
         // Execution Flow Architecture (STEP-2): Validate state transition
         const currentState = mapWizardStepToState(step);
@@ -1768,6 +1862,7 @@ export function AutonomousAgentWizard() {
             // Single structured plan from summarize layer
             if (data.phase === 'summarize' && data.workflowIntentPlan) {
                 const p = data.workflowIntentPlan;
+                const capabilitySteps = Array.isArray(data.capabilityOptions) ? (data.capabilityOptions as CapabilityOptionStep[]) : [];
                 console.log('[Frontend] Summarize layer - received workflowIntentPlan');
                 setIsDegradedPlan(Boolean(data.degradedPlan || data.requiresConfirmation || data.planQuality === 'degraded' || p?.requires_confirmation));
                 setPlanSummary(p.structuredSummary || '');
@@ -1807,7 +1902,12 @@ export function AutonomousAgentWizard() {
                         ? data.registryTags
                         : (p.registryTags || [])
                 );
+                setCapabilityOptions(capabilitySteps);
+                setCapabilitySelectionsByStep(initializeCapabilitySelections(capabilitySteps));
+                setCapabilitySelectionsApplied(false);
+                setCapabilityDefaultConfirmStepIds([]);
                 setOriginalPrompt(data.originalPrompt || prompt);
+                setIntentSnapshot(data.intentSnapshot ?? null);
                 setHasWorkflowPlan(true);
                 setSelectedVariationMeta({
                     id: 'structured-plan',
@@ -1818,7 +1918,7 @@ export function AutonomousAgentWizard() {
                     requiredNodeTypes: data.mandatoryNodeTypes || p.mandatoryNodeTypes,
                 });
                 setIsSummarizeLayerProcessing(false);
-                setStep('questioning');
+                setStep(capabilitySteps.length > 0 ? 'capability-selection' : 'questioning');
                 scrollToStep(step2Ref, 300);
                 return;
             }
@@ -1849,7 +1949,12 @@ export function AutonomousAgentWizard() {
                 setPlanBranchingOverview('');
                 setPlanMandatoryNodeTypes(Array.isArray(data.mandatoryNodeTypes) ? data.mandatoryNodeTypes : hints);
                 setPlanRegistryTags(Array.isArray(data.registryTags) ? data.registryTags : []);
+                setCapabilityOptions([]);
+                setCapabilitySelectionsByStep({});
+                setCapabilitySelectionsApplied(false);
+                setCapabilityDefaultConfirmStepIds([]);
                 setOriginalPrompt(prompt);
+                setIntentSnapshot(null);
                 setHasWorkflowPlan(true);
                 setSelectedVariationMeta({
                     id: 'structured-plan-fallback',
@@ -1923,6 +2028,7 @@ export function AutonomousAgentWizard() {
             const data = await response.json();
             if (data.phase === 'summarize' && data.workflowIntentPlan) {
                 const p = data.workflowIntentPlan;
+                const capabilitySteps = Array.isArray(data.capabilityOptions) ? (data.capabilityOptions as CapabilityOptionStep[]) : [];
                 setIsDegradedPlan(Boolean(data.degradedPlan || data.requiresConfirmation || data.planQuality === 'degraded' || p?.requires_confirmation));
                 setPlanSummary(p.structuredSummary || '');
                 setPlanNodeHints(Array.isArray(p.proposedNodeChain) ? p.proposedNodeChain : []);
@@ -1961,7 +2067,12 @@ export function AutonomousAgentWizard() {
                         ? data.registryTags
                         : (p.registryTags || [])
                 );
+                setCapabilityOptions(capabilitySteps);
+                setCapabilitySelectionsByStep(initializeCapabilitySelections(capabilitySteps));
+                setCapabilitySelectionsApplied(false);
+                setCapabilityDefaultConfirmStepIds([]);
                 setOriginalPrompt(data.originalPrompt || analyzePrompt);
+                setIntentSnapshot(data.intentSnapshot ?? null);
                 setHasWorkflowPlan(true);
                 setSelectedVariationMeta({
                     id: 'structured-plan',
@@ -1971,8 +2082,10 @@ export function AutonomousAgentWizard() {
                     nodes: p.proposedNodeChain,
                     requiredNodeTypes: data.mandatoryNodeTypes || p.mandatoryNodeTypes,
                 });
+                setStep(capabilitySteps.length > 0 ? 'capability-selection' : 'questioning');
+            } else {
+                setStep('questioning');
             }
-            setStep('questioning');
             toast({ title: 'Plan updated', description: 'Structured workflow plan was regenerated.' });
         } catch (e: any) {
             toast({ title: 'Regenerate failed', description: e?.message || 'Unknown error', variant: 'destructive' });
@@ -1990,6 +2103,15 @@ export function AutonomousAgentWizard() {
             toast({ title: 'Empty plan', description: 'Add a structured plan or regenerate.', variant: 'destructive' });
             return;
         }
+        if (capabilityOptions.length > 0 && !capabilitySelectionsApplied) {
+            toast({
+                title: 'Apply capability selection first',
+                description: 'Select capability nodes and generate a structural prompt before continuing to workflow setup.',
+                variant: 'destructive',
+            });
+            setStep('capability-selection');
+            return;
+        }
         if (isDegradedPlan) {
             toast({
                 title: 'Plan quality degraded',
@@ -1997,6 +2119,16 @@ export function AutonomousAgentWizard() {
                 variant: 'destructive',
             });
             return;
+        }
+        if (capabilityOptions.length > 0) {
+            const currentResolution = resolveCapabilitySelections(
+                capabilityOptions,
+                capabilitySelectionsByStep,
+            );
+            setCapabilitySelectionsByStep(currentResolution.byStep);
+            setCapabilityDefaultConfirmStepIds([]);
+        } else {
+            setCapabilityDefaultConfirmStepIds([]);
         }
         const mainPrompt = planSummary.trim();
         setPrompt(mainPrompt);
@@ -2166,6 +2298,88 @@ export function AutonomousAgentWizard() {
             });
             setHasWorkflowPlan(true);
             setStep('questioning');
+        } finally {
+            setIsSummarizeLayerProcessing(false);
+        }
+    };
+
+    const handleApplyCapabilitySelections = async () => {
+        const analyzePrompt = (originalPrompt || prompt || planSummary || '').trim();
+        if (!analyzePrompt) {
+            toast({ title: 'Missing prompt', description: 'Please analyze the workflow prompt again.', variant: 'destructive' });
+            return;
+        }
+
+        const sanitizedSelections = resolveCapabilitySelections(capabilityOptions, capabilitySelectionsByStep).byStep;
+        setCapabilitySelectionsByStep(sanitizedSelections);
+        setStep('analyzing');
+        setIsSummarizeLayerProcessing(true);
+
+        try {
+            const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: analyzePrompt,
+                    mode: 'analyze',
+                    originalPrompt: analyzePrompt,
+                    capabilitySelectionsByStep: sanitizedSelections,
+                    intentSnapshot: intentSnapshot ?? undefined,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ error: 'Failed to apply capability selections' }));
+                throw new Error(error.error || error.message || 'Failed to apply capability selections');
+            }
+
+            const data = await response.json();
+            if (data.phase === 'summarize' && data.workflowIntentPlan) {
+                const p = data.workflowIntentPlan;
+                const capabilitySteps = Array.isArray(data.capabilityOptions) ? (data.capabilityOptions as CapabilityOptionStep[]) : [];
+
+                setIsDegradedPlan(Boolean(data.degradedPlan || data.requiresConfirmation || data.planQuality === 'degraded' || p?.requires_confirmation));
+                setPlanSummary(p.structuredSummary || '');
+                setPlanNodeHints(Array.isArray(p.proposedNodeChain) ? p.proposedNodeChain : []);
+                setPlanNodeReasons(
+                    p.nodeInclusionReasons && typeof p.nodeInclusionReasons === 'object'
+                        ? (p.nodeInclusionReasons as Record<string, string>)
+                        : {}
+                );
+                setPlanMandatoryNodeTypes(
+                    Array.isArray(data.mandatoryNodeTypes) && data.mandatoryNodeTypes.length > 0
+                        ? data.mandatoryNodeTypes
+                        : (p.mandatoryNodeTypes || [])
+                );
+                setPlanRegistryTags(
+                    Array.isArray(data.registryTags) && data.registryTags.length > 0
+                        ? data.registryTags
+                        : (p.registryTags || [])
+                );
+                setCapabilityOptions(capabilitySteps);
+                setCapabilitySelectionsByStep(resolveCapabilitySelections(capabilitySteps, sanitizedSelections).byStep);
+                setCapabilitySelectionsApplied(true);
+                setCapabilityDefaultConfirmStepIds([]);
+                setOriginalPrompt(data.originalPrompt || analyzePrompt);
+                setIntentSnapshot(data.intentSnapshot ?? intentSnapshot ?? null);
+                setHasWorkflowPlan(true);
+                setSelectedVariationMeta({
+                    id: 'structured-plan',
+                    prompt: p.structuredSummary || '',
+                    keywords: p.proposedNodeChain,
+                    matchedKeywords: data.matchedKeywords,
+                    nodes: p.proposedNodeChain,
+                    requiredNodeTypes: data.mandatoryNodeTypes || p.mandatoryNodeTypes,
+                });
+                setStep('questioning');
+                scrollToStep(step2Ref, 300);
+                return;
+            }
+
+            throw new Error('Could not generate structural prompt from selected capability nodes');
+        } catch (e: any) {
+            toast({ title: 'Capability selection failed', description: e?.message || 'Unknown error', variant: 'destructive' });
+            setStep('capability-selection');
         } finally {
             setIsSummarizeLayerProcessing(false);
         }
@@ -3509,6 +3723,10 @@ export function AutonomousAgentWizard() {
                                 ...(canonicalUserIntentForMetadata
                                     ? { originalUserPrompt: canonicalUserIntentForMetadata }
                                     : {}),
+                                // Include user-initiated field ownership overrides so backend can persist them
+                                ...(Object.keys(fieldOwnershipOverrides).length > 0
+                                    ? { fieldOwnershipOverrides }
+                                    : {}),
                             }),
                         });
                         
@@ -3926,6 +4144,8 @@ export function AutonomousAgentWizard() {
                 planMandatoryNodeTypes,
                 planNodeHints,
                 selectedVariationMeta,
+                capabilitySelectionsByStep,
+                capabilityDefaultConfirmStepIds,
                 existingWorkflow: existingWorkflowForContinuation,
             });
 
@@ -3941,8 +4161,14 @@ export function AutonomousAgentWizard() {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || error.message || 'Failed to generate workflow');
+                const error = await response.json().catch(() => ({}));
+                const parsedError = normalizeGenerateWorkflowUiError(
+                    error,
+                    'Failed to generate workflow'
+                );
+                throw Object.assign(new Error(buildGenerateWorkflowUiErrorMessage(parsedError)), {
+                    pipelineError: parsedError,
+                });
             }
 
             const responseContentType = (response.headers.get('content-type') || '').toLowerCase();
@@ -4346,11 +4572,13 @@ export function AutonomousAgentWizard() {
                         }
 
                         if (update.status === 'error') {
-                            throw new Error(
-                                typeof update.error === 'string'
-                                    ? update.error
-                                    : 'Workflow generation failed'
+                            const streamError = normalizeGenerateWorkflowUiError(
+                                update,
+                                'Workflow generation failed'
                             );
+                            throw Object.assign(new Error(buildGenerateWorkflowUiErrorMessage(streamError)), {
+                                pipelineError: streamError,
+                            });
                         }
 
                             // Log structure for debugging
@@ -4439,6 +4667,7 @@ export function AutonomousAgentWizard() {
                                     setConfirmationData({
                                         workflowId: update.workflowId,
                                         workflowExplanation: update.workflowExplanation || update.confirmationRequest?.workflowExplanation,
+                                        structuralPrompt: update.structuralPrompt || update.pipelineContext?.structuralPrompt || undefined,
                                         confidenceScore: update.pipelineContext?.confidence_score || update.confirmationRequest?.confidenceScore,
                                         workflow: {
                                             nodes: nodes || update.workflow?.nodes || [],
@@ -4928,6 +5157,12 @@ export function AutonomousAgentWizard() {
             stopFallbackProgress();
 
             console.error(err);
+            const parsedPipelineError = normalizeGenerateWorkflowUiError(
+                err?.pipelineError || err,
+                err?.message || 'Failed to generate workflow. Please try again.'
+            );
+            const uiErrorMessage = buildGenerateWorkflowUiErrorMessage(parsedPipelineError);
+            let errorToastShown = false;
             
             // Execution Flow Architecture (STEP-2): Handle error with retry logic
             const currentState = stateManager.getCurrentState();
@@ -4947,36 +5182,39 @@ export function AutonomousAgentWizard() {
                     // Max retries reached or invalid state - transition to ERROR
                     if (retryResult.shouldTransitionToError) {
                         // Transition to ERROR state (allowed: STATE_5 ? STATE_ERROR_HANDLING)
-                        stateManager.transitionToError(err.message || 'Build failed after retries');
+                        stateManager.transitionToError(uiErrorMessage || 'Build failed after retries');
                     } else {
                         // Invalid state for retry - use handleError
-                        stateManager.handleError(err.message || 'Build failed after retries');
+                        stateManager.handleError(uiErrorMessage || 'Build failed after retries');
                     }
                     toast({ 
                         title: 'Build Failed', 
-                        description: retryResult.error || err.message || 'Maximum retries reached',
+                        description: retryResult.error || uiErrorMessage || 'Maximum retries reached',
                         variant: 'destructive' 
                     });
+                    errorToastShown = true;
                 }
             } else {
-                stateManager.handleError(err.message || 'Build failed');
+                stateManager.handleError(uiErrorMessage || 'Build failed');
             }
             
             // Don't go back to confirmation if we're already past that step
             // Instead, show error but stay on current step or go to a safe state
-            if (step === 'building' || step === 'credentials') {
+            if (!errorToastShown && (step === 'building' || step === 'credentials')) {
                 toast({ 
                     title: 'Build Failed', 
-                    description: err.message || 'Failed to generate workflow. Please try again.', 
+                    description: uiErrorMessage || 'Failed to generate workflow. Please try again.', 
+                    variant: 'destructive' 
+                });
+                setStep(hasWorkflowPlan ? 'questioning' : 'confirmation');
+            } else if (!errorToastShown) {
+                toast({ 
+                    title: 'Error', 
+                    description: uiErrorMessage || 'An error occurred. Please try again.', 
                     variant: 'destructive' 
                 });
                 setStep(hasWorkflowPlan ? 'questioning' : 'confirmation');
             } else {
-                toast({ 
-                    title: 'Error', 
-                    description: err.message || 'An error occurred. Please try again.', 
-                    variant: 'destructive' 
-                });
                 setStep(hasWorkflowPlan ? 'questioning' : 'confirmation');
             }
         }
@@ -5057,6 +5295,277 @@ export function AutonomousAgentWizard() {
         setStep('configuration');
     };
 
+    // ── Capability-Node-Selection-Flow handlers (tasks 10.1, 10.2, 10.3) ─────
+
+    /**
+     * Phase 1: Call /api/capability-selection/analyze after prompt submission.
+     * Returns CapabilityContainer[] and a correlationId.
+     * Req 3.7, 7.1, 7.3
+     */
+    const handleCapabilityNodeSelectionAnalyze = async () => {
+        if (!prompt.trim()) return;
+
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData?.session?.user?.id ?? '';
+
+        setStep('analyzing');
+        setIsSummarizeLayerProcessing(true);
+
+        try {
+            const response = await fetch(`${ENDPOINTS.itemBackend}/api/capability-selection/analyze`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(sessionData?.session?.access_token
+                        ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+                        : {}),
+                },
+                body: JSON.stringify({ prompt, userId }),
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({ message: 'Analysis failed' }));
+                throw new Error(err.message || err.error || 'Capability analysis failed');
+            }
+
+            const data = await response.json();
+            const containers: CapabilityContainer[] = Array.isArray(data.containers) ? data.containers : [];
+
+            setCapNodeContainers(containers);
+            setCapNodeCorrelationId(data.correlationId ?? '');
+            setCapNodeSelections({});
+            setOriginalPrompt(prompt);
+
+            // Req 7.1, 7.3: do NOT call legacy structural prompt generation here
+            setStep('capability-node-selection');
+        } catch (err: any) {
+            toast({ title: 'Analysis Failed', description: err.message, variant: 'destructive' });
+            setStep('idle');
+        } finally {
+            setIsSummarizeLayerProcessing(false);
+        }
+    };
+
+    /**
+     * Phase 2: Called when user clicks Continue on CapabilityStage.
+     * Calls /api/capability-selection/generate with the user's selections.
+     * Req 4.1, 7.1
+     */
+    const handleCapabilityNodeSelectionGenerate = async (selections: NodeSelectionMap) => {
+        setCapNodeSelections(selections);
+        setStep('analyzing');
+        setIsSummarizeLayerProcessing(true);
+
+        try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const response = await fetch(`${ENDPOINTS.itemBackend}/api/capability-selection/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(sessionData?.session?.access_token
+                        ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+                        : {}),
+                },
+                body: JSON.stringify({
+                    correlationId: capNodeCorrelationId,
+                    userPrompt: originalPrompt || prompt,
+                    selections,
+                    containers: capNodeContainers,
+                }),
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({ message: 'Generation failed' }));
+                throw new Error(err.message || err.error || 'Structural prompt generation failed');
+            }
+
+            const data = await response.json();
+            setCapNodeStructuralPrompt(data.structuralPrompt ?? '');
+            setCapNodeWorkflow(data.workflow ?? null);
+
+            // Req 5.3: show review step — Continue is the sole gate for Backend_Generation
+            setStep('capability-review');
+        } catch (err: any) {
+            toast({ title: 'Generation Failed', description: err.message, variant: 'destructive' });
+            // Return to selection step with selections preserved (Req 6.6)
+            setStep('capability-node-selection');
+        } finally {
+            setIsSummarizeLayerProcessing(false);
+        }
+    };
+
+    /**
+     * Phase 3: Called when user clicks Continue on CapabilityReviewStep.
+     * Calls /api/capability-selection/confirm to begin Backend_Generation.
+     * Req 6.1, 5.3, 5.4
+     */
+    const handleCapabilityNodeSelectionConfirm = async () => {
+        setStep('building');
+        setProgress(5);
+        setIsComplete(false);
+        setCurrentPhase('preflight');
+        setBuildStartTime(Date.now());
+        setElapsedTime(0);
+        setBuildingLogs(['Starting backend generation...']);
+
+        try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const userId = sessionData?.session?.user?.id ?? '';
+
+            const response = await fetch(`${ENDPOINTS.itemBackend}/api/capability-selection/confirm`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(sessionData?.session?.access_token
+                        ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+                        : {}),
+                },
+                body: JSON.stringify({
+                    correlationId: capNodeCorrelationId,
+                    workflow: capNodeWorkflow,
+                    userPrompt: originalPrompt || prompt,
+                    structuralPrompt: capNodeStructuralPrompt || originalPrompt || prompt,
+                    userId,
+                }),
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({ message: 'Confirmation failed' }));
+                throw new Error(err.message || err.error || 'Backend generation failed');
+            }
+
+            const data = await response.json();
+
+            // data.workflow contains the AI-populated, credential-discovered, field-ownership-mapped workflow.
+            // We must save it to Supabase, then wire it into the field-ownership wizard
+            // (same path as the legacy handleRefine phase:'ready' handler).
+            const workflowNodes = data.workflow?.nodes ?? capNodeWorkflow?.nodes ?? [];
+            const workflowEdges = data.workflow?.edges ?? capNodeWorkflow?.edges ?? [];
+
+            if (workflowNodes.length === 0) {
+                throw new Error('Backend returned an empty workflow — no nodes to save.');
+            }
+
+            setProgress(80);
+            setBuildingLogs((prev) => [...prev, 'Saving workflow...']);
+
+            // ── Save to Supabase ──────────────────────────────────────────────
+            const { normalizeBackendWorkflow } = await import('@/lib/node-type-normalizer');
+            const normalizedBackend = normalizeBackendWorkflow({ nodes: workflowNodes, edges: workflowEdges });
+            const normalized = validateAndFixWorkflow({ nodes: normalizedBackend.nodes, edges: normalizedBackend.edges });
+
+            const { data: savedWorkflow, error: saveError } = await supabase
+                .from('workflows')
+                .insert({
+                    name: (prompt || originalPrompt || 'AI Generated Workflow').substring(0, 50),
+                    nodes: normalized.nodes,
+                    edges: normalized.edges,
+                    user_id: userId,
+                    updated_at: new Date().toISOString(),
+                } as any)
+                .select()
+                .single();
+
+            if (saveError) throw saveError;
+            if (!savedWorkflow?.id) throw new Error('Workflow saved but no ID returned');
+
+            setGeneratedWorkflowId(savedWorkflow.id);
+            setNodes(applyFillModesToNodes(normalized.nodes as any[], fillModeValues));
+            setEdges(normalized.edges as any[]);
+            setProgress(100);
+            setIsComplete(true);
+
+            // ── Wire field-ownership wizard (same as legacy phase:'ready' path) ──
+            const comprehensiveQuestions: any[] = data.comprehensiveQuestions ?? [];
+            const discoveredCreds: any[] = data.discoveredCredentials ?? [];
+
+            setPendingWorkflowData({
+                nodes: normalized.nodes,
+                edges: normalized.edges,
+                update: { ...data, phase: 'ready', success: true },
+                discoveredInputs: data.discoveredInputs ?? [],
+                discoveredCredentials: discoveredCreds,
+                comprehensiveQuestions,
+                unifiedReadiness: data.unifiedReadiness ?? null,
+                credentialStatuses: data.credentialStatuses,
+                credentialWizardView: data.credentialWizardView,
+                fieldOwnershipMap: data.fieldOwnershipMap ?? undefined,
+            });
+
+            setBuildingLogs((prev) => [...prev, 'Workflow generated successfully!']);
+
+            if (comprehensiveQuestions.length > 0 || discoveredCreds.length > 0) {
+                // Wire questions into the field-ownership step
+                const fom = data.fieldOwnershipMap as Record<string, Record<string, string>> | undefined;
+                setAllQuestions(comprehensiveQuestions.map((q: any) => {
+                    const fieldName = String(q.fieldName || '').trim() || 'credential';
+                    const isCredentialQ = q.category === 'credential' || q.ownershipClass === 'credential';
+                    const fomFillMode = fom?.[q.nodeId]?.[fieldName];
+                    return {
+                        ...q,
+                        questionType: isCredentialQ ? 'credential' : (q.category || 'input'),
+                        id: q.id || `${q.nodeId}_${fieldName}`,
+                        fieldName,
+                        label: q.text || q.label || `${q.nodeLabel} - ${fieldName}`,
+                        isVaultCredential: isCredentialQ,
+                        fillModeDefault: q.fillModeDefault || fomFillMode || undefined,
+                    };
+                }));
+                setStep('field-ownership');
+            } else if (data.fieldOwnershipMap && Object.keys(data.fieldOwnershipMap).length > 0) {
+                // No questions but fieldOwnershipMap exists — synthesize rows
+                const fom = data.fieldOwnershipMap as Record<string, Record<string, string>>;
+                const nodeMap = new Map<string, any>();
+                (normalized.nodes as any[]).forEach((n: any) => { if (n?.id) nodeMap.set(String(n.id), n); });
+                const synthesized: any[] = [];
+                let askOrder = 1;
+                for (const [nodeId, fields] of Object.entries(fom)) {
+                    const node = nodeMap.get(nodeId);
+                    const nodeType = String(node?.type || nodeId);
+                    const nodeLabel = String(node?.data?.label || node?.data?.name || nodeType);
+                    for (const [fieldName, fillMode] of Object.entries(fields)) {
+                        const fillModeStr = String(fillMode || 'manual_static');
+                        const isCredField = fillModeStr === 'manual_static' &&
+                            (fieldName.toLowerCase().includes('key') ||
+                             fieldName.toLowerCase().includes('token') ||
+                             fieldName.toLowerCase().includes('secret') ||
+                             fieldName.toLowerCase().includes('password'));
+                        synthesized.push({
+                            questionType: 'input',
+                            id: `fom_${nodeId}_${fieldName}`,
+                            nodeId, nodeType, nodeLabel, fieldName,
+                            label: fieldName.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim(),
+                            text: fieldName.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim(),
+                            type: isCredField ? 'password' : 'text',
+                            category: isCredField ? 'credential' : 'configuration',
+                            ownershipClass: isCredField ? 'credential' : 'value',
+                            required: false,
+                            askOrder: askOrder++,
+                            fillModeDefault: fillModeStr as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once',
+                            supportsRuntimeAI: fillModeStr === 'runtime_ai',
+                            supportsBuildtimeAI: fillModeStr === 'buildtime_ai_once' || fillModeStr === 'runtime_ai',
+                            ownershipUiMode: isCredField ? 'locked' : 'selectable',
+                            isVaultCredential: false,
+                        });
+                    }
+                }
+                setAllQuestions(synthesized);
+                setStep('field-ownership');
+            } else {
+                // No questions at all — go straight to complete
+                setQuestionsAnswered(true);
+                setStep('complete');
+            }
+        } catch (err: any) {
+            toast({ title: 'Backend Generation Failed', description: err.message, variant: 'destructive' });
+            setStep('capability-review');
+            setProgress(0);
+            setIsComplete(false);
+        }
+    };
+
+    // ─────────────────────────────────────────────────────────────────────────
+
     const reset = () => {
         // Execution Flow Architecture (STEP-2): Reset state manager
         stateManager.reset();
@@ -5077,6 +5586,12 @@ export function AutonomousAgentWizard() {
         // Bug A fix: reset pipeline gate flags
         setPipelineReady(false);
         setQuestionsAnswered(false);
+        // Capability-Node-Selection-Flow state reset (task 10.1)
+        setCapNodeContainers([]);
+        setCapNodeCorrelationId('');
+        setCapNodeSelections({});
+        setCapNodeStructuralPrompt('');
+        setCapNodeWorkflow(null);
         // Scroll back to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -5315,6 +5830,18 @@ export function AutonomousAgentWizard() {
                                                                 {planBranchingOverview}
                                                             </p>
                                                         ) : null}
+                                                    {capabilitySelectionsApplied && (
+                                                        <p className="text-xs text-muted-foreground">
+                                                            <span className="font-semibold">Generated from selected nodes: </span>
+                                                            {[
+                                                                ...new Set(
+                                                                    Object.values(capabilitySelectionsByStep)
+                                                                        .flat()
+                                                                        .filter((x) => typeof x === 'string' && x.trim().length > 0)
+                                                                ),
+                                                            ].join(', ') || 'none'}
+                                                        </p>
+                                                    )}
                                                     </CollapsibleContent>
                                                 </Collapsible>
                                             )}
@@ -5342,8 +5869,18 @@ export function AutonomousAgentWizard() {
                                                 <Button type="button" variant="outline" onClick={handleRegeneratePlan} disabled={isSummarizeLayerProcessing}>
                                                     <RefreshCw className="mr-2 h-4 w-4" /> Regenerate plan
                                                 </Button>
-                                                <Button type="button" className="bg-indigo-600 hover:bg-indigo-500" onClick={handleConfirmPlanAndAnalyze}>
-                                                    Continue to workflow setup <ArrowRight className="ml-2 h-4 w-4" />
+                                                <Button
+                                                    type="button"
+                                                    className="bg-indigo-600 hover:bg-indigo-500"
+                                                    onClick={() => {
+                                                        if (capabilityOptions.length > 0 && !capabilitySelectionsApplied) {
+                                                            setStep('capability-selection');
+                                                        } else {
+                                                            void handleConfirmPlanAndAnalyze();
+                                                        }
+                                                    }}
+                                                >
+                                                    {capabilityOptions.length > 0 && !capabilitySelectionsApplied ? 'Continue to capability selection' : 'Continue to workflow setup'} <ArrowRight className="ml-2 h-4 w-4" />
                                                 </Button>
                                                 <Button
                                                     type="button"
@@ -5360,6 +5897,11 @@ export function AutonomousAgentWizard() {
                                                         setPlanRepairActions([]);
                                                         setPlanSemanticWarnings([]);
                                                         setPlanDiagnosticsOpen(false);
+                                                        setCapabilityOptions([]);
+                                                        setCapabilitySelectionsByStep({});
+                                                        setCapabilitySelectionsApplied(false);
+                                                        setCapabilityDefaultConfirmStepIds([]);
+                                                        setIntentSnapshot(null);
                                                         setPrompt('');
                                                         setStep('idle');
                                                     }}
@@ -5390,6 +5932,132 @@ export function AutonomousAgentWizard() {
                             </ThemedBorderGlow>
                         </motion.div>
                     </div>
+                    )}
+
+                    {step === 'capability-selection' && capabilityOptions.length > 0 && (
+                        <div className="scroll-mt-6">
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                                <Card className="border-indigo-500/30 shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="text-indigo-400 flex items-center gap-2">
+                                            <Layers className="h-5 w-5" /> Select Capability Nodes
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Choose one or more nodes for each step. Only registry nodes are shown, and your selections will be enforced in structural + workflow generation.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-5">
+                                        {capabilityOptions.map((capStep) => {
+                                            const selected = capabilitySelectionsByStep[capStep.stepId] || [];
+                                            return (
+                                                <div key={capStep.stepId} className="rounded-lg border border-border/60 p-4 space-y-3">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="text-sm font-semibold text-foreground">{capStep.stepText}</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge variant="outline" className="font-mono text-[10px]">
+                                                                {capStep.intentClass}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {capStep.candidateNodeTypes.map((nodeType) => {
+                                                            const isSelected = selected.includes(nodeType);
+                                                            return (
+                                                                <Button
+                                                                    key={`${capStep.stepId}_${nodeType}`}
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    variant={isSelected ? 'default' : 'outline'}
+                                                                    onClick={() => {
+                                                                        setCapabilitySelectionsApplied(false);
+                                                                        setCapabilitySelectionsByStep((prev) => {
+                                                                            const current = prev[capStep.stepId] || [];
+                                                                            const exists = current.includes(nodeType);
+                                                                            let next: string[];
+                                                                            if (!capStep.selectionPolicy.multiSelectAllowed) {
+                                                                                next = exists ? [] : [nodeType];
+                                                                            } else if (exists) {
+                                                                                next = current.filter((x) => x !== nodeType);
+                                                                            } else {
+                                                                                next = [...current, nodeType];
+                                                                            }
+                                                                            return { ...prev, [capStep.stepId]: next };
+                                                                        });
+                                                                    }}
+                                                                    className="font-mono text-xs"
+                                                                >
+                                                                    {nodeType}
+                                                                </Button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    {capStep.defaultSuggestedNodeType && (
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Suggested default: <span className="font-mono">{capStep.defaultSuggestedNodeType}</span>
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                        <div className="flex flex-wrap gap-3 pt-2 border-t border-border">
+                                            <Button type="button" variant="outline" onClick={() => setStep('questioning')}>
+                                                Back to plan
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                className="bg-indigo-600 hover:bg-indigo-500"
+                                                onClick={() => {
+                                                    void handleApplyCapabilitySelections();
+                                                }}
+                                            >
+                                                Generate structural prompt with selected nodes <ArrowRight className="ml-2 h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </div>
+                    )}
+
+                    {/* ── Capability-Node-Selection-Flow: CapabilityStage (task 10.1) ── */}
+                    {/* Req 3.1–3.8, 7.1, 7.3: shown after Phase 1 analyze; legacy structural prompt NOT called here */}
+                    {step === 'capability-node-selection' && capNodeContainers.length > 0 && (
+                        <div className="scroll-mt-6 py-4">
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                                <CapabilityStage
+                                    containers={capNodeContainers}
+                                    onComplete={(selections) => {
+                                        void handleCapabilityNodeSelectionGenerate(selections);
+                                    }}
+                                    onBack={() => {
+                                        // Req 3.8: Go Back returns to prompt step with no state change
+                                        setStep('idle');
+                                    }}
+                                />
+                            </motion.div>
+                        </div>
+                    )}
+
+                    {/* ── Capability-Node-Selection-Flow: CapabilityReviewStep (task 10.2) ── */}
+                    {/* Req 5.1–5.6, 6.1: shown after Phase 2 generate; Continue is sole gate for Backend_Generation */}
+                    {step === 'capability-review' && capNodeStructuralPrompt && capNodeWorkflow && (
+                        <div className="scroll-mt-6 py-4">
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                                <CapabilityReviewStep
+                                    structuralPrompt={capNodeStructuralPrompt}
+                                    workflow={capNodeWorkflow}
+                                    selections={capNodeSelections}
+                                    onConfirm={() => {
+                                        // Req 5.3, 5.4, 6.1: sole gate for Backend_Generation
+                                        void handleCapabilityNodeSelectionConfirm();
+                                    }}
+                                    onBack={() => {
+                                        // Req 5.5: Go Back returns to CapabilityStage with selections preserved
+                                        setStep('capability-node-selection');
+                                    }}
+                                />
+                            </motion.div>
+                        </div>
                     )}
 
                     {/* Loading state for refining (configuration questions are now derived from the finalized graph) */}
@@ -7160,6 +7828,7 @@ export function AutonomousAgentWizard() {
                         >
                             <WorkflowConfirmationStep
                                 workflowId={confirmationData.workflowId}
+                                structuralPrompt={confirmationData.structuralPrompt}
                                 workflowExplanation={confirmationData.workflowExplanation as any}
                                 confidenceScore={confirmationData.confidenceScore}
                                 workflow={confirmationData.workflow}
@@ -7665,6 +8334,12 @@ export function AutonomousAgentWizard() {
                                   )
                                 : undefined
                         }
+                        buildManifestSnapshot={
+                            pendingWorkflowData?.fieldOwnershipMap as Record<string, Record<string, string>> | undefined
+                        }
+                        onOwnershipChange={(nodeId, fieldName, mode) => {
+                            setFieldOwnershipOverride(nodeId, fieldName, mode);
+                        }}
                         floating
                     />
 

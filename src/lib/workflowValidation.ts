@@ -825,23 +825,37 @@ export function validateAndFixWorkflow(
             // We resolve the positional index to the actual case value so React Flow can
             // connect the edge to the correct rendered handle — works for any N cases.
             if (sourceType === 'switch') {
+                const switchConfig = sourceNode?.data?.config || {};
+                const rawCases = switchConfig.cases ?? switchConfig.rules;
+                let casesArray: Array<{ value: string }> = [];
+                if (Array.isArray(rawCases)) {
+                    casesArray = rawCases;
+                } else if (typeof rawCases === 'string') {
+                    try { casesArray = JSON.parse(rawCases); } catch { /* keep empty */ }
+                }
+                const caseValues = casesArray
+                    .map((c) => String(c?.value ?? '').trim())
+                    .filter((v) => v.length > 0);
                 const caseIndexMatch = normalizedSourceHandle.match(/^case_(\d+)$/i);
                 if (caseIndexMatch) {
                     const caseIndex = parseInt(caseIndexMatch[1], 10) - 1; // case_1 → index 0
-                    const switchConfig = sourceNode?.data?.config || {};
-                    const rawCases = switchConfig.cases ?? switchConfig.rules;
-                    let casesArray: Array<{ value: string }> = [];
-                    if (Array.isArray(rawCases)) {
-                        casesArray = rawCases;
-                    } else if (typeof rawCases === 'string') {
-                        try { casesArray = JSON.parse(rawCases); } catch { /* keep empty */ }
-                    }
                     if (casesArray[caseIndex]?.value) {
                         normalizedSourceHandle = casesArray[caseIndex].value;
                     }
                     // If no case value found, keep the original case_N handle as fallback
                 }
-                // Non-positional switch handles (already a case value) pass through unchanged
+                // Non-positional switch handles: validate membership against current switch cases.
+                if (
+                    caseValues.length > 0 &&
+                    normalizedSourceHandle &&
+                    !caseValues.includes(normalizedSourceHandle)
+                ) {
+                    const sourceOutgoing = linearEdges.filter((candidate: any) => candidate.source === edge.source);
+                    const sourceOrdinal = sourceOutgoing.findIndex((candidate: any) => candidate.id === edge.id);
+                    const fallbackHandle = caseValues[Math.max(0, Math.min(sourceOrdinal, caseValues.length - 1))] || caseValues[0];
+                    console.warn(`[WorkflowValidation] ⚠️ Stale switch sourceHandle "${normalizedSourceHandle}" remapped to "${fallbackHandle}" for edge ${edge.id}`);
+                    normalizedSourceHandle = fallbackHandle;
+                }
             }
 
             // Map common backend field names to React handle IDs

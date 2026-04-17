@@ -303,6 +303,27 @@ function WorkflowCanvasInner() {
     // ✅ PERMANENT FIX: Removed excessive logging - only log in dev mode when actually needed
     // Logging removed to prevent console spam - edges will render correctly without logs
 
+    const parseSwitchCaseValues = (node: any): string[] => {
+      const config = node?.data?.config || {};
+      const rawCases = config.cases ?? config.rules;
+      let cases: any[] = [];
+      if (Array.isArray(rawCases)) {
+        cases = rawCases;
+      } else if (typeof rawCases === 'string') {
+        try {
+          const parsed = JSON.parse(rawCases);
+          if (Array.isArray(parsed)) {
+            cases = parsed;
+          }
+        } catch {
+          return [];
+        }
+      }
+      return cases
+        .map((item: any) => String(item?.value ?? '').trim())
+        .filter((value: string) => value.length > 0);
+    };
+
     const validEdges = edges.map((edge) => {
       const sourceNode = nodes.find(n => n.id === edge.source);
       const targetNode = nodes.find(n => n.id === edge.target);
@@ -339,6 +360,16 @@ function WorkflowCanvasInner() {
       }
       if (!normalizedTargetHandle) {
         normalizedTargetHandle = targetNodeType === 'ai_agent' ? 'userInput' : 'input';
+      }
+
+      if (String(sourceNodeType || '') === 'switch') {
+        const validSwitchHandles = parseSwitchCaseValues(sourceNode);
+        if (validSwitchHandles.length > 0 && !validSwitchHandles.includes(normalizedSourceHandle)) {
+          console.warn(
+            `[EdgeRender] Dropping edge ${edge.id} due to stale switch handle "${normalizedSourceHandle}". Valid handles: ${validSwitchHandles.join(', ')}`
+          );
+          return null;
+        }
       }
 
       // ✅ PERMANENT FIX: Only log normalization in development and limit frequency
@@ -427,8 +458,7 @@ function WorkflowCanvasInner() {
       };
     });
 
-    // MANDATORY: Return all edges (don't filter out any)
-    return validEdges;
+    return validEdges.filter((edge): edge is Edge => edge !== null);
   }, [
     // ✅ PERMANENT FIX: Use stable dependency keys that only change when content actually changes
     // These keys are memoized separately and only change when edges/nodes content changes

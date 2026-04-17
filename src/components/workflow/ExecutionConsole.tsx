@@ -33,6 +33,11 @@ interface ExecutionConsoleProps {
 
 type ResolvedInputSource = 'runtime_ai' | 'static_config';
 
+/** Returns true when the execution has reached a terminal state. */
+function isTerminalStatus(status: string): boolean {
+  return status === 'success' || status === 'failed' || status === 'completed' || status === 'error';
+}
+
 export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionConsoleProps) {
   const { workflowId, updateNodeStatus, resetWorkflow, resetAllNodeStatuses, nodes } = useWorkflowStore();
   const [executions, setExecutions] = useState<Execution[]>([]);
@@ -164,13 +169,32 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
         // Force refresh executions immediately (but don't change selection)
         loadExecutions();
         // Poll for updates while execution is running
-        const pollInterval = setInterval(() => {
-          loadExecutions();
+        let pollStopped = false;
+        const pollInterval = setInterval(async () => {
+          await loadExecutions();
+          // Check if the execution we started has reached a terminal status
+          const currentExec = selectedExecutionRef.current;
+          if (currentExec && currentExec.id === executionId && isTerminalStatus(currentExec.status)) {
+            if (!pollStopped) {
+              pollStopped = true;
+              clearInterval(pollInterval);
+              try {
+                window.dispatchEvent(new CustomEvent('workflow-execution-terminal', {
+                  detail: { execution: currentExec },
+                }));
+              } catch {
+                // Ensure polling stops even if dispatch throws
+              }
+            }
+          }
         }, 1000); // Poll every second
         
         // Stop polling after 30 seconds (execution should be done by then)
         setTimeout(() => {
-          clearInterval(pollInterval);
+          if (!pollStopped) {
+            pollStopped = true;
+            clearInterval(pollInterval);
+          }
         }, 30000);
       }
     };
@@ -256,6 +280,18 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
                   return true;
                 });
             });
+            // Dispatch terminal event and stop subscription when execution reaches a terminal state
+            if (isTerminalStatus(updatedExecution.status)) {
+              try {
+                window.dispatchEvent(new CustomEvent('workflow-execution-terminal', {
+                  detail: { execution: updatedExecution },
+                }));
+              } catch {
+                // Ensure we continue even if dispatch throws
+              }
+              // Unsubscribe from realtime updates for this execution
+              supabase.removeChannel(channel);
+            }
             // Always update selected execution if it's the one being updated
             if (selectedExecutionRef.current?.id === updatedExecution.id) {
               setSelectedExecution(updatedExecution);

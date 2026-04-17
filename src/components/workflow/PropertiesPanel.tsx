@@ -2010,9 +2010,15 @@ export default function PropertiesPanel({
                         config={{
                           formTitle: (selectedNode.data.config?.formTitle as string) || 'Form Submission',
                           formDescription: (selectedNode.data.config?.formDescription as string) || '',
-                          fields: Array.isArray(selectedNode.data.config?.fields)
-                            ? (selectedNode.data.config.fields as any[])
-                            : [],
+                          fields: (() => {
+                            const raw = selectedNode.data.config?.fields;
+                            if (Array.isArray(raw)) return raw as any[];
+                            // Parse JSON string if the backend stored it as a string
+                            if (typeof raw === 'string' && raw.trim().startsWith('[')) {
+                              try { return JSON.parse(raw); } catch { /* fall through */ }
+                            }
+                            return [];
+                          })(),
                           submitButtonText: (selectedNode.data.config?.submitButtonText as string) || 'Submit',
                           successMessage: (selectedNode.data.config?.successMessage as string) || 'Thank you for your submission!',
                           redirectUrl: (selectedNode.data.config?.redirectUrl as string) || '',

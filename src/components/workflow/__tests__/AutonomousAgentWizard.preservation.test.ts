@@ -16,6 +16,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import {
+  normalizeGenerateWorkflowUiError,
+  buildGenerateWorkflowUiErrorMessage,
+} from '@/lib/generate-workflow-error';
 
 // ---------------------------------------------------------------------------
 // Shared type and logic (mirrors AutonomousAgentWizard.tsx configuration step)
@@ -286,6 +290,39 @@ describe('P2.3: Non-configuration steps — configuration step is not_rendered',
         expect(getConfigurationStepBranch(state)).toBe('not_rendered');
       }
     }
+  });
+});
+
+describe('P2.5: workflow generation error contract normalization', () => {
+  it('normalizes non-stream 422 payload with stageTrace and correlationId', () => {
+    const payload = {
+      error: 'INVALID_LLM_RESPONSE',
+      message: 'Node selection failed',
+      correlationId: 'corr-123',
+      stageTrace: [{ stage: 'node_selection', error: 'INVALID_LLM_RESPONSE' }],
+    };
+    const parsed = normalizeGenerateWorkflowUiError(payload, 'fallback');
+    expect(parsed.code).toBe('INVALID_LLM_RESPONSE');
+    expect(parsed.stage).toBe('node_selection');
+    expect(parsed.correlationId).toBe('corr-123');
+    expect(buildGenerateWorkflowUiErrorMessage(parsed)).toContain('stage: node_selection');
+  });
+
+  it('normalizes stream error payload using explicit stage field', () => {
+    const streamError = {
+      status: 'error',
+      error: 'NO_VALID_NODES',
+      message: 'No valid nodes after recovery',
+      stage: 'node_selection',
+      correlationId: 'corr-stream',
+    };
+    const parsed = normalizeGenerateWorkflowUiError(streamError, 'fallback');
+    expect(parsed.code).toBe('NO_VALID_NODES');
+    expect(parsed.stage).toBe('node_selection');
+    expect(parsed.correlationId).toBe('corr-stream');
+    const message = buildGenerateWorkflowUiErrorMessage(parsed);
+    expect(message).toContain('No valid nodes after recovery');
+    expect(message).toContain('correlation: corr-stream');
   });
 });
 
