@@ -167,6 +167,15 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
           AI
         </div>
       )}
+      {data.config?.mockMode === true && (
+        <div
+          className="absolute -top-2 left-2 z-10 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500 text-white shadow-sm border border-amber-400/40"
+          style={isAiEditedHighlight ? { left: '2.5rem' } : undefined}
+          title="Mock mode enabled"
+        >
+          Mock
+        </div>
+      )}
       {/* Execution Status Indicators */}
       {status === 'running' && (
         <div className="absolute -top-2 -right-2 bg-background rounded-full p-0.5 shadow-sm border border-border z-10">

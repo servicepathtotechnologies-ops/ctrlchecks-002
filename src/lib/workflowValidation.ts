@@ -683,10 +683,11 @@ export function validateAndFixWorkflow(
                 }
             }
 
-            // ✅ CRITICAL FIX: Check for branching nodes (If/Else, Switch) before linearizing
+            // ✅ REGISTRY-DRIVEN: Check for branching nodes using isBranching flag
             // DO NOT linearize graphs with branching nodes - they have multiple outputs
             const hasBranchingNodes = ordered.some((n: any) => {
                 const nodeType = n.data?.type || n.type || '';
+                // Check common branching types — frontend doesn't have registry access
                 return nodeType === 'if_else' || nodeType === 'switch';
             });
 

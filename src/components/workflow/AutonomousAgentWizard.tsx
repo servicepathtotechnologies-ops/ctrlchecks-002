@@ -5452,7 +5452,13 @@ export function AutonomousAgentWizard() {
             // ── Save to Supabase ──────────────────────────────────────────────
             const { normalizeBackendWorkflow } = await import('@/lib/node-type-normalizer');
             const normalizedBackend = normalizeBackendWorkflow({ nodes: workflowNodes, edges: workflowEdges });
-            const normalized = validateAndFixWorkflow({ nodes: normalizedBackend.nodes, edges: normalizedBackend.edges });
+            // ✅ Use preserveTopology=true: the backend already built the correct branching graph.
+            // Without this, validateAndFixWorkflow re-runs linearization which adds spurious
+            // log_output fan-in edges from all branch terminals.
+            const normalized = validateAndFixWorkflow(
+                { nodes: normalizedBackend.nodes, edges: normalizedBackend.edges },
+                { preserveTopology: true }
+            );
 
             const { data: savedWorkflow, error: saveError } = await supabase
                 .from('workflows')
