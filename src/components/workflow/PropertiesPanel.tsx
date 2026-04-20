@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import NodeUsageCard from './NodeUsageCard';
 import GoogleSheetsSettings from './GoogleSheetsSettings';
+import ScheduleWiseSettings from './ScheduleWiseSettings';
 import FormNodeSettings from './FormNodeSettings';
 import ScheduleTrigger from './ScheduleTrigger';
 import FacebookConnectionStatus from '@/components/FacebookConnectionStatus';
@@ -2041,6 +2042,20 @@ export default function PropertiesPanel({
                             onConfigChange={(newConfig) => {
                               updateNodeConfig(selectedNode.id, newConfig);
                             }}
+                          />
+                        </div>
+                      ) : selectedNode.data.type === 'schedulewise' ? (
+                        <div className="space-y-4">
+                          <h3 className="text-xs font-medium uppercase text-muted-foreground/70 tracking-wide">
+                            Configuration
+                          </h3>
+                          <ScheduleWiseSettings
+                            config={selectedNode.data.config}
+                            onConfigChange={(newConfig) => {
+                              updateNodeConfig(selectedNode.id, newConfig);
+                            }}
+                            nodeId={selectedNode.id}
+                            workflowId={workflowId}
                           />
                         </div>
                       ) : selectedNode.data.type === 'schedule' ? (
