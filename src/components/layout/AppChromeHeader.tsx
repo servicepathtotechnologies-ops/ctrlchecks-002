@@ -13,7 +13,7 @@ import { useAuth } from '@/lib/auth';
 import { useRole } from '@/hooks/useRole';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
-import { Moon, Sun, Shield, UserCircle, LogOut, User } from 'lucide-react';
+import { Moon, Sun, Shield, UserCircle, LogOut, User, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { USER_PRIMARY_NAV } from './nav-config';
 
@@ -106,6 +106,12 @@ export function AppChromeHeader({
                   <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                     <User className="h-4 w-4" />
                     My Account
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/subscriptions" className="flex items-center gap-2 cursor-pointer">
+                    <Zap className="h-4 w-4" />
+                    Subscription
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

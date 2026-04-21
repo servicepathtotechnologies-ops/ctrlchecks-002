@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { getBackendUrl } from "@/lib/api/getBackendUrl";
@@ -10,11 +10,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Save, CheckCircle, AlertCircle, RefreshCw, User as UserIcon, LogOut, Trash2 } from "lucide-react";
+import { Loader2, Save, CheckCircle, AlertCircle, RefreshCw, User as UserIcon, LogOut, Trash2, Zap, Crown, Shield, ArrowRight } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { AppChromeHeader } from "@/components/layout/AppChromeHeader";
+
+interface SubscriptionInfo {
+  planName: string;
+  status: string;
+  workflowLimit: number;
+  workflowsUsed: number;
+  remainingWorkflows: number;
+  utilizationPercentage: number;
+}
 
 interface ConnectionStatus {
   connected: boolean;
@@ -34,6 +45,10 @@ export default function Profile() {
     email: "",
     avatar_url: "",
   });
+
+  // Subscription state
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
 
   // Connection states
   const [connections, setConnections] = useState<{
@@ -205,8 +220,39 @@ export default function Profile() {
     if (user) {
       loadProfile();
       checkConnections();
+      fetchSubscription();
     }
   }, [user, loadProfile, checkConnections]);
+
+  const fetchSubscription = async () => {
+    if (!user) return;
+    setLoadingSubscription(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) return;
+      const backendUrl = getBackendUrl();
+      const res = await fetch(`${backendUrl}/api/subscriptions/current`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.subscription && data.usage) {
+        setSubscription({
+          planName: data.subscription.planName,
+          status: data.subscription.status,
+          workflowLimit: data.subscription.workflowLimit,
+          workflowsUsed: data.usage.workflowsUsed,
+          remainingWorkflows: data.usage.remainingWorkflows,
+          utilizationPercentage: data.usage.utilizationPercentage,
+        });
+      }
+    } catch {
+      // silent
+    } finally {
+      setLoadingSubscription(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -576,8 +622,7 @@ export default function Profile() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Profile Details Card */}
-            <Card>
-              <CardHeader className="pb-3">
+            <Card>              <CardHeader className="pb-3">
                 <CardTitle className="text-base">Profile Details</CardTitle>
                 <CardDescription className="text-xs">Update your personal information</CardDescription>
               </CardHeader>
@@ -738,6 +783,104 @@ export default function Profile() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Subscription Card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-base">
+                <span>Subscription Plan</span>
+                {subscription && (
+                  <Badge
+                    variant="outline"
+                    className={
+                      subscription.planName === "Enterprise"
+                        ? "border-amber-500 text-amber-600"
+                        : subscription.planName === "Pro"
+                        ? "border-primary text-primary"
+                        : "border-border text-muted-foreground"
+                    }
+                  >
+                    {subscription.planName === "Enterprise" ? (
+                      <Crown className="mr-1 h-3 w-3" />
+                    ) : subscription.planName === "Pro" ? (
+                      <Zap className="mr-1 h-3 w-3" />
+                    ) : (
+                      <Shield className="mr-1 h-3 w-3" />
+                    )}
+                    {subscription.planName}
+                  </Badge>
+                )}
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Your current plan and workflow usage
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loadingSubscription ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading subscription...
+                </div>
+              ) : subscription ? (
+                <>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Workflows used</span>
+                      <span className="font-medium">
+                        {subscription.workflowsUsed} / {subscription.workflowLimit}
+                      </span>
+                    </div>
+                    <Progress
+                      value={subscription.utilizationPercentage}
+                      className={`h-2 ${
+                        subscription.utilizationPercentage >= 90
+                          ? "[&>div]:bg-red-500"
+                          : subscription.utilizationPercentage >= 70
+                          ? "[&>div]:bg-amber-500"
+                          : "[&>div]:bg-primary"
+                      }`}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {subscription.remainingWorkflows} workflow{subscription.remainingWorkflows !== 1 ? "s" : ""} remaining
+                    </p>
+                  </div>
+
+                  {subscription.remainingWorkflows === 0 && (
+                    <div className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
+                      <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      You've reached your workflow limit. Upgrade to create more.
+                    </div>
+                  )}
+
+                  <Button asChild className="w-full h-8 text-sm" variant={subscription.planName === "Free" ? "default" : "outline"}>
+                    <Link to="/subscriptions">
+                      {subscription.planName === "Free" ? (
+                        <>
+                          <Zap className="mr-2 h-3.5 w-3.5" />
+                          Upgrade Plan
+                        </>
+                      ) : (
+                        <>
+                          Manage Subscription
+                          <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                        </>
+                      )}
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">No subscription found.</p>
+                  <Button asChild className="w-full h-8 text-sm">
+                    <Link to="/subscriptions">
+                      <Zap className="mr-2 h-3.5 w-3.5" />
+                      View Plans
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
         </div>
       </main>

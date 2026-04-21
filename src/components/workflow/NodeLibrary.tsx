@@ -69,13 +69,13 @@ export default function NodeLibrary({ onDragStart, onClose }: NodeLibraryProps) 
     <div className="relative w-72 h-full flex flex-col bg-background border-r border-border/60">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border/40">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 relative flex items-center justify-center">
           <h2 className="text-sm font-medium text-foreground/90">Node Library</h2>
           {onClose && (
             <button
               onClick={onClose}
               className={cn(
-                "h-6 w-6 flex items-center justify-center rounded-sm",
+                "absolute right-0 h-6 w-6 flex items-center justify-center rounded-sm",
                 "text-muted-foreground/60 hover:text-foreground/80",
                 "hover:bg-muted/40 transition-colors duration-150"
               )}

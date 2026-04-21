@@ -16,6 +16,7 @@ import { buildConnectorCallbackUrl, rememberOAuthReturnTo } from '@/lib/oauth-re
 import ZohoConnectionStatus from './ZohoConnectionStatus';
 import InstagramConnectGuide from './InstagramConnectGuide';
 import WhatsAppOnboardingGuide from './WhatsAppOnboardingGuide';
+import { GoogleLogo } from '@/components/icons/GoogleLogo';
 
 export default function ConnectionsPanel() {
   const { user } = useAuth();
@@ -817,7 +818,7 @@ export default function ConnectionsPanel() {
               className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:shadow-sm disabled:opacity-50 w-full ${googleConnected ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40' : 'border-border bg-background hover:bg-muted'}`}
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/5">
-                <img src="/integrations-logos/Google.svg" alt="Google" className="h-5 w-5 object-contain" />
+                <GoogleLogo size="md" />
               </div>
               <span className="text-xs font-medium leading-tight">Google</span>
               <span className={`flex items-center gap-1 text-[10px] ${googleConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>

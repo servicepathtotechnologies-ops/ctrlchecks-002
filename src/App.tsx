@@ -32,6 +32,7 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const UsersManager = lazy(() => import("./pages/admin/UsersManager"));
 const UserDetails = lazy(() => import("./pages/admin/UserDetails"));
 const AdminPlaceholder = lazy(() => import("./pages/admin/AdminPlaceholder"));
+const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
 const SettingsApiKeys = lazy(() => import("./pages/settings/ApiKeys"));
 const SettingsTeams = lazy(() => import("./pages/settings/Teams"));
 const SettingsNotifications = lazy(() => import("./pages/settings/Notifications"));
@@ -52,6 +53,7 @@ const ModelTestPage = lazy(() => import("./pages/ModelTestPage"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Profile = lazy(() => import("./pages/Profile"));
+const Subscriptions = lazy(() => import("./pages/Subscriptions"));
 
 // Component to conditionally render Chatbot only on landing page
 const ConditionalChatbot = () => {
@@ -110,6 +112,7 @@ const App = () => (
                   <Route path="/execution/:id" element={<ExecutionDetail />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/settings/profile" element={<Profile />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
                   <Route path="/settings/api-keys" element={<SettingsApiKeys />} />
                   <Route path="/settings/teams" element={<SettingsTeams />} />
                   <Route path="/settings/notifications" element={<SettingsNotifications />} />
@@ -142,6 +145,14 @@ const App = () => (
                     element={
                       <AdminRoute>
                         <UserDetails />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/subscriptions"
+                    element={
+                      <AdminRoute>
+                        <AdminSubscriptions />
                       </AdminRoute>
                     }
                   />

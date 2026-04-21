@@ -5,7 +5,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { AdminChromeHeader } from '@/components/layout/AdminChromeHeader';
-import { Shield, LayoutTemplate, Users, Settings, BarChart3 } from 'lucide-react';
+import { Shield, LayoutTemplate, Users, Settings, BarChart3, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -26,6 +26,13 @@ export default function AdminDashboard() {
       icon: Users,
       action: () => navigate('/admin/users'),
       color: 'text-green-500',
+    },
+    {
+      title: 'Subscriptions',
+      description: 'Manage user subscriptions and billing',
+      icon: CreditCard,
+      action: () => navigate('/admin/subscriptions'),
+      color: 'text-indigo-500',
     },
     {
       title: 'System Settings',

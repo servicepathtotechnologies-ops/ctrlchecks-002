@@ -1416,6 +1416,15 @@ export function AutonomousAgentWizard() {
         return raw === undefined || raw === null ? '' : String(raw).trim();
     }, [credentialValues]);
 
+    /** Canonical key for missing-item credentials (prefer vault key over provider labels). */
+    const getMissingItemCredentialKey = useCallback((cred: any): string => {
+        const key =
+            String(cred?.vaultKey || '').trim() ||
+            String(cred?.credentialId || '').trim() ||
+            String(cred?.provider || '').trim();
+        return key;
+    }, []);
+
     /** Vault secrets filled + OAuth accounts connected (statuses or live Google token). */
     const credentialSecretsReady = useMemo(() => {
         const vaultOk =
@@ -5602,6 +5611,36 @@ export function AutonomousAgentWizard() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     const promptLayout = getPromptInputLayoutState(prompt, step);
+    const hasPostAnalysisContext = Boolean(
+        (originalPrompt && String(originalPrompt).trim()) ||
+            (planSummary && String(planSummary).trim()) ||
+            (analysis?.summary && String(analysis.summary).trim()) ||
+            (refinement?.systemPrompt && String(refinement.systemPrompt).trim()) ||
+            intentSnapshot
+    );
+    const showPromptComposer = step === 'idle' || step === 'analyzing';
+    const showIntentContextCard =
+        !showPromptComposer &&
+        step !== 'building' &&
+        step !== 'complete' &&
+        hasPostAnalysisContext;
+    const intentContextSummary =
+        (planSummary && String(planSummary).trim()) ||
+        (refinement?.systemPrompt && String(refinement.systemPrompt).trim()) ||
+        (analysis?.summary && String(analysis.summary).trim()) ||
+        (prompt && String(prompt).trim()) ||
+        '';
+    const requiredSectionStyles = {
+        fieldOwnership: {
+            cardClass: 'border-blue-500/30 shadow-lg',
+            titleClass: 'text-blue-400 flex items-center gap-2',
+        },
+        configuration: {
+            cardClass: 'border-red-500/30 shadow-lg',
+            titleClass: 'text-red-400 flex items-center gap-2',
+            requiredIndicatorClass: 'text-red-500 ml-1',
+        },
+    } as const;
 
     return (
         <div className="fixed inset-0 z-50 bg-background text-foreground font-sans flex flex-col">
@@ -5636,84 +5675,110 @@ export function AutonomousAgentWizard() {
                 {/* Steps 1-4: Single page view */}
                 {step !== 'building' && step !== 'complete' && (
                 <div className="max-w-5xl mx-auto space-y-8 pb-20">
-                    {/* STEP 1: User Prompt */}
-                    <div ref={step1Ref} className="scroll-mt-6">
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }} 
-                            animate={{ opacity: 1, y: 0 }}
-                            className="flex flex-col gap-6"
-                        >
-                            <div className="text-center space-y-2">
-                                <h3 className="text-3xl font-bold bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">What would you like to automate?</h3>
-                                <p className="text-muted-foreground text-lg">Describe your task in natural language. The agents will handle the rest.</p>
-                            </div>
-                            <div className="relative group">
-                                <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                                <Textarea
-                                    placeholder="e.g. Post to Instagram every morning at 9 AM with a tech tip..."
-                                    className="relative min-h-[150px] bg-card border-border resize-none p-6 text-lg focus-visible:ring-indigo-500 rounded-lg shadow-xl"
-                                    value={prompt}
-                                    onChange={(e) => setPrompt(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && prompt.trim()) {
-                                            e.preventDefault();
-                                            handleAnalyze();
-                                        }
-                                    }}
-                                />
-                            </div>
-                            <div className="mt-3 flex items-center justify-between gap-3">
-                                {promptLayout.showShortcutHint ? (
-                                    <p className="text-xs text-muted-foreground">
-                                        Press <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted border border-border rounded">Ctrl/Cmd + Enter</kbd> to analyze
-                                    </p>
-                                ) : <span />}
-                                <Button
-                                    className="bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20"
-                                    onClick={handleAnalyze}
-                                    disabled={promptLayout.disableAnalyzeButton}
-                                >
-                                    {step === 'analyzing' ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Analyze Prompts <ArrowRight className="ml-2 h-4 w-4" />
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-4 mt-8">
-                                {['Social Media Automation', 'Data Syncing', 'Report Generation'].map((i) => (
-                                    <ThemedBorderGlow
-                                        key={i}
-                                        borderRadius={10}
-                                        glowRadius={26}
-                                        className="min-h-[4.5rem]"
+                    {showPromptComposer && (
+                        <div ref={step1Ref} className="scroll-mt-6">
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex flex-col gap-6"
+                            >
+                                <div className="text-center space-y-2">
+                                    <h3 className="text-3xl font-bold bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">What would you like to automate?</h3>
+                                    <p className="text-muted-foreground text-lg">Describe your task in natural language. The agents will handle the rest.</p>
+                                </div>
+                                <div className="relative group">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                                    <Textarea
+                                        placeholder="e.g. Post to Instagram every morning at 9 AM with a tech tip..."
+                                        className="relative min-h-[150px] bg-card border-border resize-none p-6 text-lg focus-visible:ring-indigo-500 rounded-lg shadow-xl"
+                                        value={prompt}
+                                        onChange={(e) => setPrompt(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && prompt.trim()) {
+                                                e.preventDefault();
+                                                handleAnalyze();
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div className="mt-3 flex items-center justify-between gap-3">
+                                    {promptLayout.showShortcutHint ? (
+                                        <p className="text-xs text-muted-foreground">
+                                            Press <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted border border-border rounded">Ctrl/Cmd + Enter</kbd> to analyze
+                                        </p>
+                                    ) : <span />}
+                                    <Button
+                                        className="bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20"
+                                        onClick={handleAnalyze}
+                                        disabled={promptLayout.disableAnalyzeButton}
                                     >
-                                        <div
-                                            className="flex h-full min-h-[4.5rem] items-center justify-center p-4 text-center text-sm text-muted-foreground transition-all hover:bg-muted/40 cursor-pointer hover:scale-[1.02]"
-                                            onClick={() => setPrompt(`Create a workflow for ${i.toLowerCase()}`)}
-                                            role="button"
-                                            tabIndex={0}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    setPrompt(`Create a workflow for ${i.toLowerCase()}`);
-                                                }
-                                            }}
-                                        >
-                                            {i}
-                                        </div>
-                                    </ThemedBorderGlow>
-                                ))}
-                            </div>
+                                        {step === 'analyzing' ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Analyze Prompts <ArrowRight className="ml-2 h-4 w-4" />
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
 
-                            {/* Structured plan appears in the summary section below after analysis */}
-                        </motion.div>
-                    </div>
+                            </motion.div>
+                        </div>
+                    )}
+
+                    {showIntentContextCard && (
+                        <div className="scroll-mt-6">
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                                <Card className="border-indigo-500/25 bg-indigo-500/5">
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-sm text-indigo-300">Intent Context</CardTitle>
+                                        <CardDescription>
+                                            Workflow intent is locked in. Continue with ownership and configuration.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        {originalPrompt && (
+                                            <p className="text-xs text-muted-foreground">
+                                                <span className="font-semibold text-foreground/80">Original prompt:</span> {originalPrompt}
+                                            </p>
+                                        )}
+                                        {intentContextSummary ? (
+                                            <StructuredPlanDisplay summary={intentContextSummary} compact />
+                                        ) : null}
+                                        <div className="flex flex-wrap gap-2 pt-1">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setStep('idle');
+                                                    setPrompt((prev) => {
+                                                        if (prev && String(prev).trim().length > 0) return prev;
+                                                        if (originalPrompt && String(originalPrompt).trim().length > 0) {
+                                                            return originalPrompt;
+                                                        }
+                                                        return intentContextSummary;
+                                                    });
+                                                }}
+                                            >
+                                                Edit intent
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={reset}
+                                            >
+                                                Restart
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </div>
+                    )}
 
                     {/* Loading state: initial prompt analysis only */}
                     {step === 'analyzing' && (
@@ -6386,10 +6451,10 @@ export function AutonomousAgentWizard() {
                     {step === 'field-ownership' && pendingWorkflowData && (
                         <div className="scroll-mt-6">
                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                                <Card className="border-amber-500/30 shadow-lg">
+                                <Card className={requiredSectionStyles.fieldOwnership.cardClass}>
                                     <CardHeader>
-                                        <CardTitle className="text-amber-400 flex items-center gap-2">
-                                            <AlertCircle className="h-5 w-5" /> Field Ownership
+                                        <CardTitle className={requiredSectionStyles.fieldOwnership.titleClass}>
+                                            <AlertCircle className="h-5 w-5" /> Field Ownership Required
                                         </CardTitle>
                                         <CardDescription>
                                             Two areas: workflow structure (forms, logic), then secrets and fill mode. Locked rows use OAuth, vault, or AI-filled values�finish accounts on the Credentials step.
@@ -6884,10 +6949,10 @@ export function AutonomousAgentWizard() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
-                                <Card className="border-amber-500/30 shadow-lg">
+                                <Card className={requiredSectionStyles.configuration.cardClass}>
                                     <CardHeader>
-                                        <CardTitle className="text-amber-400 flex items-center gap-2">
-                                            <AlertCircle className="h-5 w-5" /> Configuration Required
+                                        <CardTitle className={requiredSectionStyles.configuration.titleClass}>
+                                            <AlertCircle className="h-5 w-5" /> Configuration Details Required
                                         </CardTitle>
                                         <CardDescription>
                                             Please provide the following configuration values to complete the workflow setup.
@@ -6962,7 +7027,7 @@ export function AutonomousAgentWizard() {
                                                                 <div className="flex items-center justify-between gap-2">
                                                                     <Label htmlFor={`question-${currentQuestionIndex}`} className="text-base font-semibold">
                                                                         {questionLabel}
-                                                                        {question.required && <span className="text-red-400 ml-1">*</span>}
+                                                                        {question.required && <span className={requiredSectionStyles.configuration.requiredIndicatorClass}>*</span>}
                                                                     </Label>
                                                                     {(question.helpText || question.description || question.example) ? (
                                                                         <HelpTooltip
@@ -7989,16 +8054,17 @@ export function AutonomousAgentWizard() {
                                                         .filter(cred => !cred.satisfied)
                                                         .map((cred) => {
                                                             const controlType = resolveConfigureFieldType(cred);
+                                                            const credKey = getMissingItemCredentialKey(cred);
                                                             return (
-                                                            <div key={cred.provider} className="p-4 border rounded-lg space-y-2">
+                                                            <div key={`${cred.nodeId || 'global'}_${credKey}`} className="p-4 border rounded-lg space-y-2">
                                                                 <Label>{cred.displayName}</Label>
                                                                 {controlType === 'select' && Array.isArray(cred.options) && cred.options.length > 0 ? (
                                                                     <Select
-                                                                        value={configureCredentials[cred.provider]?.value || ''}
+                                                                        value={configureCredentials[credKey]?.value || ''}
                                                                         onValueChange={(value) => {
                                                                             setConfigureCredentials({
                                                                                 ...configureCredentials,
-                                                                                [cred.provider]: {
+                                                                                [credKey]: {
                                                                                     value: normalizeSelectValue(
                                                                                         value,
                                                                                         undefined,
@@ -8022,11 +8088,11 @@ export function AutonomousAgentWizard() {
                                                                 ) : controlType === 'textarea' ? (
                                                                     <Textarea
                                                                         placeholder={cred.placeholder || `Enter ${cred.displayName} credentials`}
-                                                                        value={configureCredentials[cred.provider]?.value || ''}
+                                                                        value={configureCredentials[credKey]?.value || ''}
                                                                         onChange={(e) => {
                                                                             setConfigureCredentials({
                                                                                 ...configureCredentials,
-                                                                                [cred.provider]: { value: e.target.value },
+                                                                                [credKey]: { value: e.target.value },
                                                                             });
                                                                         }}
                                                                     />
@@ -8034,11 +8100,11 @@ export function AutonomousAgentWizard() {
                                                                     <Input
                                                                         type={controlType === 'password' ? 'password' : (controlType === 'number' ? 'number' : 'text')}
                                                                         placeholder={cred.placeholder || `Enter ${cred.displayName} credentials`}
-                                                                        value={configureCredentials[cred.provider]?.value || ''}
+                                                                        value={configureCredentials[credKey]?.value || ''}
                                                                         onChange={(e) => {
                                                                             setConfigureCredentials({
                                                                                 ...configureCredentials,
-                                                                                [cred.provider]: { value: e.target.value },
+                                                                                [credKey]: { value: e.target.value },
                                                                             });
                                                                         }}
                                                                     />
@@ -8179,6 +8245,23 @@ export function AutonomousAgentWizard() {
                                                         
                                                         setIsConfiguring(true);
                                                         try {
+                                                            const credentialPayload = Object.entries(configureCredentials).reduce(
+                                                                (acc, [key, value]) => {
+                                                                    const normalizedKey = String(key || '').trim();
+                                                                    if (!normalizedKey) return acc;
+                                                                    const rawValue =
+                                                                        value && typeof value === 'object' && 'value' in value
+                                                                            ? (value as Record<string, unknown>).value
+                                                                            : value;
+                                                                    if (rawValue === undefined || rawValue === null) return acc;
+                                                                    const text = String(rawValue).trim();
+                                                                    if (!text) return acc;
+                                                                    acc[normalizedKey] = text;
+                                                                    return acc;
+                                                                },
+                                                                {} as Record<string, string>
+                                                            );
+
                                                             const response = await fetch(
                                                                 `${ENDPOINTS.itemBackend}/api/workflows/${generatedWorkflowId}/configure`,
                                                                 {
@@ -8188,7 +8271,7 @@ export function AutonomousAgentWizard() {
                                                                         'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
                                                                     },
                                                                     body: JSON.stringify({
-                                                                        credentials: configureCredentials,
+                                                                        credentials: credentialPayload,
                                                                         inputs: configureInputs,
                                                                     }),
                                                                 }

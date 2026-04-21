@@ -8,6 +8,7 @@ import {
   Shield,
   Users,
   ArrowLeft,
+  CreditCard,
 } from 'lucide-react';
 
 export interface UserNavItem {
@@ -33,6 +34,7 @@ export const ADMIN_SECTION_NAV: AdminNavItem[] = [
   { title: 'Admin home', path: '/admin/dashboard', icon: Shield },
   { title: 'Templates', path: '/admin/templates', icon: LayoutTemplate },
   { title: 'Users', path: '/admin/users', icon: Users },
+  { title: 'Subscriptions', path: '/admin/subscriptions', icon: CreditCard },
 ];
 
 export const ADMIN_BACK_TO_APP = {

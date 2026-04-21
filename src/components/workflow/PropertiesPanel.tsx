@@ -1129,13 +1129,18 @@ export default function PropertiesPanel({
           }
         }
 
-        // Send credential inputs (keyed by nodeId so backend knows which node they belong to)
+        // Send credential inputs with node-scoped keys accepted by backend.
         if (Object.keys(credentialInputs).length > 0) {
+          const scopedCredentials = Object.entries(credentialInputs).reduce<Record<string, unknown>>((acc, [fieldName, value]) => {
+            const scopedKey = `cred_${selectedNode.id}_${fieldName}`;
+            acc[scopedKey] = value;
+            return acc;
+          }, {});
           const attachCredsRes = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-credentials`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
-              credentials: { [`node_${selectedNode.id}`]: credentialInputs },
+              credentials: scopedCredentials,
             }),
           });
           if (!attachCredsRes.ok) {
@@ -1233,7 +1238,7 @@ export default function PropertiesPanel({
               type="single"
               value={viewMode}
               onValueChange={(value) => value && setViewMode(value as ViewMode)}
-              className="justify-start flex-1"
+              className="justify-center flex-1"
             >
               <ToggleGroupItem
                 value="properties"
@@ -1713,7 +1718,7 @@ export default function PropertiesPanel({
           type="single"
           value={viewMode}
           onValueChange={(value) => value && setViewMode(value as ViewMode)}
-          className="justify-start flex-1"
+          className="justify-center flex-1"
         >
           <ToggleGroupItem
             value="properties"

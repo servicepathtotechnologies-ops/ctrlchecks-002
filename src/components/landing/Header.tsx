@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const navItems = [
     { name: "Demo", href: "#demo" },
@@ -21,7 +22,7 @@ export function Header() {
     { name: "Verticals", href: "#verticals" },
     { name: "Why us", href: "#why-ctrlchecks" },
     { name: "Beta", href: "#features" },
-    { name: "Plans", href: "#subscription" },
+    { name: "Plans", href: "/subscriptions", isRoute: true },
   ];
 
   return (
@@ -31,15 +32,25 @@ export function Header() {
           <AppBrand context="marketing" />
 
           <div className="hidden xl:flex xl:items-center xl:gap-5">
-            {navItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {item.name}
-              </a>
-            ))}
+            {navItems.map((item) =>
+              item.isRoute ? (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {item.name}
+                </Link>
+              ) : (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {item.name}
+                </a>
+              )
+            )}
           </div>
 
           <div className="hidden xl:flex xl:items-center xl:gap-4">
@@ -108,16 +119,27 @@ export function Header() {
               className="xl:hidden"
             >
               <div className="max-h-[min(70vh,28rem)] space-y-1 overflow-y-auto pb-4 pt-2">
-                {navItems.map((item) => (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    className="block rounded-lg px-3 py-2 text-base font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </a>
-                ))}
+                {navItems.map((item) =>
+                  item.isRoute ? (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className="block rounded-lg px-3 py-2 text-base font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ) : (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      className="block rounded-lg px-3 py-2 text-base font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {item.name}
+                    </a>
+                  )
+                )}
                 <div className="mt-4 flex flex-col gap-2 px-3">
                   {user ? (
                     <Button asChild>

@@ -10,10 +10,9 @@ import { useAuth } from "@/lib/auth";
 import { isAdmin } from "@/lib/roles";
 import { useToast } from "@/hooks/use-toast";
 import { AppBrand } from "@/components/brand/AppBrand";
+import { GoogleLogo } from "@/components/icons/GoogleLogo";
 
-const GoogleIcon = () => (
-  <img src="/integrations-logos/Google.svg" alt="Google" className="h-6 w-6 object-contain" />
-);
+const GoogleIcon = () => <GoogleLogo size="md" />;
 const GitHubIcon = () => (
   <img src="/integrations-logos/Github.svg" alt="GitHub" className="h-5 w-5 object-contain" />
 );
@@ -101,8 +100,8 @@ export default function SignIn() {
       {/* Left — Decorative */}
       <div className="hidden lg:flex lg:flex-1 gradient-primary items-center justify-center p-12">
         <div className="max-w-md text-center text-white">
-          <h2 className="text-3xl font-bold leading-tight">Your workflows are waiting</h2>
-          <p className="mt-4 text-white/80 leading-relaxed">Pick up right where you left off. Your automations are running — sign in to manage them.</p>
+          <h2 className="text-3xl font-bold leading-tight">Welcome Back</h2>
+          <p className="mt-4 text-white/80 leading-relaxed">Pick up right where you left off. Your automations are running - sign in to manage them.</p>
         </div>
       </div>
 

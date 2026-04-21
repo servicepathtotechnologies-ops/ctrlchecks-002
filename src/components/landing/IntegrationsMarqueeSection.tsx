@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { landingViewport, springSoft } from "@/components/landing/landing-motion";
+import { GoogleLogo } from "@/components/icons/GoogleLogo";
 
 type IntegrationLogo = {
   name: string;
@@ -137,15 +138,20 @@ const normalizedIntegrations = integrations.map((item) => ({
 const columns = splitIntoColumns(normalizedIntegrations, 4);
 
 function LogoTile({ item }: { item: IntegrationLogo }) {
+  const isGoogleTile = item.name.toLowerCase() === "google";
   return (
     <div className="flex flex-row items-center gap-3 rounded-xl bg-background/70 px-3 py-2.5 shadow-sm backdrop-blur-sm dark:bg-white/5">
       <div className="h-10 w-10 shrink-0 rounded-lg bg-white p-1.5 shadow-sm ring-1 ring-black/5 dark:bg-white dark:ring-white/10">
-        <img
-          src={item.src}
-          alt={item.name}
-          loading="lazy"
-          className="h-full w-full object-contain [image-rendering:-webkit-optimize-contrast]"
-        />
+        {isGoogleTile ? (
+          <GoogleLogo size="lg" className="h-full w-full [image-rendering:-webkit-optimize-contrast]" />
+        ) : (
+          <img
+            src={item.src}
+            alt={item.name}
+            loading="lazy"
+            className="h-full w-full object-contain [image-rendering:-webkit-optimize-contrast]"
+          />
+        )}
       </div>
       <p className="min-w-0 truncate text-sm font-medium text-muted-foreground">
         {item.name}

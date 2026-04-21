@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { AppBrand } from "@/components/brand/AppBrand";
+import { GoogleLogo } from "@/components/icons/GoogleLogo";
 import { z } from "zod";
 
 const signUpSchema = z.object({
@@ -18,9 +19,7 @@ const signUpSchema = z.object({
   role: z.enum(["user", "admin"], { required_error: "Please select a role" }),
 });
 
-const GoogleIcon = () => (
-  <img src="/integrations-logos/Google.svg" alt="Google" className="h-6 w-6 object-contain" />
-);
+const GoogleIcon = () => <GoogleLogo size="md" />;
 const GitHubIcon = () => (
   <img src="/integrations-logos/Github.svg" alt="GitHub" className="h-5 w-5 object-contain" />
 );

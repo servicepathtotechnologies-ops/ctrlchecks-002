@@ -11,7 +11,7 @@ const footerLinks = {
     { name: "Industries", href: "#verticals" },
     { name: "Why CtrlChecks", href: "#why-ctrlchecks" },
     { name: "Beta focus", href: "#features" },
-    { name: "Subscription", href: "#subscription" },
+    { name: "Subscription", href: "/subscriptions", isRoute: true },
     { name: "FAQ", href: "#faq" },
   ],
   Resources: [
@@ -91,12 +91,21 @@ export function Footer() {
               <ul className="mt-5 space-y-3">
                 {links.map((link) => (
                   <li key={link.name}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {link.name}
-                    </a>
+                    {(link as any).isRoute ? (
+                      <Link
+                        to={link.href}
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.name}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.name}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

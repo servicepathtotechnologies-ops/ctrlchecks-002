@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Search, Zap, MoreHorizontal, Play, Trash2, Copy, Clock, History, Bot, Cpu, Workflow, MessageSquare, ChevronRight, Edit, Sparkles, Wrench, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Zap, MoreHorizontal, Play, Trash2, Copy, Clock, History, Bot, Cpu, Workflow, MessageSquare, ChevronRight, Edit, Sparkles, Hammer, ArrowLeft } from 'lucide-react';
 import { AppChromeHeader } from '@/components/layout/AppChromeHeader';
 import GoogleConnectionStatus from '@/components/GoogleConnectionStatus';
 import { WorkflowAuthGate } from '@/components/WorkflowAuthGate';
@@ -692,31 +692,6 @@ export default function Workflows() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
-              {/* Manual Creation Option */}
-              <Card className="cursor-pointer transition-shadow border hover:shadow-md">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
-                    <Wrench className="h-5 w-5 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg font-semibold">Create Workflow Manually</CardTitle>
-                  <CardDescription className="text-sm mt-1.5">
-                    Build your workflow step by step using our visual workflow builder.
-                    Drag and drop nodes, configure each step, and connect them together.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    className="w-full gradient-primary text-primary-foreground"
-                    onClick={() => {
-                      setShowCreateOptions(false);
-                      navigate('/workflow/new');
-                    }}
-                  >
-                    Start Building
-                  </Button>
-                </CardContent>
-              </Card>
-
               {/* AI Creation Option */}
               <Card className="cursor-pointer transition-shadow border hover:shadow-md">
                 <CardHeader className="pb-4">
@@ -738,6 +713,31 @@ export default function Workflows() {
                     }}
                   >
                     Generate with AI
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Manual Creation Option */}
+              <Card className="cursor-pointer transition-shadow border hover:shadow-md">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
+                    <Hammer className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold">Create Workflow Manually</CardTitle>
+                  <CardDescription className="text-sm mt-1.5">
+                    Build your workflow step by step using our visual workflow builder.
+                    Drag and drop nodes, configure each step, and connect them together.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    className="w-full gradient-primary text-primary-foreground"
+                    onClick={() => {
+                      setShowCreateOptions(false);
+                      navigate('/workflow/new');
+                    }}
+                  >
+                    Start Building
                   </Button>
                 </CardContent>
               </Card>

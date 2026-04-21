@@ -60,4 +60,32 @@ describe('wizard-credential-view (frontend)', () => {
     const { rows } = buildCredentialWizardView(questions, st);
     expect(rows.length).toBeGreaterThanOrEqual(1);
   });
+
+  it('matches status by credential key granularity (not provider collision)', () => {
+    const question = baseQ({
+      id: 'q_drive_token',
+      nodeId: 'n_google',
+      nodeType: 'google_drive',
+      nodeLabel: 'Google Drive',
+      fieldName: 'google_drive_token',
+      text: 'Google Drive Access Token',
+    });
+
+    const statuses: CredentialStatusRow[] = [
+      {
+        nodeId: 'n_google',
+        credentialId: 'google_sheets_token',
+        displayName: 'Google Sheets Token',
+        status: 'resolved_connected',
+      },
+      {
+        nodeId: 'n_google',
+        credentialId: 'google_drive_token',
+        displayName: 'Google Drive Token',
+        status: 'required_missing',
+      },
+    ];
+
+    expect(matchCredentialStatusForQuestion(question, statuses)).toBe('required_missing');
+  });
 });
