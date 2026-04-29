@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Save, Settings, Upload, Download } from 'lucide-react';
+import { ArrowLeft, Play, Save, Settings, Upload, Download, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,7 @@ import ScheduleSettings from './ScheduleSettings';
 import ConnectionsPanel from '@/components/ConnectionsPanel';
 import { WorkflowActionButton } from '@/components/WorkflowActionButton';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { workflowScheduler } from '@/lib/workflowScheduler';
 
 interface WorkflowHeaderProps {
@@ -27,6 +27,7 @@ interface WorkflowHeaderProps {
   isSaving?: boolean;
   isRunning?: boolean;
   onImport?: (data: any) => void;
+  onCancel?: () => void;
 }
 
 export default function WorkflowHeader({
@@ -34,7 +35,8 @@ export default function WorkflowHeader({
   onRun,
   isSaving,
   isRunning,
-  onImport
+  onImport,
+  onCancel,
 }: WorkflowHeaderProps) {
   const navigate = useNavigate();
   const { workflowId, workflowName, setWorkflowName, isDirty, nodes, edges } = useWorkflowStore();
@@ -256,6 +258,17 @@ export default function WorkflowHeader({
             <Play className="mr-2 h-4 w-4" />
             Save & Run
           </WorkflowActionButton>
+        )}
+
+        {isRunning && onCancel && (
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={onCancel}
+          >
+            <Square className="mr-2 h-3.5 w-3.5 fill-current" />
+            Cancel
+          </Button>
         )}
 
         <WorkflowActionButton

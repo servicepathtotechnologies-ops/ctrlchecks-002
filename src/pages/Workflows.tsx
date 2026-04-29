@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+﻿import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { Plus, Search, Zap, MoreHorizontal, Play, Trash2, Copy, Clock, History, Bot, Cpu, Workflow, MessageSquare, ChevronRight, Edit, Sparkles, Hammer, ArrowLeft } from 'lucide-react';
 import { AppChromeHeader } from '@/components/layout/AppChromeHeader';
 import GoogleConnectionStatus from '@/components/GoogleConnectionStatus';
@@ -21,7 +21,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Tables, Json } from '@/integrations/supabase/types';
+import { Tables, Json } from '@/integrations/aws/types';
 import { is406Error } from '@/lib/utils';
 
 type WorkflowRecord = Tables<'workflows'> & {

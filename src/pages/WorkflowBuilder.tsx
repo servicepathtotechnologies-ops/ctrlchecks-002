@@ -1,8 +1,8 @@
-import { useEffect, useCallback, useState, useRef, Suspense, lazy } from 'react';
+﻿import { useEffect, useCallback, useState, useRef, Suspense, lazy } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useWorkflowStore, WorkflowNode } from '@/stores/workflowStore';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { NodeTypeDefinition } from '@/components/workflow/nodeTypes';
 import WorkflowHeader from '@/components/workflow/WorkflowHeader';
 import { useDebugStore } from '@/stores/debugStore';
 import { Edge } from '@xyflow/react';
-import { Json } from '@/integrations/supabase/types';
+import { Json } from '@/integrations/aws/types';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
 import { extractNodeConfigForAttachInputs } from '@/lib/attach-inputs-payload';
 import { buildFormPublicUrl } from '@/lib/formPublicUrl';
@@ -35,6 +35,15 @@ type LastResolvedInputsMap = Record<
   Record<string, { value: unknown; source?: 'runtime_ai' | 'static_config'; executionId: string; startedAt: string }>
 >;
 
+type ReliabilityUiState = {
+  traceId?: string;
+  rateLimited?: boolean;
+  circuitOpen?: boolean;
+  dlqRoutingEnabled?: boolean;
+  selfCorrectionTriggered?: boolean;
+  lastErrorCode?: string;
+};
+
 export default function WorkflowBuilder() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -43,6 +52,7 @@ export default function WorkflowBuilder() {
   const { user, loading: authLoading } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [activeExecutionId, setActiveExecutionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [executionGuidance, setExecutionGuidance] = useState<GuidedStatusContent | null>(null);
   const [executionNotificationResult, setExecutionNotificationResult] = useState<ExecutionResult | null>(null);
@@ -50,10 +60,12 @@ export default function WorkflowBuilder() {
   const [nodeLibraryOpen, setNodeLibraryOpen] = useState(true);
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
   const [lastResolvedInputs, setLastResolvedInputs] = useState<LastResolvedInputsMap>({});
+  const [reliabilityStatus, setReliabilityStatus] = useState<ReliabilityUiState | null>(null);
   // Credential status panel state removed — credentials are handled via the header Connections route
   const credentialPanelData = null;
   const { debugNodeId } = useDebugStore();
   const hasAutoRun = useRef(false); // Track if we've already auto-run for this workflow load
+  const isSavingRef = useRef(false); // Ref-based lock to prevent concurrent handleSave calls
   const {
     nodes,
     edges,
@@ -99,6 +111,30 @@ export default function WorkflowBuilder() {
       navigate('/signin');
     }
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchReliabilityDiagnostics = async () => {
+      try {
+        const response = await fetch(`${ENDPOINTS.itemBackend}/health`);
+        if (!response.ok) return;
+        const payload = await response.json();
+        if (cancelled) return;
+        const reliability = payload?.reliability || {};
+        setReliabilityStatus((prev) => ({
+          ...prev,
+          circuitOpen: Number(reliability?.circuitBreakers?.open || 0) > 0,
+          dlqRoutingEnabled: Boolean(reliability?.dlqMandatoryRouting),
+        }));
+      } catch {
+        // best-effort diagnostics
+      }
+    };
+    void fetchReliabilityDiagnostics();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const loadWorkflow = useCallback(async (workflowId: string) => {
     setIsLoading(true);
@@ -285,6 +321,8 @@ export default function WorkflowBuilder() {
 
   const handleSave = useCallback(async () => {
     if (!user) return;
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
 
     setIsSaving(true);
     let saveSucceeded = false;
@@ -496,6 +534,7 @@ export default function WorkflowBuilder() {
         variant: 'destructive',
       });
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
       if (saveSucceeded) setIsDirty(false);
     }
@@ -629,6 +668,15 @@ export default function WorkflowBuilder() {
     onRefresh: handleRefresh,
     onDismiss: handleDismiss,
   });
+  const shouldShowReliabilityStatus = Boolean(
+    reliabilityStatus &&
+      (reliabilityStatus.traceId ||
+        reliabilityStatus.rateLimited ||
+        reliabilityStatus.circuitOpen ||
+        reliabilityStatus.dlqRoutingEnabled === false ||
+        reliabilityStatus.selfCorrectionTriggered ||
+        reliabilityStatus.lastErrorCode)
+  );
 
   const handleRun = useCallback(async (autoSave = false) => {
     setExecutionGuidance(null);
@@ -885,6 +933,12 @@ export default function WorkflowBuilder() {
               const errorCode = errorData.code || 'UNKNOWN_ERROR';
               const errorDetails = errorData.details ? JSON.stringify(errorData.details, null, 2) : '';
               const errorHint = errorData.hint || '';
+              setReliabilityStatus((prev) => ({
+                ...prev,
+                traceId: response.headers.get('x-trace-id') || undefined,
+                rateLimited: response.status === 429,
+                lastErrorCode: errorCode,
+              }));
               
               // ✅ CRITICAL: Log full error details for debugging
               console.error('[execute-workflow] ❌ Error response:', {
@@ -918,6 +972,13 @@ export default function WorkflowBuilder() {
               
               throw new Error(detailedMessage);
             }
+
+            setReliabilityStatus((prev) => ({
+              ...prev,
+              traceId: response.headers.get('x-trace-id') || undefined,
+              rateLimited: false,
+              lastErrorCode: undefined,
+            }));
 
             toast({
               title: 'Waiting for Form Submission',
@@ -1080,6 +1141,15 @@ export default function WorkflowBuilder() {
         const errorCode = errorData.code || 'UNKNOWN_ERROR';
         const errorDetails = errorData.details ? JSON.stringify(errorData.details, null, 2) : '';
         const errorHint = errorData.hint || '';
+        setReliabilityStatus((prev) => ({
+          ...prev,
+          traceId: response.headers.get('x-trace-id') || undefined,
+          rateLimited: response.status === 429,
+          selfCorrectionTriggered:
+            typeof errorMessage === 'string' &&
+            (errorMessage.includes('self-repair') || errorMessage.includes('OUTPUT_VALIDATION_FAILED')),
+          lastErrorCode: errorCode,
+        }));
         
         // ✅ CRITICAL: Log full error details for debugging
         console.error('[execute-workflow] ❌ Error response:', {
@@ -1128,9 +1198,17 @@ export default function WorkflowBuilder() {
       }
 
       const data = await response.json();
+      setReliabilityStatus((prev) => ({
+        ...prev,
+        traceId: response.headers.get('x-trace-id') || undefined,
+        rateLimited: false,
+        selfCorrectionTriggered: JSON.stringify(data || {}).includes('_selfValidation'),
+        lastErrorCode: undefined,
+      }));
 
       // Build and set the execution notification result
       setExecutionNotificationResult(buildExecutionNotificationResult(data, nodes));
+      if (data.executionId) setActiveExecutionId(data.executionId);
 
       // Force refresh execution console to show new execution immediately
       // The realtime subscription will handle updates, but we trigger a refresh for immediate feedback
@@ -1207,8 +1285,35 @@ export default function WorkflowBuilder() {
       });
     } finally {
       setIsRunning(false);
+      setActiveExecutionId(null);
     }
   }, [nodes, consoleExpanded, resetAllNodeStatuses]);
+
+  const handleCancel = useCallback(async () => {
+    if (!activeExecutionId) return;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const res = await fetch(`${ENDPOINTS.itemBackend}/api/executions/${activeExecutionId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionData?.session?.access_token
+            ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+            : {}),
+        },
+      });
+      if (res.ok) {
+        setIsRunning(false);
+        setActiveExecutionId(null);
+        toast({ title: 'Execution cancelled' });
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Cancel failed', description: err.error || 'Unknown error', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Cancel failed', description: 'Network error', variant: 'destructive' });
+    }
+  }, [activeExecutionId]);
 
   // Auto-run workflow if autoRun parameter is present (for AI-generated workflows)
   // Moved here after handleRun is defined to avoid initialization order issues
@@ -1263,6 +1368,7 @@ export default function WorkflowBuilder() {
         isSaving={isSaving}
         isRunning={isRunning}
         onImport={handleImportWorkflow}
+        onCancel={activeExecutionId ? handleCancel : undefined}
       />
       <Suspense
         fallback={
@@ -1275,7 +1381,20 @@ export default function WorkflowBuilder() {
         }
       >
         <div className="flex-1 flex flex-col overflow-hidden relative">
-          {(executionGuidance || notificationConfigs.length > 0) && (
+          {!debugNodeId && shouldShowReliabilityStatus && reliabilityStatus && (
+            <div className="absolute left-1/2 top-4 z-[70] w-[min(520px,calc(100%-2rem))] -translate-x-1/2">
+              <div className="rounded-md border border-border bg-background/95 p-3 text-xs text-muted-foreground shadow-sm backdrop-blur">
+                <div className="mb-1 font-medium text-foreground">Reliability status</div>
+                {reliabilityStatus.traceId && <div>Trace ID: {reliabilityStatus.traceId}</div>}
+                {reliabilityStatus.rateLimited && <div>Rate limit: throttled</div>}
+                {reliabilityStatus.circuitOpen && <div>Circuit breakers: open circuit detected</div>}
+                {reliabilityStatus.dlqRoutingEnabled === false && <div>DLQ routing: disabled</div>}
+                {reliabilityStatus.selfCorrectionTriggered && <div>Self-correction: triggered</div>}
+                {reliabilityStatus.lastErrorCode && <div>Last error code: {reliabilityStatus.lastErrorCode}</div>}
+              </div>
+            </div>
+          )}
+          {!debugNodeId && (executionGuidance || notificationConfigs.length > 0) && (
             <div className="absolute right-4 top-4 z-[70] w-[min(420px,calc(100%-2rem))] flex flex-col gap-3">
               {executionGuidance && (
                 <GuidedStatusCard

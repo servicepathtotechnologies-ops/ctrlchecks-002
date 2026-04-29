@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Workflow API Client
  * Handles workflow execution and backend communication
  */
 
 import { api, testConnection } from './client';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 
 export const workflowAPI = {
   async executeWorkflow(workflowId: string, triggerData: any = {}) {

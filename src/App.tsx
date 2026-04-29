@@ -71,7 +71,15 @@ const ConditionalChatbot = () => {
   );
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,     // don't refetch within 30 s of a successful fetch
+      retry: 1,              // one retry instead of 3 on transient failures
+      refetchOnWindowFocus: false, // avoid silent refetch every time user alt-tabs back
+    },
+  },
+});
 
 const App = () => (
   <ErrorBoundary>

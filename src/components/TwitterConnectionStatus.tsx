@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { Loader2, CheckCircle2, XCircle, Twitter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';

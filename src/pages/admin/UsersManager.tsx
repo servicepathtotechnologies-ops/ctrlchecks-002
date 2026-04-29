@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+﻿import { useCallback, useEffect, useState } from 'react';
 import { Trash2, RefreshCw, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { AdminChromeHeader } from '@/components/layout/AdminChromeHeader';
 import { deleteUser, getAllUsers, updateUserRole, type AdminUser } from '@/lib/api/admin';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/integrations/aws/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
 

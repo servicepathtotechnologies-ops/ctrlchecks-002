@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useMemo, useRef } from 'react';
+﻿import { useEffect, useCallback, useState, useMemo, useRef } from 'react';
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { useDebugStore } from '@/stores/debugStore';
 import { useWorkflowStore } from '@/stores/workflowStore';
@@ -9,7 +9,7 @@ import PropertiesPanel from '../PropertiesPanel';
 import { X, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { generateExpression } from '@/lib/expressionResolver';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { useToast } from '@/hooks/use-toast';
 
@@ -261,7 +261,7 @@ export default function DebugPanel({ onClose }: DebugPanelProps) {
         <DndContext onDragEnd={handleDragEnd}>
           <div className="flex-1 flex overflow-hidden">
             {/* Left: Input Panel */}
-            <div className="w-80 flex-shrink-0">
+            <div className="w-[360px] flex-shrink-0">
               <InputPanel inputData={inputData} />
             </div>
 
@@ -275,7 +275,7 @@ export default function DebugPanel({ onClose }: DebugPanelProps) {
             </div>
 
             {/* Right: Output Panel */}
-            <div className="w-80 flex-shrink-0">
+            <div className="w-[460px] flex-shrink-0">
               <OutputPanel
                 outputData={nodeState?.lastOutput}
                 executionTime={nodeState?.executionTime}

@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+﻿import { supabase } from '@/integrations/aws/client';
 
 export interface LinkedInCredentials {
   accessToken: string;

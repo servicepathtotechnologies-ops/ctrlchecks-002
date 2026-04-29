@@ -142,8 +142,14 @@ export function validateWorkflowGraph(nodes: Node[], edges: Edge[]): ValidationR
     });
   }
 
-  // 4. Each node (except trigger and merge nodes) must have exactly 1 incoming edge
-  // ✅ FIX: Merge nodes are specifically designed to combine multiple inputs, so they can have multiple incoming edges
+  // 4. Each node (except trigger and merge nodes) must have exactly 1 incoming edge.
+  // Exception: in branching workflows (switch/if_else), terminal/output nodes may
+  // legitimately converge inputs from multiple branches as long as each source is distinct.
+  const hasBranchingNode = nodes.some(n => {
+    const t = n.data?.type || '';
+    return t === 'switch' || t === 'if_else';
+  });
+
   nodes.forEach(node => {
     if (node.id === triggerNode.id) {
       return; // Trigger has no incoming
@@ -151,7 +157,7 @@ export function validateWorkflowGraph(nodes: Node[], edges: Edge[]): ValidationR
 
     const nodeType = node.data?.type || '';
     const isMergeNode = nodeType === 'merge';
-    
+
     const incoming = incomingEdges.get(node.id) || [];
     if (incoming.length === 0) {
       errors.push({
@@ -160,7 +166,14 @@ export function validateWorkflowGraph(nodes: Node[], edges: Edge[]): ValidationR
         nodeId: node.id,
       });
     } else if (incoming.length > 1 && !isMergeNode) {
-      // ✅ FIX: Allow merge nodes to have multiple incoming edges
+      // In a branching workflow, a node is a valid convergence point when all
+      // of its incoming edges come from distinct upstream nodes (no duplicate sources).
+      const sourceIds = incoming.map(e => e.source);
+      const allSourcesDistinct = new Set(sourceIds).size === sourceIds.length;
+      if (hasBranchingNode && allSourcesDistinct) {
+        // Legitimate multi-branch convergence — not an error.
+        return;
+      }
       errors.push({
         code: 'MULTIPLE_INCOMING',
         message: `Node "${node.data?.label || node.id}" has ${incoming.length} incoming edges, but should have exactly one`,

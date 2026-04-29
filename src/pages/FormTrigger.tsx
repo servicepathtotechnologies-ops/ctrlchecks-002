@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { Loader2 } from 'lucide-react';
 import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';
@@ -43,62 +42,15 @@ export default function FormTrigger() {
       setError(null);
       setResolvedFormNodeId(null);
 
-      // Fetch workflow and form node config
-      const { data: workflow, error: workflowError } = await supabase
-        .from('workflows')
-        .select('*')
-        .eq('id', workflowId)
-        .single();
-
-      if (workflowError || !workflow) {
-        throw new Error('Workflow not found');
+      const response = await fetch(`${ENDPOINTS.itemBackend}/api/form-trigger/${workflowId}/${nodeId}`);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({ message: 'Failed to load form' }));
+        throw new Error(body.message || body.error || 'Failed to load form');
       }
 
-      if (workflow.status !== 'active') {
-        throw new Error('This form is no longer active. The workflow has been deactivated.');
-      }
-
-      const nodes = workflow.nodes as any[];
-      const isFormNode = (node: any) =>
-        node.data?.type === 'form' || node.type === 'form';
-
-      let formNode = nodes?.find(
-        (node: any) =>
-          (node.id === nodeId || node.data?.id === nodeId) && isFormNode(node)
-      );
-
-      if (!formNode) {
-        const formOnly = (nodes || []).filter(isFormNode);
-        if (formOnly.length === 1) {
-          formNode = formOnly[0];
-          if (import.meta.env.DEV) {
-            console.info(
-              '[FormTrigger] Route node id did not match; using the single form node in this workflow'
-            );
-          }
-        }
-      }
-
-      if (!formNode) {
-        throw new Error('Form node not found in this workflow');
-      }
-
-      setResolvedFormNodeId(formNode.id);
-
-      const config = formNode.data?.config || formNode.config || {};
-
-      // Parse fields
-      let fields: FormField[] = [];
-      if (Array.isArray(config.fields)) {
-        fields = config.fields;
-      } else if (typeof config.fields === 'string') {
-        try {
-          fields = JSON.parse(config.fields || '[]');
-        } catch (e) {
-          console.error('Failed to parse fields JSON:', e);
-          fields = [];
-        }
-      }
+      const config = await response.json();
+      setResolvedFormNodeId(config.nodeId || nodeId || null);
+      const fields: FormField[] = Array.isArray(config.fields) ? config.fields : [];
 
       setFormConfig({
         formTitle: config.formTitle || 'Form Submission',
@@ -388,4 +340,3 @@ export default function FormTrigger() {
     </>
   );
 }
-

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/aws/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { Loader2, Plus, Users, UserPlus, Crown, Shield, Eye, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { AppChromeHeader } from "@/components/layout/AppChromeHeader";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/aws/types";
 
 type TeamRole = Database["public"]["Enums"]["team_role"];
 

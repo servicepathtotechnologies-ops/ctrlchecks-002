@@ -14,8 +14,8 @@
 
 CREATE TYPE public.app_role AS ENUM ('admin', 'moderator', 'user');
 CREATE TYPE public.workflow_status AS ENUM ('draft', 'active', 'paused', 'archived');
-CREATE TYPE public.execution_status AS ENUM ('pending', 'running', 'success', 'failed', 'cancelled');
-CREATE TYPE public.execution_trigger AS ENUM ('manual', 'webhook', 'schedule');
+CREATE TYPE public.execution_status AS ENUM ('pending', 'running', 'success', 'failed', 'cancelled', 'waiting');
+CREATE TYPE public.execution_trigger AS ENUM ('manual', 'webhook', 'schedule', 'form', 'chat');
 CREATE TYPE public.team_role AS ENUM ('owner', 'admin', 'member', 'viewer');
 CREATE TYPE public.invitation_status AS ENUM ('pending', 'accepted', 'rejected', 'expired');
 
@@ -97,7 +97,7 @@ CREATE TABLE public.workflows (
   webhook_url TEXT UNIQUE,  -- Unique webhook URL for triggering workflows
   cron_expression TEXT,  -- For scheduled workflows
   source TEXT CHECK (source IN ('template', 'custom')) DEFAULT 'custom',  -- Whether workflow came from template
-  template_id UUID REFERENCES public.templates(id) ON DELETE SET NULL,  -- If copied from template
+  template_id UUID,  -- FK added below after templates table is created
   template_version INTEGER,  -- Version of template when copied
   version INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -158,6 +158,11 @@ CREATE TABLE public.templates (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Add FK from workflows to templates now that templates table exists
+ALTER TABLE public.workflows
+  ADD CONSTRAINT workflows_template_id_fkey
+  FOREIGN KEY (template_id) REFERENCES public.templates(id) ON DELETE SET NULL;
 
 -- API keys table: For programmatic access (future feature)
 CREATE TABLE public.api_keys (
@@ -547,12 +552,11 @@ CREATE POLICY "Users can update own notifications" ON public.notifications
   FOR UPDATE TO authenticated USING (auth.uid() = user_id);
 
 -- ============================================
--- STEP 7: ENABLE REALTIME
+-- STEP 7: REALTIME
 -- ============================================
--- Enable real-time subscriptions for live updates
-
-ALTER PUBLICATION supabase_realtime ADD TABLE public.executions;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+-- Supabase realtime publications removed — real-time updates
+-- are now handled via WebSocket on the Express backend + Redis pub/sub.
+-- No action needed here for AWS RDS.
 
 -- ============================================
 -- SETUP COMPLETE!

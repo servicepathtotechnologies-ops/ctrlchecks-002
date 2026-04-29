@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
-import { 
-  ArrowLeft, Clock, CheckCircle, XCircle, Loader2, 
-  RefreshCw
+import {
+  ArrowLeft, Clock, CheckCircle, XCircle, Loader2,
+  RefreshCw, Square
 } from 'lucide-react';
 import { AppChromeHeader } from '@/components/layout/AppChromeHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Tables } from '@/integrations/supabase/types';
+import { Tables } from '@/integrations/aws/types';
 import ExecutionLogBlock from '@/components/workflow/ExecutionLogBlock';
 
 type Execution = Tables<'executions'> & {
@@ -118,6 +118,31 @@ export default function ExecutionDetail() {
     }
   };
 
+  const cancelExecution = async () => {
+    if (!execution) return;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const res = await fetch(`${ENDPOINTS.itemBackend}/api/executions/${execution.id}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionData?.session?.access_token
+            ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+            : {}),
+        },
+      });
+      if (res.ok) {
+        toast({ title: 'Execution cancelled' });
+        loadExecution(execution.id);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Cancel failed', description: err.error || 'Unknown error', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Cancel failed', description: 'Network error', variant: 'destructive' });
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'success': return <CheckCircle className="h-4 w-4 text-success" />;
@@ -159,22 +184,27 @@ export default function ExecutionDetail() {
       <AppChromeHeader />
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
-          <div className="flex min-w-0 items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/executions')}>
+        <div className="mb-8 flex flex-wrap items-start justify-between gap-4 border-b border-border pb-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/executions')}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="min-w-0">
               <h1 className="text-xl font-bold truncate md:text-2xl">
                 {execution.workflows?.name || 'Execution'}
               </h1>
-              <div className="font-mono text-xs text-muted-foreground">{execution.id.slice(0, 8)}…</div>
+              <div className="font-mono text-xs text-muted-foreground mt-0.5">{execution.id.slice(0, 8)}…</div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Badge variant="outline" className={getStatusColor(execution.status)}>
               {execution.status}
             </Badge>
+            {execution.status === 'running' && (
+              <Button size="sm" variant="destructive" onClick={cancelExecution}>
+                <Square className="mr-2 h-3.5 w-3.5 fill-current" /> Cancel
+              </Button>
+            )}
             {execution.status === 'failed' && (
               <Button size="sm" onClick={retryExecution}>
                 <RefreshCw className="mr-2 h-4 w-4" /> Retry

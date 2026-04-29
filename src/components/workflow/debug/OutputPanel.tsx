@@ -153,18 +153,9 @@ export default function OutputPanel({
   const { toast } = useToast();
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
   
-  // Determine default view: prefer Table if available, otherwise JSON, fallback to Tree
-  const getDefaultView = (data: unknown): 'tree' | 'json' | 'table' | 'schema' => {
-    const candidate = (() => {
-      if (Array.isArray(data)) return data;
-      if (data && typeof data === 'object') {
-        const items = (data as Record<string, unknown>).items;
-        if (Array.isArray(items)) return items;
-      }
-      return null;
-    })();
-    const rows = candidate?.filter((r) => r && typeof r === 'object' && !Array.isArray(r)) as Array<Record<string, unknown>>;
-    if (rows && rows.length > 0) return 'table';
+  // Match Node-RED style debugging: default to raw JSON, with Tree/Table/Schema
+  // available when the user explicitly wants another projection.
+  const getDefaultView = (_data: unknown): 'tree' | 'json' | 'table' | 'schema' => {
     return 'json';
   };
   
@@ -258,29 +249,54 @@ export default function OutputPanel({
       return data;
     };
 
+    const arrayRowsToObjects = (
+      rows: unknown[],
+      headers?: unknown
+    ): Array<Record<string, unknown>> | null => {
+      if (!rows.every(Array.isArray)) return null;
+      const headerList = Array.isArray(headers) && headers.every((h) => typeof h === 'string')
+        ? headers as string[]
+        : [];
+      return rows.map((row, rowIndex) => {
+        const values = row as unknown[];
+        return values.reduce<Record<string, unknown>>((acc, value, index) => {
+          acc[headerList[index] || `column_${index + 1}`] = value;
+          return acc;
+        }, { _row: rowIndex + 1 });
+      });
+    };
+
+    const extractArrayProperty = (obj: Record<string, unknown>): Array<Record<string, unknown>> | null => {
+      const arrayProps = ['items', 'data', 'results', 'rows', 'records', 'list', 'array', 'output', 'values'];
+      for (const prop of arrayProps) {
+        if (!Array.isArray(obj[prop])) continue;
+        const arr = obj[prop] as unknown[];
+        const objects = arr.filter((item) => item && typeof item === 'object' && !Array.isArray(item));
+        if (objects.length > 0) return objects as Array<Record<string, unknown>>;
+        const mappedRows = arrayRowsToObjects(arr, obj.headers);
+        if (mappedRows && mappedRows.length > 0) return mappedRows;
+      }
+      return null;
+    };
+
     // Helper: Extract array of objects from various output shapes
     const extractTableData = (data: unknown): Array<Record<string, unknown>> | null => {
       // Case 1: Direct array
       if (Array.isArray(data)) {
         const objects = data.filter((item) => item && typeof item === 'object' && !Array.isArray(item));
-        return objects.length > 0 ? (objects as Array<Record<string, unknown>>) : null;
+        if (data.length === 1 && objects.length === 1) {
+          const nested = extractArrayProperty(objects[0] as Record<string, unknown>);
+          if (nested) return nested;
+        }
+        if (objects.length > 0) return objects as Array<Record<string, unknown>>;
+        return arrayRowsToObjects(data);
       }
 
       // Case 2: Object with common array properties
       if (data && typeof data === 'object') {
         const obj = data as Record<string, unknown>;
-        
-        // Try common property names (items, data, results, rows, records, list, array)
-        const arrayProps = ['items', 'data', 'results', 'rows', 'records', 'list', 'array', 'output'];
-        for (const prop of arrayProps) {
-          if (Array.isArray(obj[prop])) {
-            const arr = obj[prop] as unknown[];
-            const objects = arr.filter((item) => item && typeof item === 'object' && !Array.isArray(item));
-            if (objects.length > 0) {
-              return objects as Array<Record<string, unknown>>;
-            }
-          }
-        }
+        const nested = extractArrayProperty(obj);
+        if (nested) return nested;
 
         // Case 3: Object itself might be a single row (convert to array)
         const keys = Object.keys(obj);
@@ -754,4 +770,3 @@ export default function OutputPanel({
       </div>
   );
 }
-

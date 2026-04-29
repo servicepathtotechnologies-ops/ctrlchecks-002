@@ -1,13 +1,13 @@
-import { useRef, useState } from 'react';
+﻿import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, ExternalLink } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { useWorkflowAuth } from '@/contexts/WorkflowAuthContext';
 import { cn } from '@/lib/utils';
-import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
 import { buildConnectorCallbackUrl } from '@/lib/oauth-return';
+import { startGoogleConnectorOAuth } from '@/lib/google-connector-oauth';
 
 interface WorkflowAuthNoticeProps {
   className?: string;
@@ -27,26 +27,15 @@ export function WorkflowAuthNotice({ className }: WorkflowAuthNoticeProps) {
   const handleGoogleConnect = async () => {
     setIsConnecting(true);
     try {
-      const redirectUrl = buildConnectorCallbackUrl('/auth/google/callback');
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-            scope: GOOGLE_CONNECTOR_SCOPES,
-          },
-        },
-      });
-
-      if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) throw new Error('Please sign in first');
 
       toast({
         title: 'Redirecting to Google...',
         description: 'Please authorize access to Google services',
       });
+      startGoogleConnectorOAuth(userId);
     } catch (error) {
       console.error('Google OAuth error:', error);
       toast({

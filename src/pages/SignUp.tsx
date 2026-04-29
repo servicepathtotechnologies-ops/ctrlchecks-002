@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Shield, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,8 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [pendingVerification, setPendingVerification] = useState(false);
   const [role, setRole] = useState<"user" | "admin">("user");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ export default function SignUp() {
   const [facebookLoading, setFacebookLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { signUp, signInWithGoogle, signInWithGitHub, signInWithFacebook } = useAuth();
+  const { signUp, confirmSignUp, resendSignUpCode, signIn, signInWithGoogle, signInWithGitHub, signInWithFacebook } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -71,8 +73,42 @@ export default function SignUp() {
       }
       return;
     }
-    toast({ title: "Welcome!", description: "Your account has been created." });
+    setPendingVerification(true);
+    toast({ title: "Check your email", description: "Enter the 6-digit verification code to finish sign up." });
+  };
+
+  const handleConfirmCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !verificationCode.trim()) {
+      toast({ title: "Code required", description: "Enter the verification code from your email.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await confirmSignUp(email, verificationCode.trim());
+    if (error) {
+      setLoading(false);
+      toast({ title: "Verification failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    const signInResult = await signIn(email, password);
+    setLoading(false);
+    if (signInResult.error) {
+      toast({ title: "Email verified", description: "Your account is verified. Please sign in." });
+      navigate("/signin");
+      return;
+    }
+    toast({ title: "Welcome!", description: "Your email has been verified." });
     navigate(role === "admin" ? "/admin/dashboard" : "/dashboard");
+  };
+
+  const handleResendCode = async () => {
+    if (!email) return;
+    const { error } = await resendSignUpCode(email);
+    toast({
+      title: error ? "Could not resend code" : "Code sent",
+      description: error ? error.message : "Check your inbox for a fresh verification code.",
+      variant: error ? "destructive" : "default",
+    });
   };
 
   const handleGoogleSignUp = async () => {
@@ -117,6 +153,32 @@ export default function SignUp() {
               Join thousands of teams automating their workflows with AI
             </p>
           </div>
+
+          {pendingVerification ? (
+            <form onSubmit={handleConfirmCode} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="verificationCode">Verification Code</Label>
+                <div className="relative">
+                  <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="verificationCode"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="123456"
+                    className="pl-10"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Button type="submit" className="w-full gradient-primary text-primary-foreground font-semibold" disabled={loading}>
+                {loading ? "Verifying..." : "Verify Email"}
+              </Button>
+              <Button type="button" variant="ghost" className="w-full" onClick={handleResendCode}>
+                Resend code
+              </Button>
+            </form>
+          ) : (
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
@@ -210,6 +272,7 @@ export default function SignUp() {
               <p className="text-center text-xs text-muted-foreground">Or sign up with Google, GitHub or Facebook</p>
             </div>
           </form>
+          )}
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}

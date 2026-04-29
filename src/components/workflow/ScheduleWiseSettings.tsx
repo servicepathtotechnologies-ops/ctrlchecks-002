@@ -1,4 +1,4 @@
-import { Input } from '@/components/ui/input';
+﻿import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -7,7 +7,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown } from 'lucide-react';
 import { InputGuideLink } from './InputGuideLink';
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
+import { getBackendUrl } from '@/lib/api/getBackendUrl';
 
 interface ScheduleWiseNodeParams {
   operation?: 'getSchedules' | 'createAppointment' | 'updateAppointment' | 'deleteAppointment';
@@ -153,17 +154,25 @@ export default function ScheduleWiseSettings({
 
       setLoadingCredentials(true);
       try {
-        const { data, error } = await supabase
-          .from('credentials')
-          .select('id, name, provider')
-          .eq('workflow_id', workflowId)
-          .eq('provider', 'schedulewise');
+        const token = (await supabase.auth.getSession()).data.session?.access_token;
+        if (!token) throw new Error('No authentication token');
 
-        if (error) {
-          console.error('[ScheduleWiseSettings] Error fetching credentials:', error);
-        } else {
-          setCredentials((data as Credential[]) || []);
-        }
+        const response = await fetch(
+          `${getBackendUrl()}/api/credentials/list?workflowId=${encodeURIComponent(workflowId)}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!response.ok) throw new Error('Failed to load ScheduleWise credentials');
+
+        const data = await response.json();
+        const scheduleWiseCredentials = (data.credentials || [])
+          .filter((cred: any) => String(cred.key || '').toLowerCase() === 'schedulewise')
+          .map((cred: any) => ({
+            id: String(cred.key),
+            name: cred.metadata?.name || 'ScheduleWise',
+            provider: String(cred.key),
+          }));
+
+        setCredentials(scheduleWiseCredentials);
       } catch (error) {
         console.error('[ScheduleWiseSettings] Error fetching credentials:', error);
       } finally {

@@ -1,4 +1,4 @@
-import type { Database } from '@/integrations/supabase/types';
+﻿import type { Database } from '@/integrations/aws/types';
 import type { AiEditorCapabilitiesResponse } from '@/types/aiEditor';
 
 type AppRole = Database['public']['Enums']['app_role'];

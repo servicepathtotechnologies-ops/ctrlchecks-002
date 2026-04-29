@@ -96,4 +96,44 @@ describe('generateFieldGuide registry metadata', () => {
     expect(guide.steps.length).toBeGreaterThanOrEqual(3);
     expect(guide.title.toLowerCase()).toMatch(/choose|operation/);
   });
+
+  it('provides JSON object guidance for HTTP headers', () => {
+    const guide = generateFieldGuide(
+      'http_request',
+      'headers',
+      'Headers',
+      'json',
+      undefined,
+      { helpCategory: 'http_headers' }
+    );
+    expect(guide.title.toLowerCase()).toMatch(/headers/);
+    expect(guide.example).toMatch(/Authorization/);
+  });
+
+  it('provides database connection string guidance', () => {
+    const guide = generateFieldGuide(
+      'postgresql',
+      'connectionString',
+      'Connection String',
+      'text',
+      undefined,
+      { helpCategory: 'connection_string' }
+    );
+    expect(guide.title.toLowerCase()).toMatch(/connection string/);
+    expect(guide.example).toMatch(/^postgresql:\/\//);
+    expect(guide.securityWarning).toBe(true);
+  });
+
+  it('provides structured switch cases guidance', () => {
+    const guide = generateFieldGuide(
+      'switch',
+      'cases',
+      'Cases',
+      'json',
+      undefined,
+      { helpCategory: 'case_list' }
+    );
+    expect(guide.steps.join(' ').toLowerCase()).toMatch(/array/);
+    expect(guide.example).toMatch(/value/);
+  });
 });

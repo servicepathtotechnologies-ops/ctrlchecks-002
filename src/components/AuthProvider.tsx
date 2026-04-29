@@ -1,259 +1,110 @@
-import { useEffect, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { AuthContext } from "@/lib/auth-context";
+﻿import { useEffect, useState, ReactNode } from "react";
+import { supabase } from "@/integrations/aws/client";
+import { AuthContext, AuthUser, AuthSession } from "@/lib/auth-context";
 
-/** Supabase Auth ban (e.g. admin suspension); blocks new sessions and refresh. */
-function isAccountBanned(user: User | null | undefined): boolean {
-    if (!user?.banned_until) return false;
-    const t = new Date(user.banned_until).getTime();
-    return !Number.isNaN(t) && t > Date.now();
+function mergeSession(prev: AuthSession | null, next: AuthSession | null): AuthSession | null {
+  if (!next) return null;
+  if (prev && prev.access_token === next.access_token) return prev;
+  return next;
 }
 
-/**
- * Avoid re-renders when Supabase emits the same logical session/user with new object references
- * (e.g. duplicate SIGNED_IN, INITIAL_SESSION + SIGNED_IN). Prevents full-app "refresh" loops.
- */
-function mergeSession(prev: Session | null, next: Session | null): Session | null {
-    if (!next) return null;
-    if (prev && prev.access_token === next.access_token && prev.expires_at === next.expires_at) {
-        return prev;
-    }
-    return next;
-}
-
-function mergeUser(prev: User | null, next: User | null): User | null {
-    if (!next) return null;
-    if (prev && prev.id === next.id) return prev;
-    return next;
+function mergeUser(prev: AuthUser | null, next: AuthUser | null): AuthUser | null {
+  if (!next) return null;
+  if (prev && prev.id === next.id) {
+    return {
+      ...prev,
+      ...next,
+      email: next.email || prev.email,
+      user_metadata: {
+        ...(prev.user_metadata || {}),
+        ...(next.user_metadata || {}),
+      },
+    };
+  }
+  return next;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [session, setSession] = useState<Session | null>(null);
-    const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        // Set up auth state listener FIRST
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (event, nextSession) => {
-                void (async () => {
-                    if (import.meta.env.DEV) {
-                        console.log('Auth state changed:', event, nextSession?.user?.email);
-                    }
-
-                    let effective = nextSession;
-                    if (nextSession?.user && isAccountBanned(nextSession.user)) {
-                        await supabase.auth.signOut();
-                        effective = null;
-                        toast.error('This account has been suspended. You have been signed out.');
-                    }
-
-                    setSession((prev) => mergeSession(prev, effective));
-                    setUser((prev) => mergeUser(prev, effective?.user ?? null));
-                    setLoading(false);
-                })();
-            }
-        );
-
-        // Check for existing session
-        supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
-            let s = currentSession;
-            if (currentSession?.user && isAccountBanned(currentSession.user)) {
-                await supabase.auth.signOut();
-                s = null;
-                toast.error('This account has been suspended. You have been signed out.');
-            }
-            setSession((prev) => mergeSession(prev, s));
-            setUser((prev) => mergeUser(prev, s?.user ?? null));
-            setLoading(false);
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
-
-    const signUp = async (email: string, password: string, fullName?: string, role: "user" | "admin" = "user") => {
-        const redirectUrl = `${window.location.origin}/`;
-
-        // Create auth user with role in metadata
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: redirectUrl,
-                data: {
-                    full_name: fullName,
-                    role: role, // Store role in metadata for trigger
-                },
-            },
-        });
-
-        if (authError) {
-            return { error: authError as Error | null };
-        }
-
-        // Wait for user to be created and trigger to run
-        if (authData.user) {
-            // Wait for the trigger to create the profile and set initial role
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Manually set role as fallback (in case trigger doesn't work or sets wrong role)
-            // This ensures role is always set correctly based on user selection
-            const { error: roleError } = await supabase
-                .from('user_roles')
-                .upsert({
-                    user_id: authData.user.id,
-                    role: role,
-                }, {
-                    onConflict: 'user_id,role'
-                });
-
-            if (roleError) {
-                console.error('Error setting user role:', roleError);
-                // Try alternative: delete existing and insert new
-                await supabase
-                    .from('user_roles')
-                    .delete()
-                    .eq('user_id', authData.user.id);
-
-                const { error: insertError } = await supabase
-                    .from('user_roles')
-                    .insert({ user_id: authData.user.id, role: role });
-
-                if (insertError) {
-                    console.error('Failed to set role even after retry:', insertError);
-                } else {
-                    console.log(`Role '${role}' set for user ${authData.user.id} (after retry)`);
-                }
-            } else {
-                console.log(`Role '${role}' successfully set for user ${authData.user.id}`);
-            }
-        }
-
-        return { error: null };
-    };
-
-    const signIn = async (email: string, password: string) => {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-
-        if (error) {
-            return { error: error as Error | null };
-        }
-
-        if (data.user && isAccountBanned(data.user)) {
-            await supabase.auth.signOut();
-            return {
-                error: new Error(
-                    'This account has been suspended. Contact support if you need help.'
-                ),
-            };
-        }
-
-        return { error: null };
-    };
-
-    const signInWithGoogle = async () => {
-        try {
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: "google",
-                options: {
-                    redirectTo: `${window.location.origin}/dashboard`,
-                },
-            });
-
-            if (error) {
-                console.error('Google OAuth error:', error);
-                return { error: error as Error | null };
-            }
-
-            // OAuth redirect will happen automatically
-            // The error will be null if redirect is successful
-            return { error: null };
-        } catch (err) {
-            console.error('Google sign-in exception:', err);
-            return { error: err as Error };
-        }
-    };
-
-    // Login flow invariant: redirectTo is always /dashboard with no scopes.
-    // This means GitHubAuthCallback at /auth/github/callback is never reached during login —
-    // Supabase redirects directly to /dashboard after session creation.
-    const signInWithGitHub = async () => {
-        try {
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: "github",
-                options: {
-                    redirectTo: `${window.location.origin}/dashboard`,
-                    // No scopes — Supabase defaults to read:user, user:email
-                },
-            });
-
-            if (error) {
-                console.error('GitHub OAuth error:', error);
-                return { error: error as Error | null };
-            }
-
-            // OAuth redirect will happen automatically
-            return { error: null };
-        } catch (err) {
-            console.error('GitHub sign-in exception:', err);
-            return { error: err as Error };
-        }
-    };
-
-    // Login flow invariant: redirectTo is always /dashboard. No FacebookAuthCallback
-    // component exists — Supabase redirects directly to /dashboard after session creation.
-    // Facebook requires scopes to be explicitly declared (unlike Google/GitHub).
-    const signInWithFacebook = async () => {
-        try {
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: "facebook",
-                options: {
-                    redirectTo: `${window.location.origin}/dashboard`,
-                    queryParams: {
-                        scope: 'public_profile',
-                    },
-                },
-            });
-
-            if (error) {
-                console.error('Facebook OAuth error:', error);
-                return { error: error as Error };
-            }
-
-            // OAuth redirect will happen automatically
-            return { error: null };
-        } catch (err) {
-            console.error('Facebook sign-in exception:', err);
-            return { error: err as Error };
-        }
-    };
-
-    const signOut = async () => {
-        await supabase.auth.signOut();
-        setUser(null);
-        setSession(null);
-    };
-
-    return (
-        <AuthContext.Provider
-            value={{
-                user,
-                session,
-                loading,
-                signUp,
-                signIn,
-                signInWithGoogle,
-                signInWithGitHub,
-                signInWithFacebook,
-                signOut,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event: string, nextSession: AuthSession | null) => {
+        setSession((prev) => mergeSession(prev, nextSession));
+        setUser((prev) => mergeUser(prev, nextSession?.user ?? null));
+        setLoading(false);
+      }
     );
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signUp = async (email: string, password: string, fullName?: string, _role: "user" | "admin" = "user") => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName } },
+    });
+    if (error) return { error: new Error(error.message) };
+    return { error: null };
+  };
+
+  const confirmSignUp = async (email: string, code: string) => {
+    const { error } = await (supabase.auth as any).confirmSignUp({ email, code });
+    if (error) return { error: new Error(error.message) };
+    return { error: null };
+  };
+
+  const resendSignUpCode = async (email: string) => {
+    const { error } = await (supabase.auth as any).resendSignUpCode({ email });
+    if (error) return { error: new Error(error.message) };
+    return { error: null };
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: new Error(error.message) };
+    if (!data.user) return { error: new Error("Sign-in failed — no user returned") };
+    return { error: null };
+  };
+
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    return { error: error ? new Error(error.message) : null };
+  };
+
+  const signInWithGitHub = async () => {
+    // GitHub does not support OIDC — Cognito cannot federate it directly.
+    // The worker handles the full OAuth exchange and creates/finds the Cognito user.
+    const apiUrl   = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const returnTo = encodeURIComponent(window.location.origin + '/dashboard');
+    window.location.href = `${apiUrl}/api/oauth/github/start-login?redirect_to=${returnTo}`;
+    return { error: null };
+  };
+
+  const signInWithFacebook = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "facebook",
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    return { error: error ? new Error(error.message) : null };
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{ user, session, loading, signUp, confirmSignUp, resendSignUpCode, signIn, signInWithGoogle, signInWithGitHub, signInWithFacebook, signOut }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }

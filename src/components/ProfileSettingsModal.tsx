@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
-import { getFacebookSupabaseOAuthOptions } from '@/lib/facebookSignInOptions';
-import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
+import { getFacebookOAuthOptions } from '@/lib/facebookSignInOptions';
 import { buildConnectorCallbackUrl, rememberOAuthReturnTo } from '@/lib/oauth-return';
+import { startGoogleConnectorOAuth } from '@/lib/google-connector-oauth';
+import { isGeneratedCognitoEmail, resolveProfileEmail } from '@/lib/profile-email';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -72,16 +73,24 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
       }
       
       if (data) {
+        const email = resolveProfileEmail(data.email, user);
         setProfile({
           full_name: data.full_name || user.user_metadata?.full_name || '',
-          email: data.email || user.email || '',
+          email,
           avatar_url: data.avatar_url || '',
         });
+
+        if (email && isGeneratedCognitoEmail(data.email)) {
+          await supabase
+            .from("profiles")
+            .update({ email })
+            .eq("user_id", user.id);
+        }
       } else {
         // Fallback to user metadata
         setProfile({
           full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
-          email: user.email || '',
+          email: resolveProfileEmail(null, user),
           avatar_url: user.user_metadata?.avatar_url || '',
         });
       }
@@ -228,7 +237,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
         .from("profiles")
         .upsert({
           user_id: user.id,
-          email: profile.email,
+          email: resolveProfileEmail(profile.email, user),
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
         }, {
@@ -270,19 +279,8 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
 
     try {
       if (service === 'google') {
-        const redirectUrl = buildConnectorCallbackUrl('/auth/google/callback');
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: redirectUrl,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-              scope: GOOGLE_CONNECTOR_SCOPES,
-            },
-          },
-        });
-        if (error) throw error;
+        startGoogleConnectorOAuth(user.id);
+        return;
       } else if (service === 'linkedin') {
         const redirectUrl = buildConnectorCallbackUrl('/auth/linkedin/callback');
         const { data, error } = await supabase.auth.signInWithOAuth({
@@ -309,7 +307,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
         const redirectUrl = buildConnectorCallbackUrl('/auth/facebook/callback');
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'facebook',
-          options: getFacebookSupabaseOAuthOptions(redirectUrl),
+          options: getFacebookOAuthOptions(redirectUrl),
         });
         if (error) throw error;
       } else if (service === 'notion') {

@@ -51,6 +51,24 @@ interface StructuralPrompt {
   terminalAction: string;
 }
 
+interface SummaryV2 {
+  graphOverview: {
+    triggerNodeIds: string[];
+    terminalNodeIds: string[];
+    totalNodes: number;
+    totalEdges: number;
+    hasBranching: boolean;
+  };
+  executionBackbone: Array<{ order: number; nodeId: string; nodeType: string; label: string; responsibility: string }>;
+  branches: Array<{
+    branchNodeId: string;
+    branchNodeType: string;
+    cases: Array<{ caseKey: string; targetNodeId: string; targetNodeType: string; terminalBehavior: string }>;
+  }>;
+  pathOutcomes: Array<{ pathId: string; condition: string; nodePath: string[]; terminalNodeId: string; outcome: string }>;
+  validationFindings: Array<{ code: string; severity: 'error' | 'warning'; message: string }>;
+}
+
 // ─── Legacy shape (backward-compatible) ──────────────────────────────────────
 
 interface WorkflowExplanation {
@@ -86,6 +104,7 @@ interface WorkflowConfirmationStepProps {
   workflowId: string;
   /** New: typed structural prompt from WorkflowGenerationPipeline. */
   structuralPrompt?: StructuralPrompt;
+  summaryV2?: SummaryV2 | null;
   /** Legacy: kept for backward compatibility. Used when structuralPrompt is absent. */
   workflowExplanation?: WorkflowExplanation;
   confidenceScore?: number;
@@ -102,6 +121,7 @@ interface WorkflowConfirmationStepProps {
 export function WorkflowConfirmationStep({
   workflowId,
   structuralPrompt,
+  summaryV2,
   workflowExplanation,
   confidenceScore,
   workflow,
@@ -131,6 +151,75 @@ export function WorkflowConfirmationStep({
 
   // Use structural prompt when available; fall back to legacy shape
   const useStructuralPrompt = !!structuralPrompt;
+
+  if (summaryV2) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="w-full max-w-4xl mx-auto space-y-6"
+      >
+        <Card className="border-2">
+          <CardHeader>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Workflow className="h-6 w-6 text-primary" />
+              Review Structural Summary
+            </CardTitle>
+            <CardDescription>
+              {summaryV2.graphOverview.totalNodes} nodes • {summaryV2.graphOverview.totalEdges} edges • {summaryV2.graphOverview.hasBranching ? 'Branching graph' : 'Linear graph'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div>
+              <p className="text-sm font-semibold mb-2">Execution backbone</p>
+              <ol className="pl-4 list-decimal space-y-1 text-sm">
+                {summaryV2.executionBackbone.map((step) => (
+                  <li key={`${step.nodeId}-${step.order}`}>
+                    <span className="font-medium">{step.label}</span> — {step.responsibility}
+                  </li>
+                ))}
+              </ol>
+            </div>
+            {summaryV2.branches.length > 0 && (
+              <div>
+                <p className="text-sm font-semibold mb-2">Branch map</p>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  {summaryV2.branches.map((branch) => (
+                    <p key={branch.branchNodeId}>
+                      {branch.branchNodeType}: {branch.cases.map((c) => `${c.caseKey} -> ${c.targetNodeType}`).join(', ')}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-semibold mb-2">Path outcomes</p>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                {summaryV2.pathOutcomes.map((path) => (
+                  <p key={path.pathId}>{path.pathId}: {path.outcome}</p>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+              <Button onClick={handleConfirm} disabled={isConfirming || isLoading} className="flex-1" size="lg">
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Confirm & Build
+              </Button>
+              <Button variant="outline" onClick={onChangeTools} disabled={isConfirming || isLoading} size="lg">
+                <Settings2 className="mr-2 h-4 w-4" />
+                Change Tools
+              </Button>
+              <Button variant="ghost" onClick={onRegenerate} disabled={isConfirming || isLoading} size="lg">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Regenerate
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
 
   const goal = workflowExplanation?.goal || 'Automate workflow based on your requirements';
   const servicesUsed = workflowExplanation?.services_used || [];

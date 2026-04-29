@@ -1,4 +1,4 @@
-import { useWorkflowStore } from '@/stores/workflowStore';
+﻿import { useWorkflowStore } from '@/stores/workflowStore';
 import { useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from 'react';
 import { getNodeDefinition, ConfigField } from './nodeTypes';
 import { NODE_USAGE_GUIDES } from './nodeUsageGuides';
@@ -18,7 +18,7 @@ import ScheduleWiseSettings from './ScheduleWiseSettings';
 import FormNodeSettings from './FormNodeSettings';
 import ScheduleTrigger from './ScheduleTrigger';
 import FacebookConnectionStatus from '@/components/FacebookConnectionStatus';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import {
   Copy, ExternalLink, Bot, Send, Loader2, Sparkles,
@@ -157,6 +157,17 @@ export default function PropertiesPanel({
   const formPublicUrl = useMemo(
     () => (workflowId ? buildFormPublicUrl(workflowId, nodes) : null),
     [workflowId, nodes]
+  );
+
+  // Stable string key for the selected node's config — prevents the auto-persist useEffect from
+  // firing on every render when the parent recreates node objects (same data, new reference).
+  const selectedNodeConfigKey = useMemo(
+    () =>
+      selectedNode
+        ? stableStringifyForAttachInputs((selectedNode.data?.config ?? {}) as Record<string, unknown>)
+        : '',
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedNode?.id, selectedNode?.data?.config]
   );
 
   // View mode state - default to properties
@@ -1049,6 +1060,7 @@ export default function PropertiesPanel({
   }, [selectedNode?.id, workflowId]);
 
   useEffect(() => {
+    if (debugMode) return;
     if (!selectedNode || !workflowId) return;
     // Only auto-persist when the workflow is already saved (has an ID)
     if (autoPersistTimerRef.current) clearTimeout(autoPersistTimerRef.current);
@@ -1056,7 +1068,7 @@ export default function PropertiesPanel({
       try {
         if (Date.now() < suppressAutoPersistUntilRef.current) return;
 
-        const { supabase } = await import('@/integrations/supabase/client');
+        const { supabase } = await import('@/integrations/aws/client');
         const { data: sessionData } = await supabase.auth.getSession();
         if (!sessionData?.session?.access_token) return;
 
@@ -1163,7 +1175,7 @@ export default function PropertiesPanel({
       if (autoPersistTimerRef.current) clearTimeout(autoPersistTimerRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedNode?.data?.config, selectedNode?.id, workflowId]);
+  }, [debugMode, selectedNodeConfigKey, selectedNode?.id, workflowId]);
 
   // Memoize available fields for condition builder – safe when no node is selected
   const availableFieldsForConditions = useMemo(() => {
@@ -1463,15 +1475,15 @@ export default function PropertiesPanel({
         (typeof value === 'object' && !Array.isArray(value) && Object.keys(value as object).length === 0);
       return (
         <div
-          className="text-xs text-muted-foreground border border-dashed border-border/60 rounded px-3 py-2 bg-muted/40"
+          className="text-xs text-muted-foreground border border-dashed border-border/60 rounded px-3 py-2.5 bg-muted/40 overflow-hidden"
           role="status"
           aria-label="AI-managed field, empty until execution"
           data-testid="ai-managed-field"
         >
-          <p className="font-medium text-foreground/80">
+          <p className="font-medium text-foreground/80 leading-snug">
             Filled automatically by AI at runtime
           </p>
-          <p className="mt-1">
+          <p className="mt-1 leading-relaxed break-words">
             This field will be generated dynamically from previous node output and your workflow
             intent. You don&apos;t need to configure it manually.
           </p>
@@ -1481,14 +1493,14 @@ export default function PropertiesPanel({
             </p>
           )}
           {runtimeValueMeta && (
-            <div className="mt-2 p-2 rounded border border-border/50 bg-background/60">
-              <p className="text-[11px] text-foreground/80 font-medium">
+            <div className="mt-2 p-2.5 rounded border border-border/40 bg-background/60 space-y-1.5">
+              <p className="text-[11px] text-foreground/80 font-medium leading-none">
                 Last runtime value (read-only)
               </p>
-              <p className="text-[10px] text-muted-foreground mt-1">
+              <p className="text-[10px] text-muted-foreground leading-snug">
                 {new Date(runtimeValueMeta.startedAt).toLocaleString()} • {runtimeValueMeta.source === 'runtime_ai' ? 'AI runtime' : 'Static config'}
               </p>
-              <pre className="mt-1 max-h-28 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] whitespace-pre-wrap break-words">
+              <pre className="max-h-28 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] whitespace-pre-wrap break-all w-full">
                 {typeof runtimeValueMeta.value === 'string'
                   ? runtimeValueMeta.value
                   : JSON.stringify(runtimeValueMeta.value, null, 2)}
@@ -1718,7 +1730,7 @@ export default function PropertiesPanel({
           type="single"
           value={viewMode}
           onValueChange={(value) => value && setViewMode(value as ViewMode)}
-          className="justify-center flex-1"
+          className="justify-start flex-1"
         >
           <ToggleGroupItem
             value="properties"
@@ -1782,7 +1794,7 @@ export default function PropertiesPanel({
       {viewMode === 'properties' ? (
         <>
           <ScrollArea className="flex-1">
-            <div className="px-4 py-4 space-y-5">
+            <div className="px-4 py-4 space-y-4">
               {guidedStatus && (
                 <GuidedStatusCard
                   title={guidedStatus.title}
@@ -2261,31 +2273,31 @@ export default function PropertiesPanel({
                               return (
                                 <div key={field.key} className={`rounded-md border border-border/40 bg-muted/10 transition-opacity ${fieldConditionActive ? 'opacity-100' : 'opacity-45'}`}>
                                   <div className="flex items-center gap-1.5 px-3 py-2">
-                                    <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1 truncate">
-                                      {field.label}
+                                    <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1 min-w-0">
+                                      <span className="truncate">{field.label}</span>
                                       {backendSchema && (
-                                        <span className="ml-1 text-[10px] text-muted-foreground/50" title="Rendered from backend schema">🎯</span>
+                                        <span className="text-[10px] text-muted-foreground/50 shrink-0" title="Rendered from backend schema">🎯</span>
                                       )}
                                     </Label>
                                   </div>
                                   <div className="px-3 pb-3">
                                     <div
-                                      className="text-xs text-muted-foreground border border-dashed border-border/60 rounded px-3 py-2 bg-muted/40"
+                                      className="text-xs text-muted-foreground border border-dashed border-border/60 rounded px-3 py-2.5 bg-muted/40 overflow-hidden"
                                       role="status"
                                       aria-label="AI-managed field, empty until execution"
                                       data-testid="ai-managed-field"
                                     >
-                                      <p className="font-medium text-foreground/80">Filled automatically by AI at runtime</p>
-                                      <p className="mt-1">
+                                      <p className="font-medium text-foreground/80 leading-snug">Filled automatically by AI at runtime</p>
+                                      <p className="mt-1 leading-relaxed break-words">
                                         This field will be generated dynamically from previous node output and your workflow intent. You don&apos;t need to configure it manually.
                                       </p>
                                       {runtimeValueMeta && (
-                                        <div className="mt-2 p-2 rounded border border-border/50 bg-background/60">
-                                          <p className="text-[11px] text-foreground/80 font-medium">Last runtime value (read-only)</p>
-                                          <p className="text-[10px] text-muted-foreground mt-1">
+                                        <div className="mt-2 p-2.5 rounded border border-border/40 bg-background/60 space-y-1.5">
+                                          <p className="text-[11px] text-foreground/80 font-medium leading-none">Last runtime value (read-only)</p>
+                                          <p className="text-[10px] text-muted-foreground leading-snug">
                                             {new Date(runtimeValueMeta.startedAt).toLocaleString()} • {runtimeValueMeta.source === 'runtime_ai' ? 'AI runtime' : 'Static config'}
                                           </p>
-                                          <pre className="mt-1 max-h-28 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] whitespace-pre-wrap break-words">
+                                          <pre className="max-h-28 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] whitespace-pre-wrap break-all w-full">
                                             {typeof runtimeValueMeta.value === 'string' ? runtimeValueMeta.value : JSON.stringify(runtimeValueMeta.value, null, 2)}
                                           </pre>
                                         </div>
@@ -2309,22 +2321,22 @@ export default function PropertiesPanel({
                             return (
                               <div key={field.key} className={`rounded-md border border-border/40 bg-muted/10 transition-opacity ${fieldConditionActive ? 'opacity-100' : 'opacity-45'}`}>
                                 {/* ── Field header row: label + toggle ── */}
-                                <div className="flex items-center justify-between gap-2 px-3 py-2">
+                                <div className="flex items-center justify-between gap-2 px-3 py-2 min-h-[36px]">
                                   <div className="flex items-center gap-1.5 min-w-0">
                                     {selectedNode.data.type === 'if_else' && field.key === 'conditions' ? (
-                                      <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1 truncate">
-                                        {field.label}
-                                        {effectiveRequired && <span className="text-destructive/80">*</span>}
+                                      <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1 min-w-0">
+                                        <span className="truncate">{field.label}</span>
+                                        {effectiveRequired && <span className="text-destructive/80 shrink-0">*</span>}
                                         {backendSchema && (
-                                          <span className="ml-1 text-[10px] text-muted-foreground/50" title="Rendered from backend schema">🎯</span>
+                                          <span className="text-[10px] text-muted-foreground/50 shrink-0" title="Rendered from backend schema">🎯</span>
                                         )}
                                       </Label>
                                     ) : (
-                                      <Label htmlFor={field.key} className="text-xs font-medium text-foreground/90 flex items-center gap-1 truncate">
-                                        {field.label}
-                                        {effectiveRequired && <span className="text-destructive/80">*</span>}
+                                      <Label htmlFor={field.key} className="text-xs font-medium text-foreground/90 flex items-center gap-1 min-w-0">
+                                        <span className="truncate">{field.label}</span>
+                                        {effectiveRequired && <span className="text-destructive/80 shrink-0">*</span>}
                                         {backendSchema && (
-                                          <span className="ml-1 text-[10px] text-muted-foreground/50" title="Rendered from backend schema">🎯</span>
+                                          <span className="text-[10px] text-muted-foreground/50 shrink-0" title="Rendered from backend schema">🎯</span>
                                         )}
                                       </Label>
                                     )}
@@ -2336,7 +2348,7 @@ export default function PropertiesPanel({
                                   <Switch
                                     checked={fieldEnabled}
                                     onCheckedChange={(checked) => handleFieldEnabledChange(field.key, checked)}
-                                    className="shrink-0 scale-90"
+                                    className="shrink-0"
                                     aria-label={`Enable ${field.label}`}
                                   />
                                 </div>
@@ -2523,16 +2535,16 @@ export default function PropertiesPanel({
             <Button
               variant="destructive"
               size="sm"
-              className="w-full h-8 text-xs font-medium"
+              className="w-full h-8 text-xs font-medium flex items-center justify-center"
               onClick={(e) => {
                 e.stopPropagation();
                 deleteSelectedNode();
               }}
             >
-              <Trash2 className="mr-2 h-3.5 w-3.5" />
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
               Delete Node
             </Button>
-            <p className="text-xs text-center text-muted-foreground/60">
+            <p className="text-xs text-center text-muted-foreground/75">
               Press <kbd className="px-1 py-0.5 text-xs font-medium text-muted-foreground bg-muted/60 rounded border border-border/40">Del</kbd> or <kbd className="px-1 py-0.5 text-xs font-medium text-muted-foreground bg-muted/60 rounded border border-border/40">Backspace</kbd> to delete
             </p>
           </div>

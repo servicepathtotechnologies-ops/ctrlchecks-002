@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { resetPassword } from "aws-amplify/auth";
 import { AppBrand } from "@/components/brand/AppBrand";
 
 export default function ForgotPassword() {
@@ -14,10 +14,11 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email) {
       toast({
         title: "Email required",
@@ -28,27 +29,27 @@ export default function ForgotPassword() {
     }
 
     setLoading(true);
-    
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
 
-    setLoading(false);
-
-    if (error) {
+    try {
+      await resetPassword({ username: email });
+      setSent(true);
+      toast({
+        title: "Code sent",
+        description: "Check your inbox for the 6-digit reset code.",
+      });
+      // Navigate to reset page with email pre-filled
+      setTimeout(() => {
+        navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+      }, 1500);
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: err.message || "Failed to send reset code.",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    setSent(true);
-    toast({
-      title: "Email sent",
-      description: "Check your inbox for the password reset link.",
-    });
   };
 
   if (sent) {
@@ -67,14 +68,9 @@ export default function ForgotPassword() {
           </div>
           <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
           <p className="text-muted-foreground">
-            We've sent a password reset link to <strong>{email}</strong>
+            We've sent a 6-digit reset code to <strong>{email}</strong>.<br />
+            Redirecting you to enter the code...
           </p>
-          <Button asChild variant="outline" className="mt-4">
-            <Link to="/signin">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to sign in
-            </Link>
-          </Button>
         </motion.div>
       </div>
     );
@@ -93,7 +89,7 @@ export default function ForgotPassword() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground">Forgot password?</h1>
           <p className="text-muted-foreground mt-2">
-            Enter your email and we'll send you a reset link
+            Enter your email and we'll send you a reset code
           </p>
         </div>
 
@@ -114,7 +110,7 @@ export default function ForgotPassword() {
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Sending..." : "Send reset link"}
+            {loading ? "Sending..." : "Send reset code"}
           </Button>
         </form>
 

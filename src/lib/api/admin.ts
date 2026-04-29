@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Admin API Client
  * Admin-only template operations
  */
 
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/aws/client';
+import type { Database } from '@/integrations/aws/types';
 import { ENDPOINTS } from '@/config/endpoints';
 
 type Template = Database['public']['Tables']['templates']['Row'];

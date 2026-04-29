@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '@/integrations/aws/client';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import {
   CheckCircle, XCircle, Loader2, Clock, ChevronDown, ChevronUp,
@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { buildFormPublicUrl } from '@/lib/formPublicUrl';
-import { Json } from '@/integrations/supabase/types';
+import { Json } from '@/integrations/aws/types';
 import ExecutionLogBlock from './ExecutionLogBlock';
 
 interface Execution {
@@ -26,6 +26,20 @@ interface Execution {
   input?: Json | null;
 }
 
+interface ExecutionStep {
+  id?: string;
+  node_id: string;
+  node_name?: string | null;
+  node_type?: string | null;
+  input_json?: Json | null;
+  output_json?: Json | null;
+  status?: string | null;
+  error?: string | null;
+  sequence?: number | null;
+  completed_at?: string | null;
+  started_at?: string | null;
+}
+
 interface ExecutionConsoleProps {
   isExpanded: boolean;
   onToggle: () => void;
@@ -36,6 +50,52 @@ type ResolvedInputSource = 'runtime_ai' | 'static_config';
 /** Returns true when the execution has reached a terminal state. */
 function isTerminalStatus(status: string): boolean {
   return status === 'success' || status === 'failed' || status === 'completed' || status === 'error';
+}
+
+function normalizeLogStatus(status?: string | null): 'running' | 'success' | 'failed' | 'skipped' | 'pending' {
+  switch (status) {
+    case 'success':
+    case 'completed':
+      return 'success';
+    case 'failed':
+    case 'error':
+      return 'failed';
+    case 'running':
+    case 'waiting':
+      return 'running';
+    case 'skipped':
+      return 'skipped';
+    default:
+      return 'pending';
+  }
+}
+
+function logsNeedStepHydration(execution: Execution, steps: ExecutionStep[]): boolean {
+  if (steps.length === 0) return false;
+  if (!Array.isArray(execution.logs) || execution.logs.length < steps.length) return true;
+  if (isTerminalStatus(execution.status)) {
+    return execution.logs.some((log: any) => log?.status === 'running' || log?.status === 'pending');
+  }
+  return false;
+}
+
+function buildLogsFromSteps(steps: ExecutionStep[]) {
+  return steps
+    .slice()
+    .sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
+    .map((step, index) => ({
+      id: step.id || `${step.node_id}-${step.sequence ?? index}`,
+      nodeId: step.node_id,
+      nodeName: step.node_name || step.node_id,
+      nodeType: step.node_type || undefined,
+      status: normalizeLogStatus(step.status),
+      startedAt: step.started_at || step.completed_at || new Date().toISOString(),
+      finishedAt: step.completed_at || undefined,
+      input: step.input_json,
+      output: step.output_json,
+      error: step.error || undefined,
+      sequence: step.sequence ?? index + 1,
+    }));
 }
 
 export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionConsoleProps) {
@@ -58,6 +118,34 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
     isManualSelectionRef.current = isManualSelection;
   }, [isManualSelection]);
 
+  const loadExecutionSteps = useCallback(async (executionId: string): Promise<ExecutionStep[]> => {
+    const { data, error } = await (supabase as any)
+      .from('execution_steps')
+      .select('id, node_id, node_name, node_type, input_json, output_json, status, error, sequence, completed_at, started_at')
+      .eq('execution_id', executionId)
+      .order('sequence', { ascending: true });
+
+    if (error) {
+      console.warn('Execution steps unavailable:', error);
+      return [];
+    }
+
+    return (data || []) as ExecutionStep[];
+  }, []);
+
+  const hydrateExecution = useCallback(async (execution: Execution): Promise<Execution> => {
+    const steps = await loadExecutionSteps(execution.id);
+    if (!logsNeedStepHydration(execution, steps)) {
+      return execution;
+    }
+
+    return {
+      ...execution,
+      logs: buildLogsFromSteps(steps) as unknown as Json,
+      output: execution.output ?? (steps.length > 0 ? steps[steps.length - 1]?.output_json ?? null : null),
+    };
+  }, [loadExecutionSteps]);
+
   // Load a specific execution with full data
   const loadExecution = useCallback(async (executionId: string) => {
     if (!workflowId) return;
@@ -75,12 +163,12 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
         return null;
       }
 
-      return data as Execution;
+      return await hydrateExecution(data as Execution);
     } catch (error) {
       console.error('Error loading execution:', error);
       return null;
     }
-  }, [workflowId]);
+  }, [workflowId, hydrateExecution]);
 
   const loadExecutions = useCallback(async () => {
     if (!workflowId) return;
@@ -127,14 +215,19 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
           const mostRecent = uniqueExecutions[0];
           // Only update if it's different or if we don't have a selection
           if (!currentSelectedExecution || currentSelectedExecution.id !== mostRecent.id) {
-            setSelectedExecution(mostRecent);
+            const fullExecution = await loadExecution(mostRecent.id);
+            setSelectedExecution(fullExecution || mostRecent);
+          } else {
+            const fullExecution = await loadExecution(currentSelectedExecution.id);
+            setSelectedExecution(fullExecution || mostRecent);
           }
         } else {
           // User has manually selected - update the selected execution data if it exists in the list
           if (currentSelectedExecution) {
             const updatedExecution = uniqueExecutions.find(e => e.id === currentSelectedExecution.id);
             if (updatedExecution) {
-              setSelectedExecution(updatedExecution);
+              const fullExecution = await loadExecution(updatedExecution.id);
+              setSelectedExecution(fullExecution || updatedExecution);
             }
           }
         }
@@ -146,7 +239,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
     } finally {
       setLoading(false);
     }
-  }, [workflowId]);
+  }, [workflowId, loadExecution]);
 
   useEffect(() => {
     if (workflowId && isExpanded) {
@@ -168,34 +261,40 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
         // The user can manually switch to the new execution if they want to see it
         // Force refresh executions immediately (but don't change selection)
         loadExecutions();
-        // Poll for updates while execution is running
+
+        // Exponential-backoff polling: 1s → 2s → 4s → 8s → cap at 10s
         let pollStopped = false;
-        const pollInterval = setInterval(async () => {
-          await loadExecutions();
-          // Check if the execution we started has reached a terminal status
-          const currentExec = selectedExecutionRef.current;
-          if (currentExec && currentExec.id === executionId && isTerminalStatus(currentExec.status)) {
-            if (!pollStopped) {
+        let attempt = 0;
+        const MAX_DELAY_MS = 10_000;
+        const MAX_DURATION_MS = 5 * 60_000; // give up after 5 minutes
+        const startedAt = Date.now();
+
+        const scheduleNext = () => {
+          if (pollStopped) return;
+          const delay = Math.min(1000 * Math.pow(2, attempt), MAX_DELAY_MS);
+          attempt++;
+          setTimeout(async () => {
+            if (pollStopped) return;
+            await loadExecutions();
+            const currentExec = selectedExecutionRef.current;
+            if (currentExec && currentExec.id === executionId && isTerminalStatus(currentExec.status)) {
               pollStopped = true;
-              clearInterval(pollInterval);
               try {
                 window.dispatchEvent(new CustomEvent('workflow-execution-terminal', {
                   detail: { execution: currentExec },
                 }));
-              } catch {
-                // Ensure polling stops even if dispatch throws
-              }
+              } catch { /* ignore dispatch errors */ }
+              return;
             }
-          }
-        }, 1000); // Poll every second
-        
-        // Stop polling after 30 seconds (execution should be done by then)
-        setTimeout(() => {
-          if (!pollStopped) {
-            pollStopped = true;
-            clearInterval(pollInterval);
-          }
-        }, 30000);
+            if (Date.now() - startedAt >= MAX_DURATION_MS) {
+              pollStopped = true;
+              return;
+            }
+            scheduleNext();
+          }, delay);
+        };
+
+        scheduleNext();
       }
     };
 
@@ -214,12 +313,21 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
     );
     
     if (hasRunningExecution) {
-      // Poll every 2 seconds while there's a running execution
-      const pollInterval = setInterval(() => {
-        loadExecutions();
-      }, 2000);
-      
-      return () => clearInterval(pollInterval);
+      // Exponential-backoff background refresh: 2s → 4s → 8s → cap 15s
+      let attempt = 0;
+      let stopped = false;
+      const MAX_BG_DELAY = 15_000;
+      let timerId: ReturnType<typeof setTimeout>;
+
+      const scheduleNext = () => {
+        if (stopped) return;
+        const delay = Math.min(2000 * Math.pow(2, attempt), MAX_BG_DELAY);
+        attempt++;
+        timerId = setTimeout(() => { loadExecutions(); scheduleNext(); }, delay);
+      };
+
+      scheduleNext();
+      return () => { stopped = true; clearTimeout(timerId); };
     }
   }, [isExpanded, workflowId, executions, loadExecutions]);
 

@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+﻿import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import { supabase } from '@/integrations/aws/client';
 import { useAuth } from '@/lib/auth';
 import { ENDPOINTS } from '@/config/endpoints';
 

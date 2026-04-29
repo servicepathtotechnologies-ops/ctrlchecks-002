@@ -1,10 +1,10 @@
-/**
+﻿/**
  * React hook for role-based access control
  */
 
 import { useEffect, useState } from 'react';
 import { getUserRole, isAdmin, isModerator, canAccessAdminPortal } from '@/lib/roles';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/integrations/aws/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
 

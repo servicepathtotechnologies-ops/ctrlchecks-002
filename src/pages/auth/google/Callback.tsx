@@ -1,159 +1,83 @@
-import { useEffect, useState, useRef } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
-import { AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { INTEGRATION_SCOPES } from '@/lib/google-scopes';
 import { resolveOAuthReturnTo } from '@/lib/oauth-return';
+import { supabase } from '@/integrations/aws/client';
+
+function safeReturnTo(params: URLSearchParams) {
+  const raw = params.get('return_to');
+  if (raw) {
+    try {
+      const decoded = decodeURIComponent(raw);
+      if (decoded.startsWith('/') && !decoded.startsWith('//')) return decoded;
+    } catch {
+      if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
+    }
+  }
+  return resolveOAuthReturnTo(params, '/workflows');
+}
 
 export default function GoogleAuthCallback() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [status, setStatus] = useState<string>('Processing authentication...');
+  const handled = useRef(false);
+  const params = new URLSearchParams(window.location.search);
+  const returnTo = safeReturnTo(params);
   const [error, setError] = useState<string | null>(null);
-  const processedRef = useRef(false);
 
   useEffect(() => {
-    // Avoid double-execution in React Strict Mode
-    if (processedRef.current) return;
+    if (handled.current) return;
+    handled.current = true;
 
-    let authSubscription: { unsubscribe: () => void } | null = null;
-    let timeoutId: NodeJS.Timeout;
+    const success = params.get('success') === 'true';
+    const oauthError = params.get('error_description') || params.get('error');
+    const email = params.get('email');
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const returnTo = resolveOAuthReturnTo(urlParams, '/workflows');
-    const isConnectorMode = urlParams.get('mode') === 'connector' || urlParams.has('returnTo');
-    const oauthError = urlParams.get('error_description') || urlParams.get('error');
+    if (oauthError) {
+      setError(oauthError);
+      toast({ title: 'Google connection failed', description: oauthError, variant: 'destructive' });
+      setTimeout(() => navigate(returnTo, { replace: true }), 3000);
+      return;
+    }
 
-    const processSession = async (session: Session | null) => {
-      if (!session) return false;
-      if (processedRef.current) return true;
+    if (success) {
+      toast({
+        title: 'Google connected',
+        description: email ? `Connected ${email}` : 'Google account connected successfully.',
+      });
+      navigate(returnTo, { replace: true });
+      return;
+    }
 
-      // If this is a login callback (not connector mode), just redirect to dashboard
-      if (!isConnectorMode) {
-        processedRef.current = true;
-        navigate('/dashboard');
-        return true;
-      }
-
-      // Connector mode: save tokens
-      try {
-        const { provider_token, provider_refresh_token } = session as Session & {
-          provider_token?: string | null;
-          provider_refresh_token?: string | null;
-        };
-
-        if (!provider_token) {
-          // getSession() can return an existing app session before OAuth provider tokens arrive.
-          // Keep listening for the OAuth SIGNED_IN event instead of failing early.
-          setStatus('Waiting for Google OAuth tokens...');
-          return false;
+    const isConnectorCallback = params.get('mode') === 'connector' || params.has('returnTo') || params.has('return_to');
+    if (!isConnectorCallback) {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) {
+          toast({ title: 'Signed in', description: 'Welcome back.' });
+          navigate('/dashboard', { replace: true });
+          return;
         }
 
-        processedRef.current = true;
-        setStatus('tokens found. Saving...');
-        console.log('Got Google tokens. Saving to database...');
+        setError('Google sign-in did not complete.');
+        toast({ title: 'Google sign-in failed', description: 'Google sign-in did not complete.', variant: 'destructive' });
+        setTimeout(() => navigate('/login', { replace: true }), 3000);
+      });
+      return;
+    }
 
-        // Upsert into google_oauth_tokens table
-        const { error: dbError } = await supabase
-          .from('google_oauth_tokens' as any)
-          .upsert({
-            user_id: session.user.id,
-            access_token: provider_token,
-            refresh_token: provider_refresh_token || null,
-            expires_at: new Date(Date.now() + 3600 * 1000).toISOString(),
-            token_type: 'Bearer',
-            scope: INTEGRATION_SCOPES,
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id'
-          });
-
-        if (dbError) throw dbError;
-
-        toast({
-          title: 'Success',
-          description: 'Google connected successfully!',
-        });
-
-        navigate(returnTo);
-        return true;
-
-      } catch (err) {
-        console.error('Error in Google callback processing:', err);
-        setError(err instanceof Error ? err.message : 'Failed to save Google connection');
-        toast({
-          title: 'Connection Failed',
-          description: err instanceof Error ? err.message : 'Failed to save connection',
-          variant: 'destructive',
-        });
-        // Still redirect after a bit so they aren't stuck
-        setTimeout(() => navigate(returnTo), 3000);
-        return true;
-      }
-    };
-
-    const setupAuthListener = async () => {
-      if (isConnectorMode && oauthError) {
-        setError(oauthError);
-        toast({
-          title: 'Connection Failed',
-          description: oauthError,
-          variant: 'destructive',
-        });
-        processedRef.current = true;
-        setTimeout(() => navigate(returnTo), 3000);
-        return;
-      }
-
-      // 1. Check if we already have a session (e.g. if exchange happened very fast)
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const success = await processSession(session);
-        if (success) return;
-      }
-
-      // 2. Setup listener for the EVENTUAL sign in (PKCE flow)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event: AuthChangeEvent, nextSession: Session | null) => {
-          console.log(`Auth Callback Event: ${event}`);
-
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            await processSession(nextSession);
-          }
-        }
-      );
-      authSubscription = subscription;
-
-      // 3. Set a timeout just in case it hangs forever
-      timeoutId = setTimeout(() => {
-        if (!processedRef.current) {
-          setError('Authentication timed out. Please try again.');
-          processedRef.current = true; // Stop listening
-        }
-      }, 10000); // 10 seconds timeout
-    };
-
-    setupAuthListener();
-
-    return () => {
-      if (authSubscription) authSubscription.unsubscribe();
-      clearTimeout(timeoutId);
-    };
-  }, [navigate, toast]);
+    setError('Google connection did not complete.');
+    toast({ title: 'Connection failed', description: 'Google connection did not complete.', variant: 'destructive' });
+    setTimeout(() => navigate(returnTo, { replace: true }), 3000);
+  }, [navigate, params, returnTo, toast]);
 
   if (error) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-8 text-center">
-        <div className="text-destructive font-semibold">Connection Failed</div>
+        <div className="font-semibold text-destructive">Connection Failed</div>
         <p className="text-muted-foreground">{error}</p>
-        <div className="bg-muted p-4 rounded text-xs font-mono text-left max-w-lg overflow-auto">
-          <p>Debug Info:</p>
-          <p>URL: {window.location.href}</p>
-          <p>Status: {status}</p>
-        </div>
-        <Button onClick={() => navigate(returnTo)} variant="outline">
+        <Button onClick={() => navigate(returnTo, { replace: true })} variant="outline">
           Return to Workflows
         </Button>
       </div>
@@ -163,12 +87,7 @@ export default function GoogleAuthCallback() {
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center gap-4">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="text-muted-foreground">{status}</p>
-      <p className="text-xs text-muted-foreground max-w-md text-center">
-        Waiting for Google to complete the handshake...
-      </p>
+      <p className="text-muted-foreground">Completing Google connection...</p>
     </div>
   );
 }
-
-import { Button } from '@/components/ui/button';

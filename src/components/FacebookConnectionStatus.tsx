@@ -1,12 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
-import { getFacebookSupabaseOAuthOptions } from '@/lib/facebookSignInOptions';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import { buildConnectorCallbackUrl } from '@/lib/oauth-return';
+import { getCurrentPathWithQuery, rememberOAuthReturnTo } from '@/lib/oauth-return';
 
 interface FacebookConnectionStatusProps {
   onConnect?: () => void;
@@ -105,16 +104,9 @@ export default function FacebookConnectionStatus({
     setIsAuthenticating(true);
 
     try {
-      const redirectUrl = buildConnectorCallbackUrl('/auth/facebook/callback');
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'facebook',
-        options: getFacebookSupabaseOAuthOptions(redirectUrl),
-      });
-
-      if (error) {
-        throw error;
-      }
+      const returnTo = getCurrentPathWithQuery();
+      rememberOAuthReturnTo(returnTo);
+      const params = new URLSearchParams({ user_id: user.id, redirect_to: returnTo });
 
       if (onConnect) {
         onConnect();
@@ -124,6 +116,7 @@ export default function FacebookConnectionStatus({
         title: 'Redirecting to Facebook...',
         description: 'Please authorize access to Facebook services',
       });
+      window.location.href = `${getBackendUrl()}/api/oauth/facebook/start?${params.toString()}`;
     } catch (error) {
       console.error('Facebook OAuth error:', error);
       toast({

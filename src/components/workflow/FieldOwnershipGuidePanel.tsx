@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Bot, Loader2, Send } from "lucide-react";
 import { ENDPOINTS } from "@/config/endpoints";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { trackFieldOwnershipGuideEvent } from "@/lib/field-ownership-guide-telemetry";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/aws/client";
 
 type GuideReply = {
   whatThisFieldDoes: string;

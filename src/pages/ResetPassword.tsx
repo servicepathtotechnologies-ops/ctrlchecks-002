@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Lock, Eye, EyeOff, CheckCircle, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { confirmResetPassword } from "aws-amplify/auth";
 import { AppBrand } from "@/components/brand/AppBrand";
 
 export default function ResetPassword() {
+  const [searchParams] = useSearchParams();
+  const [email, setEmail] = useState(searchParams.get("email") || "");
+  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,29 +21,22 @@ export default function ResetPassword() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Check if we have a valid session from the reset link
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Invalid or expired link",
-          description: "Please request a new password reset link.",
-          variant: "destructive",
-        });
-        navigate("/forgot-password");
-      }
-    };
-    checkSession();
-  }, [navigate, toast]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
+    if (!email || !code) {
+      toast({
+        title: "Missing fields",
+        description: "Please enter your email and the code from your inbox.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 8) {
       toast({
         title: "Password too short",
-        description: "Password must be at least 6 characters.",
+        description: "Password must be at least 8 characters.",
         variant: "destructive",
       });
       return;
@@ -57,27 +53,28 @@ export default function ResetPassword() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.updateUser({ password });
+    try {
+      await confirmResetPassword({
+        username: email,
+        confirmationCode: code.trim(),
+        newPassword: password,
+      });
 
-    setLoading(false);
-
-    if (error) {
+      setSuccess(true);
+      toast({
+        title: "Password updated",
+        description: "Your password has been reset successfully.",
+      });
+      setTimeout(() => navigate("/signin"), 2000);
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: err.message || "Failed to reset password.",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    setSuccess(true);
-    toast({
-      title: "Password updated",
-      description: "Your password has been reset successfully.",
-    });
-
-    // Redirect to dashboard after 2 seconds
-    setTimeout(() => navigate("/dashboard"), 2000);
   };
 
   if (success) {
@@ -96,7 +93,7 @@ export default function ResetPassword() {
           </div>
           <h1 className="text-2xl font-bold text-foreground">Password reset!</h1>
           <p className="text-muted-foreground">
-            Redirecting you to the dashboard...
+            Redirecting you to sign in...
           </p>
         </motion.div>
       </div>
@@ -116,11 +113,39 @@ export default function ResetPassword() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground">Reset your password</h1>
           <p className="text-muted-foreground mt-2">
-            Enter your new password below
+            Enter the 6-digit code from your email and your new password
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="code">Reset Code</Label>
+            <div className="relative">
+              <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="code"
+                type="text"
+                inputMode="numeric"
+                placeholder="123456"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="pl-10"
+                maxLength={6}
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="password">New Password</Label>
             <div className="relative">
@@ -159,9 +184,18 @@ export default function ResetPassword() {
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Updating..." : "Reset password"}
+            {loading ? "Resetting..." : "Reset password"}
           </Button>
         </form>
+
+        <div className="text-center">
+          <Link
+            to="/forgot-password"
+            className="text-sm text-muted-foreground hover:text-primary"
+          >
+            Didn't get a code? Send again
+          </Link>
+        </div>
       </motion.div>
     </div>
   );

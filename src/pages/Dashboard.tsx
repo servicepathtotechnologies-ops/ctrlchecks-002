@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+﻿import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/aws/client";
 import { Zap, Plus, Play, FolderOpen, LayoutTemplate, History, MoreHorizontal, Copy, Trash2, Clock, Bot, Workflow, MessageSquare, Sparkles, Hammer, ArrowLeft, Activity, CreditCard } from "lucide-react";
 import { AppChromeHeader } from "@/components/layout/AppChromeHeader";
 import GoogleConnectionStatus from "@/components/GoogleConnectionStatus";
@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tables, Json } from "@/integrations/supabase/types";
+import { Tables, Json } from "@/integrations/aws/types";
 import { toast } from "@/hooks/use-toast";
 import { is406Error } from "@/lib/utils";
 
@@ -424,7 +424,7 @@ export default function Dashboard() {
             className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
             onClick={() => navigate('/workflows')}
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Workflows</CardTitle>
               <Zap className="h-4 w-4 text-primary" />
             </CardHeader>
@@ -437,7 +437,7 @@ export default function Dashboard() {
             className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
             onClick={() => navigate('/executions')}
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Executions Today</CardTitle>
               <Play className="h-4 w-4 text-secondary" />
             </CardHeader>
@@ -453,7 +453,7 @@ export default function Dashboard() {
               setWorkflowsLoading(true);
             }}
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Active Workflows</CardTitle>
               <Activity className={`h-4 w-4 ${filterActive ? 'text-primary' : 'text-success'}`} />
             </CardHeader>

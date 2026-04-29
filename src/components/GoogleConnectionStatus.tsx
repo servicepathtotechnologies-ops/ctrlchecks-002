@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
-import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
-import { buildConnectorCallbackUrl } from '@/lib/oauth-return';
+import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { startGoogleConnectorOAuth } from '@/lib/google-connector-oauth';
 import {
   Tooltip,
   TooltipContent,
@@ -81,28 +80,11 @@ export default function GoogleConnectionStatus() {
     setIsAuthenticating(true);
 
     try {
-      const redirectUrl = buildConnectorCallbackUrl('/auth/google/callback');
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-            scope: GOOGLE_CONNECTOR_SCOPES,
-          },
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
       toast({
         title: 'Redirecting to Google...',
         description: 'Please authorize access to Google services',
       });
+      startGoogleConnectorOAuth(user.id);
     } catch (error) {
       console.error('Google OAuth error:', error);
       toast({

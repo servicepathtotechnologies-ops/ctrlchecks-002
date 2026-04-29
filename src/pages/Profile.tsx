@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/aws/client";
 import { getBackendUrl } from "@/lib/api/getBackendUrl";
-import { getFacebookSupabaseOAuthOptions } from "@/lib/facebookSignInOptions";
-import { GOOGLE_CONNECTOR_SCOPES } from "@/lib/google-scopes";
+import { getFacebookOAuthOptions } from "@/lib/facebookSignInOptions";
 import { buildConnectorCallbackUrl, rememberOAuthReturnTo } from "@/lib/oauth-return";
+import { startGoogleConnectorOAuth } from "@/lib/google-connector-oauth";
+import { isGeneratedCognitoEmail, resolveProfileEmail } from "@/lib/profile-email";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,18 +75,38 @@ export default function Profile() {
         .from("profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      const email = resolveProfileEmail(data?.email, user);
+
       if (data) {
         setProfile({
           full_name: data.full_name || "",
-          email: data.email || user.email || "",
+          email,
           avatar_url: data.avatar_url || "",
+        });
+
+        if (email && isGeneratedCognitoEmail(data.email)) {
+          await supabase
+            .from("profiles")
+            .upsert({
+              user_id: user.id,
+              email,
+              full_name: data.full_name || "",
+              avatar_url: data.avatar_url || "",
+            }, { onConflict: "user_id" });
+        }
+      } else {
+        setProfile({
+          full_name: (user as any)?.user_metadata?.full_name || (user as any)?.user_metadata?.name || "",
+          email,
+          avatar_url: "",
         });
       }
     } catch (error) {
       console.error("Error loading profile:", error);
+      setProfile((prev) => ({ ...prev, email: resolveProfileEmail(prev.email, user) }));
     } finally {
       setLoading(false);
     }
@@ -108,7 +129,7 @@ export default function Profile() {
         .from('google_oauth_tokens' as any)
         .select('id, expires_at')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       setConnections((prev) => ({
         ...prev,
@@ -261,11 +282,12 @@ export default function Profile() {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({
+        .upsert({
+          user_id: user.id,
+          email: resolveProfileEmail(profile.email, user),
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
-        })
-        .eq("user_id", user.id);
+        }, { onConflict: "user_id" });
 
       if (error) throw error;
       toast({
@@ -301,19 +323,8 @@ export default function Profile() {
 
     try {
       if (service === 'google') {
-        const redirectUrl = buildConnectorCallbackUrl('/auth/google/callback');
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: redirectUrl,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-              scope: GOOGLE_CONNECTOR_SCOPES,
-            },
-          },
-        });
-        if (error) throw error;
+        startGoogleConnectorOAuth(user.id);
+        return;
       } else if (service === 'linkedin') {
         const redirectUrl = buildConnectorCallbackUrl('/auth/linkedin/callback');
         const { data, error } = await supabase.auth.signInWithOAuth({
@@ -340,7 +351,7 @@ export default function Profile() {
         const redirectUrl = buildConnectorCallbackUrl('/auth/facebook/callback');
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'facebook',
-          options: getFacebookSupabaseOAuthOptions(redirectUrl),
+          options: getFacebookOAuthOptions(redirectUrl),
         });
         if (error) throw error;
       } else if (service === 'notion') {

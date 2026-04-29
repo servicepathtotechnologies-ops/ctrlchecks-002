@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import { buildConnectorCallbackUrl } from '@/lib/oauth-return';
+import { getCurrentPathWithQuery, rememberOAuthReturnTo } from '@/lib/oauth-return';
 
 interface GitHubConnectionStatusProps {
   onConnect?: () => void;
@@ -117,19 +117,9 @@ export default function GitHubConnectionStatus({
     setIsAuthenticating(true);
 
     try {
-      const redirectUrl = buildConnectorCallbackUrl('/auth/github/callback');
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: redirectUrl,
-          scopes: 'repo user read:org',
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
+      const returnTo = getCurrentPathWithQuery();
+      rememberOAuthReturnTo(returnTo);
+      const params = new URLSearchParams({ user_id: user.id, redirect_to: returnTo });
 
       if (onConnect) {
         onConnect();
@@ -139,6 +129,7 @@ export default function GitHubConnectionStatus({
         title: 'Redirecting to GitHub...',
         description: 'Please authorize access to GitHub services',
       });
+      window.location.href = `${getBackendUrl()}/api/oauth/github/start?${params.toString()}`;
     } catch (error) {
       console.error('GitHub OAuth error:', error);
       toast({

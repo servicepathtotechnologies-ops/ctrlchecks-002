@@ -1,184 +1,126 @@
 /**
- * GitHub OAuth Callback Handler
- * 
- * Handles GitHub OAuth callback from Supabase Auth.
- * Extracts tokens from session and saves them securely via backend API.
+ * GitHub OAuth Callback
+ *
+ * Handles two flows redirected from the worker:
+ *
+ * LOGIN flow  (?mode=login&session_code=<uuid>&return_to=<path>)
+ *   — Exchanges session_code for Cognito tokens, injects into Amplify
+ *     localStorage, then navigates to return_to. Amplify picks up the
+ *     session on the next render because it reads localStorage on every
+ *     fetchAuthSession() call.
+ *
+ * CONNECT flow (?success=true&login=<github_login>&return_to=<path>)
+ *   — Shows toast and navigates; no token handling needed (user already
+ *     has a Cognito session).
+ *
+ * ERROR (?error=<message>)
+ *   — Shows error toast and navigates back.
  */
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
-import { AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { Button } from '@/components/ui/button';
-import { resolveOAuthReturnTo } from '@/lib/oauth-return';
+
+const API_URL    = import.meta.env.VITE_API_URL    || 'http://localhost:3001';
+const CLIENT_ID  = import.meta.env.VITE_COGNITO_CLIENT_ID || '';
+
+function injectAmplifyTokens(
+  username:     string,
+  accessToken:  string,
+  idToken:      string,
+  refreshToken: string,
+) {
+  const prefix = `CognitoIdentityServiceProvider.${CLIENT_ID}`;
+  localStorage.setItem(`${prefix}.LastAuthUser`,              username);
+  localStorage.setItem(`${prefix}.${username}.accessToken`,  accessToken);
+  localStorage.setItem(`${prefix}.${username}.idToken`,      idToken);
+  localStorage.setItem(`${prefix}.${username}.refreshToken`, refreshToken);
+  localStorage.setItem(`${prefix}.${username}.clockDrift`,   '0');
+}
 
 export default function GitHubAuthCallback() {
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
   const { toast } = useToast();
-  const [status, setStatus] = useState<string>('Processing authentication...');
-  const [error, setError] = useState<string | null>(null);
-  const processedRef = useRef(false);
+  const handled   = useRef(false);
 
   useEffect(() => {
-    // Avoid double-execution in React Strict Mode
-    if (processedRef.current) return;
+    if (handled.current) return;
+    handled.current = true;
 
-    let authSubscription: { unsubscribe: () => void } | null = null;
-    let timeoutId: NodeJS.Timeout;
-    const searchParams = new URLSearchParams(window.location.search);
-    const returnTo = resolveOAuthReturnTo(searchParams, '/workflows');
-    const oauthError = searchParams.get('error_description') || searchParams.get('error');
+    const params      = new URLSearchParams(window.location.search);
+    const mode        = params.get('mode');
+    const sessionCode = params.get('session_code');
+    const success     = params.get('success') === 'true';
+    const login       = params.get('login');
+    const error       = params.get('error');
+    const returnTo    = decodeURIComponent(params.get('return_to') || '/dashboard');
 
-    const processSession = async (session: Session | null) => {
-      if (!session) return false;
+    if (error) {
+      const msg = decodeURIComponent(error);
+      toast({ title: 'GitHub sign-in failed', description: msg, variant: 'destructive' });
+      setTimeout(() => navigate(returnTo, { replace: true }), 2500);
+      return;
+    }
 
-      // Prevent multiple processings for the same session if possible
-      if (processedRef.current) return true;
+    if (mode === 'login' && sessionCode) {
+      // Exchange session code for Cognito tokens, inject into Amplify storage
+      (async () => {
+        try {
+          const res = await fetch(`${API_URL}/api/oauth/github/exchange-session`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ session_code: sessionCode }),
+          });
+          const data = await res.json();
 
-      try {
-        // Extract tokens from Supabase session
-        const { provider_token, provider_refresh_token, expires_at } = session as Session & {
-          provider_token?: string | null;
-          provider_refresh_token?: string | null;
-          expires_at?: number;
-        };
-
-        if (!provider_token) {
-          setStatus('Waiting for GitHub OAuth tokens...');
-          return false;
-        }
-
-        processedRef.current = true;
-        setStatus('GitHub tokens found. Saving...');
-        console.log('Got GitHub tokens. Saving to database via backend API...');
-
-        // Get current session token for API authentication
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (!currentSession?.access_token) {
-          throw new Error('No active session found');
-        }
-
-        // Call backend API to save token (with encryption)
-        const backendUrl = getBackendUrl();
-        const response = await fetch(`${backendUrl}/api/social-tokens`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${currentSession.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            provider: 'github',
-            access_token: provider_token,
-            refresh_token: provider_refresh_token || null,
-            expires_at: expires_at ? new Date(expires_at * 1000).toISOString() : null,
-            scope: 'repo,user,read:org', // GitHub scopes
-            provider_user_id: null, // Can be fetched from GitHub API if needed
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error?.message || `Failed to save GitHub token: ${response.statusText}`);
-        }
-
-        toast({
-          title: 'Success',
-          description: 'GitHub connected successfully!',
-        });
-
-        // Check if we should return to a specific page
-        navigate(returnTo);
-        return true;
-
-      } catch (err) {
-        console.error('Error in GitHub callback processing:', err);
-        setError(err instanceof Error ? err.message : 'Failed to save GitHub connection');
-        toast({
-          title: 'Connection Failed',
-          description: err instanceof Error ? err.message : 'Failed to save connection',
-          variant: 'destructive',
-        });
-        setTimeout(() => navigate(returnTo), 3000);
-        return true;
-      }
-    };
-
-    const setupAuthListener = async () => {
-      if (oauthError) {
-        setError(oauthError);
-        toast({
-          title: 'Connection Failed',
-          description: oauthError,
-          variant: 'destructive',
-        });
-        processedRef.current = true;
-        setTimeout(() => navigate(returnTo), 3000);
-        return;
-      }
-
-      // 1. Check if we already have a session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const success = await processSession(session);
-        if (success) return;
-      }
-
-      // 2. Setup listener for the eventual sign in (PKCE flow)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event: AuthChangeEvent, nextSession: Session | null) => {
-          console.log(`Auth Callback Event: ${event}`);
-
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            await processSession(nextSession);
+          if (!res.ok || !data.accessToken) {
+            throw new Error(data.error || 'Token exchange failed');
           }
+
+          injectAmplifyTokens(
+            data.username,
+            data.accessToken,
+            data.idToken,
+            data.refreshToken,
+          );
+
+          toast({
+            title:       'Signed in with GitHub!',
+            description: login ? `Welcome, @${login}` : 'GitHub sign-in successful.',
+          });
+
+          // Hard-navigate so Amplify re-initialises from fresh localStorage
+          window.location.href = returnTo;
+        } catch (err: any) {
+          toast({
+            title:       'GitHub sign-in failed',
+            description: err.message || 'Could not complete sign-in.',
+            variant:     'destructive',
+          });
+          setTimeout(() => navigate('/auth', { replace: true }), 2500);
         }
-      );
-      authSubscription = subscription;
+      })();
+      return;
+    }
 
-      // 3. Set a timeout just in case it hangs forever
-      timeoutId = setTimeout(() => {
-        if (!processedRef.current) {
-          setError('Authentication timed out. Please try again.');
-          processedRef.current = true;
-        }
-      }, 10000); // 10 seconds timeout
-    };
-
-    setupAuthListener();
-
-    return () => {
-      if (authSubscription) authSubscription.unsubscribe();
-      clearTimeout(timeoutId);
-    };
+    // CONNECT flow (success / already-authenticated user linked GitHub)
+    if (success) {
+      toast({
+        title:       'GitHub connected!',
+        description: login ? `Connected as @${login}` : 'GitHub account connected successfully.',
+      });
+      navigate(returnTo, { replace: true });
+    } else {
+      toast({ title: 'Connection failed', description: 'GitHub connection failed.', variant: 'destructive' });
+      setTimeout(() => navigate(returnTo, { replace: true }), 2500);
+    }
   }, [navigate, toast]);
-
-  if (error) {
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-8 text-center">
-        <div className="text-destructive font-semibold">Connection Failed</div>
-        <p className="text-muted-foreground">{error}</p>
-        <div className="bg-muted p-4 rounded text-xs font-mono text-left max-w-lg overflow-auto">
-          <p>Debug Info:</p>
-          <p>URL: {window.location.href}</p>
-          <p>Status: {status}</p>
-        </div>
-        <Button onClick={() => navigate(returnTo)} variant="outline">
-          Return to Workflows
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center gap-4">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="text-muted-foreground">{status}</p>
-      <p className="text-xs text-muted-foreground max-w-md text-center">
-        Waiting for GitHub to complete the handshake...
-      </p>
+      <p className="text-muted-foreground">Completing GitHub sign-in…</p>
     </div>
   );
 }

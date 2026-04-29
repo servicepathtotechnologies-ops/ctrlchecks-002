@@ -23,8 +23,11 @@ CREATE INDEX IF NOT EXISTS idx_workflows_template ON public.workflows(template_i
 
 -- Update RLS policies for templates (read-only for users, full access for admins)
 DROP POLICY IF EXISTS "Anyone can view templates" ON public.templates;
+DROP POLICY IF EXISTS "Users can view active templates" ON public.templates;
+DROP POLICY IF EXISTS "Admins can view all templates" ON public.templates;
 DROP POLICY IF EXISTS "Admins can create templates" ON public.templates;
 DROP POLICY IF EXISTS "Admins can update templates" ON public.templates;
+DROP POLICY IF EXISTS "Admins can delete templates" ON public.templates;
 
 -- Users can only view active templates
 CREATE POLICY "Users can view active templates" ON public.templates

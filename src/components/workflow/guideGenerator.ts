@@ -186,6 +186,62 @@ function guideFromRegistryHelpCategory(
     case 'webhook_secret':
     case 'generic_credential':
       return generateCredentialGuide(nodeType, fieldLabel);
+    case 'connection_string':
+      return { ...generateConnectionStringGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'username':
+      return { ...generateUsernameGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'password':
+      return { ...generatePasswordGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'service_account_email':
+      return { ...generateServiceAccountEmailGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'phone_number_id':
+      return { ...generateWhatsAppPhoneNumberIdGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'business_account_id':
+      return { ...generateMetaBusinessAccountGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'database_id':
+      return { ...generateProviderResourceIdGuide(nodeType, fieldLabel, 'database'), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'workspace_id':
+      return { ...generateProviderResourceIdGuide(nodeType, fieldLabel, 'workspace'), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'channel_id':
+      return { ...generateProviderResourceIdGuide(nodeType, fieldLabel, 'channel'), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'list_id':
+      return { ...generateProviderResourceIdGuide(nodeType, fieldLabel, 'list'), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'folder_id':
+      return { ...generateProviderResourceIdGuide(nodeType, fieldLabel, 'folder'), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'file_path':
+      return { ...generateFilePathGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'project_id':
+      return { ...generateProjectIdGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'dataset_id':
+      return { ...generateProviderResourceIdGuide(nodeType, fieldLabel, 'dataset'), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'bucket_name':
+      return { ...generateBucketNameGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'region':
+      return { ...generateRegionGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'model_id':
+      return { ...generateModelGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'timezone':
+      return { ...generateTimezoneGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'http_headers':
+      return { ...generateHeadersGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'http_body':
+      return { ...generateBodyPayloadGuide(fieldLabel, placeholder), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'query_params':
+      return { ...generateQueryParamsGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'field_mapping':
+      return { ...generateFieldMappingGuide(fieldLabel, placeholder), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'case_list':
+      return { ...generateCaseListGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'form_fields':
+      return { ...generateFormFieldsGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'sql_query':
+      return { ...generateSQLQueryGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'graphql_query':
+      return { ...generateGraphQLQueryGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'search_query':
+      return { ...generateSearchQueryGuide(nodeType, fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
+    case 'code_snippet':
+      return { ...generateCodeSnippetGuide(fieldLabel), ...(url ? { url } : {}), ...(ex ? { example: ex } : {}) };
     default:
       return null;
   }
@@ -771,7 +827,135 @@ function generateAPIKeyGuide(nodeType: string, fieldLabel: string): FieldGuide {
       ],
       example: 'sk-ant-api03-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       securityWarning: true
-    }
+    },
+    mailgun: {
+      title: 'How to get Mailgun API Key?',
+      url: 'https://app.mailgun.com/settings/api_security',
+      steps: [
+        'Step 1: Log in to https://app.mailgun.com',
+        'Step 2: Click your account name (top right) → "API Security"',
+        'Step 3: Under "Mailgun API keys", click "Add new key"',
+        'Step 4: Enter a description (e.g., "Workflow Automation") and click "Create Key"',
+        'Step 5: Copy the key immediately — it starts with "key-"',
+        'Step 6: Paste it into the API Key field above',
+        '',
+        'Note: You also need your sending domain from Domains → your domain → Domain Settings.',
+        '',
+        '⚠️ The private API key can send email on your behalf. Keep it secret.',
+      ],
+      example: 'key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+      securityWarning: true,
+    },
+    sendgrid: {
+      title: 'How to get SendGrid API Key?',
+      url: 'https://app.sendgrid.com/settings/api_keys',
+      steps: [
+        'Step 1: Log in to https://app.sendgrid.com',
+        'Step 2: Go to Settings → API Keys in the left sidebar',
+        'Step 3: Click "Create API Key" (top right)',
+        'Step 4: Enter a name (e.g., "Workflow Automation")',
+        'Step 5: Select "Restricted Access" and enable "Mail Send" → Full Access',
+        'Step 6: Click "Create & View"',
+        'Step 7: Copy the key immediately — it starts with "SG."',
+        'Step 8: Paste it into the API Key field above',
+        '',
+        '⚠️ The key is shown only once. If lost, delete it and create a new one.',
+      ],
+      example: 'SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+      securityWarning: true,
+    },
+    pipedrive: {
+      title: 'How to get Pipedrive API Token?',
+      url: 'https://app.pipedrive.com/settings/api',
+      steps: [
+        'Step 1: Log in to your Pipedrive account at https://app.pipedrive.com',
+        'Step 2: Click your profile avatar (top right) → "Personal preferences"',
+        'Step 3: Go to the "API" tab',
+        'Step 4: Your personal API token is displayed — click the copy icon',
+        'Step 5: Paste the token into the API Token field above',
+        '',
+        'Format: a 40-character alphanumeric string.',
+        '',
+        '⚠️ This token acts as your personal credentials. Do not share it.',
+      ],
+      example: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+      securityWarning: true,
+    },
+    activecampaign: {
+      title: 'How to get ActiveCampaign API Key?',
+      url: 'https://www.activecampaign.com/api/overview.php',
+      steps: [
+        'Step 1: Log in to your ActiveCampaign account',
+        'Step 2: Go to Settings (gear icon, bottom left) → "Developer"',
+        'Step 3: Your API Key and API URL are shown on this page',
+        'Step 4: Click the copy icon next to the API Key',
+        'Step 5: Paste it into the API Key field above',
+        'Step 6: Also copy the API URL (e.g., https://youraccountname.api-us1.com) into the API URL field',
+        '',
+        'Format: a 64-character hex string.',
+        '',
+        '⚠️ Do not share your API key — it grants full account access.',
+      ],
+      example: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+      securityWarning: true,
+    },
+    jenkins: {
+      title: 'How to get Jenkins API Token?',
+      url: 'https://your-jenkins-server/user/your-username/configure',
+      steps: [
+        'Step 1: Log in to your Jenkins server',
+        'Step 2: Click your username (top right) → "Configure"',
+        'Step 3: Scroll down to the "API Token" section',
+        'Step 4: Click "Add new Token"',
+        'Step 5: Enter a name (e.g., "Workflow Automation") and click "Generate"',
+        'Step 6: Copy the token immediately — it is shown only once',
+        'Step 7: Paste it into the API Token field above',
+        '',
+        'Note: Use this token with your Jenkins username for Basic Auth.',
+        '',
+        '⚠️ Tokens cannot be retrieved after creation. Store them securely.',
+      ],
+      example: '11abc123def456ghi789jkl012mno345pq',
+      securityWarning: true,
+    },
+    supabase: {
+      title: 'How to get Supabase API Key?',
+      url: 'https://supabase.com/dashboard/project/_/settings/api',
+      steps: [
+        'Step 1: Log in to https://supabase.com/dashboard',
+        'Step 2: Select your project',
+        'Step 3: Go to Project Settings → API (left sidebar)',
+        'Step 4: Under "Project API keys", copy one of:',
+        '   • anon / public — safe for client-side usage with RLS enabled',
+        '   • service_role — bypasses RLS; use only in server-side workflows',
+        'Step 5: Also copy the "Project URL" (e.g., https://xxxx.supabase.co) into the URL field',
+        'Step 6: Paste the key into the API Key field above',
+        '',
+        '⚠️ Never expose the service_role key in client-side code.',
+      ],
+      example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.xxx',
+      securityWarning: true,
+    },
+    aws: {
+      title: 'How to get AWS Access Key ID?',
+      url: 'https://console.aws.amazon.com/iam/home#/users',
+      steps: [
+        'Step 1: Log in to https://console.aws.amazon.com',
+        'Step 2: Go to IAM → Users',
+        'Step 3: Select the IAM user you want to use (or create a new one with least-privilege permissions)',
+        'Step 4: Go to the "Security credentials" tab',
+        'Step 5: Scroll to "Access keys" and click "Create access key"',
+        'Step 6: Choose use case (e.g., "Application running outside AWS") → Next',
+        'Step 7: Copy both the Access Key ID and Secret Access Key',
+        'Step 8: Paste the Access Key ID into the Access Key ID field and the Secret into the Secret Access Key field',
+        '',
+        'Format: Access Key ID starts with "AKIA" (20 characters).',
+        '',
+        '⚠️ Never use root account credentials. Create a dedicated IAM user with minimal permissions.',
+      ],
+      example: 'AKIAIOSFODNN7EXAMPLE',
+      securityWarning: true,
+    },
   };
 
   return guides[nodeType] || {
@@ -792,6 +976,100 @@ function generateAPIKeyGuide(nodeType: string, fieldLabel: string): FieldGuide {
 }
 
 function generateTokenGuide(nodeType: string, fieldLabel: string): FieldGuide {
+  if (nodeType === 'telegram') {
+    return {
+      title: 'How to get Telegram Bot Token?',
+      url: 'https://t.me/BotFather',
+      steps: [
+        'Step 1: Open Telegram and search for "@BotFather" in the search bar',
+        'Step 2: Tap BotFather and press "Start"',
+        'Step 3: Send the command: /newbot',
+        'Step 4: BotFather asks for a display name — enter one (e.g., "My Workflow Bot")',
+        'Step 5: Choose a username — it must end in "bot" (e.g., "myworkflow_bot")',
+        'Step 6: BotFather confirms creation and shows your Bot Token',
+        'Step 7: Copy the full token — it looks like: 1234567890:ABCdefGHIjklMNOpqrSTUvwxYZ',
+        'Step 8: Paste the token into the field above',
+        '',
+        'To revoke a leaked token: send /token to BotFather and regenerate it.',
+        '',
+        '⚠️ Never share your bot token. Anyone with it can control your bot.',
+      ],
+      example: '1234567890:ABCdefGHIjklMNOpqrSTUvwxYZ',
+      securityWarning: true,
+    };
+  }
+
+  if (nodeType === 'discord') {
+    return {
+      title: 'How to get Discord Bot Token?',
+      url: 'https://discord.com/developers/applications',
+      steps: [
+        'Step 1: Go to https://discord.com/developers/applications and sign in',
+        'Step 2: Click "New Application" → give it a name → click "Create"',
+        'Step 3: In the left sidebar, click "Bot"',
+        'Step 4: Click "Add Bot" → confirm with "Yes, do it!"',
+        'Step 5: Under TOKEN, click "Reset Token" → confirm → copy the token immediately',
+        'Step 6: Scroll down and enable "Message Content Intent" if your bot reads messages',
+        'Step 7: To add the bot to a server: go to OAuth2 → URL Generator → select "bot" scope',
+        '   Select required permissions and visit the generated URL to invite the bot',
+        'Step 8: Paste the token into the field above',
+        '',
+        'Token format: MTxxxxxxxxxxxxxxxxxxxxxxxx.Gxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        '',
+        '⚠️ The token is shown only once after reset. If lost, reset it again.',
+      ],
+      example: 'MTxxxxxxxxxxxxxxxxxxxxxxxx.Gxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+      securityWarning: true,
+    };
+  }
+
+  if (nodeType === 'twilio') {
+    return {
+      title: 'How to get Twilio Auth Token?',
+      url: 'https://console.twilio.com',
+      steps: [
+        'Step 1: Go to https://console.twilio.com and sign in',
+        'Step 2: Your Account SID and Auth Token are on the dashboard homepage',
+        'Step 3: Click the eye icon next to Auth Token to reveal the value',
+        'Step 4: Click the copy icon to copy the Auth Token',
+        'Step 5: Paste it into the Auth Token field above',
+        '',
+        'Also note your Account SID from the same page — you need it for the Account SID field.',
+        '',
+        'Format: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4 (32-character hex string)',
+        '',
+        '⚠️ Treat the Auth Token like a password. Never expose it in client-side code.',
+      ],
+      example: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4',
+      securityWarning: true,
+    };
+  }
+
+  if (nodeType === 'hubspot') {
+    return {
+      title: 'How to get HubSpot Private App Token?',
+      url: 'https://developers.hubspot.com/docs/api/private-apps',
+      steps: [
+        'Step 1: Log in to HubSpot at https://app.hubspot.com',
+        'Step 2: Click the settings gear icon (top right)',
+        'Step 3: Go to Integrations → Private Apps in the left sidebar',
+        'Step 4: Click "Create a private app" (top right)',
+        'Step 5: On the "Basic Info" tab, enter a name and description for the app',
+        'Step 6: Go to the "Scopes" tab and enable the permissions your workflow needs',
+        '   Common scopes: crm.objects.contacts.read/write, crm.objects.deals.read/write',
+        'Step 7: Click "Create app" (top right) → confirm',
+        'Step 8: A dialog shows your access token — click "Copy" immediately',
+        'Step 9: Paste the token into the field above',
+        '',
+        'Format: pat-eu1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+        '',
+        '⚠️ This token grants API access based on the scopes you selected. Keep it secret.',
+      ],
+      example: 'pat-eu1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+      securityWarning: true,
+    };
+  }
+
   return {
     title: `How to get ${fieldLabel}?`,
     steps: [
@@ -812,7 +1090,7 @@ function generateTokenGuide(nodeType: string, fieldLabel: string): FieldGuide {
 
 function generateURLGuide(nodeType: string, fieldKey: string, fieldLabel: string): FieldGuide {
   const lowerKey = fieldKey.toLowerCase();
-  
+
   if (lowerKey.includes('webhook')) {
     return {
       title: 'How to get Webhook URL?',
@@ -826,9 +1104,97 @@ function generateURLGuide(nodeType: string, fieldKey: string, fieldLabel: string
         'Step 7: Test the webhook to verify it\'s working',
         '',
         'Example:',
-        'https://api.example.com/webhook/receive'
+        'https://api.example.com/webhook/receive',
       ],
-      example: 'https://api.example.com/webhook/receive'
+      example: 'https://api.example.com/webhook/receive',
+    };
+  }
+
+  if (nodeType === 'mailgun') {
+    return {
+      title: 'How to get your Mailgun Sending Domain?',
+      url: 'https://app.mailgun.com/mg/sending/domains',
+      steps: [
+        'Step 1: Log in to https://app.mailgun.com',
+        'Step 2: Go to Send → Domains in the left sidebar',
+        'Step 3: You will see your verified sending domains listed',
+        'Step 4: If you have not added a domain yet, click "Add New Domain" and follow the DNS setup guide',
+        'Step 5: Copy the domain name exactly as shown (e.g., mg.yourdomain.com)',
+        'Step 6: Paste it into the Domain field above',
+        '',
+        'Note: Mailgun provides a sandbox domain (sandbox....mailgun.org) for testing. Use your own domain for production.',
+      ],
+      example: 'mg.yourdomain.com',
+    };
+  }
+
+  if (nodeType === 'activecampaign') {
+    return {
+      title: 'How to get ActiveCampaign API URL?',
+      url: 'https://help.activecampaign.com/hc/en-us/articles/207317590',
+      steps: [
+        'Step 1: Log in to your ActiveCampaign account',
+        'Step 2: Go to Settings (gear icon, bottom left) → "Developer"',
+        'Step 3: Your API URL is shown on this page (next to your API Key)',
+        'Step 4: Copy the full URL — it includes your account name',
+        'Step 5: Paste it into the API URL field above',
+        '',
+        'Format: https://youraccountname.api-us1.com',
+        '',
+        'Note: The URL is unique to your account and region.',
+      ],
+      example: 'https://youraccountname.api-us1.com',
+    };
+  }
+
+  if (nodeType === 'woocommerce') {
+    return {
+      title: 'How to get your WooCommerce Store URL?',
+      steps: [
+        'Step 1: Your store URL is the domain where your WordPress/WooCommerce site is hosted',
+        'Step 2: It is the root URL of your site — not a product or checkout page',
+        'Step 3: Make sure it includes the protocol: https://',
+        'Step 4: Paste it into the Store URL field above',
+        '',
+        'Example: if your site is at https://shop.example.com, enter that.',
+        '',
+        'Note: The REST API will be accessed at <store_url>/wp-json/wc/v3/...',
+      ],
+      example: 'https://shop.example.com',
+    };
+  }
+
+  if (nodeType === 'jenkins') {
+    return {
+      title: 'How to get Jenkins Base URL?',
+      steps: [
+        'Step 1: Your Jenkins Base URL is the root address of your Jenkins server',
+        'Step 2: For self-hosted Jenkins it is typically http://your-server:8080 or https://jenkins.yourdomain.com',
+        'Step 3: Check with your DevOps team if you are unsure',
+        'Step 4: Paste the full URL (with protocol) into the Base URL field above',
+        '',
+        'Example: https://jenkins.yourdomain.com',
+        '',
+        'Note: Do not include trailing slashes or specific job paths.',
+      ],
+      example: 'https://jenkins.yourdomain.com',
+    };
+  }
+
+  if (nodeType === 'supabase') {
+    return {
+      title: 'How to get Supabase Project URL?',
+      url: 'https://supabase.com/dashboard/project/_/settings/api',
+      steps: [
+        'Step 1: Log in to https://supabase.com/dashboard',
+        'Step 2: Select your project',
+        'Step 3: Go to Project Settings → API in the left sidebar',
+        'Step 4: Under "Project URL", copy the URL shown (e.g., https://xxxx.supabase.co)',
+        'Step 5: Paste it into the Project URL field above',
+        '',
+        'Format: https://<project-ref>.supabase.co',
+      ],
+      example: 'https://xxxxxxxxxxxxxxxxxxxx.supabase.co',
     };
   }
 
@@ -844,9 +1210,9 @@ function generateURLGuide(nodeType: string, fieldKey: string, fieldLabel: string
       'Step 7: Test the URL in a browser or API client to verify it\'s accessible',
       '',
       'Example:',
-      'https://api.example.com/v1'
+      'https://api.example.com/v1',
     ],
-    example: 'https://api.example.com/v1'
+    example: 'https://api.example.com/v1',
   };
 }
 
@@ -940,6 +1306,51 @@ function generateCredentialGuide(nodeType: string, fieldLabel: string): FieldGui
     };
   }
   
+  // WooCommerce consumer key / consumer secret
+  if (nodeType === 'woocommerce') {
+    const isSecret = fieldLabel.toLowerCase().includes('secret');
+    return {
+      title: isSecret ? 'How to get WooCommerce Consumer Secret?' : 'How to get WooCommerce Consumer Key?',
+      url: 'https://woocommerce.com/document/woocommerce-rest-api/',
+      steps: [
+        'Step 1: Log in to your WordPress admin panel (https://yourstore.com/wp-admin)',
+        'Step 2: Go to WooCommerce → Settings → Advanced → REST API',
+        'Step 3: Click "Add Key"',
+        'Step 4: Fill in Description (e.g., "Workflow Automation"), select User, set Permissions to "Read/Write"',
+        'Step 5: Click "Generate API Key"',
+        'Step 6: The Consumer Key and Consumer Secret are shown — copy both immediately',
+        'Step 7: Paste the Consumer Key into the Consumer Key field and Consumer Secret into its field',
+        '',
+        '⚠️ The Consumer Secret is shown only once. If lost, you must regenerate the key pair.',
+      ],
+      example: isSecret ? 'cs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' : 'ck_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+      securityWarning: true,
+    };
+  }
+
+  // SFTP private key
+  if (nodeType === 'sftp' && fieldLabel.toLowerCase().includes('private')) {
+    return {
+      title: 'How to get SFTP Private Key?',
+      steps: [
+        'Step 1: Generate an SSH key pair if you do not have one:',
+        '   Run: ssh-keygen -t ed25519 -C "workflow-automation"',
+        '   This creates ~/.ssh/id_ed25519 (private) and ~/.ssh/id_ed25519.pub (public)',
+        'Step 2: Add the public key to the SFTP server\'s authorized_keys file:',
+        '   cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys  (on the server)',
+        'Step 3: Copy the full content of the private key file:',
+        '   cat ~/.ssh/id_ed25519  (on your local machine)',
+        'Step 4: Paste the entire content — including the -----BEGIN and -----END lines — into this field',
+        '',
+        'Note: If your SFTP provider gave you a private key file, open it in a text editor and copy all its contents.',
+        '',
+        '⚠️ Never share your private key. Treat it like a password.',
+      ],
+      example: '-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1...\n-----END OPENSSH PRIVATE KEY-----',
+      securityWarning: true,
+    };
+  }
+
   // Generic credential guide for non-database credentials
   return {
     title: `How to get ${fieldLabel}?`,
@@ -959,6 +1370,333 @@ function generateCredentialGuide(nodeType: string, fieldLabel: string): FieldGui
       '⚠️ Do not expose this value on frontend. Store it securely.'
     ],
     securityWarning: true
+  };
+}
+
+function generateConnectionStringGuide(nodeType: string, fieldLabel: string): FieldGuide {
+  const lowerNode = nodeType.toLowerCase();
+  const example =
+    lowerNode.includes('postgres') ? 'postgresql://user:password@host:5432/database?sslmode=require' :
+    lowerNode.includes('mysql') ? 'mysql://user:password@host:3306/database' :
+    lowerNode.includes('mongo') ? 'mongodb+srv://user:password@cluster.example.mongodb.net/database' :
+    lowerNode.includes('redis') ? 'redis://default:password@host:6379' :
+    'protocol://username:password@host:port/database';
+
+  return {
+    title: `How to fill ${fieldLabel}?`,
+    steps: [
+      'Step 1: Open your database or service dashboard and find the connection details.',
+      'Step 2: Copy the full connection URI if the provider gives one.',
+      'Step 3: If it gives separate fields, combine protocol, username, password, host, port, and database name.',
+      'Step 4: Include SSL options when the provider requires them, for example sslmode=require for PostgreSQL.',
+      'Step 5: Paste the complete URI into this field. Do not paste only the host name.',
+      'Step 6: Use a dedicated low-permission database user for workflow automation.',
+    ],
+    example,
+    securityWarning: true,
+  };
+}
+
+function generateUsernameGuide(nodeType: string, fieldLabel: string): FieldGuide {
+  return {
+    title: `How to get ${fieldLabel}?`,
+    steps: [
+      'Step 1: Open the provider dashboard or admin console for this service.',
+      'Step 2: Go to users, credentials, database users, or account settings.',
+      'Step 3: Copy the username exactly as shown. It may be an email address, login name, or generated service user.',
+      'Step 4: For databases and automation accounts, prefer a dedicated user with only the permissions this workflow needs.',
+      'Step 5: Paste only the username, not the password or full connection string.',
+    ],
+    example: nodeType.toLowerCase().includes('smtp') ? 'your-email@example.com' : 'workflow_user',
+  };
+}
+
+function generatePasswordGuide(nodeType: string, fieldLabel: string): FieldGuide {
+  return {
+    title: `How to get ${fieldLabel}?`,
+    steps: [
+      'Step 1: Open the provider dashboard where the user, app, or database credential is managed.',
+      'Step 2: If the password is not visible, create or reset it and copy the new value immediately.',
+      'Step 3: For services like Gmail, Outlook, Bitbucket, or Jira, use an app password or API token when available.',
+      'Step 4: Paste the password/token exactly as generated. Preserve symbols, spaces, and capitalization.',
+      'Step 5: Rotate the password if it was ever exposed or pasted into the wrong place.',
+    ],
+    example: nodeType.toLowerCase().includes('smtp') ? 'app-password-or-smtp-password' : 'generated-password-or-token',
+    securityWarning: true,
+  };
+}
+
+function generateServiceAccountEmailGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to get ${fieldLabel}?`,
+    url: 'https://console.cloud.google.com/iam-admin/serviceaccounts',
+    steps: [
+      'Step 1: Open Google Cloud Console and select the project used by this workflow.',
+      'Step 2: Go to IAM & Admin -> Service Accounts.',
+      'Step 3: Create a service account or open an existing one.',
+      'Step 4: Copy the service account email. It usually ends with .iam.gserviceaccount.com.',
+      'Step 5: Grant that service account access to the target resource, such as sharing a Google Sheet with it.',
+    ],
+    example: 'workflow-service@project-id.iam.gserviceaccount.com',
+  };
+}
+
+function generateWhatsAppPhoneNumberIdGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to get ${fieldLabel}?`,
+    url: 'https://developers.facebook.com/docs/whatsapp/cloud-api/get-started',
+    steps: [
+      'Step 1: Open Meta for Developers and select the app connected to WhatsApp.',
+      'Step 2: Go to WhatsApp -> API Setup.',
+      'Step 3: Select the WhatsApp Business Account and phone number.',
+      'Step 4: Copy the Phone number ID shown in the API setup panel.',
+      'Step 5: Paste the numeric ID only. Do not paste the display phone number.',
+    ],
+    example: '123456789012345',
+  };
+}
+
+function generateMetaBusinessAccountGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to get ${fieldLabel}?`,
+    url: 'https://business.facebook.com/settings/whatsapp-business-accounts',
+    steps: [
+      'Step 1: Open Meta Business Settings.',
+      'Step 2: Go to Accounts -> WhatsApp accounts or Business assets.',
+      'Step 3: Select the business account used by the connected Meta app.',
+      'Step 4: Copy the WhatsApp Business Account ID or Business Account ID from account details.',
+      'Step 5: Paste the numeric ID only.',
+    ],
+    example: '123456789012345',
+  };
+}
+
+function generateProviderResourceIdGuide(nodeType: string, fieldLabel: string, resourceName: string): FieldGuide {
+  const serviceName = nodeType.replace(/_/g, ' ') || 'the provider';
+  return {
+    title: `How to get ${fieldLabel}?`,
+    steps: [
+      `Step 1: Open ${serviceName} and navigate to the ${resourceName} you want this node to use.`,
+      `Step 2: Look in the URL, settings, or API/details panel for the ${resourceName} ID.`,
+      'Step 3: Copy the stable ID, not the display name, unless the field description explicitly asks for a name.',
+      'Step 4: If the ID is not visible in the UI, list resources with the provider API and copy the id field from the response.',
+      'Step 5: Paste the ID exactly as shown.',
+    ],
+    example: `${resourceName}_123456`,
+  };
+}
+
+function generateProjectIdGuide(nodeType: string, fieldLabel: string): FieldGuide {
+  return {
+    title: `How to get ${fieldLabel}?`,
+    url: nodeType.toLowerCase().includes('google') ? 'https://console.cloud.google.com/' : undefined,
+    steps: [
+      'Step 1: Open the cloud or provider console for the account this workflow will use.',
+      'Step 2: Select the target project or workspace.',
+      'Step 3: Copy the project ID from project settings, not the project display name.',
+      'Step 4: For Google Cloud, use the Project ID string such as my-project-123, not the numeric project number.',
+      'Step 5: Make sure the saved credential has access to this project.',
+    ],
+    example: nodeType.toLowerCase().includes('google') ? 'my-gcp-project-id' : 'project_123456',
+  };
+}
+
+function generateBucketNameGuide(nodeType: string, fieldLabel: string): FieldGuide {
+  return {
+    title: `How to get ${fieldLabel}?`,
+    steps: [
+      'Step 1: Open the storage service console, such as Amazon S3 or Google Cloud Storage.',
+      'Step 2: Open the bucket list and select the bucket this workflow should use.',
+      'Step 3: Copy the bucket name exactly. Bucket names are usually globally unique and case-sensitive rules vary by provider.',
+      'Step 4: Paste only the bucket name, not a full URL, unless the field asks for a URL.',
+      'Step 5: Confirm the saved credential can read/write this bucket for the selected operation.',
+    ],
+    example: nodeType.toLowerCase().includes('s3') ? 'my-s3-bucket' : 'my-storage-bucket',
+  };
+}
+
+function generateRegionGuide(nodeType: string, fieldLabel: string): FieldGuide {
+  return {
+    title: `How to choose ${fieldLabel}?`,
+    steps: [
+      'Step 1: Open the service dashboard and check the region where the resource was created.',
+      'Step 2: Copy the provider region code, not the friendly location label.',
+      'Step 3: AWS examples: us-east-1, us-west-2, ap-south-1.',
+      'Step 4: Google Cloud examples: us-central1, asia-south1, europe-west1.',
+      'Step 5: Use the same region as the bucket, database, queue, or service instance.',
+    ],
+    example: nodeType.toLowerCase().includes('aws') ? 'us-east-1' : 'us-central1',
+  };
+}
+
+function generateTimezoneGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to set ${fieldLabel}?`,
+    url: 'https://en.wikipedia.org/wiki/List_of_tz_database_time_zones',
+    steps: [
+      'Step 1: Use an IANA timezone name in Area/City format.',
+      'Step 2: Examples include Asia/Kolkata, America/New_York, Europe/London, and UTC.',
+      'Step 3: Do not use vague abbreviations like IST, CST, or PST because they can be ambiguous.',
+      'Step 4: Pick the timezone where scheduled work should be interpreted.',
+    ],
+    example: 'Asia/Kolkata',
+  };
+}
+
+function generateHeadersGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to format ${fieldLabel}?`,
+    steps: [
+      'Step 1: Enter a JSON object where each key is a header name and each value is a string.',
+      'Step 2: Use double quotes around all keys and string values.',
+      'Step 3: Common headers are Authorization, Content-Type, Accept, and X-API-Key.',
+      'Step 4: For bearer auth, use "Authorization": "Bearer {{$credentials.apiToken}}".',
+      'Step 5: Do not put secrets directly here when the node can use dashboard credentials.',
+    ],
+    example: '{ "Authorization": "Bearer {{$credentials.apiToken}}", "Content-Type": "application/json" }',
+    securityWarning: true,
+  };
+}
+
+function generateBodyPayloadGuide(fieldLabel: string, placeholder?: string): FieldGuide {
+  return {
+    title: `How to format ${fieldLabel}?`,
+    steps: [
+      'Step 1: Enter valid JSON for API payloads, or plain text only if the node description says text is accepted.',
+      'Step 2: Use double quotes in JSON and no trailing commas.',
+      'Step 3: Use expressions like {{$json.email}} to map values from previous nodes.',
+      'Step 4: Match the provider API schema exactly: required keys, nested objects, and arrays must be in the expected shape.',
+      'Step 5: For arrays, use [ ... ]; for objects, use { ... }.',
+    ],
+    example: placeholder || '{ "name": "{{$json.name}}", "email": "{{$json.email}}" }',
+  };
+}
+
+function generateQueryParamsGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to format ${fieldLabel}?`,
+    steps: [
+      'Step 1: Enter query parameters as a JSON object unless the field description asks for a raw query string.',
+      'Step 2: Keys are parameter names; values can be strings, numbers, booleans, or expressions.',
+      'Step 3: Do not include the leading ? when using JSON object mode.',
+      'Step 4: If the field asks for a raw string, use format like limit=10&status=active.',
+      'Step 5: Encode special characters only when using raw string mode.',
+    ],
+    example: '{ "limit": 10, "status": "active" }',
+  };
+}
+
+function generateFieldMappingGuide(fieldLabel: string, placeholder?: string): FieldGuide {
+  return {
+    title: `How to map ${fieldLabel}?`,
+    steps: [
+      'Step 1: Enter a JSON object where keys are target field names in the destination app.',
+      'Step 2: Set each value to a static value or an expression from upstream data.',
+      'Step 3: Use provider field/API names, not always the friendly labels from the UI.',
+      'Step 4: For optional fields, include only keys you want to send.',
+      'Step 5: Validate nested objects and arrays against the provider documentation.',
+    ],
+    example: placeholder || '{ "name": "{{$json.name}}", "email": "{{$json.email}}" }',
+  };
+}
+
+function generateCaseListGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to format ${fieldLabel}?`,
+    steps: [
+      'Step 1: Enter an array of case objects.',
+      'Step 2: Each case should include a value to match and a label/name for the branch.',
+      'Step 3: The value must match the switch expression output exactly unless the node supports pattern matching.',
+      'Step 4: Keep branch labels short and stable because they become output paths.',
+      'Step 5: Add a fallback/default path if the node supports it.',
+    ],
+    example: '[{ "value": "new", "label": "New" }, { "value": "done", "label": "Done" }]',
+  };
+}
+
+function generateFormFieldsGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to format ${fieldLabel}?`,
+    steps: [
+      'Step 1: Enter an array of field definitions.',
+      'Step 2: Each field should have key, label, type, and required.',
+      'Step 3: Use stable lowercase keys such as email, name, company, or message.',
+      'Step 4: Supported types commonly include text, email, number, select, checkbox, textarea, and date.',
+      'Step 5: For select fields, add an options array with label/value pairs.',
+    ],
+    example: '[{ "key": "email", "label": "Email", "type": "email", "required": true }]',
+  };
+}
+
+function generateSQLQueryGuide(nodeType: string, fieldLabel: string): FieldGuide {
+  const isSalesforce = nodeType.toLowerCase().includes('salesforce') || fieldLabel.toLowerCase().includes('soql');
+  return {
+    title: `How to write ${fieldLabel}?`,
+    steps: [
+      isSalesforce ? 'Step 1: Use SOQL/SOSL syntax for Salesforce fields and objects.' : 'Step 1: Write a SQL query supported by the target database.',
+      'Step 2: Use SELECT for read nodes and INSERT/UPDATE/DELETE only on write nodes.',
+      'Step 3: Use placeholders or expressions for dynamic values instead of string concatenation.',
+      'Step 4: Check table/object names and field names against the provider schema.',
+      'Step 5: Limit large reads during testing to avoid slow or expensive workflow runs.',
+    ],
+    example: isSalesforce ? 'SELECT Id, Name, Email FROM Contact LIMIT 10' : 'SELECT * FROM users WHERE id = $1',
+  };
+}
+
+function generateGraphQLQueryGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to write ${fieldLabel}?`,
+    steps: [
+      'Step 1: Write a valid GraphQL query or mutation.',
+      'Step 2: Include the operation name when possible for easier debugging.',
+      'Step 3: Put dynamic inputs in GraphQL variables rather than string-building the query.',
+      'Step 4: Make sure the selected fields exist in the GraphQL schema.',
+      'Step 5: Keep variables as a separate JSON object if the node provides a variables field.',
+    ],
+    example: 'query GetItem($id: ID!) { item(id: $id) { id name } }',
+  };
+}
+
+function generateSearchQueryGuide(nodeType: string, fieldLabel: string): FieldGuide {
+  const lowerNode = nodeType.toLowerCase();
+  return {
+    title: `How to write ${fieldLabel}?`,
+    steps: [
+      'Step 1: Use the search syntax for the selected provider.',
+      lowerNode.includes('gmail') ? 'Step 2: Gmail examples: is:unread, from:customer@example.com, newer_than:7d.' : 'Step 2: Start with simple keywords or filters, then add provider-specific operators.',
+      'Step 3: Use upstream expressions for dynamic search terms only when needed.',
+      'Step 4: Test with a narrow query first to avoid returning too much data.',
+      'Step 5: If results are empty, verify the connected account has access to the target resource.',
+    ],
+    example: lowerNode.includes('gmail') ? 'is:unread newer_than:7d' : 'status:active',
+  };
+}
+
+function generateFilePathGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to fill ${fieldLabel}?`,
+    steps: [
+      'Step 1: Use the path format expected by the provider or server.',
+      'Step 2: For cloud storage, use object paths like folder/file.csv without a leading bucket name unless requested.',
+      'Step 3: For SFTP/FTP, use the remote path such as /exports/file.csv.',
+      'Step 4: Preserve file extensions and capitalization.',
+      'Step 5: Use expressions like {{$json.fileName}} only for the dynamic part.',
+    ],
+    example: 'exports/report.csv',
+  };
+}
+
+function generateCodeSnippetGuide(fieldLabel: string): FieldGuide {
+  return {
+    title: `How to write ${fieldLabel}?`,
+    steps: [
+      'Step 1: Write JavaScript that returns the value or object this node should output.',
+      'Step 2: Use $json for the current input object when supported by the node.',
+      'Step 3: Keep side effects out of transformation nodes unless the node description allows API calls.',
+      'Step 4: Return plain JSON-compatible values: objects, arrays, strings, numbers, booleans, or null.',
+      'Step 5: Test with sample input before using it in a live workflow.',
+    ],
+    example: 'return { ...$json, processed: true };',
   };
 }
 
@@ -1653,12 +2391,30 @@ function generateAccountIDGuide(nodeType: string): FieldGuide {
         'Step 8: Paste it into the input field',
         '',
         'Example:',
-        '17841405309211844'
+        '17841405309211844',
       ],
-      example: '17841405309211844'
+      example: '17841405309211844',
     };
   }
-  
+
+  if (nodeType === 'twilio') {
+    return {
+      title: 'How to get Twilio Account SID?',
+      url: 'https://console.twilio.com',
+      steps: [
+        'Step 1: Go to https://console.twilio.com and sign in',
+        'Step 2: Your Account SID is displayed on the dashboard homepage under "Account Info"',
+        'Step 3: Click the copy icon next to Account SID',
+        'Step 4: Paste it into the Account SID field above',
+        '',
+        'Format: starts with "AC" followed by 32 hex characters.',
+        '',
+        'Note: You also need the Auth Token from the same page — see the Auth Token field guide.',
+      ],
+      example: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    };
+  }
+
   return {
     title: 'How to get Account ID?',
     steps: [
@@ -1668,8 +2424,8 @@ function generateAccountIDGuide(nodeType: string): FieldGuide {
       'Step 4: Copy the ID',
       'Step 5: Paste it into the input field',
       '',
-      'Tip: Check the service\'s API documentation for specific instructions.'
-    ]
+      'Tip: Check the service\'s API documentation for specific instructions.',
+    ],
   };
 }
 

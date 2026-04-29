@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Template API Client
  * User-facing template operations
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import { ENDPOINTS } from '@/config/endpoints';
+import { supabase } from '@/integrations/aws/client';
 
 // Template type - using any to avoid complex type inference issues
 type Template = any;
@@ -27,35 +27,27 @@ export interface TemplateMetadata {
  * Get all active templates (for users)
  */
 export async function getActiveTemplates(): Promise<Template[]> {
-  // @ts-expect-error - Type inference issue with Supabase complex types
-  const { data, error } = await supabase
-    .from('templates')
-    .select('*')
-    .eq('is_active', true)
-    .order('is_featured', { ascending: false })
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return (data || []) as Template[];
+  const response = await fetch(`${ENDPOINTS.itemBackend}/api/templates`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Failed to fetch templates' }));
+    throw new Error(error.error || 'Failed to fetch templates');
+  }
+  const data = await response.json();
+  return (data.templates || []) as Template[];
 }
 
 /**
  * Get template by ID
  */
 export async function getTemplateById(templateId: string): Promise<Template | null> {
-  const { data, error } = await supabase
-    .from('templates')
-    .select('*')
-    .eq('id', templateId)
-    .eq('is_active', true)
-    .single();
-
-  if (error) {
-    if (error.code === 'PGRST116') return null; // Not found
-    throw error;
+  const response = await fetch(`${ENDPOINTS.itemBackend}/api/templates/${templateId}`);
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Failed to fetch template' }));
+    throw new Error(error.error || 'Failed to fetch template');
   }
-
-  return data;
+  const data = await response.json();
+  return data.template || null;
 }
 
 /**
@@ -100,29 +92,27 @@ export async function copyTemplate(templateId: string, workflowName?: string): P
  * Get templates by category
  */
 export async function getTemplatesByCategory(category: string): Promise<Template[]> {
-  const { data, error } = await supabase
-    .from('templates')
-    .select('*')
-    .eq('is_active', true)
-    .eq('category', category)
-    .order('is_featured', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+  const params = new URLSearchParams({ category });
+  const response = await fetch(`${ENDPOINTS.itemBackend}/api/templates?${params}`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Failed to fetch templates' }));
+    throw new Error(error.error || 'Failed to fetch templates');
+  }
+  const data = await response.json();
+  return data.templates || [];
 }
 
 /**
  * Search templates
  */
 export async function searchTemplates(query: string): Promise<Template[]> {
-  const { data, error } = await supabase
-    .from('templates')
-    .select('*')
-    .eq('is_active', true)
-    .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-    .order('is_featured', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+  const params = new URLSearchParams({ search: query });
+  const response = await fetch(`${ENDPOINTS.itemBackend}/api/templates?${params}`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Failed to search templates' }));
+    throw new Error(error.error || 'Failed to search templates');
+  }
+  const data = await response.json();
+  return data.templates || [];
 }
 

@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Role-based access control utilities
  * Provides functions to check user roles and permissions
  */
 
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/aws/client';
+import type { Database } from '@/integrations/aws/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -13,34 +13,53 @@ export interface UserRole {
   role: AppRole;
 }
 
+// --- In-flight deduplication + short-lived result cache ---
+// Collapses concurrent calls (e.g. from multiple components mounting simultaneously)
+// into a single network round-trip, and caches the result for 60 seconds.
+const _inflight = new Map<string, Promise<unknown>>();
+const _roleResultCache = new Map<string, { value: unknown; expiry: number }>();
+const ROLE_CACHE_TTL_MS = 60_000;
+
+function cachedAsync<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const hit = _roleResultCache.get(key) as { value: T; expiry: number } | undefined;
+  if (hit && Date.now() < hit.expiry) return Promise.resolve(hit.value);
+
+  const inflight = _inflight.get(key) as Promise<T> | undefined;
+  if (inflight) return inflight;
+
+  const p = fn()
+    .then(value => {
+      _roleResultCache.set(key, { value, expiry: Date.now() + ROLE_CACHE_TTL_MS });
+      _inflight.delete(key);
+      return value;
+    })
+    .catch(err => {
+      _inflight.delete(key);
+      throw err;
+    });
+
+  _inflight.set(key, p);
+  return p;
+}
+
+async function _fetchHasRole(userId: string, role: AppRole): Promise<boolean> {
+  const { data, error } = await supabase.rpc('has_role', { _user_id: userId, _role: role });
+  if (error) {
+    if (error.code !== '42883') console.error('Error checking role:', error);
+    return false;
+  }
+  return data === true;
+}
+
 /**
  * Check if current user has a specific role
  */
 export async function hasRole(role: AppRole): Promise<boolean> {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      return false;
-    }
-
-    const { data, error } = await supabase
-      .rpc('has_role', {
-        _user_id: user.id,
-        _role: role
-      });
-
-    if (error) {
-      // Don't log RPC errors if function doesn't exist yet (migration not applied)
-      if (error.code !== '42883') {
-        console.error('Error checking role:', error);
-      }
-      return false;
-    }
-
-    return data === true;
+    if (userError || !user) return false;
+    return cachedAsync(`hasRole:${user.id}:${role}`, () => _fetchHasRole(user.id, role));
   } catch (error) {
-    // Silently fail if role checking isn't available yet
     console.warn('Role check failed (migration may not be applied):', error);
     return false;
   }
@@ -60,6 +79,26 @@ export async function isModerator(): Promise<boolean> {
   return hasRole('moderator');
 }
 
+async function _fetchUserRole(userId: string): Promise<AppRole | null> {
+  const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', userId);
+
+  if (error) {
+    const is406Error = error.code === 'PGRST116' || error.message?.includes('406') || (error as any).status === 406;
+    if (is406Error) {
+      console.warn('user_roles 406 error (RLS policy may need to be applied):', error);
+      return null;
+    }
+    console.error('Error getting user role:', error);
+    return null;
+  }
+
+  if (!data || data.length === 0) return null;
+
+  const rolePriority: Record<AppRole, number> = { admin: 3, moderator: 2, user: 1 };
+  const sortedRoles = data.map(item => item.role).sort((a, b) => rolePriority[b] - rolePriority[a]);
+  return sortedRoles[0] || null;
+}
+
 /**
  * Get current user's role
  * Returns the highest priority role if user has multiple roles
@@ -68,47 +107,8 @@ export async function isModerator(): Promise<boolean> {
 export async function getUserRole(): Promise<AppRole | null> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) return null;
-
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id);
-
-    // Handle 406 errors gracefully (RLS policy may not be set up yet)
-    if (error) {
-      // 406 = Not Acceptable (usually RLS blocking access)
-      // PGRST116 = PostgREST error code for 406
-      const is406Error = error.code === 'PGRST116' || 
-                        error.message?.includes('406') ||
-                        (error as any).status === 406;
-      
-      if (is406Error) {
-        console.warn('user_roles 406 error (RLS policy may need to be applied):', error);
-        return null;
-      }
-      
-      console.error('Error getting user role:', error);
-      return null;
-    }
-
-    if (!data || data.length === 0) return null;
-
-    // If user has multiple roles, return the highest priority one
-    // Priority: admin > moderator > user
-    const rolePriority: Record<AppRole, number> = {
-      admin: 3,
-      moderator: 2,
-      user: 1,
-    };
-
-    // Sort by priority (highest first) and return the first one
-    const sortedRoles = data
-      .map(item => item.role)
-      .sort((a, b) => rolePriority[b] - rolePriority[a]);
-
-    return sortedRoles[0] || null;
+    return cachedAsync(`getUserRole:${user.id}`, () => _fetchUserRole(user.id));
   } catch (error) {
     console.error('Error getting user role:', error);
     return null;

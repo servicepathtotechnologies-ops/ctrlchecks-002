@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Templates Page (User View)
  * Browse and copy workflow templates
  */
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { getActiveTemplates, copyTemplate } from '@/lib/api/templates';
 import { useToast } from '@/hooks/use-toast';
 import { AppChromeHeader } from '@/components/layout/AppChromeHeader';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/integrations/aws/types';
 
 type Template = Database['public']['Tables']['templates']['Row'] & {
   difficulty?: string;
@@ -81,7 +81,7 @@ export default function Templates() {
           <p className="text-sm text-muted-foreground">Loading templates...</p>
         ) : (
       <WorkflowAuthGate>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-3xl font-bold">Workflow Templates</h1>
             <p className="text-muted-foreground mt-1">
@@ -92,7 +92,7 @@ export default function Templates() {
             placeholder="Search templates..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full md:w-96"
+            className="w-full md:max-w-sm"
           />
         </div>
 
@@ -122,8 +122,8 @@ export default function Templates() {
                       <Badge variant="secondary">{template.difficulty}</Badge>
                     )}
                     {template.estimated_setup_time && (
-                      <Badge variant="outline" className="gap-1">
-                        <Clock className="h-3 w-3" />
+                      <Badge variant="outline" className="gap-1 items-center">
+                        <Clock className="h-3 w-3 shrink-0" />
                         {template.estimated_setup_time} min
                       </Badge>
                     )}

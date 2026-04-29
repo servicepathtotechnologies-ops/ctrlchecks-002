@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminChromeHeader } from "@/components/layout/AdminChromeHeader";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/aws/client";
 import { getBackendUrl } from "@/lib/api/getBackendUrl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

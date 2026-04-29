@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { 
   Search, Clock, CheckCircle, XCircle, Loader2, 
@@ -14,7 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { Tables } from '@/integrations/supabase/types';
+import { Tables } from '@/integrations/aws/types';
 
 type Execution = Tables<'executions'> & {
   workflows?: { name: string } | null;
@@ -208,11 +208,11 @@ export default function Executions() {
                 onClick={() => navigate(`/execution/${execution.id}`)}
               >
                 <CardContent className="py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      {getStatusIcon(execution.status)}
-                      <div>
-                        <div className="font-medium">
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="shrink-0">{getStatusIcon(execution.status)}</div>
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">
                           {execution.workflows?.name || 'Unknown Workflow'}
                         </div>
                         <div className="text-xs text-muted-foreground font-mono">
@@ -221,16 +221,16 @@ export default function Executions() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 shrink-0">
                       <Badge variant="outline" className={getStatusColor(execution.status)}>
                         {execution.status}
                       </Badge>
                       
-                      <div className="text-sm text-muted-foreground w-20 text-right">
+                      <div className="text-sm text-muted-foreground min-w-[5rem] text-right">
                         {formatDuration(execution.duration_ms)}
                       </div>
 
-                      <div className="text-sm text-muted-foreground w-40 text-right">
+                      <div className="text-sm text-muted-foreground min-w-[10rem] text-right hidden sm:block">
                         {new Date(execution.started_at).toLocaleString()}
                       </div>
 

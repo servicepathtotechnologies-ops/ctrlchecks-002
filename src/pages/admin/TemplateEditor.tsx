@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Template Editor
  * Allows admins to edit template nodes and edges using the workflow builder
  */
@@ -7,7 +7,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useWorkflowStore, WorkflowNode } from '@/stores/workflowStore';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { NodeTypeDefinition } from '@/components/workflow/nodeTypes';
 import NodeLibrary from '@/components/workflow/NodeLibrary';
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Edge } from '@xyflow/react';
-import { Json } from '@/integrations/supabase/types';
+import { Json } from '@/integrations/aws/types';
 import { updateTemplate } from '@/lib/api/admin';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
 

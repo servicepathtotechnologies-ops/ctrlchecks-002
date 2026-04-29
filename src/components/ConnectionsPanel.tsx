@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -7,16 +7,16 @@ import {
 } from '@/components/ui/popover';
 import { CheckCircle, AlertCircle, Plug, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
-import { getFacebookSupabaseOAuthOptions } from '@/lib/facebookSignInOptions';
-import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
-import { buildConnectorCallbackUrl, rememberOAuthReturnTo } from '@/lib/oauth-return';
+import { getCurrentPathWithQuery, rememberOAuthReturnTo } from '@/lib/oauth-return';
 import ZohoConnectionStatus from './ZohoConnectionStatus';
 import InstagramConnectGuide from './InstagramConnectGuide';
 import WhatsAppOnboardingGuide from './WhatsAppOnboardingGuide';
+import ManualCredentialManager from './ManualCredentialManager';
 import { GoogleLogo } from '@/components/icons/GoogleLogo';
+import { fetchConnectionCatalog, fetchConnectionStatuses } from '@/lib/connections-catalog';
 
 export default function ConnectionsPanel() {
   const { user } = useAuth();
@@ -50,6 +50,12 @@ export default function ConnectionsPanel() {
   const [showWhatsappGuide, setShowWhatsappGuide] = useState(false);
   const [isZohoConnecting, setIsZohoConnecting] = useState(false);
   const [isZohoDialogOpen, setIsZohoDialogOpen] = useState(false);
+  const [catalogSummary, setCatalogSummary] = useState({
+    total: 0,
+    oauth: 0,
+    manual: 0,
+    missingEnv: 0,
+  });
 
   const checkConnections = useCallback(async () => {
     if (!user) {
@@ -58,6 +64,34 @@ export default function ConnectionsPanel() {
     }
 
     try {
+      const [catalog, statuses] = await Promise.all([
+        fetchConnectionCatalog().catch(() => []),
+        fetchConnectionStatuses().catch(() => ({})),
+      ]);
+
+      if (catalog.length > 0 || Object.keys(statuses).length > 0) {
+        setCatalogSummary({
+          total: catalog.length,
+          oauth: catalog.filter((entry) => entry.authType === 'oauth').length,
+          manual: catalog.filter((entry) => entry.authType !== 'oauth').length,
+          missingEnv: catalog.filter((entry) => entry.oauthImplemented && !entry.configured).length,
+        });
+        setGoogleConnected(Boolean(statuses.google?.connected));
+        setLinkedInConnected(Boolean(statuses.linkedin?.connected));
+        setGithubConnected(Boolean(statuses.github?.connected));
+        setFacebookConnected(Boolean(statuses.facebook?.connected));
+        setNotionConnected(Boolean(statuses.notion?.connected));
+        setTwitterConnected(Boolean(statuses.twitter?.connected));
+        setInstagramConnected(Boolean(statuses.instagram?.connected));
+        setInstagramNeedsReconnect(Boolean(statuses.instagram?.expiresAt && !statuses.instagram.connected));
+        setWhatsappConnected(Boolean(statuses.whatsapp?.connected));
+        setWhatsappNeedsReconnect(Boolean(statuses.whatsapp?.expiresAt && !statuses.whatsapp.connected));
+        setZohoConnected(Boolean(statuses.zoho?.connected));
+        setSalesforceConnected(Boolean(statuses.salesforce?.connected));
+        setIsChecking(false);
+        return;
+      }
+
       // Check Google connection
       const { data: googleData } = await supabase
         .from('google_oauth_tokens' as any)
@@ -271,7 +305,11 @@ export default function ConnectionsPanel() {
     }
   }, [open, checkConnections]);
 
-  const handleGoogleConnect = async () => {
+  const startWorkerOAuth = (
+    provider: 'google' | 'linkedin' | 'github' | 'facebook',
+    label: string,
+    setConnecting: (value: boolean) => void,
+  ) => {
     if (!user) {
       toast({
         title: 'Error',
@@ -281,40 +319,34 @@ export default function ConnectionsPanel() {
       return;
     }
 
-    setIsGoogleConnecting(true);
+    setConnecting(true);
 
     try {
-      const redirectUrl = buildConnectorCallbackUrl('/auth/google/callback');
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-            scope: GOOGLE_CONNECTOR_SCOPES,
-          },
-        },
+      const backendUrl = getBackendUrl();
+      const returnTo = getCurrentPathWithQuery();
+      rememberOAuthReturnTo(returnTo);
+      const params = new URLSearchParams({
+        user_id: user.id,
+        redirect_to: returnTo,
       });
-
-      if (error) throw error;
-
-      setOpen(false);
       toast({
-        title: 'Redirecting to Google...',
-        description: 'Please authorize access to Google services',
+        title: `Redirecting to ${label}...`,
+        description: `Please authorize access to ${label} services`,
       });
+      setOpen(false);
+      window.location.href = `${backendUrl}/api/oauth/${provider}/start?${params.toString()}`;
     } catch (error) {
-      console.error('Google OAuth error:', error);
+      console.error(`${label} OAuth error:`, error);
       toast({
         title: 'Authentication Failed',
-        description: error instanceof Error ? error.message : 'Failed to initiate Google authentication',
+        description: error instanceof Error ? error.message : `Failed to initiate ${label} authentication`,
         variant: 'destructive',
       });
-      setIsGoogleConnecting(false);
+      setConnecting(false);
     }
   };
+
+  const handleGoogleConnect = () => startWorkerOAuth('google', 'Google', setIsGoogleConnecting);
 
   const handleGoogleDisconnect = async () => {
     if (!user) return;
@@ -343,50 +375,7 @@ export default function ConnectionsPanel() {
     }
   };
 
-  const handleLinkedInConnect = async () => {
-    if (!user) {
-      toast({
-        title: 'Error',
-        description: 'Please sign in first',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsLinkedInConnecting(true);
-
-    try {
-      const redirectUrl = buildConnectorCallbackUrl('/auth/linkedin/callback');
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        // Supabase settings: linkedin=false, linkedin_oidc=true
-        provider: 'linkedin_oidc',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            // LinkedIn OIDC scopes + posting permission
-            scope: 'openid profile email w_member_social',
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      setOpen(false);
-      toast({
-        title: 'Redirecting to LinkedIn...',
-        description: 'Please authorize access to LinkedIn services',
-      });
-    } catch (error) {
-      console.error('LinkedIn OAuth error:', error);
-      toast({
-        title: 'Authentication Failed',
-        description: error instanceof Error ? error.message : 'Failed to initiate LinkedIn authentication',
-        variant: 'destructive',
-      });
-      setIsLinkedInConnecting(false);
-    }
-  };
+  const handleLinkedInConnect = () => startWorkerOAuth('linkedin', 'LinkedIn', setIsLinkedInConnecting);
 
   const handleLinkedInDisconnect = async () => {
     if (!user) return;
@@ -415,46 +404,7 @@ export default function ConnectionsPanel() {
     }
   };
 
-  const handleGithubConnect = async () => {
-    if (!user) {
-      toast({
-        title: 'Error',
-        description: 'Please sign in first',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsGithubConnecting(true);
-
-    try {
-      const redirectUrl = buildConnectorCallbackUrl('/auth/github/callback');
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: redirectUrl,
-          scopes: 'repo user read:org',
-        },
-      });
-
-      if (error) throw error;
-
-      setOpen(false);
-      toast({
-        title: 'Redirecting to GitHub...',
-        description: 'Please authorize access to GitHub services',
-      });
-    } catch (error) {
-      console.error('GitHub OAuth error:', error);
-      toast({
-        title: 'Authentication Failed',
-        description: error instanceof Error ? error.message : 'Failed to initiate GitHub authentication',
-        variant: 'destructive',
-      });
-      setIsGithubConnecting(false);
-    }
-  };
+  const handleGithubConnect = () => startWorkerOAuth('github', 'GitHub', setIsGithubConnecting);
 
   const handleGithubDisconnect = async () => {
     if (!user) return;
@@ -495,43 +445,7 @@ export default function ConnectionsPanel() {
     }
   };
 
-  const handleFacebookConnect = async () => {
-    if (!user) {
-      toast({
-        title: 'Error',
-        description: 'Please sign in first',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsFacebookConnecting(true);
-
-    try {
-      const redirectUrl = buildConnectorCallbackUrl('/auth/facebook/callback');
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'facebook',
-        options: getFacebookSupabaseOAuthOptions(redirectUrl),
-      });
-
-      if (error) throw error;
-
-      setOpen(false);
-      toast({
-        title: 'Redirecting to Facebook...',
-        description: 'Please authorize access to Facebook services',
-      });
-    } catch (error) {
-      console.error('Facebook OAuth error:', error);
-      toast({
-        title: 'Authentication Failed',
-        description: error instanceof Error ? error.message : 'Failed to initiate Facebook authentication',
-        variant: 'destructive',
-      });
-      setIsFacebookConnecting(false);
-    }
-  };
+  const handleFacebookConnect = () => startWorkerOAuth('facebook', 'Facebook', setIsFacebookConnecting);
 
   const handleFacebookDisconnect = async () => {
     if (!user) return;
@@ -809,6 +723,29 @@ export default function ConnectionsPanel() {
             )}
           </div>
 
+          {catalogSummary.total > 0 && (
+            <div className="grid grid-cols-4 gap-2 rounded-lg border bg-muted/30 p-2 text-center">
+              <div>
+                <div className="text-sm font-semibold">{catalogSummary.total}</div>
+                <div className="text-[10px] text-muted-foreground">Catalog</div>
+              </div>
+              <div>
+                <div className="text-sm font-semibold">{catalogSummary.oauth}</div>
+                <div className="text-[10px] text-muted-foreground">OAuth</div>
+              </div>
+              <div>
+                <div className="text-sm font-semibold">{catalogSummary.manual}</div>
+                <div className="text-[10px] text-muted-foreground">Manual</div>
+              </div>
+              <div>
+                <div className={`text-sm font-semibold ${catalogSummary.missingEnv ? 'text-amber-600' : 'text-green-600'}`}>
+                  {catalogSummary.missingEnv}
+                </div>
+                <div className="text-[10px] text-muted-foreground">Env</div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-4 gap-2">
             {/* Google */}
             <button
@@ -996,6 +933,8 @@ export default function ConnectionsPanel() {
               </span>
             </button>
           </div>
+
+          <ManualCredentialManager />
         </div>
       </PopoverContent>
     </Popover>

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/aws/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
+import { isGeneratedCognitoEmail, resolveProfileEmail } from "@/lib/profile-email";
 
 export default function ProfileSettings() {
   const { user } = useAuth();
@@ -30,10 +31,23 @@ export default function ProfileSettings() {
 
       if (error) throw error;
       if (data) {
+        const email = resolveProfileEmail(data.email, user);
         setProfile({
           full_name: data.full_name || "",
-          email: data.email || "",
+          email,
           avatar_url: data.avatar_url || "",
+        });
+        if (email && isGeneratedCognitoEmail(data.email)) {
+          await supabase
+            .from("profiles")
+            .update({ email })
+            .eq("user_id", user?.id);
+        }
+      } else if (user) {
+        setProfile({
+          full_name: user.user_metadata?.full_name || user.user_metadata?.name || "",
+          email: resolveProfileEmail(null, user),
+          avatar_url: user.user_metadata?.avatar_url || "",
         });
       }
     } catch (error) {
@@ -55,6 +69,7 @@ export default function ProfileSettings() {
       const { error } = await supabase
         .from("profiles")
         .update({
+          email: resolveProfileEmail(profile.email, user),
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
         })

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+﻿import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { Loader2, Send, MessageSquare } from 'lucide-react';
 import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';

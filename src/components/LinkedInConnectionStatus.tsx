@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import { buildConnectorCallbackUrl } from '@/lib/oauth-return';
+import { getBackendUrl } from '@/lib/api/getBackendUrl';
+import { getCurrentPathWithQuery, rememberOAuthReturnTo } from '@/lib/oauth-return';
 
 interface LinkedInConnectionStatusProps {
   onConnect?: () => void;
@@ -63,7 +64,7 @@ export default function LinkedInConnectionStatus({
       try {
         const authToken = (await supabase.auth.getSession()).data.session?.access_token;
         if (authToken) {
-          const resp = await fetch('/api/connections/linkedin/status', {
+          const resp = await fetch(`${getBackendUrl()}/api/connections/linkedin/status`, {
             headers: {
               Authorization: `Bearer ${authToken}`,
             },
@@ -120,27 +121,9 @@ export default function LinkedInConnectionStatus({
     setIsAuthenticating(true);
 
     try {
-      const redirectUrl = buildConnectorCallbackUrl('/auth/linkedin/callback');
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        // IMPORTANT: Supabase exposes two LinkedIn providers:
-        // - 'linkedin' (legacy OAuth)
-        // - 'linkedin_oidc' (OIDC)
-        // Your Supabase settings show linkedin=false and linkedin_oidc=true, so we must use linkedin_oidc.
-        provider: 'linkedin_oidc',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            // LinkedIn OIDC scopes + posting permission
-            // (LinkedIn lists: openid, profile, email, w_member_social)
-            scope: 'openid profile email w_member_social',
-          },
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
+      const returnTo = getCurrentPathWithQuery();
+      rememberOAuthReturnTo(returnTo);
+      const params = new URLSearchParams({ user_id: user.id, redirect_to: returnTo });
 
       if (onConnect) {
         onConnect();
@@ -150,6 +133,7 @@ export default function LinkedInConnectionStatus({
         title: 'Redirecting to LinkedIn...',
         description: 'Please authorize access to LinkedIn services',
       });
+      window.location.href = `${getBackendUrl()}/api/oauth/linkedin/start?${params.toString()}`;
     } catch (error) {
       console.error('LinkedIn OAuth error:', error);
       toast({

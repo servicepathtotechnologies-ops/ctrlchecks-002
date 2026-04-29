@@ -80,7 +80,7 @@ export const ENDPOINTS = {
     ollamaBase: getApiUrl(), // Use main API endpoint
 
     // Backend access mode
-    useDirectBackend: import.meta.env.VITE_USE_DIRECT_BACKEND === 'true' || isDevelopment || !import.meta.env.VITE_SUPABASE_URL
+    useDirectBackend: import.meta.env.VITE_USE_DIRECT_BACKEND === 'true' || isDevelopment
 };
 
 // Log configuration on load for easier debugging (only in development)

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Admin Templates Manager
  * Full CRUD interface for managing global templates
  */
@@ -18,7 +18,7 @@ import { AdminChromeHeader } from '@/components/layout/AdminChromeHeader';
 import { getAllTemplates, deleteTemplate, toggleTemplateActive, createTemplate, updateTemplate } from '@/lib/api/admin';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/integrations/aws/types';
 
 type Template = Database['public']['Tables']['templates']['Row'];
 

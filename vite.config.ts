@@ -57,16 +57,15 @@ export default defineConfig(({ mode }) => {
       sourcemap: !isProduction,
       rollupOptions: {
         output: {
-          // Code splitting for better performance
           manualChunks: {
             'react-vendor': ['react', 'react-dom', 'react-router-dom'],
             'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
             'workflow-vendor': ['@xyflow/react', 'zustand'],
+            'animation-vendor': ['framer-motion'],
           },
         },
       },
-      // Chunk size warnings
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 500,
       // Target modern browsers for smaller bundle
       target: 'esnext',
     },

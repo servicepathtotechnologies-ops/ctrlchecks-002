@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Property-Based Test — Uniform Card Layout Structure (P4)
  *
  * Feature: ui-ux-and-auth-improvements, Property 4: All connector cards share a uniform layout structure
@@ -33,11 +33,11 @@ vi.mock('@/lib/api/getBackendUrl', () => ({
 }));
 
 vi.mock('@/lib/facebookSignInOptions', () => ({
-  getFacebookSupabaseOAuthOptions: () => ({}),
+  getFacebookOAuthOptions: () => ({}),
 }));
 
 // Mock supabase — all DB queries resolve to empty (not connected)
-vi.mock('@/integrations/supabase/client', () => ({
+vi.mock('@/integrations/aws/client', () => ({
   supabase: {
     from: () => ({
       select: () => ({

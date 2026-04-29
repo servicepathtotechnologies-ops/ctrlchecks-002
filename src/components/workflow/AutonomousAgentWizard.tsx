@@ -1,4 +1,4 @@
-import { ENDPOINTS } from '@/config/endpoints';
+﻿import { ENDPOINTS } from '@/config/endpoints';
 import { AppBrand } from '@/components/brand/AppBrand';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -18,11 +18,11 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { validateAndFixWorkflow } from '@/lib/workflowValidation';
+import { validateAndFixWorkflow, type ValidateAndFixWorkflowOptions } from '@/lib/workflowValidation';
 import { computeExecutionOrderRank } from '@/lib/workflowGraphValidator';
 import { useTheme } from '@/hooks/useTheme';
 import { InputGuideLink } from './InputGuideLink';
@@ -84,8 +84,8 @@ import {
 } from '@/lib/generate-workflow-error';
 import { shouldRunAttachCredentialsAfterAttachInputs } from '@/lib/workflow-phase-contract';
 import { getPromptInputLayoutState } from '@/lib/prompt-input-layout';
-import { GOOGLE_CONNECTOR_SCOPES } from '@/lib/google-scopes';
-import { buildConnectorCallbackUrl, rememberOAuthReturnTo } from '@/lib/oauth-return';
+import { getCurrentPathWithQuery } from '@/lib/oauth-return';
+import { startGoogleConnectorOAuth } from '@/lib/google-connector-oauth';
 import FieldOwnershipGuidePanel from './FieldOwnershipGuidePanel';
 import { buildFieldOwnershipGuideContext } from '@/lib/field-ownership-guide-context';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
@@ -340,6 +340,25 @@ type WizardSelectedVariationMeta = {
     requiredNodeTypes?: string[];
 } | null;
 
+type SummaryV2 = {
+    graphOverview: {
+        triggerNodeIds: string[];
+        terminalNodeIds: string[];
+        totalNodes: number;
+        totalEdges: number;
+        hasBranching: boolean;
+    };
+    executionBackbone: Array<{ order: number; nodeId: string; nodeType: string; label: string; responsibility: string }>;
+    branches: Array<{
+        branchNodeId: string;
+        branchNodeType: string;
+        cases: Array<{ caseKey: string; targetNodeId: string; targetNodeType: string; terminalBehavior: string }>;
+    }>;
+    nodes: Array<{ nodeId: string; nodeType: string; label: string; purpose: string; inputEffect: string; outputEffect: string }>;
+    pathOutcomes: Array<{ pathId: string; condition: string; nodePath: string[]; terminalNodeId: string; outcome: string }>;
+    validationFindings: Array<{ code: string; severity: 'error' | 'warning'; message: string }>;
+} | null;
+
 /**
  * Parse a structuredSummary string into its display sections.
  * Strips the configuration contract boilerplate � only Goal, Intent alignment,
@@ -407,6 +426,48 @@ function StructuredPlanDisplay({ summary, compact = false }: { summary: string; 
             )}
             {terminals && (
                 <p className="text-xs text-muted-foreground italic border-t border-border/40 pt-2">{terminals}</p>
+            )}
+        </div>
+    );
+}
+
+function SummaryV2Display({ summaryV2, compact = false }: { summaryV2: SummaryV2; compact?: boolean }) {
+    if (!summaryV2) return null;
+    const overview = summaryV2.graphOverview;
+    return (
+        <div className={compact ? 'space-y-1 text-xs text-slate-300/90' : 'space-y-3 text-sm'}>
+            <p className={compact ? 'font-medium text-slate-200' : 'font-medium text-foreground'}>
+                Graph: {overview.totalNodes} nodes, {overview.totalEdges} edges, {overview.hasBranching ? 'branching flow' : 'linear flow'}
+            </p>
+            {summaryV2.executionBackbone.length > 0 && (
+                <ol className={compact ? 'pl-3 list-decimal space-y-0.5' : 'pl-4 list-decimal space-y-1'}>
+                    {summaryV2.executionBackbone.slice(0, compact ? 3 : 8).map((step) => (
+                        <li key={`${step.nodeId}-${step.order}`}>
+                            <span className="font-medium">{step.label}</span>
+                            {!compact && <span className="text-muted-foreground"> — {step.responsibility}</span>}
+                        </li>
+                    ))}
+                </ol>
+            )}
+            {summaryV2.branches.length > 0 && !compact && (
+                <div className="space-y-1">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Branches</span>
+                    {summaryV2.branches.map((branch) => (
+                        <div key={branch.branchNodeId} className="text-foreground/90">
+                            {branch.branchNodeType}: {branch.cases.map((c) => `${c.caseKey} -> ${c.targetNodeType}`).join(', ')}
+                        </div>
+                    ))}
+                </div>
+            )}
+            {!compact && summaryV2.pathOutcomes.length > 0 && (
+                <div className="space-y-1">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Path outcomes</span>
+                    {summaryV2.pathOutcomes.slice(0, 6).map((path) => (
+                        <div key={path.pathId} className="text-foreground/80">
+                            {path.pathId}: {path.outcome}
+                        </div>
+                    ))}
+                </div>
             )}
         </div>
     );
@@ -702,6 +763,7 @@ export function AutonomousAgentWizard() {
             triggerDescription: string;
             terminalAction: string;
         };
+        summaryV2?: SummaryV2;
         confidenceScore?: number;
         workflow: { nodes: any[]; edges: any[] };
     } | null>(null);
@@ -742,6 +804,7 @@ export function AutonomousAgentWizard() {
     /** Single structured plan (replaces multi-variant selection) */
     const [hasWorkflowPlan, setHasWorkflowPlan] = useState(false);
     const [planSummary, setPlanSummary] = useState('');
+    const [planSummaryV2, setPlanSummaryV2] = useState<SummaryV2>(null);
     const [isDegradedPlan, setIsDegradedPlan] = useState(false);
     const [planNodeHints, setPlanNodeHints] = useState<string[]>([]);
     const [planNodeReasons, setPlanNodeReasons] = useState<Record<string, string>>({});
@@ -774,6 +837,10 @@ export function AutonomousAgentWizard() {
 
     /** User toggles for unlockable credential fields (`unlock_<nodeId>_<field>` on attach-inputs). */
     const [credentialUnlockOverrides, setCredentialUnlockOverrides] = useState<Record<string, boolean>>({});
+    /** Which credential help rows are expanded (key = `credhelp_<nodeId>_<fieldName>`). */
+    const [credHelpExpanded, setCredHelpExpanded] = useState<Record<string, boolean>>({});
+    /** View mode per credential help row: 'simple' | 'technical' */
+    const [credHelpViewMode, setCredHelpViewMode] = useState<Record<string, 'simple' | 'technical'>>({});
     /** Per plane key: force-include optional vault row on Credentials; false = hide when allowed. */
     const [credentialStepIncludeOverrides, setCredentialStepIncludeOverrides] = useState<Record<string, boolean>>({});
     const [executionStatus, setExecutionStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
@@ -836,29 +903,10 @@ export function AutonomousAgentWizard() {
     }, [step, generatedWorkflowId, missingItems]);
 
     useEffect(() => {
-        if (step !== 'configure' && configureGuidance) {
+        if (step !== 'configure') {
             setConfigureGuidance(null);
         }
-    }, [step, configureGuidance]);
-
-    // Debug: Log when requiredCredentials changes
-    useEffect(() => {
-        console.log('?? [Frontend] requiredCredentials state changed:', requiredCredentials);
-        console.log('?? [Frontend] Current step:', step);
-        console.log('?? [Frontend] Has refinement:', !!refinement);
-        if (step === 'confirmation' && refinement) {
-            console.log('? [Frontend] Should show credentials step:', requiredCredentials.length > 0);
-        }
-    }, [requiredCredentials, step, refinement]);
-    
-    // Debug: Log when workflow ID is set
-    useEffect(() => {
-        if (generatedWorkflowId) {
-            console.log('? Workflow ID set:', generatedWorkflowId);
-        } else {
-            console.log('?? Workflow ID is null');
-        }
-    }, [generatedWorkflowId]);
+    }, [step]);
 
     // Load last runtime-resolved inputs for preview in configuration questions
     useEffect(() => {
@@ -882,7 +930,7 @@ export function AutonomousAgentWizard() {
             }
         };
         loadLastResolvedInputs();
-    }, [generatedWorkflowId, step]);
+    }, [generatedWorkflowId]);
 
     // ? Handle OAuth callback return - restore workflow state after OAuth connection
     useEffect(() => {
@@ -1439,13 +1487,17 @@ export function AutonomousAgentWizard() {
     }, [credentialQuestionsForStep, getCredentialAnswerForQuestion, blockingOAuthCredentials]);
 
     /** Manual config questions (excluding pure credential vault rows � those use credentials step). */
-    const manualConfigurationQuestions = useMemo(() => {
+    /** Execution-order rank: recomputes only when graph topology changes, not on every input change. */
+    const executionOrderRank = useMemo(() => {
         const nodes = pendingWorkflowData?.nodes;
         const edges = pendingWorkflowData?.edges;
-        const orderRank =
-            Array.isArray(nodes) && nodes.length > 0
-                ? computeExecutionOrderRank(nodes as any[], Array.isArray(edges) ? edges : [])
-                : new Map<string, number>();
+        return Array.isArray(nodes) && nodes.length > 0
+            ? computeExecutionOrderRank(nodes as any[], Array.isArray(edges) ? edges : [])
+            : new Map<string, number>();
+    }, [pendingWorkflowData?.nodes, pendingWorkflowData?.edges]);
+
+    const manualConfigurationQuestions = useMemo(() => {
+        const orderRank = executionOrderRank;
 
         return ownershipQuestions
             .filter((q: any) => {
@@ -1493,8 +1545,7 @@ export function AutonomousAgentWizard() {
         ownershipEffectiveModes,
         isCredentialUnlocked,
         fieldEnabledOverrides,
-        pendingWorkflowData?.nodes,
-        pendingWorkflowData?.edges,
+        executionOrderRank,
     ]);
 
     const manualConfigurationQuestionIdsKey = useMemo(
@@ -1875,6 +1926,7 @@ export function AutonomousAgentWizard() {
                 console.log('[Frontend] Summarize layer - received workflowIntentPlan');
                 setIsDegradedPlan(Boolean(data.degradedPlan || data.requiresConfirmation || data.planQuality === 'degraded' || p?.requires_confirmation));
                 setPlanSummary(p.structuredSummary || '');
+                setPlanSummaryV2((p.summaryV2 ?? null) as SummaryV2);
                 setPlanNodeHints(Array.isArray(p.proposedNodeChain) ? p.proposedNodeChain : []);
                 setPlanNodeReasons(
                     p.nodeInclusionReasons && typeof p.nodeInclusionReasons === 'object'
@@ -1948,6 +2000,7 @@ export function AutonomousAgentWizard() {
                 const rawHints = extractNodeHintsFromAnalyzePayload(data);
                 const hints = rawHints.length ? orderPlanHints(rawHints) : ['manual_trigger', 'log_output'];
                 setPlanSummary(summaryText);
+                setPlanSummaryV2(null);
                 setPlanNodeHints(hints);
                 setPlanNodeReasons({});
                 setPlanOrderingConfidence(null);
@@ -2040,6 +2093,7 @@ export function AutonomousAgentWizard() {
                 const capabilitySteps = Array.isArray(data.capabilityOptions) ? (data.capabilityOptions as CapabilityOptionStep[]) : [];
                 setIsDegradedPlan(Boolean(data.degradedPlan || data.requiresConfirmation || data.planQuality === 'degraded' || p?.requires_confirmation));
                 setPlanSummary(p.structuredSummary || '');
+                setPlanSummaryV2((p.summaryV2 ?? null) as SummaryV2);
                 setPlanNodeHints(Array.isArray(p.proposedNodeChain) ? p.proposedNodeChain : []);
                 setPlanNodeReasons(
                     p.nodeInclusionReasons && typeof p.nodeInclusionReasons === 'object'
@@ -2349,6 +2403,7 @@ export function AutonomousAgentWizard() {
 
                 setIsDegradedPlan(Boolean(data.degradedPlan || data.requiresConfirmation || data.planQuality === 'degraded' || p?.requires_confirmation));
                 setPlanSummary(p.structuredSummary || '');
+                setPlanSummaryV2((p.summaryV2 ?? null) as SummaryV2);
                 setPlanNodeHints(Array.isArray(p.proposedNodeChain) ? p.proposedNodeChain : []);
                 setPlanNodeReasons(
                     p.nodeInclusionReasons && typeof p.nodeInclusionReasons === 'object'
@@ -2408,173 +2463,6 @@ export function AutonomousAgentWizard() {
         return upper;
     };
     
-    // Identify required credentials from requirements and answers
-    const identifyRequiredCredentials = (requirements: any, answerMap: Record<string, string>): string[] => {
-        const credentials: string[] = [];
-        
-        // CRITICAL: Add null safety check
-        if (!requirements) {
-            console.warn('??  [Frontend] Requirements is null/undefined - skipping credential identification');
-            return credentials;
-        }
-        
-        // Extract selected services from answers
-        const answerValues = Object.values(answerMap).map(v => String(v).toLowerCase());
-        const answerTexts = Object.values(answerMap).join(' ').toLowerCase();
-        const promptText = prompt.toLowerCase();
-        
-        console.log('?? [Frontend] Identifying credentials:', { 
-            promptText: promptText.substring(0, 100), 
-            answerValues, 
-            answerTexts: answerTexts.substring(0, 200) 
-        });
-        
-        // Check if AI Agent/LLM functionality is needed
-        // Only detect AI if explicitly mentioned - be conservative to avoid false positives
-        const hasAIFunctionality = 
-            promptText.includes('ai agent') ||
-            promptText.includes('ai assistant') ||
-            promptText.includes('chatbot') ||
-            promptText.includes('chat bot') ||
-            promptText.includes('llm') ||
-            promptText.includes('language model') ||
-            promptText.includes('ai model') ||
-            promptText.includes('ai-powered') ||
-            promptText.includes('ai powered') ||
-            promptText.includes('using ai') ||
-            promptText.includes('with ai') ||
-            // Only include 'generate' if combined with AI context
-            (promptText.includes('generate') && (promptText.includes('ai') || promptText.includes('content'))) ||
-            // Only include 'analyze' if combined with AI context (not just data analysis)
-            (promptText.includes('analyze') && (promptText.includes('ai') || promptText.includes('sentiment') || promptText.includes('intent'))) ||
-            promptText.includes('summarize') ||
-            promptText.includes('classify') ||
-            promptText.includes('sentiment') ||
-            promptText.includes('intent') ||
-            promptText.includes('natural language') ||
-            promptText.includes('nlp') ||
-            promptText.includes('text analysis') ||
-            promptText.includes('content generation') ||
-            answerTexts.includes('ai agent') ||
-            answerTexts.includes('ai assistant') ||
-            answerTexts.includes('chatbot') ||
-            answerTexts.includes('ai-generated') ||
-            answerTexts.includes('ai generated') ||
-            answerTexts.includes('ai-generated content') ||
-            answerTexts.includes('ai content') ||
-            answerValues.some(v => v.includes('ai-generated') || v.includes('ai generated'));
-        
-        console.log('?? [Frontend] AI Functionality detected:', hasAIFunctionality);
-        
-        // Check for AI providers in answers
-        if (answerValues.some(v => v.includes('openai') || v.includes('gpt'))) {
-            credentials.push('OPENAI_API_KEY');
-            console.log('? [Frontend] Added OPENAI_API_KEY');
-        } else if (answerValues.some(v => v.includes('claude') || v.includes('anthropic'))) {
-            credentials.push('ANTHROPIC_API_KEY');
-            console.log('? [Frontend] Added ANTHROPIC_API_KEY');
-        } else if (answerValues.some(v => v.includes('gemini'))) {
-            // Only ask for Gemini API Key if explicitly mentioned (not for Google Sheets/Gmail)
-            credentials.push('GEMINI_API_KEY');
-            console.log('? [Frontend] Added GEMINI_API_KEY (from provider selection)');
-        } else if (hasAIFunctionality) {
-            // If AI functionality is detected but no specific provider selected, default to Gemini
-            // Only if AI functionality is actually needed (not just Google Sheets/Gmail)
-            credentials.push('GEMINI_API_KEY');
-            console.log('? [Frontend] Added GEMINI_API_KEY (default for AI functionality)');
-        }
-        
-        // Check for output channels - ONLY if explicitly mentioned in prompt or answers
-        // CRITICAL FIX: Don't add credentials unless user explicitly requested the service
-        const promptLower = prompt.toLowerCase();
-        if ((answerValues.some(v => v.includes('slack')) || promptLower.includes('slack')) && 
-            !promptLower.includes('social media automation')) { // Social media automation doesn't always need Slack
-            // Only add if explicitly selected or mentioned
-            if (answerValues.some(v => v.includes('slack'))) {
-                credentials.push('SLACK_TOKEN', 'SLACK_WEBHOOK_URL');
-            }
-        }
-        if (answerValues.some(v => v.includes('discord')) || promptLower.includes('discord')) {
-            credentials.push('DISCORD_WEBHOOK_URL');
-        }
-        // Only add SMTP if user explicitly mentions email/SMTP (not just "email" in general context)
-        if ((answerValues.some(v => v.includes('email') || v.includes('smtp')) || 
-             promptLower.includes('smtp') || promptLower.includes('send email')) &&
-            !promptLower.includes('gmail')) { // Gmail uses OAuth, not SMTP
-            credentials.push('SMTP_HOST', 'SMTP_USERNAME', 'SMTP_PASSWORD');
-        }
-        
-        // Check for Google services - ONLY add GEMINI_API_KEY if it's for AI functionality
-        // Google Sheets, Gmail, etc. use OAuth tokens, not GEMINI_API_KEY
-        // Only add GEMINI_API_KEY if Google is mentioned AND AI functionality is detected
-        const hasGoogleService = answerValues.some(v => v.includes('google')) || 
-            (requirements.platforms && requirements.platforms.some((p: any) => 
-                typeof p === 'string' ? p.toLowerCase().includes('google') : 
-                (p.name || p.type || '').toLowerCase().includes('google')
-            ));
-        
-        // Only add GEMINI_API_KEY if Google is mentioned AND it's for AI (not just Google Sheets/Gmail)
-        if (hasGoogleService && hasAIFunctionality && !credentials.includes('GEMINI_API_KEY')) {
-            credentials.push('GEMINI_API_KEY');
-        }
-        
-        // Check requirements for credential hints
-        if (requirements.credentials && Array.isArray(requirements.credentials)) {
-            requirements.credentials.forEach((cred: any) => {
-                const credName = typeof cred === 'string' ? cred : (cred.name || cred.type || '');
-                if (credName) {
-                    const normalized = normalizeCredentialName(credName);
-                    // Check if normalized version already exists
-                    if (!credentials.includes(normalized) && 
-                        !credentials.some(c => normalizeCredentialName(c) === normalized)) {
-                        credentials.push(normalized);
-                    }
-                }
-            });
-        }
-        
-        // Check APIs for credential requirements
-        // CRITICAL FIX: Only add credentials if user explicitly mentioned them in prompt
-        // Don't trust AI-generated requirements.apis blindly
-        if (requirements.apis && Array.isArray(requirements.apis)) {
-            requirements.apis.forEach((api: any) => {
-                const apiName = typeof api === 'string' ? api : (api.name || api.endpoint || '');
-                const apiLower = apiName.toLowerCase();
-                // Only add OpenAI if user explicitly mentioned OpenAI, GPT, or ChatGPT in prompt
-                if ((apiLower.includes('openai') || apiLower.includes('gpt')) &&
-                    (promptLower.includes('openai') || promptLower.includes('gpt') || promptLower.includes('chatgpt'))) {
-                    if (!credentials.includes('OPENAI_API_KEY')) credentials.push('OPENAI_API_KEY');
-                }
-                // Only add Anthropic if user explicitly mentioned Claude or Anthropic in prompt
-                if ((apiLower.includes('claude') || apiLower.includes('anthropic')) &&
-                    (promptLower.includes('claude') || promptLower.includes('anthropic'))) {
-                    if (!credentials.includes('ANTHROPIC_API_KEY')) credentials.push('ANTHROPIC_API_KEY');
-                }
-                // Only add Gemini if user explicitly mentioned Gemini or Google AI in prompt
-                // Note: Google API (for Sheets/Gmail) is different from Google Gemini API
-                if (apiLower.includes('gemini') && 
-                    (apiLower.includes('ai') || apiLower.includes('llm') || hasAIFunctionality) &&
-                    (promptLower.includes('gemini') || promptLower.includes('google ai'))) {
-                    if (!credentials.includes('GEMINI_API_KEY')) credentials.push('GEMINI_API_KEY');
-                }
-                // Don't add GEMINI_API_KEY just for "google" - Google services use OAuth
-            });
-        }
-        
-        // Final deduplication with normalization
-        const normalizedCreds = new Map<string, string>();
-        credentials.forEach(cred => {
-            const normalized = normalizeCredentialName(cred);
-            if (!normalizedCreds.has(normalized)) {
-                normalizedCreds.set(normalized, cred);
-            }
-        });
-        
-        const finalCredentials = Array.from(normalizedCreds.values());
-        console.log('?? [Frontend] Final identified credentials (deduplicated):', finalCredentials);
-        return finalCredentials;
-    };
-
     const handleRefine = async (explicitPrompt?: string, analysisSnapshot?: AnalysisResult | null) => {
         const effectiveAnalysis = analysisSnapshot ?? analysis;
         // Execution Flow Architecture (STEP-2): Validate state transition
@@ -2835,8 +2723,8 @@ export function AutonomousAgentWizard() {
                         // Step 1: Normalize backend format to frontend format
                         const { normalizeBackendWorkflow } = await import('@/lib/node-type-normalizer');
                         const normalizedBackend = normalizeBackendWorkflow({ nodes: workflowNodes, edges: workflowEdges });
-                        // Step 2: Validate and fix workflow
-                        const normalized = validateAndFixWorkflow({ nodes: normalizedBackend.nodes, edges: normalizedBackend.edges });
+                        // Step 2: Validate and fix workflow (up to 10 passes until graph stabilises)
+                        const normalized = revalidateWorkflowGraph(normalizedBackend.nodes, normalizedBackend.edges, 10);
 
                         const metaRefine1: Record<string, unknown> = {};
                         const p1 = (originalPrompt && originalPrompt.trim()) || (typeof prompt === 'string' && prompt.trim()) || '';
@@ -2904,7 +2792,7 @@ export function AutonomousAgentWizard() {
                         const { data: { user } } = await supabase.auth.getUser();
                         const { normalizeBackendWorkflow } = await import('@/lib/node-type-normalizer');
                         const normalizedBackend = normalizeBackendWorkflow({ nodes: workflowNodes, edges: workflowEdges });
-                        const normalized = validateAndFixWorkflow({ nodes: normalizedBackend.nodes, edges: normalizedBackend.edges });
+                        const normalized = revalidateWorkflowGraph(normalizedBackend.nodes, normalizedBackend.edges, 10);
 
                         const workflowData: Record<string, unknown> = {
                             name: (analysis?.summary && typeof analysis.summary === 'string')
@@ -3055,7 +2943,7 @@ export function AutonomousAgentWizard() {
                     if (workflowNodes.length > 0 && workflowEdges.length > 0) {
                         try {
                             const { data: { user } } = await supabase.auth.getUser();
-                            const normalized = validateAndFixWorkflow({ nodes: workflowNodes, edges: workflowEdges });
+                            const normalized = revalidateWorkflowGraph(workflowNodes, workflowEdges, 10);
 
                             const metaRefine2: Record<string, unknown> = {};
                             const p2 = (originalPrompt && originalPrompt.trim()) || (typeof prompt === 'string' && prompt.trim()) || '';
@@ -3135,9 +3023,9 @@ export function AutonomousAgentWizard() {
                     console.log('? Backend confirmed: No credentials required for this workflow');
                 }
             } else if (data?.requirements) {
-                // Fallback: Only use frontend detection if backend didn't provide requiredCredentials at all
-                detectedCredentials = identifyRequiredCredentials(data.requirements, answers);
-                console.log('?? Frontend identified required credentials (fallback):', detectedCredentials);
+                console.warn(
+                    '[Frontend] Backend did not provide requiredCredentials. Skipping client-side credential inference and relying on backend discovery/missing-items readiness.'
+                );
             } else {
                 console.log('?? No credentials required');
             }
@@ -3199,258 +3087,30 @@ export function AutonomousAgentWizard() {
         }
     };
 
-    // Universal function to inject user-provided credentials into workflow nodes
-    // This stores credentials in the node's config, not as environment variables
-    // Works for ALL node types by intelligently matching credential names to config field names
-    const injectCredentialsIntoNodes = (nodes: any[], credentials: Record<string, string>): any[] => {
-        if (Object.keys(credentials).length === 0) {
-            console.log('[Credential Injection] No credentials provided, skipping injection');
-            return nodes;
+    /**
+     * Run up to maxPasses rounds of graph validation+fixing until the graph stabilises.
+     * Returns the stabilised { nodes, edges }.
+     */
+    const revalidateWorkflowGraph = (
+        initialNodes: any[],
+        initialEdges: any[],
+        maxPasses = 10,
+        options?: ValidateAndFixWorkflowOptions,
+    ): { nodes: any[]; edges: any[]; passes: number } => {
+        let current = { nodes: initialNodes, edges: initialEdges };
+        for (let pass = 1; pass <= maxPasses; pass++) {
+            const before = JSON.stringify({ nodes: current.nodes, edges: current.edges });
+            const fixed = validateAndFixWorkflow(
+                { nodes: current.nodes, edges: current.edges },
+                options
+            );
+            const after = JSON.stringify({ nodes: fixed.nodes, edges: fixed.edges });
+            current = fixed;
+            if (before === after) {
+                return { ...current, passes: pass };
+            }
         }
-        console.log('[Credential Injection] Injecting credentials into nodes:', Object.keys(credentials));
-        
-        // Helper function to check if a field name matches a credential
-        const matchesCredential = (fieldName: string, credName: string): boolean => {
-            const fieldLower = fieldName.toLowerCase().replace(/[_-]/g, '');
-            const credLower = credName.toLowerCase().replace(/[_-]/g, '');
-            
-            // Direct match
-            if (fieldLower === credLower) return true;
-            
-            // Check if credential name contains key parts of field name
-            const credParts = credLower.split('_').filter(p => p.length > 2);
-            if (credParts.length > 0 && credParts.every(part => fieldLower.includes(part))) {
-                return true;
-            }
-            
-            // Check if field name contains key parts of credential name
-            const fieldParts = fieldLower.split(/(?=[A-Z])|_|-/).filter(p => p.length > 2);
-            if (fieldParts.length > 0 && fieldParts.every(part => credLower.includes(part))) {
-                return true;
-            }
-            
-            return false;
-        };
-        
-        // Helper function to convert credential name to possible field names
-        const getPossibleFieldNames = (credName: string): string[] => {
-            const credLower = credName.toLowerCase();
-            const possibilities: string[] = [];
-            
-            // Remove common prefixes/suffixes
-            const base = credLower
-                .replace(/^(slack_|discord_|google_|smtp_|database_|api_)/, '')
-                .replace(/(_url|_token|_key|_secret|_password|_id)$/, '');
-            
-            // Generate variations
-            possibilities.push(base); // webhook
-            possibilities.push(base + 'url'); // webhookurl
-            possibilities.push(base + '_url'); // webhook_url
-            possibilities.push(base + 'Url'); // webhookUrl (camelCase)
-            possibilities.push(base + '-url'); // webhook-url
-            
-            // Special mappings
-            if (credLower.includes('webhook')) {
-                possibilities.push('webhookUrl', 'webhook_url', 'webhook', 'url');
-            }
-            if (credLower.includes('token')) {
-                possibilities.push('token', 'accessToken', 'access_token', 'authToken', 'auth_token');
-            }
-            if (credLower.includes('api_key') || credLower.includes('apikey')) {
-                possibilities.push('apiKey', 'api_key', 'api-key', 'key', 'apikey');
-            }
-            if (credLower.includes('secret')) {
-                possibilities.push('secret', 'clientSecret', 'client_secret', 'secretKey', 'secret_key');
-            }
-            if (credLower.includes('password')) {
-                possibilities.push('password', 'passwd', 'pwd');
-            }
-            if (credLower.includes('username')) {
-                possibilities.push('username', 'user', 'userName', 'user_name');
-            }
-            if (credLower.includes('host')) {
-                possibilities.push('host', 'hostname', 'server');
-            }
-            if (credLower.includes('spreadsheet') || credLower.includes('sheet')) {
-                possibilities.push('spreadsheetId', 'spreadsheet_id', 'sheetId', 'sheet_id', 'id');
-            }
-            if (credLower.includes('connection') && credLower.includes('string')) {
-                possibilities.push('connectionString', 'connection_string', 'connection', 'connString', 'conn_string');
-            }
-            
-            return [...new Set(possibilities)]; // Remove duplicates
-        };
-        
-        return nodes.map((node: any) => {
-            const nodeType = (node.type || node.data?.type || '').toLowerCase();
-            const nodeConfig = { ...(node.data?.config || {}) };
-            let updated = false;
-            
-            // Get all existing config field names (check various naming conventions)
-            const configFieldNames = new Set<string>();
-            Object.keys(nodeConfig).forEach(key => {
-                configFieldNames.add(key);
-                configFieldNames.add(key.toLowerCase());
-                configFieldNames.add(key.replace(/[_-]/g, ''));
-            });
-            
-            // Try to inject each credential
-            Object.entries(credentials).forEach(([credName, value]) => {
-                if (!value || value.trim() === '') return; // Skip empty credentials
-                
-                const credNameLower = credName.toLowerCase();
-                let injected = false;
-                
-                // Strategy 1: Direct field name matching (exact or normalized)
-                const possibleFieldNames = getPossibleFieldNames(credName);
-                for (const fieldName of possibleFieldNames) {
-                    // Check exact match
-                    if (Object.prototype.hasOwnProperty.call(nodeConfig, fieldName)) {
-                        nodeConfig[fieldName] = value;
-                        updated = true;
-                        injected = true;
-                        console.log(`[Credential Injection] Applied ${credName} to ${node.id}.${fieldName} (exact match)`);
-                        break;
-                    }
-                    
-                    // Check case-insensitive match
-                    const matchingKey = Object.keys(nodeConfig).find(
-                        k => k.toLowerCase() === fieldName.toLowerCase()
-                    );
-                    if (matchingKey) {
-                        nodeConfig[matchingKey] = value;
-                        updated = true;
-                        injected = true;
-                        console.log(`[Credential Injection] Applied ${credName} to ${node.id}.${matchingKey} (case-insensitive match)`);
-                        break;
-                    }
-                    
-                    // Check normalized match (remove underscores, dashes)
-                    const normalizedFieldName = fieldName.replace(/[_-]/g, '').toLowerCase();
-                    const matchingNormalizedKey = Object.keys(nodeConfig).find(
-                        k => k.replace(/[_-]/g, '').toLowerCase() === normalizedFieldName
-                    );
-                    if (matchingNormalizedKey) {
-                        nodeConfig[matchingNormalizedKey] = value;
-                        updated = true;
-                        injected = true;
-                        console.log(`[Credential Injection] Applied ${credName} to ${node.id}.${matchingNormalizedKey} (normalized match)`);
-                        break;
-                    }
-                }
-                
-                // Strategy 2: Semantic matching - check if any config field semantically matches the credential
-                if (!injected) {
-                    for (const [configKey, configValue] of Object.entries(nodeConfig)) {
-                        if (matchesCredential(configKey, credName)) {
-                            // Check if the field is empty or has a placeholder
-                            const isEmpty = !configValue || 
-                                          (typeof configValue === 'string' && (
-                                            configValue.trim() === '' ||
-                                            configValue.includes('{{') ||
-                                            configValue.includes('${') ||
-                                            configValue.toLowerCase().includes('placeholder') ||
-                                            configValue.toLowerCase().includes('example')
-                                          ));
-                            
-                            if (isEmpty) {
-                                nodeConfig[configKey] = value;
-                                updated = true;
-                                injected = true;
-                                console.log(`[Credential Injection] Applied ${credName} to ${node.id}.${configKey} (semantic match)`);
-                                break;
-                            }
-                        }
-                    }
-                }
-                
-                // Strategy 3: Node-type-specific intelligent mapping
-                if (!injected) {
-                    // Slack nodes
-                    if (nodeType.includes('slack')) {
-                        if (credNameLower.includes('webhook')) {
-                            nodeConfig.webhookUrl = value;
-                            updated = true;
-                            injected = true;
-                            console.log(`[Credential Injection] Applied ${credName} to ${node.id}.webhookUrl (Slack webhook)`);
-                        } else if (credNameLower.includes('token')) {
-                            nodeConfig.token = value;
-                            updated = true;
-                            injected = true;
-                            console.log(`[Credential Injection] Applied ${credName} to ${node.id}.token (Slack token)`);
-                        }
-                    }
-                    
-                    // Discord nodes
-                    if (nodeType.includes('discord') && credNameLower.includes('webhook')) {
-                        nodeConfig.webhookUrl = value;
-                        updated = true;
-                        injected = true;
-                        console.log(`[Credential Injection] Applied ${credName} to ${node.id}.webhookUrl (Discord webhook)`);
-                    }
-                    
-                    // Google Sheets nodes
-                    if (nodeType.includes('google') && nodeType.includes('sheet')) {
-                        if (credNameLower.includes('sheet') || credNameLower.includes('spreadsheet')) {
-                            const urlMatch = String(value).match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-                            nodeConfig.spreadsheetId = urlMatch ? urlMatch[1] : value;
-                            updated = true;
-                            injected = true;
-                            console.log(`[Credential Injection] Applied ${credName} to ${node.id}.spreadsheetId (Google Sheets)`);
-                        }
-                    }
-                    
-                    // Email/SMTP nodes
-                    if (nodeType.includes('email') || nodeType.includes('smtp')) {
-                        if (credNameLower.includes('smtp_host') || credNameLower.includes('host')) {
-                            nodeConfig.host = value;
-                            updated = true;
-                            injected = true;
-                        } else if (credNameLower.includes('smtp_username') || credNameLower.includes('username')) {
-                            nodeConfig.username = value;
-                            updated = true;
-                            injected = true;
-                        } else if (credNameLower.includes('smtp_password') || credNameLower.includes('password')) {
-                            nodeConfig.password = value;
-                            updated = true;
-                            injected = true;
-                        }
-                        if (injected) {
-                            console.log(`[Credential Injection] Applied ${credName} to ${node.id} (SMTP)`);
-                        }
-                    }
-                    
-                    // Database nodes
-                    if (nodeType.includes('database')) {
-                        if (credNameLower.includes('connection') || credNameLower.includes('connection_string')) {
-                            nodeConfig.connectionString = value;
-                            updated = true;
-                            injected = true;
-                            console.log(`[Credential Injection] Applied ${credName} to ${node.id}.connectionString (Database)`);
-                        }
-                    }
-                    
-                    // HTTP/API nodes
-                    if ((nodeType.includes('http') || nodeType.includes('api')) && credNameLower.includes('api_key')) {
-                        nodeConfig.apiKey = value;
-                        updated = true;
-                        injected = true;
-                        console.log(`[Credential Injection] Applied ${credName} to ${node.id}.apiKey (HTTP/API)`);
-                    }
-                }
-            });
-            
-            if (updated) {
-                return {
-                    ...node,
-                    data: {
-                        ...node.data,
-                        config: nodeConfig,
-                    },
-                };
-            }
-            return node;
-        });
+        return { ...current, passes: maxPasses };
     };
 
     /**
@@ -3463,7 +3123,7 @@ export function AutonomousAgentWizard() {
             setExecutionProgress(0);
             setExecutionError(null);
             setStep('executing');
-            
+
             // Get auth token
             const { data: { session } } = await supabase.auth.getSession();
             const headers: Record<string, string> = {
@@ -3472,6 +3132,52 @@ export function AutonomousAgentWizard() {
             
             if (session?.access_token) {
                 headers['Authorization'] = `Bearer ${session.access_token}`;
+            }
+
+            // Pre-execution readiness check: re-read server-side missing items so vault
+            // credentials, user-provided static fields, and runtime_ai deferrals are evaluated
+            // against the workflow that will actually run.
+            const localMissingCredentialLabels = credentialQuestionsForStep
+                .filter((q: any) => {
+                    if (q?.required === false) return false;
+                    if (q?.credential?.satisfied === true) return false;
+                    return getCredentialAnswerForQuestion(q).length === 0;
+                })
+                .map((q: any) => q.label || q.credential?.displayName || q.fieldName || 'credential');
+            const localMissingOAuthLabels = blockingOAuthCredentials.map(
+                (c: any) => c.displayName || c.vaultKey || c.provider || 'connected account'
+            );
+            const localMissingLabels = [...localMissingCredentialLabels, ...localMissingOAuthLabels];
+            if (localMissingLabels.length > 0) {
+                setExecutionError(`Missing credentials before execution: ${localMissingLabels.join(', ')}.`);
+                setExecutionStatus('failed');
+                setStep('credentials');
+                return;
+            }
+
+            const readinessResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/missing-items`, {
+                headers,
+            });
+            if (!readinessResponse.ok) {
+                const error = await readinessResponse.json().catch(() => ({ error: 'Pre-execution readiness check failed' }));
+                throw new Error(error.message || error.error || 'Could not verify workflow readiness before execution');
+            }
+            const readiness = await readinessResponse.json();
+            const missingCredentialLabels = (Array.isArray(readiness.credentials) ? readiness.credentials : [])
+                .filter((c: any) => c?.satisfied !== true)
+                .map((c: any) => c.displayName || c.vaultKey || c.provider || 'credential');
+            const missingInputLabels = (Array.isArray(readiness.inputs) ? readiness.inputs : [])
+                .filter((i: any) => i?.required !== false)
+                .map((i: any) => `${i.nodeLabel || i.nodeId || 'Node'} - ${i.fieldName || 'input'}`);
+            if (missingCredentialLabels.length > 0 || missingInputLabels.length > 0) {
+                const parts = [
+                    missingCredentialLabels.length > 0 ? `credentials: ${missingCredentialLabels.join(', ')}` : '',
+                    missingInputLabels.length > 0 ? `inputs: ${missingInputLabels.join(', ')}` : '',
+                ].filter(Boolean);
+                setExecutionError(`Workflow is not ready for execution. Missing ${parts.join('; ')}.`);
+                setExecutionStatus('failed');
+                setStep(missingCredentialLabels.length > 0 ? 'credentials' : 'configuration');
+                return;
             }
             
             // Start execution using distributed workflow engine
@@ -3499,22 +3205,28 @@ export function AutonomousAgentWizard() {
             setExecutionId(execId);
             setExecutionProgress(10);
             
-            // Poll for execution status
-            const pollInterval = setInterval(async () => {
+            // Poll for execution status with exponential backoff (2s → 4s → 8s → max 30s)
+            let pollDelay = 2000;
+            const MAX_POLL_DELAY = 30000;
+            let pollTimeoutId: ReturnType<typeof setTimeout> | null = null;
+            let pollCancelled = false;
+
+            const pollStatus = async () => {
+                if (pollCancelled) return;
                 try {
                     const statusResponse = await fetch(`${ENDPOINTS.itemBackend}/api/execution-status/${execId}`, {
                         headers: session?.access_token ? {
                             'Authorization': `Bearer ${session.access_token}`
                         } : {}
                     });
-                    
+
                     if (!statusResponse.ok) {
                         throw new Error('Failed to get execution status');
                     }
-                    
+
                     const statusData = await statusResponse.json();
                     const status = statusData.status;
-                    
+
                     // Update progress based on completed steps
                     if (statusData.steps && Array.isArray(statusData.steps)) {
                         const completedSteps = statusData.steps.filter((s: any) => s.status === 'completed').length;
@@ -3523,9 +3235,9 @@ export function AutonomousAgentWizard() {
                             setExecutionProgress(10 + (completedSteps / totalSteps) * 80);
                         }
                     }
-                    
+
                     if (status === 'completed') {
-                        clearInterval(pollInterval);
+                        pollCancelled = true;
                         setExecutionStatus('completed');
                         setExecutionProgress(100);
                         setExecutionResult(statusData);
@@ -3535,7 +3247,7 @@ export function AutonomousAgentWizard() {
                             description: 'Your workflow has completed execution!',
                         });
                     } else if (status === 'failed' || status === 'error') {
-                        clearInterval(pollInterval);
+                        pollCancelled = true;
                         setExecutionStatus('failed');
                         setExecutionError(statusData.error || 'Workflow execution failed');
                         setStep('complete');
@@ -3544,17 +3256,24 @@ export function AutonomousAgentWizard() {
                             description: statusData.error || 'Workflow execution encountered an error',
                             variant: 'destructive',
                         });
+                    } else {
+                        pollDelay = Math.min(pollDelay * 1.5, MAX_POLL_DELAY);
+                        pollTimeoutId = setTimeout(pollStatus, pollDelay);
                     }
                 } catch (pollError: any) {
                     console.error('Error polling execution status:', pollError);
-                    // Continue polling on error
+                    if (!pollCancelled) {
+                        pollTimeoutId = setTimeout(pollStatus, pollDelay);
+                    }
                 }
-            }, 2000); // Poll every 2 seconds
-            
+            };
+            pollTimeoutId = setTimeout(pollStatus, pollDelay);
+
             // Timeout after 5 minutes
             setTimeout(() => {
-                clearInterval(pollInterval);
-                if (executionStatus === 'running') {
+                if (!pollCancelled) {
+                    pollCancelled = true;
+                    if (pollTimeoutId) clearTimeout(pollTimeoutId);
                     setExecutionStatus('failed');
                     setExecutionError('Execution timeout - workflow took too long to complete');
                     setStep('complete');
@@ -3603,24 +3322,15 @@ export function AutonomousAgentWizard() {
                     })
                 );
             }
-            rememberOAuthReturnTo();
-            const redirectUrl = buildConnectorCallbackUrl('/auth/google/callback');
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: redirectUrl,
-                    queryParams: {
-                        access_type: 'offline',
-                        prompt: 'consent',
-                        scope: GOOGLE_CONNECTOR_SCOPES,
-                    },
-                },
-            });
-            if (error) throw error;
+            const { data: { session } } = await supabase.auth.getSession();
+            const userId = session?.user?.id;
+            if (!userId) throw new Error('Please sign in first to connect Google.');
+            const returnTo = getCurrentPathWithQuery();
             toast({
                 title: 'Redirecting to Google�',
                 description: 'Authorize access; you will return here afterward.',
             });
+            startGoogleConnectorOAuth(userId, returnTo);
         } catch (e: unknown) {
             toast({
                 title: 'Google sign-in failed',
@@ -3660,20 +3370,26 @@ export function AutonomousAgentWizard() {
                 if (buildAiFromGen && typeof buildAiFromGen === 'object') {
                     workflowMetadataCfg.buildAiUsage = buildAiFromGen;
                 }
+                const pendingNormalized = revalidateWorkflowGraph(
+                    pendingWorkflowData.nodes,
+                    pendingWorkflowData.edges,
+                    10,
+                    { preserveTopology: true }
+                );
                 const workflowData = {
                     name: (analysis?.summary && typeof analysis.summary === 'string') 
                         ? analysis.summary.substring(0, 50) 
                         : 'AI Generated Workflow',
-                    nodes: pendingWorkflowData.nodes,
-                    edges: pendingWorkflowData.edges,
+                    nodes: pendingNormalized.nodes,
+                    edges: pendingNormalized.edges,
                     user_id: user?.id,
                     updated_at: new Date().toISOString(),
                     ...(Object.keys(workflowMetadataCfg).length > 0
                         ? {
                               metadata: workflowMetadataCfg,
                               graph: {
-                                  nodes: pendingWorkflowData.nodes,
-                                  edges: pendingWorkflowData.edges,
+                                  nodes: pendingNormalized.nodes,
+                                  edges: pendingNormalized.edges,
                                   metadata: { ...workflowMetadataCfg },
                               },
                           }
@@ -3715,7 +3431,9 @@ export function AutonomousAgentWizard() {
                         ...sanitizedModeInputs,
                         ...unlockPayload,
                     };
-                    if (Object.keys(combinedInputs).length > 0) {
+                    // Always call attach-inputs: it applies visible user values, persists ownership
+                    // metadata, freezes the graph boundary, and injects satisfied vault credentials.
+                    if (Object.keys(combinedInputs).length >= 0) {
                         console.log('?? Attaching node inputs...');
                         console.log('?? Input values:', combinedInputs);
                         
@@ -3900,12 +3618,11 @@ export function AutonomousAgentWizard() {
                         ? JSON.parse(finalWorkflow.graph) 
                         : finalWorkflow.graph || finalWorkflow;
                     
-                    // Backend attach-* preserves topology; avoid frontend linearization here
-                    const normalized = validateAndFixWorkflow(
-                        {
-                            nodes: workflowGraph?.nodes || finalWorkflow.nodes || [],
-                            edges: workflowGraph?.edges || finalWorkflow.edges || [],
-                        },
+                    // Backend attach-* preserves topology; avoid frontend linearization here.
+                    const normalized = revalidateWorkflowGraph(
+                        workflowGraph?.nodes || finalWorkflow.nodes || [],
+                        workflowGraph?.edges || finalWorkflow.edges || [],
+                        10,
                         { preserveTopology: true }
                     );
                     
@@ -4261,9 +3978,10 @@ export function AutonomousAgentWizard() {
                 const workflowNodes = n || [];
                 const workflowEdges = e || [];
                 if (workflowNodes.length > 0 || workflowEdges.length > 0) {
+                    const revalidated = revalidateWorkflowGraph(workflowNodes, workflowEdges, 10);
                     setPendingWorkflowData({
-                        nodes: workflowNodes,
-                        edges: workflowEdges,
+                        nodes: revalidated.nodes,
+                        edges: revalidated.edges,
                         update,
                         discoveredInputs,
                         discoveredCredentials: discoveredCreds,
@@ -4677,6 +4395,7 @@ export function AutonomousAgentWizard() {
                                         workflowId: update.workflowId,
                                         workflowExplanation: update.workflowExplanation || update.confirmationRequest?.workflowExplanation,
                                         structuralPrompt: update.structuralPrompt || update.pipelineContext?.structuralPrompt || undefined,
+                                        summaryV2: (update.summaryV2 || update.confirmationRequest?.summaryV2 || null) as SummaryV2,
                                         confidenceScore: update.pipelineContext?.confidence_score || update.confirmationRequest?.confidenceScore,
                                         workflow: {
                                             nodes: nodes || update.workflow?.nodes || [],
@@ -4698,14 +4417,15 @@ export function AutonomousAgentWizard() {
                                         const wEdges = update.edges || update.workflow?.edges || [];
                                         if (wNodes.length > 0) {
                                             const { data: { user: wUser } } = await supabase.auth.getUser();
+                                            const preSaveGraph = revalidateWorkflowGraph(wNodes, wEdges, 10);
                                             const { data: preSaved, error: preSaveErr } = await supabase
                                                 .from('workflows')
                                                 .insert({
                                                     name: (analysis?.summary && typeof analysis.summary === 'string')
                                                         ? analysis.summary.substring(0, 50)
                                                         : 'AI Generated Workflow',
-                                                    nodes: wNodes,
-                                                    edges: wEdges,
+                                                    nodes: preSaveGraph.nodes,
+                                                    edges: preSaveGraph.edges,
                                                     user_id: wUser?.id,
                                                     updated_at: new Date().toISOString(),
                                                 } as any)
@@ -4755,7 +4475,7 @@ export function AutonomousAgentWizard() {
                                     // No credentials to inject (none required)
                                     const nodesWithCredentials = workflowNodes;
                                     
-                                    const normalized = validateAndFixWorkflow({ nodes: nodesWithCredentials, edges: workflowEdges });
+                                    const normalized = revalidateWorkflowGraph(nodesWithCredentials, workflowEdges, 10);
                                     
                                     // ? CRITICAL: Check if workflow is already ready before setting blueprint
                                     const currentState = stateManager.getCurrentState();
@@ -4955,14 +4675,15 @@ export function AutonomousAgentWizard() {
                         const wEdges = finalData.edges || finalData.workflow?.edges || [];
                         if (wNodes.length > 0) {
                             const { data: { user: wUser } } = await supabase.auth.getUser();
+                            const preSaveGraph = revalidateWorkflowGraph(wNodes, wEdges, 10);
                             const { data: preSaved, error: preSaveErr } = await supabase
                                 .from('workflows')
                                 .insert({
                                     name: (analysis?.summary && typeof analysis.summary === 'string')
                                         ? analysis.summary.substring(0, 50)
                                         : 'AI Generated Workflow',
-                                    nodes: wNodes,
-                                    edges: wEdges,
+                                    nodes: preSaveGraph.nodes,
+                                    edges: preSaveGraph.edges,
                                     user_id: wUser?.id,
                                     updated_at: new Date().toISOString(),
                                 } as any)
@@ -5017,7 +4738,7 @@ export function AutonomousAgentWizard() {
             ) {
                 try {
                     const { data: { user } } = await supabase.auth.getUser();
-                    const normalized = validateAndFixWorkflow({ nodes: workflowNodes, edges: workflowEdges });
+                    const normalized = revalidateWorkflowGraph(workflowNodes, workflowEdges, 10);
 
                     const metaFallback: Record<string, unknown> = {};
                     const pfb = (originalPrompt && originalPrompt.trim()) || (typeof prompt === 'string' && prompt.trim()) || '';
@@ -5111,7 +4832,7 @@ export function AutonomousAgentWizard() {
                 ) {
                     try {
                         const { data: { user } } = await supabase.auth.getUser();
-                        const normalized = validateAndFixWorkflow({ nodes: retryWorkflowNodes, edges: retryWorkflowEdges });
+                        const normalized = revalidateWorkflowGraph(retryWorkflowNodes, retryWorkflowEdges, 10);
 
                         const metaRetry: Record<string, unknown> = {};
                         const pr = (originalPrompt && originalPrompt.trim()) || (typeof prompt === 'string' && prompt.trim()) || '';
@@ -5464,8 +5185,10 @@ export function AutonomousAgentWizard() {
             // ✅ Use preserveTopology=true: the backend already built the correct branching graph.
             // Without this, validateAndFixWorkflow re-runs linearization which adds spurious
             // log_output fan-in edges from all branch terminals.
-            const normalized = validateAndFixWorkflow(
-                { nodes: normalizedBackend.nodes, edges: normalizedBackend.edges },
+            const normalized = revalidateWorkflowGraph(
+                normalizedBackend.nodes,
+                normalizedBackend.edges,
+                10,
                 { preserveTopology: true }
             );
 
@@ -5960,6 +5683,7 @@ export function AutonomousAgentWizard() {
                                                     onClick={() => {
                                                         setHasWorkflowPlan(false);
                                                         setPlanSummary('');
+                                                        setPlanSummaryV2(null);
                                                         setPlanNodeHints([]);
                                                         setPlanNodeReasons({});
                                                         setPlanOrderingConfidence(null);
@@ -6215,9 +5939,13 @@ export function AutonomousAgentWizard() {
                                                 <Sparkles className="h-4 w-4" />
                                                 Final Analyzed Prompt:
                                             </p>
-                                            <StructuredPlanDisplay
-                                                summary={planSummary || refinement.enhancedPrompt || refinement.systemPrompt || refinement.refinedPrompt || ''}
-                                            />
+                                            {planSummaryV2 ? (
+                                                <SummaryV2Display summaryV2={planSummaryV2} />
+                                            ) : (
+                                                <StructuredPlanDisplay
+                                                    summary={planSummary || refinement.enhancedPrompt || refinement.systemPrompt || refinement.refinedPrompt || ''}
+                                                />
+                                            )}
                                         </div>
 
                                         {/* Pipeline Stage Trace � shows each AI stage result */}
@@ -6551,17 +6279,54 @@ export function AutonomousAgentWizard() {
                                                 </div>
                                             );
                                         })()}
-                                        <div className="flex flex-wrap gap-2">
-                                            <Button type="button" variant="outline" onClick={() => applyOwnershipToAll('manual_static')}>
-                                                Convert All To You
-                                            </Button>
-                                            <Button type="button" variant="outline" onClick={() => applyOwnershipToAll('runtime_ai')}>
-                                                Convert All Eligible To AI (runtime or build)
-                                            </Button>
-                                            <Button type="button" variant="outline" onClick={resetOwnershipToAIRecommendations}>
-                                                Reset To AI Recommendations
-                                            </Button>
-                                        </div>
+                                        {(() => {
+                                            const hasConvertibleToYou = ownershipQuestions.some((q: any) => {
+                                                const rowLocked = q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
+                                                if (rowLocked) return false;
+                                                const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
+                                                const current = ownershipEffectiveModes.byModeKey[modeKey] ?? q.fillModeDefault;
+                                                return current !== 'manual_static';
+                                            });
+                                            const hasConvertibleToAI = ownershipQuestions.some((q: any) => {
+                                                const rowLocked = q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
+                                                if (rowLocked) return false;
+                                                return q.supportsRuntimeAI !== false || q.supportsBuildtimeAI !== false;
+                                            });
+                                            const differsFromRecommendations = ownershipQuestions.some((q: any) => {
+                                                const rowLocked = q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
+                                                if (rowLocked) return false;
+                                                const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
+                                                const current = ownershipEffectiveModes.byModeKey[modeKey];
+                                                if (current === undefined) return false;
+                                                const { mode: recommended } = resolveWizardEffectiveFieldFillMode(
+                                                    undefined,
+                                                    q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined,
+                                                    q.supportsRuntimeAI,
+                                                    q.supportsBuildtimeAI
+                                                );
+                                                return current !== recommended;
+                                            });
+                                            if (!hasConvertibleToYou && !hasConvertibleToAI && !differsFromRecommendations) return null;
+                                            return (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {hasConvertibleToYou && (
+                                                        <Button type="button" variant="outline" onClick={() => applyOwnershipToAll('manual_static')}>
+                                                            Convert All To You
+                                                        </Button>
+                                                    )}
+                                                    {hasConvertibleToAI && (
+                                                        <Button type="button" variant="outline" onClick={() => applyOwnershipToAll('runtime_ai')}>
+                                                            Convert All Eligible To AI (runtime or build)
+                                                        </Button>
+                                                    )}
+                                                    {differsFromRecommendations && (
+                                                        <Button type="button" variant="outline" onClick={resetOwnershipToAIRecommendations}>
+                                                            Reset To AI Recommendations
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                         <div className="space-y-8">
                                             {(
                                                 [
@@ -6692,9 +6457,8 @@ export function AutonomousAgentWizard() {
                                                                                     question.isUnlockableCredential &&
                                                                                     isCredentialUnlocked(question)
                                                                                 );
-                                                                            const youDisabled = false;
-                                                                            const buildDisabled = false;
-                                                                            const aiRuntimeDisabled = false;
+                                                                            const showBuildButton = question.supportsBuildtimeAI !== false;
+                                                                            const showRuntimeButton = question.supportsRuntimeAI !== false;
                                                                             // -- Per-field on/off toggle --
                                                                             const fieldEnabledKey = `fieldEnabled_${question.nodeId}_${question.fieldName}`;
                                                                             const hasAiPrefilledValue = !!(question.aiFilledAtBuildTime || question.aiUsesRuntime);
@@ -6854,32 +6618,36 @@ export function AutonomousAgentWizard() {
                                                                                             >
                                                                                                 You
                                                                                             </Button>
-                                                                                            <Button
-                                                                                                type="button"
-                                                                                                size="sm"
-                                                                                                variant={selectedMode === 'buildtime_ai_once' ? 'default' : 'outline'}
-                                                                                                onClick={() =>
-                                                                                                    setFillModeValues((prev) => ({
-                                                                                                        ...prev,
-                                                                                                        [modeKey]: 'buildtime_ai_once',
-                                                                                                    }))
-                                                                                                }
-                                                                                            >
-                                                                                                AI (build)
-                                                                                            </Button>
-                                                                                            <Button
-                                                                                                type="button"
-                                                                                                size="sm"
-                                                                                                variant={selectedMode === 'runtime_ai' ? 'default' : 'outline'}
-                                                                                                onClick={() =>
-                                                                                                    setFillModeValues((prev) => ({
-                                                                                                        ...prev,
-                                                                                                        [modeKey]: 'runtime_ai',
-                                                                                                    }))
-                                                                                                }
-                                                                                            >
-                                                                                                AI (runtime)
-                                                                                            </Button>
+                                                                                            {showBuildButton && (
+                                                                                                <Button
+                                                                                                    type="button"
+                                                                                                    size="sm"
+                                                                                                    variant={selectedMode === 'buildtime_ai_once' ? 'default' : 'outline'}
+                                                                                                    onClick={() =>
+                                                                                                        setFillModeValues((prev) => ({
+                                                                                                            ...prev,
+                                                                                                            [modeKey]: 'buildtime_ai_once',
+                                                                                                        }))
+                                                                                                    }
+                                                                                                >
+                                                                                                    AI (build)
+                                                                                                </Button>
+                                                                                            )}
+                                                                                            {showRuntimeButton && (
+                                                                                                <Button
+                                                                                                    type="button"
+                                                                                                    size="sm"
+                                                                                                    variant={selectedMode === 'runtime_ai' ? 'default' : 'outline'}
+                                                                                                    onClick={() =>
+                                                                                                        setFillModeValues((prev) => ({
+                                                                                                            ...prev,
+                                                                                                            [modeKey]: 'runtime_ai',
+                                                                                                        }))
+                                                                                                    }
+                                                                                                >
+                                                                                                    AI (runtime)
+                                                                                                </Button>
+                                                                                            )}
                                                                                         </div>
                                                                                     </div>
                                                                                     {locked && question.aiFilledAtBuildTime ? (
@@ -6917,6 +6685,62 @@ export function AutonomousAgentWizard() {
                                                                                             </p>
                                                                                         </div>
                                                                                     )}
+                                                                                    {(question.ownershipClass === 'credential' || question.isVaultCredential) && (() => {
+                                                                                        const helpKey = `credhelp_${question.nodeId}_${question.fieldName}`;
+                                                                                        const isExpanded = !!credHelpExpanded[helpKey];
+                                                                                        const viewMode = credHelpViewMode[helpKey] ?? 'simple';
+                                                                                        const nodeLabel = String(question.nodeLabel || question.nodeType || 'this node');
+                                                                                        // Look up AI-generated guidance from discoveredCredentials (matched by nodeId + vaultKey)
+                                                                                        const discoveredCreds: any[] = pendingWorkflowData?.discoveredCredentials || [];
+                                                                                        const matchedCred = discoveredCreds.find((c: any) =>
+                                                                                            (question.credential?.vaultKey && c.vaultKey === question.credential.vaultKey) ||
+                                                                                            (Array.isArray(c.nodeIds) && c.nodeIds.includes(question.nodeId))
+                                                                                        );
+                                                                                        const simpleText = matchedCred?.simpleDescription || `This credential authorizes ${nodeLabel} to act on your behalf. Find it in the service's settings, API, or developer console.`;
+                                                                                        const technicalText = matchedCred?.technicalDescription || `Credential for ${nodeLabel}. Injected at execution time from the secure vault. Not logged. Reference as {{$credentials.<fieldName>}} in custom expressions if needed.`;
+                                                                                        const howToObtain = matchedCred?.howToObtain || '';
+                                                                                        return (
+                                                                                            <div className="mt-2 border border-border/40 rounded-md overflow-hidden">
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    className="w-full flex items-center justify-between px-2 py-1.5 text-[11px] text-muted-foreground hover:bg-muted/30 transition-colors text-left"
+                                                                                                    onClick={() => setCredHelpExpanded(prev => ({ ...prev, [helpKey]: !isExpanded }))}
+                                                                                                >
+                                                                                                    <span>Why do I need this? How do I get it?</span>
+                                                                                                    <span className="ml-2 opacity-60">{isExpanded ? '▲' : '▼'}</span>
+                                                                                                </button>
+                                                                                                {isExpanded && (
+                                                                                                    <div className="px-2 pb-2 pt-1 bg-muted/10 space-y-2">
+                                                                                                        <div className="flex gap-1">
+                                                                                                            <button
+                                                                                                                type="button"
+                                                                                                                className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${viewMode === 'simple' ? 'bg-primary text-primary-foreground border-primary' : 'border-border/50 text-muted-foreground hover:bg-muted/30'}`}
+                                                                                                                onClick={() => setCredHelpViewMode(prev => ({ ...prev, [helpKey]: 'simple' }))}
+                                                                                                            >
+                                                                                                                Simple
+                                                                                                            </button>
+                                                                                                            <button
+                                                                                                                type="button"
+                                                                                                                className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${viewMode === 'technical' ? 'bg-primary text-primary-foreground border-primary' : 'border-border/50 text-muted-foreground hover:bg-muted/30'}`}
+                                                                                                                onClick={() => setCredHelpViewMode(prev => ({ ...prev, [helpKey]: 'technical' }))}
+                                                                                                            >
+                                                                                                                Technical
+                                                                                                            </button>
+                                                                                                        </div>
+                                                                                                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                                                                                            {viewMode === 'simple' ? simpleText : technicalText}
+                                                                                                        </p>
+                                                                                                        {howToObtain && (
+                                                                                                            <div className="mt-1 pt-1 border-t border-border/30">
+                                                                                                                <p className="text-[10px] font-medium text-muted-foreground mb-0.5">How to get it:</p>
+                                                                                                                <p className="text-[11px] text-muted-foreground whitespace-pre-line leading-relaxed">{howToObtain}</p>
+                                                                                                            </div>
+                                                                                                        )}
+                                                                                                    </div>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        );
+                                                                                    })()}
                                                                                     </div>
                                                                                     )}
                                                                                 </div>
@@ -7730,10 +7554,14 @@ export function AutonomousAgentWizard() {
                                                 <p className="text-xs font-semibold text-slate-300 mb-2">
                                                     Final analyzed prompt
                                                 </p>
-                                                <StructuredPlanDisplay
-                                                    summary={planSummary || refinement.enhancedPrompt || refinement.systemPrompt || refinement.refinedPrompt || ''}
-                                                    compact
-                                                />
+                                                {planSummaryV2 ? (
+                                                    <SummaryV2Display summaryV2={planSummaryV2} compact />
+                                                ) : (
+                                                    <StructuredPlanDisplay
+                                                        summary={planSummary || refinement.enhancedPrompt || refinement.systemPrompt || refinement.refinedPrompt || ''}
+                                                        compact
+                                                    />
+                                                )}
                                             </div>
                                         </motion.div>
                                     )}
@@ -7900,6 +7728,7 @@ export function AutonomousAgentWizard() {
                             <WorkflowConfirmationStep
                                 workflowId={confirmationData.workflowId}
                                 structuralPrompt={confirmationData.structuralPrompt}
+                                summaryV2={confirmationData.summaryV2}
                                 workflowExplanation={confirmationData.workflowExplanation as any}
                                 confidenceScore={confirmationData.confidenceScore}
                                 workflow={confirmationData.workflow}
@@ -7929,10 +7758,11 @@ export function AutonomousAgentWizard() {
                                         if (result.success && result.workflow) {
                                             // Workflow confirmed and pipeline continued
                                             // Update workflow in store
-                                            const normalized = validateAndFixWorkflow({
-                                                nodes: result.workflow.nodes || [],
-                                                edges: result.workflow.edges || [],
-                                            });
+                                            const normalized = revalidateWorkflowGraph(
+                                                result.workflow.nodes || [],
+                                                result.workflow.edges || [],
+                                                10
+                                            );
                                             
                                             setNodes(normalized.nodes);
                                             setEdges(normalized.edges);
@@ -8289,14 +8119,27 @@ export function AutonomousAgentWizard() {
                                                             }
 
                                                             const result = await response.json();
-                                                            void result;
+                                                            const finalNodes = Array.isArray(result?.nodes)
+                                                                ? result.nodes
+                                                                : Array.isArray(result?.workflow?.nodes)
+                                                                  ? result.workflow.nodes
+                                                                  : [];
+                                                            const finalEdges = Array.isArray(result?.edges)
+                                                                ? result.edges
+                                                                : Array.isArray(result?.workflow?.edges)
+                                                                  ? result.workflow.edges
+                                                                  : [];
+                                                            if (finalNodes.length > 0) {
+                                                                setNodes(finalNodes as any[]);
+                                                                setEdges(finalEdges as any[]);
+                                                            }
                                                             setWorkflowReady(true);
                                                             setConfigureGuidance(null);
                                                             toast({
                                                                 title: 'Success',
                                                                 description: 'Workflow configured successfully!',
                                                             });
-                                                            setStep('complete');
+                                                            navigate(`/workflow/${generatedWorkflowId}`, { replace: true });
                                                         } catch (error: any) {
                                                             const guidance = mapWorkflowIssueToGuidance({
                                                                 message: error?.message || 'Failed to configure workflow',
@@ -8409,30 +8252,30 @@ export function AutonomousAgentWizard() {
                         </motion.div>
                     )}
 
-                    <FieldOwnershipGuidePanel
-                        enabled={fieldOwnershipGuideEnabled}
-                        isVisible={['field-ownership', 'credentials', 'configure'].includes(step)}
-                        contextPayload={fieldOwnershipGuideContext as Record<string, unknown>}
-                        selectedFieldLabel={
-                            selectedGuideQuestion
-                                ? String(
-                                      selectedGuideQuestion.text ||
-                                          selectedGuideQuestion.label ||
-                                          selectedGuideQuestion.fieldName ||
-                                          ''
-                                  )
-                                : undefined
-                        }
-                        buildManifestSnapshot={
-                            pendingWorkflowData?.fieldOwnershipMap as Record<string, Record<string, string>> | undefined
-                        }
-                        onOwnershipChange={(nodeId, fieldName, mode) => {
-                            setFieldOwnershipOverride(nodeId, fieldName, mode);
-                        }}
-                        floating
-                    />
-
                 </AnimatePresence>
+
+                <FieldOwnershipGuidePanel
+                    enabled={fieldOwnershipGuideEnabled}
+                    isVisible={['field-ownership', 'credentials', 'configure'].includes(step)}
+                    contextPayload={fieldOwnershipGuideContext as Record<string, unknown>}
+                    selectedFieldLabel={
+                        selectedGuideQuestion
+                            ? String(
+                                  selectedGuideQuestion.text ||
+                                      selectedGuideQuestion.label ||
+                                      selectedGuideQuestion.fieldName ||
+                                      ''
+                              )
+                            : undefined
+                    }
+                    buildManifestSnapshot={
+                        pendingWorkflowData?.fieldOwnershipMap as Record<string, Record<string, string>> | undefined
+                    }
+                    onOwnershipChange={(nodeId, fieldName, mode) => {
+                        setFieldOwnershipOverride(nodeId, fieldName, mode);
+                    }}
+                    floating
+                />
             </div>
         </div>
     );

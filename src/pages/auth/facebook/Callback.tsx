@@ -1,172 +1,66 @@
-/**
- * Facebook OAuth Callback Handler
- * 
- * Handles Facebook OAuth callback from Supabase Auth.
- * Extracts tokens from session and saves them securely via backend API.
- */
-
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { getBackendUrl } from '@/lib/api/getBackendUrl';
-import { getFacebookOAuthScopeString } from '@/lib/facebookSignInOptions';
-import { Loader2 } from 'lucide-react';
-import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import { resolveOAuthReturnTo } from '@/lib/oauth-return';
+
+function safeReturnTo(params: URLSearchParams) {
+  const raw = params.get('return_to');
+  if (raw) {
+    try {
+      const decoded = decodeURIComponent(raw);
+      if (decoded.startsWith('/') && !decoded.startsWith('//')) return decoded;
+    } catch {
+      if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
+    }
+  }
+  return resolveOAuthReturnTo(params, '/workflows');
+}
 
 export default function FacebookAuthCallback() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [status, setStatus] = useState<string>('Processing authentication...');
+  const handled = useRef(false);
+  const params = new URLSearchParams(window.location.search);
+  const returnTo = safeReturnTo(params);
   const [error, setError] = useState<string | null>(null);
-  const processedRef = useRef(false);
 
   useEffect(() => {
-    // Avoid double-execution in React Strict Mode
-    if (processedRef.current) return;
+    if (handled.current) return;
+    handled.current = true;
 
-    let authSubscription: { unsubscribe: () => void } | null = null;
-    let timeoutId: NodeJS.Timeout;
-    const searchParams = new URLSearchParams(window.location.search);
-    const returnTo = resolveOAuthReturnTo(searchParams, '/workflows');
-    const oauthError = searchParams.get('error_description') || searchParams.get('error');
+    const success = params.get('success') === 'true';
+    const oauthError = params.get('error_description') || params.get('error');
+    const name = params.get('name');
 
-    const processSession = async (session: Session | null) => {
-      if (!session) return false;
+    if (oauthError) {
+      setError(oauthError);
+      toast({ title: 'Facebook connection failed', description: oauthError, variant: 'destructive' });
+      setTimeout(() => navigate(returnTo, { replace: true }), 3000);
+      return;
+    }
 
-      // Prevent multiple processings for the same session
-      if (processedRef.current) return true;
+    if (success) {
+      toast({
+        title: 'Facebook connected',
+        description: name ? `Connected ${name}` : 'Facebook account connected successfully.',
+      });
+      navigate(returnTo, { replace: true });
+      return;
+    }
 
-      try {
-        // Extract tokens from Supabase session
-        const { provider_token, provider_refresh_token, expires_at } = session as Session & {
-          provider_token?: string | null;
-          provider_refresh_token?: string | null;
-          expires_at?: number;
-        };
-
-        if (!provider_token) {
-          setStatus('Waiting for Facebook OAuth tokens...');
-          return false;
-        }
-
-        processedRef.current = true;
-        setStatus('Facebook tokens found. Saving...');
-        console.log('Got Facebook tokens. Saving to database via backend API...');
-
-        // Get current session token for API authentication
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (!currentSession?.access_token) {
-          throw new Error('No active session found');
-        }
-
-        // Call backend API to save token (with encryption)
-        const backendUrl = getBackendUrl();
-        const response = await fetch(`${backendUrl}/api/social-tokens`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${currentSession.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            provider: 'facebook',
-            access_token: provider_token,
-            refresh_token: provider_refresh_token || null,
-            expires_at: expires_at ? new Date(expires_at * 1000).toISOString() : null,
-            scope: getFacebookOAuthScopeString(),
-            provider_user_id: null, // Can be fetched from Facebook API if needed
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error?.message || `Failed to save Facebook token: ${response.statusText}`);
-        }
-
-        toast({
-          title: 'Success',
-          description: 'Facebook connected successfully!',
-        });
-
-        // Check if we should return to a specific page
-        navigate(returnTo);
-        return true;
-
-      } catch (err) {
-        console.error('Error in Facebook callback processing:', err);
-        setError(err instanceof Error ? err.message : 'Failed to save Facebook connection');
-        toast({
-          title: 'Connection Failed',
-          description: err instanceof Error ? err.message : 'Failed to save connection',
-          variant: 'destructive',
-        });
-        setTimeout(() => navigate(returnTo), 3000);
-        return true;
-      }
-    };
-
-    const setupAuthListener = async () => {
-      if (oauthError) {
-        setError(oauthError);
-        toast({
-          title: 'Connection Failed',
-          description: oauthError,
-          variant: 'destructive',
-        });
-        processedRef.current = true;
-        setTimeout(() => navigate(returnTo), 3000);
-        return;
-      }
-
-      // 1. Check if we already have a session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const success = await processSession(session);
-        if (success) return;
-      }
-
-      // 2. Setup listener for the eventual sign in (PKCE flow)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event: AuthChangeEvent, nextSession: Session | null) => {
-          console.log(`Auth Callback Event: ${event}`);
-
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            await processSession(nextSession);
-          }
-        }
-      );
-      authSubscription = subscription;
-
-      // 3. Set a timeout just in case it hangs forever
-      timeoutId = setTimeout(() => {
-        if (!processedRef.current) {
-          setError('Authentication timed out. Please try again.');
-          processedRef.current = true;
-        }
-      }, 10000); // 10 seconds timeout
-    };
-
-    setupAuthListener();
-
-    return () => {
-      if (authSubscription) authSubscription.unsubscribe();
-      clearTimeout(timeoutId);
-    };
-  }, [navigate, toast]);
+    setError('Facebook connection did not complete.');
+    toast({ title: 'Connection failed', description: 'Facebook connection did not complete.', variant: 'destructive' });
+    setTimeout(() => navigate(returnTo, { replace: true }), 3000);
+  }, [navigate, params, returnTo, toast]);
 
   if (error) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-8 text-center">
-        <div className="text-destructive font-semibold">Connection Failed</div>
+        <div className="font-semibold text-destructive">Connection Failed</div>
         <p className="text-muted-foreground">{error}</p>
-        <div className="bg-muted p-4 rounded text-xs font-mono text-left max-w-lg overflow-auto">
-          <p>Debug Info:</p>
-          <p>URL: {window.location.href}</p>
-          <p>Status: {status}</p>
-        </div>
-        <Button onClick={() => navigate(returnTo)} variant="outline">
+        <Button onClick={() => navigate(returnTo, { replace: true })} variant="outline">
           Return to Workflows
         </Button>
       </div>
@@ -176,10 +70,7 @@ export default function FacebookAuthCallback() {
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center gap-4">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="text-muted-foreground">{status}</p>
-      <p className="text-xs text-muted-foreground max-w-md text-center">
-        Waiting for Facebook to complete the handshake...
-      </p>
+      <p className="text-muted-foreground">Completing Facebook connection...</p>
     </div>
   );
 }
