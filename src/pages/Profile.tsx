@@ -254,6 +254,7 @@ export default function Profile() {
       if (!token) return;
       const backendUrl = getBackendUrl();
       const res = await fetch(`${backendUrl}/api/subscriptions/current`, {
+        cache: "no-store",
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) return;
@@ -385,14 +386,22 @@ export default function Profile() {
 
     try {
       if (service === 'google' || service === 'linkedin' || service === 'notion') {
-        const tableName = service === 'google' ? 'google_oauth_tokens' : 
-                         service === 'linkedin' ? 'linkedin_oauth_tokens' : 
-                         'notion_oauth_tokens';
-        const { error } = await supabase
-          .from(tableName as any)
-          .delete()
-          .eq('user_id', user.id);
-        if (error) throw error;
+        const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+        if (!authToken) {
+          throw new Error('No authentication token');
+        }
+        const backendUrl = getBackendUrl();
+        const response = await fetch(`${backendUrl}/api/connections/${service}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || errorData.error || 'Failed to disconnect');
+        }
       } else if (service === 'github' || service === 'facebook') {
         const authToken = (await supabase.auth.getSession()).data.session?.access_token;
         if (!authToken) {

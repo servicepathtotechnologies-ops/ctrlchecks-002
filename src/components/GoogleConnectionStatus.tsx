@@ -100,12 +100,21 @@ export default function GoogleConnectionStatus() {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('google_oauth_tokens' as any)
-        .delete()
-        .eq('user_id', user.id);
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const resp = await fetch(`${apiUrl}/api/connections/google`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
 
-      if (error) throw error;
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        throw new Error((body as any).error || `HTTP ${resp.status}`);
+      }
 
       setIsAuthenticated(false);
       toast({

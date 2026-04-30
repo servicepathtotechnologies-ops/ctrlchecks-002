@@ -2,11 +2,12 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/aws/client';
-import { Plus, Search, Zap, MoreHorizontal, Play, Trash2, Copy, Clock, History, Bot, Cpu, Workflow, MessageSquare, ChevronRight, Edit, Sparkles, Hammer, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Zap, MoreHorizontal, Play, Trash2, Copy, Clock, History, Bot, Cpu, Workflow, MessageSquare, ChevronRight, Edit, ArrowLeft } from 'lucide-react';
 import { AppChromeHeader } from '@/components/layout/AppChromeHeader';
 import GoogleConnectionStatus from '@/components/GoogleConnectionStatus';
 import { WorkflowAuthGate } from '@/components/WorkflowAuthGate';
 import { WorkflowActionButton } from '@/components/WorkflowActionButton';
+import { WorkflowCreationOptions } from '@/components/workflow/WorkflowCreationOptions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -684,64 +685,7 @@ export default function Workflows() {
               <ArrowLeft className="mr-2 h-4 w-4" /> Back
             </Button>
 
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-semibold mb-1.5">Create New Workflow</h1>
-              <p className="text-muted-foreground text-sm">
-                Choose how you'd like to create your workflow
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* AI Creation Option */}
-              <Card className="cursor-pointer transition-shadow border hover:shadow-md">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg font-semibold">Create Using AI</CardTitle>
-                  <CardDescription className="text-sm mt-1.5">
-                    Describe your workflow in natural language and let AI automatically
-                    generate the workflow structure for you. Perfect for quick prototyping.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    className="w-full gradient-primary text-primary-foreground"
-                    onClick={() => {
-                      setShowCreateOptions(false);
-                      navigate('/workflow/ai');
-                    }}
-                  >
-                    Generate with AI
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Manual Creation Option */}
-              <Card className="cursor-pointer transition-shadow border hover:shadow-md">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
-                    <Hammer className="h-5 w-5 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg font-semibold">Create Workflow Manually</CardTitle>
-                  <CardDescription className="text-sm mt-1.5">
-                    Build your workflow step by step using our visual workflow builder.
-                    Drag and drop nodes, configure each step, and connect them together.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    className="w-full gradient-primary text-primary-foreground"
-                    onClick={() => {
-                      setShowCreateOptions(false);
-                      navigate('/workflow/new');
-                    }}
-                  >
-                    Start Building
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+            <WorkflowCreationOptions onNavigate={() => setShowCreateOptions(false)} />
           </div>
         </div>
       )}

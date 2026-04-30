@@ -348,61 +348,48 @@ export default function ConnectionsPanel() {
 
   const handleGoogleConnect = () => startWorkerOAuth('google', 'Google', setIsGoogleConnecting);
 
-  const handleGoogleDisconnect = async () => {
+  const disconnectViaBackend = async (provider: string, label: string, onDisconnected: () => void) => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('google_oauth_tokens' as any)
-        .delete()
-        .eq('user_id', user.id);
+      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!authToken) throw new Error('No authentication token');
 
-      if (error) throw error;
+      const backendUrl = getBackendUrl();
+      const response = await fetch(`${backendUrl}/api/connections/${provider}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-      setGoogleConnected(false);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || errorData.error || 'Failed to disconnect');
+      }
+
+      onDisconnected();
       toast({
         title: 'Disconnected',
-        description: 'Google account disconnected successfully',
+        description: `${label} account disconnected successfully`,
       });
       checkConnections();
     } catch (error) {
-      console.error('Error disconnecting:', error);
+      console.error(`Error disconnecting ${label}:`, error);
       toast({
         title: 'Error',
-        description: 'Failed to disconnect Google account',
+        description: `Failed to disconnect ${label} account`,
         variant: 'destructive',
       });
     }
   };
+
+  const handleGoogleDisconnect = () => disconnectViaBackend('google', 'Google', () => setGoogleConnected(false));
 
   const handleLinkedInConnect = () => startWorkerOAuth('linkedin', 'LinkedIn', setIsLinkedInConnecting);
 
-  const handleLinkedInDisconnect = async () => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('linkedin_oauth_tokens' as any)
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      setLinkedInConnected(false);
-      toast({
-        title: 'Disconnected',
-        description: 'LinkedIn account disconnected successfully',
-      });
-      checkConnections();
-    } catch (error) {
-      console.error('Error disconnecting:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to disconnect LinkedIn account',
-        variant: 'destructive',
-      });
-    }
-  };
+  const handleLinkedInDisconnect = () => disconnectViaBackend('linkedin', 'LinkedIn', () => setLinkedInConnected(false));
 
   const handleGithubConnect = () => startWorkerOAuth('github', 'GitHub', setIsGithubConnecting);
 
@@ -515,32 +502,7 @@ export default function ConnectionsPanel() {
     }
   };
 
-  const handleNotionDisconnect = async () => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('notion_oauth_tokens' as any)
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      setNotionConnected(false);
-      toast({
-        title: 'Disconnected',
-        description: 'Notion account disconnected successfully',
-      });
-      checkConnections();
-    } catch (error) {
-      console.error('Error disconnecting:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to disconnect Notion account',
-        variant: 'destructive',
-      });
-    }
-  };
+  const handleNotionDisconnect = () => disconnectViaBackend('notion', 'Notion', () => setNotionConnected(false));
 
   const handleTwitterConnect = async () => {
     if (!user) {
@@ -571,32 +533,7 @@ export default function ConnectionsPanel() {
     }
   };
 
-  const handleTwitterDisconnect = async () => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('twitter_oauth_tokens' as any)
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      setTwitterConnected(false);
-      toast({
-        title: 'Disconnected',
-        description: 'Twitter account disconnected successfully',
-      });
-      checkConnections();
-    } catch (error) {
-      console.error('Error disconnecting:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to disconnect Twitter account',
-        variant: 'destructive',
-      });
-    }
-  };
+  const handleTwitterDisconnect = () => disconnectViaBackend('twitter', 'Twitter', () => setTwitterConnected(false));
 
   const handleInstagramConnect = () => {
     rememberOAuthReturnTo();
@@ -605,22 +542,10 @@ export default function ConnectionsPanel() {
   };
 
   const handleInstagramDisconnect = async () => {
-    if (!user) return;
-    try {
-      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
-      if (!authToken) throw new Error('No authentication token');
-      const backendUrl = getBackendUrl();
-      await fetch(`${backendUrl}/api/connections/instagram`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
+    await disconnectViaBackend('instagram', 'Instagram', () => {
       setInstagramConnected(false);
       setInstagramUsername(null);
-      toast({ title: 'Disconnected', description: 'Instagram account disconnected' });
-      checkConnections();
-    } catch (error) {
-      toast({ title: 'Error', description: 'Failed to disconnect Instagram', variant: 'destructive' });
-    }
+    });
   };
 
   const handleWhatsappConnect = () => {
@@ -630,22 +555,10 @@ export default function ConnectionsPanel() {
   };
 
   const handleWhatsappDisconnect = async () => {
-    if (!user) return;
-    try {
-      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
-      if (!authToken) throw new Error('No authentication token');
-      const backendUrl = getBackendUrl();
-      await fetch(`${backendUrl}/api/connections/whatsapp`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
+    await disconnectViaBackend('whatsapp', 'WhatsApp', () => {
       setWhatsappConnected(false);
       setWhatsappPhone(null);
-      toast({ title: 'Disconnected', description: 'WhatsApp account disconnected' });
-      checkConnections();
-    } catch (error) {
-      toast({ title: 'Error', description: 'Failed to disconnect WhatsApp', variant: 'destructive' });
-    }
+    });
   };
 
   const handleSalesforceConnect = async () => {
@@ -670,22 +583,7 @@ export default function ConnectionsPanel() {
     }
   };
 
-  const handleSalesforceDisconnect = async () => {
-    if (!user) return;
-    try {
-      const { error } = await supabase
-        .from('salesforce_oauth_tokens' as any)
-        .delete()
-        .eq('user_id', user.id);
-      if (error) throw error;
-      setSalesforceConnected(false);
-      toast({ title: 'Disconnected', description: 'Salesforce account disconnected successfully' });
-      checkConnections();
-    } catch (error) {
-      console.error('Error disconnecting Salesforce:', error);
-      toast({ title: 'Error', description: 'Failed to disconnect Salesforce account', variant: 'destructive' });
-    }
-  };
+  const handleSalesforceDisconnect = () => disconnectViaBackend('salesforce', 'Salesforce', () => setSalesforceConnected(false));
 
   const totalConnected = (googleConnected ? 1 : 0) + (linkedInConnected ? 1 : 0) + (githubConnected ? 1 : 0) + (facebookConnected ? 1 : 0) + (notionConnected ? 1 : 0) + (twitterConnected ? 1 : 0) + (zohoConnected ? 1 : 0) + (instagramConnected ? 1 : 0) + (whatsappConnected ? 1 : 0) + (salesforceConnected ? 1 : 0);
 

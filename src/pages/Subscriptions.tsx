@@ -31,6 +31,12 @@ interface CurrentSubscription {
   workflowsUsed: number;
 }
 
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+  }
+}
+
 const PLAN_META = {
   Free: {
     icon: Shield,
@@ -68,11 +74,14 @@ export default function Subscriptions() {
 
   // Load Razorpay script once
   useEffect(() => {
+    if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+      return;
+    }
+
     const s = document.createElement("script");
     s.src = "https://checkout.razorpay.com/v1/checkout.js";
     s.async = true;
     document.body.appendChild(s);
-    return () => { document.body.removeChild(s); };
   }, []);
 
   useEffect(() => {
@@ -104,6 +113,7 @@ export default function Subscriptions() {
       const token = (await supabase.auth.getSession()).data.session?.access_token;
       if (!token) return;
       const res = await fetch(`${getBackendUrl()}/api/subscriptions/current`, {
+        cache: "no-store",
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) return;
@@ -115,13 +125,13 @@ export default function Subscriptions() {
   const handleUpgrade = async (plan: Plan) => {
     if (!user) { navigate("/signin"); return; }
     if (plan.name === "Free") return;
-    if (currentSub?.planName === plan.name) {
-      toast({ title: `You're already on ${plan.name}` });
-      return;
-    }
 
     setProcessing(plan.name);
     try {
+      if (!window.Razorpay) {
+        throw new Error("Payment checkout is still loading. Please try again in a moment.");
+      }
+
       const token = (await supabase.auth.getSession()).data.session?.access_token;
       if (!token) throw new Error("Not authenticated");
 
@@ -143,7 +153,7 @@ export default function Subscriptions() {
         amount: orderData.order.amount,
         currency: orderData.order.currency,
         name: "CtrlChecks",
-        description: `${plan.name} Plan — ${plan.workflowLimit} workflows`,
+        description: `${plan.name} Plan - adds ${plan.workflowLimit} workflows`,
         order_id: orderData.order.id,
         prefill: {
           name: userName,
@@ -160,7 +170,6 @@ export default function Subscriptions() {
                 orderId: response.razorpay_order_id,
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
-                planName: plan.name,
               }),
             });
 
@@ -170,8 +179,8 @@ export default function Subscriptions() {
             }
 
             toast({
-              title: "🎉 Subscription Activated!",
-              description: `You're now on ${plan.name} — ${plan.workflowLimit} workflows unlocked.`,
+              title: "Workflow quota added",
+              description: `${plan.name} added ${plan.workflowLimit} workflows to your account.`,
             });
             await loadCurrentSub();
           } catch (e: any) {
@@ -183,7 +192,16 @@ export default function Subscriptions() {
         modal: { ondismiss: () => setProcessing(null) },
       };
 
-      new (window as any).Razorpay(rzpOptions).open();
+      const checkout = new window.Razorpay({
+        ...rzpOptions,
+        payment_failed: (response: any) => {
+          const message = response?.error?.description || "Payment failed before verification.";
+          toast({ title: "Payment Failed", description: message, variant: "destructive" });
+          setProcessing(null);
+        },
+      });
+
+      checkout.open();
     } catch (e: any) {
       toast({ title: "Payment Error", description: e.message, variant: "destructive" });
       setProcessing(null);
@@ -318,7 +336,15 @@ export default function Subscriptions() {
                 )}
 
                 <p className="text-sm text-muted-foreground mb-4">
-                  <span className="font-semibold text-foreground">{plan.workflowLimit}</span> workflows included
+                  {plan.name === "Free" ? (
+                    <>
+                      <span className="font-semibold text-foreground">{plan.workflowLimit}</span> workflows included
+                    </>
+                  ) : (
+                    <>
+                      Adds <span className="font-semibold text-foreground">{plan.workflowLimit}</span> workflows
+                    </>
+                  )}
                 </p>
 
                 {/* Features */}
@@ -332,13 +358,13 @@ export default function Subscriptions() {
                 </ul>
 
                 {/* CTA */}
-                {active ? (
+                {plan.name === "Free" ? (
                   <Button variant="outline" disabled className="w-full">
-                    <Check className="mr-2 h-4 w-4" /> Current Plan
-                  </Button>
-                ) : plan.name === "Free" ? (
-                  <Button variant="outline" className="w-full" disabled>
-                    Free Plan
+                    {active ? (
+                      <><Check className="mr-2 h-4 w-4" /> Current Plan</>
+                    ) : (
+                      <>Free Plan</>
+                    )}
                   </Button>
                 ) : (
                   <Button
@@ -349,7 +375,7 @@ export default function Subscriptions() {
                     {busy ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
                     ) : (
-                      <><CreditCard className="mr-2 h-4 w-4" /> Upgrade to {plan.name}</>
+                      <><CreditCard className="mr-2 h-4 w-4" /> {active ? `Add ${plan.workflowLimit} workflows` : `Add ${plan.workflowLimit} workflows`}</>
                     )}
                   </Button>
                 )}

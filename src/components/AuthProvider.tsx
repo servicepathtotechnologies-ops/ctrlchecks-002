@@ -40,13 +40,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName?: string, _role: "user" | "admin" = "user") => {
+  const syncUserRole = async (role: "user" | "admin") => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return;
+
+    const { error } = await supabase
+      .from('user_roles')
+      .upsert({ user_id: data.user.id, role }, { onConflict: 'user_id,role' });
+
+    if (error) {
+      console.warn('[Auth] Failed to sync user role:', error.message || error);
+    }
+  };
+
+  const signUp = async (email: string, password: string, fullName?: string, role: "user" | "admin" = "user") => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: { data: { full_name: fullName, role } },
     });
     if (error) return { error: new Error(error.message) };
+    window.localStorage.setItem(`ctrlchecks:signup-role:${email.toLowerCase()}`, role);
     return { error: null };
   };
 
@@ -66,13 +80,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: new Error(error.message) };
     if (!data.user) return { error: new Error("Sign-in failed — no user returned") };
+
+    const pendingRoleKey = `ctrlchecks:signup-role:${email.toLowerCase()}`;
+    const pendingRole = window.localStorage.getItem(pendingRoleKey);
+    if (pendingRole === 'admin' || pendingRole === 'user') {
+      await syncUserRole(pendingRole);
+      window.localStorage.removeItem(pendingRoleKey);
+    }
+
     return { error: null };
   };
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${window.location.origin}/auth/google/callback` },
     });
     return { error: error ? new Error(error.message) : null };
   };
@@ -89,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithFacebook = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "facebook",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${window.location.origin}/auth/facebook/callback` },
     });
     return { error: error ? new Error(error.message) : null };
   };

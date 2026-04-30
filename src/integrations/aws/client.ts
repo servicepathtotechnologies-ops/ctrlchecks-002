@@ -35,8 +35,11 @@ if (cognitoUserPoolId && cognitoClientId) {
           ? {
               oauth: {
                 domain:          cognitoDomain,
-                scopes:          ['openid', 'email'],
-                redirectSignIn:  [`${typeof window !== 'undefined' ? window.location.origin : ''}/auth/google/callback`],
+                scopes:          ['openid', 'email', 'profile'],
+                redirectSignIn:  [
+                  `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/google/callback`,
+                  `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/facebook/callback`,
+                ],
                 redirectSignOut: [`${typeof window !== 'undefined' ? window.location.origin : ''}/`],
                 responseType:    'code' as const,
               },

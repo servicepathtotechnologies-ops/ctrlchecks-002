@@ -1,12 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { WorkflowAuthGate } from '@/components/WorkflowAuthGate';
-import { WorkflowActionButton } from '@/components/WorkflowActionButton';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Hammer, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { AppBrand } from '@/components/brand/AppBrand';
+import { WorkflowCreationOptions } from '@/components/workflow/WorkflowCreationOptions';
 
 export default function WorkflowCreationChoice() {
   const navigate = useNavigate();
@@ -43,59 +42,7 @@ export default function WorkflowCreationChoice() {
       <div className="flex flex-1 items-center justify-center overflow-y-auto px-4 py-8">
         <div className="relative z-10 w-full max-w-4xl">
         <WorkflowAuthGate>
-
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-semibold mb-1.5">Create New Workflow</h1>
-            <p className="text-muted-foreground text-sm">
-              Choose how you'd like to create your workflow
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* AI Creation Option */}
-            <Card className="cursor-pointer transition-shadow border hover:shadow-md">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                </div>
-                <CardTitle className="text-lg font-semibold">Create Using AI</CardTitle>
-                <CardDescription className="text-sm mt-1.5">
-                  Describe your workflow in natural language and let AI automatically
-                  generate the workflow structure for you. Perfect for quick prototyping.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <WorkflowActionButton
-                  className="w-full gradient-primary text-primary-foreground"
-                  onClick={() => navigate('/workflow/ai')}
-                >
-                  Generate with AI
-                </WorkflowActionButton>
-              </CardContent>
-            </Card>
-
-            {/* Manual Creation Option */}
-            <Card className="cursor-pointer transition-shadow border hover:shadow-md">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
-                  <Hammer className="h-5 w-5 text-primary" />
-                </div>
-                <CardTitle className="text-lg font-semibold">Create Workflow Manually</CardTitle>
-                <CardDescription className="text-sm mt-1.5">
-                  Build your workflow step by step using our visual workflow builder.
-                  Drag and drop nodes, configure each step, and connect them together.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <WorkflowActionButton
-                  className="w-full gradient-primary text-primary-foreground"
-                  onClick={() => navigate('/workflow/new')}
-                >
-                  Start Building
-                </WorkflowActionButton>
-              </CardContent>
-            </Card>
-          </div>
+          <WorkflowCreationOptions />
         </WorkflowAuthGate>
         </div>
       </div>
