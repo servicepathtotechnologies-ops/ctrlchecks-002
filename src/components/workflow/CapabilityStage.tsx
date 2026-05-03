@@ -7,12 +7,13 @@
  * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 8.6
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, ArrowLeft, ArrowRight, Wifi, WifiOff } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { NODE_LAYMAN_DESCRIPTIONS } from './nodeLaymanDescriptions';
 import type {
   CapabilityContainer,
   CandidateNode,
@@ -61,6 +62,7 @@ interface CandidateOptionProps {
 }
 
 function CandidateOption({ candidate, isSelected, onSelect }: CandidateOptionProps) {
+  const laymanDescription = NODE_LAYMAN_DESCRIPTIONS[candidate.nodeType];
   return (
     <button
       type="button"
@@ -99,6 +101,11 @@ function CandidateOption({ candidate, isSelected, onSelect }: CandidateOptionPro
             <CredentialBadge hasCredentials={candidate.hasCredentials} />
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">{candidate.description}</p>
+          {laymanDescription && (
+            <p className="text-xs text-foreground/60 leading-relaxed italic">
+              {laymanDescription}
+            </p>
+          )}
         </div>
 
         {/* Selected checkmark */}
@@ -160,14 +167,42 @@ function ContainerCard({ container, selectedNodeType, onSelect, index }: Contain
 // ─── Capability Stage ─────────────────────────────────────────────────────────
 
 export function CapabilityStage({ containers, onComplete, onBack }: CapabilityStageProps) {
-  const [selections, setSelections] = useState<NodeSelectionMap>({});
+  const [selections, setSelections] = useState<NodeSelectionMap>(() => {
+    const initial: NodeSelectionMap = {};
+    for (const container of containers) {
+      if (container.candidates.length === 1) {
+        initial[container.containerId] = container.candidates[0].nodeType;
+      }
+    }
+    return initial;
+  });
 
   // Req 3.4, 3.6 — at least one container must have a selection; not all containers need to be filled
-  const isComplete = Object.keys(selections).length >= 1;
+  useEffect(() => {
+    setSelections((prev) => {
+      const next: NodeSelectionMap = {};
+      for (const container of containers) {
+        const current = prev[container.containerId];
+        if (current && container.candidates.some((candidate) => candidate.nodeType === current)) {
+          next[container.containerId] = current;
+        } else if (container.candidates.length === 1) {
+          next[container.containerId] = container.candidates[0].nodeType;
+        }
+      }
+      return next;
+    });
+  }, [containers]);
 
   // Req 3.5 — selecting a node replaces any prior selection in that container
   // Clicking an already-selected node deselects it (toggle off)
   // Req 3.8 — no backend call on selection change
+  const sortedContainers = [...containers].sort(
+    (a, b) => a.useCaseUnit.orderIndex - b.useCaseUnit.orderIndex,
+  );
+  const selectedCount = Object.keys(selections).length;
+  const totalCount = containers.length;
+  const isComplete = totalCount > 0 && selectedCount === totalCount;
+
   function handleSelect(containerId: string, nodeType: string) {
     setSelections((prev) => {
       if (prev[containerId] === nodeType) {
@@ -187,20 +222,13 @@ export function CapabilityStage({ containers, onComplete, onBack }: CapabilitySt
   }
 
   // Req 3.1 — render containers in useCaseUnit.orderIndex order
-  const sortedContainers = [...containers].sort(
-    (a, b) => a.useCaseUnit.orderIndex - b.useCaseUnit.orderIndex,
-  );
-
-  const selectedCount = Object.keys(selections).length;
-  const totalCount = containers.length;
-
   return (
     <div className="w-full max-w-3xl mx-auto flex flex-col gap-4 pb-24">
       {/* Header */}
       <div className="space-y-1">
         <h2 className="text-xl font-semibold">Choose your integrations</h2>
         <p className="text-sm text-muted-foreground">
-          Select the integrations you want to use — skip any you don't need.{' '}
+          Select one registry node for each workflow step.{' '}
           <span className="font-medium text-foreground">
             {selectedCount} of {totalCount}
           </span>{' '}

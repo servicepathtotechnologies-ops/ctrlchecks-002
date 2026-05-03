@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { getIntegrationLogo } from '@/lib/integrationLogos';
 
 const PROVIDER_COLORS: Record<string, string> = {
   google:      'bg-red-100 text-red-600',
@@ -80,6 +82,35 @@ const PROVIDER_INITIALS: Record<string, string> = {
   bitbucket: 'Bb', ftp: 'FTP', sftp: 'SFTP',
 };
 
+const PROVIDER_LOGO_ALIASES: Record<string, string> = {
+  aws: 'aws_s3',
+  google: 'google',
+  youtube: 'youtube',
+  cloudflare: 'cloudflare',
+  dropbox: 'dropbox',
+  mongodb: 'mongodb',
+  zoho: 'zoho',
+  activecampaign: 'activecampaign',
+};
+
+const SIMPLE_ICON_SLUGS: Record<string, string> = {
+  asana: 'asana',
+  monday: 'mondaydotcom',
+  linear: 'linear',
+  trello: 'trello',
+  microsoft: 'microsoft',
+  sendgrid: 'sendgrid',
+  calendly: 'calendly',
+  mailgun: 'mailgun',
+  cloudflare: 'cloudflare',
+  quickbooks: 'quickbooks',
+  xero: 'xero',
+  typeform: 'typeform',
+  qdrant: 'qdrant',
+  huggingface: 'huggingface',
+  mistral: 'mistralai',
+};
+
 interface Props {
   provider: string;
   size?: number;
@@ -87,8 +118,35 @@ interface Props {
 }
 
 export function ProviderLogo({ provider, size = 32, className }: Props) {
-  const color = PROVIDER_COLORS[provider] ?? PROVIDER_COLORS.generic;
-  const initials = PROVIDER_INITIALS[provider] ?? provider.slice(0, 2).toUpperCase();
+  const normalizedProvider = provider.toLowerCase();
+  const [imageFailed, setImageFailed] = useState(false);
+  const logoKey = PROVIDER_LOGO_ALIASES[normalizedProvider] ?? normalizedProvider;
+  const localLogoSrc = getIntegrationLogo(logoKey);
+  const simpleIconSlug = SIMPLE_ICON_SLUGS[normalizedProvider];
+  const logoSrc = localLogoSrc || (simpleIconSlug ? `https://cdn.simpleicons.org/${simpleIconSlug}` : undefined);
+  const color = PROVIDER_COLORS[normalizedProvider] ?? PROVIDER_COLORS.generic;
+  const initials = PROVIDER_INITIALS[normalizedProvider] ?? provider.slice(0, 2).toUpperCase();
+
+  if (logoSrc && !imageFailed) {
+    return (
+      <div
+        className={cn(
+          'rounded-lg flex items-center justify-center shrink-0 bg-background border border-border/50 overflow-hidden',
+          className,
+        )}
+        style={{ width: size, height: size }}
+      >
+        <img
+          src={logoSrc}
+          alt={`${provider} logo`}
+          className="h-[70%] w-[70%] object-contain"
+          draggable={false}
+          onError={() => setImageFailed(true)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn('rounded-lg flex items-center justify-center font-bold shrink-0', color, className)}

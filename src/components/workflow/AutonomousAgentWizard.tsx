@@ -88,6 +88,7 @@ import { getCurrentPathWithQuery } from '@/lib/oauth-return';
 import { startGoogleConnectorOAuth } from '@/lib/google-connector-oauth';
 import FieldOwnershipGuidePanel from './FieldOwnershipGuidePanel';
 import { buildFieldOwnershipGuideContext } from '@/lib/field-ownership-guide-context';
+import { nodesBySlug } from '@/docs-content';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
 import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
 
@@ -239,6 +240,126 @@ function groupQuestionsByNode(questions: any[]) {
     return Array.from(grouped.entries()).map(([nodeId, value]) => ({ nodeId, ...value }));
 }
 
+type FieldDesc = {
+    what: string;
+    you: string;
+    aiBuild: string;
+    aiRun: string;
+    example: string;
+    needed?: string;
+    bestOwner?: string;
+    dataImpact?: string;
+};
+type FieldDescMap = Record<string, FieldDesc>;
+
+function humanizeFieldName(fieldName: string): string {
+    return String(fieldName || 'this field')
+        .replace(/_/g, ' ')
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/^./, (c) => c.toUpperCase());
+}
+
+function findFieldDocForQuestion(question: Record<string, any>): any | null {
+    const nodeType = String(question.nodeType || '').trim();
+    const fieldName = String(question.fieldName || '').trim().toLowerCase();
+    if (!nodeType || !fieldName) return null;
+    const doc = nodesBySlug[nodeType];
+    if (!doc) return null;
+    const operations = (doc.resources || []).flatMap((resource: any) => resource.operations || []);
+    const requestedOperation = String(
+        question.operation || question.action || question.resource || question.operationValue || ''
+    ).trim().toLowerCase();
+    const matches = operations.flatMap((operation: any) =>
+        (operation.fields || [])
+            .filter((field: any) => {
+                const internalKey = String(field.internalKey || '').trim().toLowerCase();
+                const name = String(field.name || '').trim().toLowerCase();
+                return internalKey === fieldName || name === fieldName;
+            })
+            .map((field: any) => ({ field, operationValue: String(operation.value || '').toLowerCase() }))
+    );
+    if (requestedOperation) {
+        const exact = matches.find((m: any) => m.operationValue === requestedOperation);
+        if (exact) return exact.field;
+    }
+    return matches[0]?.field || null;
+}
+
+function buildDeterministicFieldExample(question: Record<string, any>, fieldDoc: any | null): string {
+    const raw =
+        question.exampleValue ??
+        question.example ??
+        fieldDoc?.example ??
+        fieldDoc?.placeholder ??
+        question.defaultValue ??
+        fieldDoc?.defaultValue;
+    const value = raw === undefined || raw === null ? '' : String(raw).trim();
+    if (value) return `Example: ${value}`;
+    const fieldName = String(question.fieldName || '');
+    if (/spreadsheet/i.test(fieldName)) return 'Example: use the ID between /d/ and /edit in the Google Sheet URL.';
+    if (/sheet.*name|tab/i.test(fieldName)) return 'Example: Sheet1 or Leads.';
+    if (/range/i.test(fieldName)) return 'Example: A1:D100 reads columns A through D.';
+    if (/operation|action/i.test(fieldName)) return 'Example: choose read when the workflow needs existing data.';
+    return 'Example: set the value that matches the workflow you are building.';
+}
+
+function buildFieldOwnershipCopy(
+    question: Record<string, any>,
+    aiFieldDesc: FieldDesc | null,
+    opts: {
+        selectedMode?: string;
+        fieldEnabled?: boolean;
+        locked?: boolean;
+    } = {}
+) {
+    const label = String(question.text || question.label || humanizeFieldName(question.fieldName || ''));
+    const fieldName = String(question.fieldName || '').trim();
+    const fieldDoc = findFieldDocForQuestion(question);
+    const humanField = humanizeFieldName(fieldName).toLowerCase();
+    const fieldPurpose = String(
+        fieldDoc?.description || question.helpText || question.description || ''
+    ).trim();
+    const what =
+        aiFieldDesc?.what ||
+        (fieldPurpose
+            ? fieldPurpose
+            : `${label} controls the ${humanField} input for this step.`);
+    const example = aiFieldDesc?.example || buildDeterministicFieldExample(question, fieldDoc);
+    const you =
+        aiFieldDesc?.you ||
+        `You means you choose and keep this ${humanField} fixed for the workflow.`;
+    const aiBuild =
+        aiFieldDesc?.aiBuild && aiFieldDesc.aiBuild !== 'N/A'
+            ? aiFieldDesc.aiBuild
+            : `AI build means AI chooses this ${humanField} once while creating the workflow, based on your intent.`;
+    const aiRun =
+        aiFieldDesc?.aiRun && aiFieldDesc.aiRun !== 'N/A'
+            ? aiFieldDesc.aiRun
+            : `AI runtime means AI decides this ${humanField} fresh on each run using incoming data and workflow intent.`;
+    const toggleOff =
+        `Toggle off leaves ${humanField} out of this setup for now. Toggle on lets you choose who owns it: You, AI build, or AI runtime.`;
+    const requiredText = aiFieldDesc?.needed || (
+        question.required === false
+            ? `This field looks optional for this workflow. Keep it off unless your intent needs ${humanField}.`
+            : `This field is likely required for this workflow step to work correctly.`
+    );
+    const recommendedOwner = aiFieldDesc?.bestOwner || (opts.locked
+        ? 'This field is locked because the workflow, OAuth, vault, or an AI-filled value already controls it.'
+        : opts.selectedMode === 'runtime_ai'
+          ? `Current choice: AI runtime. The value can change on every run based on incoming data.`
+          : opts.selectedMode === 'buildtime_ai_once'
+            ? `Current choice: AI build. AI prepares this value once during setup, then it stays fixed.`
+            : `Current choice: You. Use this when the value should stay predictable and be reviewed by you.`);
+    const dataImpact = aiFieldDesc?.dataImpact || (
+        opts.fieldEnabled === false
+            ? `Because it is off, this input will not shape how this step handles data yet.`
+            : `When enabled, this input changes how this step reads, filters, writes, or prepares data for the next step.`
+    );
+    return { what, you, aiBuild, aiRun, example, toggleOff, requiredText, recommendedOwner, dataImpact };
+}
+
 function credentialWizardFriendlyStatus(status: string): string {
     switch (status) {
         case 'required_missing':
@@ -326,6 +447,9 @@ interface CapabilityOptionStep {
         multiSelectAllowed: boolean;
         required: boolean;
     };
+    confidence?: number;
+    ambiguous?: boolean;
+    reason?: string;
 }
 
 /** Mirrors selectedVariationMeta shape in AutonomousAgentWizard */
@@ -737,6 +861,15 @@ export function AutonomousAgentWizard() {
     const [buildingLogs, setBuildingLogs] = useState<string[]>([]);
     const [generatedWorkflowId, setGeneratedWorkflowId] = useState<string | null>(null);
     const [lastResolvedInputs, setLastResolvedInputs] = useState<LastResolvedInputsMap>({});
+    // Per-node AI descriptions in the field-ownership panel: "desc_<sectionKey>_<nodeId>"
+    const [nodeDescriptions, setNodeDescriptions] = useState<
+        Record<string, { loading: boolean; text: string | null; open: boolean }>
+    >({});
+    // Per-field AI descriptions: key = nodeId, value = map of fieldName → description object
+    const [fieldDescriptions, setFieldDescriptions] = useState<
+        Record<string, { loading: boolean; data: FieldDescMap | null }>
+    >({});
+    const [fieldHelpExpanded, setFieldHelpExpanded] = useState<Record<string, boolean>>({});
     const [progress, setProgress] = useState(0);
     const [currentPhase, setCurrentPhase] = useState<string>('');
     const [isComplete, setIsComplete] = useState(false);
@@ -868,6 +1001,8 @@ export function AutonomousAgentWizard() {
     const step2Ref = useRef<HTMLDivElement>(null);
     const step3Ref = useRef<HTMLDivElement>(null);
     const step4Ref = useRef<HTMLDivElement>(null);
+    // Track which nodeIds have had field descriptions requested (to avoid re-fetching on re-renders)
+    const fieldDescFetchedRef = useRef<Set<string>>(new Set());
 
     // Fetch missing items when entering Configure step
     useEffect(() => {
@@ -2374,6 +2509,19 @@ export function AutonomousAgentWizard() {
         }
 
         const sanitizedSelections = resolveCapabilitySelections(capabilityOptions, capabilitySelectionsByStep).byStep;
+        const missingRequiredStep = capabilityOptions.find((step) =>
+            step.selectionPolicy?.required !== false &&
+            !(sanitizedSelections[step.stepId]?.length > 0)
+        );
+        if (missingRequiredStep) {
+            toast({
+                title: 'Select a registry node',
+                description: `Choose at least one node for "${missingRequiredStep.stepText}" before continuing.`,
+                variant: 'destructive',
+            });
+            setStep('capability-selection');
+            return;
+        }
         setCapabilitySelectionsByStep(sanitizedSelections);
         setStep('analyzing');
         setIsSummarizeLayerProcessing(true);
@@ -5000,6 +5148,125 @@ export function AutonomousAgentWizard() {
         setFillModeValues((prev) => ({ ...prev, ...updates }));
     };
 
+    const fetchNodeDescription = useCallback(
+        async (descKey: string, nodeType: string, nodeLabel: string, nodeId: string) => {
+            // Toggle close if already open
+            if (nodeDescriptions[descKey]?.open) {
+                setNodeDescriptions((prev) => ({ ...prev, [descKey]: { ...prev[descKey], open: false } }));
+                return;
+            }
+            // Show cached text without a second API call
+            if (nodeDescriptions[descKey]?.text) {
+                setNodeDescriptions((prev) => ({ ...prev, [descKey]: { ...prev[descKey], open: true } }));
+                return;
+            }
+            setNodeDescriptions((prev) => ({ ...prev, [descKey]: { loading: true, text: null, open: false } }));
+            try {
+                const session = (await supabase.auth.getSession()).data.session;
+                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+
+                const blueprint = (pendingWorkflowData as any)?.update?.structuralBlueprint;
+                const nodeNarrative = (blueprint?.nodeNarratives as any[] | undefined)
+                    ?.find((n: any) => n.nodeId === nodeId)?.text;
+                const workflowOverview = blueprint?.overviewText;
+
+                const response = await fetch(`${ENDPOINTS.itemBackend}/api/ai/node-description`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ nodeType, nodeLabel, nodeNarrative, workflowOverview, userPrompt: prompt }),
+                });
+                const data = await response.json();
+                setNodeDescriptions((prev) => ({
+                    ...prev,
+                    [descKey]: { loading: false, text: data.description || 'No description available.', open: true },
+                }));
+            } catch {
+                setNodeDescriptions((prev) => ({
+                    ...prev,
+                    [descKey]: { loading: false, text: 'Could not load description. Please try again.', open: true },
+                }));
+            }
+        },
+        [nodeDescriptions, pendingWorkflowData, prompt]
+    );
+
+    const fetchFieldDescriptions = useCallback(
+        async (nodeId: string, nodeType: string, nodeLabel: string, fields: any[], requestKey?: string) => {
+            const requiredFieldNames = fields
+                .map((field: any) => String(field.fieldName || '').trim())
+                .filter(Boolean);
+            const existingNodeDescriptions = fieldDescriptions[nodeId];
+            const hasAllRequestedFields = requiredFieldNames.every((fieldName) =>
+                Boolean(existingNodeDescriptions?.data?.[fieldName])
+            );
+            if (existingNodeDescriptions?.loading || hasAllRequestedFields) return;
+            setFieldDescriptions((prev) => ({
+                ...prev,
+                [nodeId]: { loading: true, data: prev[nodeId]?.data || null },
+            }));
+            try {
+                const session = (await supabase.auth.getSession()).data.session;
+                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+
+                const blueprint = (pendingWorkflowData as any)?.update?.structuralBlueprint;
+                const nodeNarrative = (blueprint?.nodeNarratives as any[] | undefined)
+                    ?.find((n: any) => n.nodeId === nodeId)?.text;
+                const workflowOverview = blueprint?.overviewText;
+
+                const fieldPayload = fields.map((q: any) => ({
+                    fieldName: String(q.fieldName || ''),
+                    label: String(q.text || q.label || q.fieldName || ''),
+                    fieldType: String(q.type || 'string'),
+                    description: String(
+                        findFieldDocForQuestion(q)?.description ||
+                        q.helpText ||
+                        q.description ||
+                        ''
+                    ),
+                    example: String(
+                        q.exampleValue ||
+                        q.example ||
+                        findFieldDocForQuestion(q)?.example ||
+                        ''
+                    ),
+                    required: q.required !== false,
+                    selectedMode: String(q.selectedMode || ''),
+                    fieldEnabled: q.fieldEnabled === true,
+                    supportsRuntimeAI: q.supportsRuntimeAI !== false,
+                    supportsBuildtimeAI: q.supportsBuildtimeAI !== false,
+                    fillModeDefault: String(q.fillModeDefault || 'manual_static'),
+                    ownership: String(q.ownershipClass || ''),
+                }));
+
+                const response = await fetch(`${ENDPOINTS.itemBackend}/api/ai/field-descriptions`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ nodeType, nodeLabel, nodeNarrative, workflowOverview, userPrompt: prompt, fields: fieldPayload }),
+                });
+                const data = await response.json();
+                setFieldDescriptions((prev) => ({
+                    ...prev,
+                    [nodeId]: {
+                        loading: false,
+                        data: {
+                            ...(prev[nodeId]?.data || {}),
+                            ...(data.descriptions || {}),
+                        },
+                    },
+                }));
+            } catch {
+                if (requestKey) fieldDescFetchedRef.current.delete(requestKey);
+                setFieldDescriptions((prev) => ({
+                    ...prev,
+                    [nodeId]: { loading: false, data: prev[nodeId]?.data || null },
+                }));
+            }
+        },
+        [fieldDescriptions, pendingWorkflowData, prompt]
+    );
+
     const proceedFromOwnershipStage = () => {
         if (ownershipEffectiveModes.coerced.length > 0) {
             toast({
@@ -6438,6 +6705,42 @@ export function AutonomousAgentWizard() {
                                                                             </Badge>
                                                                         </div>
                                                                     </div>
+                                                                    {/* On-demand AI node description */}
+                                                                    {(() => {
+                                                                        const descKey = `desc_${section.key}_${group.nodeId}`;
+                                                                        const descState = nodeDescriptions[descKey];
+                                                                        return (
+                                                                            <div className="space-y-2">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    disabled={descState?.loading}
+                                                                                    onClick={() =>
+                                                                                        fetchNodeDescription(
+                                                                                            descKey,
+                                                                                            group.nodeType,
+                                                                                            group.nodeLabel,
+                                                                                            group.nodeId
+                                                                                        )
+                                                                                    }
+                                                                                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors px-0 bg-transparent border-0 cursor-pointer"
+                                                                                >
+                                                                                    <Sparkles className="h-3 w-3" />
+                                                                                    {descState?.loading
+                                                                                        ? 'Analyzing…'
+                                                                                        : descState?.open
+                                                                                        ? 'Hide description'
+                                                                                        : 'What does this node do?'}
+                                                                                </button>
+                                                                                {descState?.open && descState?.text && (
+                                                                                    <div className="rounded border border-indigo-400/20 bg-indigo-500/5 px-3 py-2">
+                                                                                        <p className="text-xs text-muted-foreground leading-relaxed italic">
+                                                                                            {descState.text}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })()}
                                                                     <div className="grid grid-cols-1 gap-3">
                                                                         {group.fields.map((question: any, idx: number) => {
                                                                             const modeKey = `mode_${question.nodeId}_${question.fieldName}`;
@@ -6475,11 +6778,17 @@ export function AutonomousAgentWizard() {
                                                                                 question.text ||
                                                                                 question.label ||
                                                                                 question.fieldName;
+                                                                            const nodeFieldDescState = fieldDescriptions[String(question.nodeId || '')];
+                                                                            const aiFieldDesc: FieldDesc | null = nodeFieldDescState?.data?.[String(question.fieldName || '')] ?? null;
+                                                                            const fieldHelpKey = `fieldhelp_${question.nodeId}_${question.fieldName}`;
+                                                                            const fieldHelpOpen = !!fieldHelpExpanded[fieldHelpKey];
+                                                                            const fieldOwnershipCopy = buildFieldOwnershipCopy(question, aiFieldDesc, {
+                                                                                selectedMode,
+                                                                                fieldEnabled,
+                                                                                locked,
+                                                                            });
                                                                             const ownershipFooterText =
                                                                                 rowExplanation ||
-                                                                                (String(question.description || '').trim()
-                                                                                    ? String(question.description).trim()
-                                                                                    : null) ||
                                                                                 (String(question.ownershipClass || '') !==
                                                                                 'structural'
                                                                                     ? 'Select ownership for this field'
@@ -6548,6 +6857,50 @@ export function AutonomousAgentWizard() {
                                                                                                 <span className="mx-1 opacity-40">�</span>
                                                                                                 <span className="font-mono text-[11px] opacity-75">{question.fieldName}</span>
                                                                                             </p>
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                disabled={nodeFieldDescState?.loading}
+                                                                                                onClick={(event) => {
+                                                                                                    event.stopPropagation();
+                                                                                                    const willOpen = !fieldHelpOpen;
+                                                                                                    setFieldHelpExpanded((prev) => ({
+                                                                                                        ...prev,
+                                                                                                        [fieldHelpKey]: willOpen,
+                                                                                                    }));
+                                                                                                    const nodeId = String(group.nodeId || '');
+                                                                                                    const fieldName = String(question.fieldName || '').trim();
+                                                                                                    const requestKey = `${nodeId}:${fieldName}`;
+                                                                                                    if (
+                                                                                                        willOpen &&
+                                                                                                        nodeId &&
+                                                                                                        fieldName &&
+                                                                                                        !nodeFieldDescState?.data?.[String(question.fieldName || '')] &&
+                                                                                                        !nodeFieldDescState?.loading &&
+                                                                                                        !fieldDescFetchedRef.current.has(requestKey)
+                                                                                                    ) {
+                                                                                                        fieldDescFetchedRef.current.add(requestKey);
+                                                                                                        fetchFieldDescriptions(
+                                                                                                            nodeId,
+                                                                                                            String(group.nodeType || ''),
+                                                                                                            String(group.nodeLabel || ''),
+                                                                                                            [{
+                                                                                                                ...question,
+                                                                                                                selectedMode,
+                                                                                                                fieldEnabled,
+                                                                                                            }],
+                                                                                                            requestKey
+                                                                                                        );
+                                                                                                    }
+                                                                                                }}
+                                                                                                className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors px-0 bg-transparent border-0 cursor-pointer"
+                                                                                            >
+                                                                                                <Sparkles className="h-3 w-3" />
+                                                                                                {nodeFieldDescState?.loading
+                                                                                                    ? 'Analyzing this field...'
+                                                                                                    : fieldHelpOpen
+                                                                                                      ? 'Hide input field help'
+                                                                                                      : 'What does this input field do?'}
+                                                                                            </button>
                                                                                         </div>
                                                                                         <Switch
                                                                                             checked={fieldEnabled}
@@ -6562,12 +6915,47 @@ export function AutonomousAgentWizard() {
                                                                                     </div>
 
                                                                                     {/* -- OFF: collapsed preview -- */}
-                                                                                    {!fieldEnabled && (
-                                                                                        <div className="px-3 py-2 border-t border-border/20">
+                                                                                    {!fieldEnabled && !fieldHelpOpen && (
+                                                                                        <div className="px-3 py-2 border-t border-border/20 space-y-1">
+                                                                                            <p className="text-[11px] text-muted-foreground/55 italic leading-snug">
+                                                                                                Off for now. Open input field help to decide whether this field is needed.
+                                                                                            </p>
                                                                                             {workflowPreviewText ? (
-                                                                                                <p className="text-[11px] text-muted-foreground/60 italic truncate">{workflowPreviewText.slice(0, 100)}</p>
+                                                                                                <p className="text-[10px] text-muted-foreground/40 font-mono truncate">Current value: {workflowPreviewText.slice(0, 100)}</p>
+                                                                                            ) : null}
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {fieldHelpOpen && (
+                                                                                        <div className="px-3 py-3 border-t border-border/20 bg-indigo-500/5 space-y-2">
+                                                                                            {nodeFieldDescState?.loading && !aiFieldDesc ? (
+                                                                                                <div className="space-y-2">
+                                                                                                    <div className="h-3 w-5/6 rounded bg-muted/40 animate-pulse" />
+                                                                                                    <div className="h-3 w-2/3 rounded bg-muted/40 animate-pulse" />
+                                                                                                </div>
                                                                                             ) : (
-                                                                                                <p className="text-[11px] text-muted-foreground/50 italic">Not configured</p>
+                                                                                                <>
+                                                                                                    <div>
+                                                                                                        <p className="text-[11px] font-medium text-foreground/85">What this field does in this workflow</p>
+                                                                                                        <p className="text-xs text-muted-foreground leading-relaxed">{fieldOwnershipCopy.what}</p>
+                                                                                                    </div>
+                                                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                                                                        <div className="rounded border border-border/40 bg-background/40 p-2">
+                                                                                                            <p className="text-[11px] font-medium text-foreground/85">Do you need it?</p>
+                                                                                                            <p className="text-[11px] text-muted-foreground leading-relaxed">{fieldOwnershipCopy.requiredText}</p>
+                                                                                                        </div>
+                                                                                                        <div className="rounded border border-border/40 bg-background/40 p-2">
+                                                                                                            <p className="text-[11px] font-medium text-foreground/85">Best ownership choice</p>
+                                                                                                            <p className="text-[11px] text-muted-foreground leading-relaxed">{fieldOwnershipCopy.recommendedOwner}</p>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                        <p className="text-[11px] font-medium text-foreground/85">How this changes the data</p>
+                                                                                                        <p className="text-[11px] text-muted-foreground leading-relaxed">{fieldOwnershipCopy.dataImpact}</p>
+                                                                                                    </div>
+                                                                                                    <p className="text-[10px] text-muted-foreground/60 font-mono">{fieldOwnershipCopy.example}</p>
+                                                                                                    <p className="text-[10px] text-muted-foreground/55">{fieldOwnershipCopy.toggleOff}</p>
+                                                                                                </>
                                                                                             )}
                                                                                         </div>
                                                                                     )}
@@ -6659,15 +7047,33 @@ export function AutonomousAgentWizard() {
                                                                                         </div>
                                                                                     ) : null}
                                                                                     {!locked && selectedMode === 'buildtime_ai_once' && (
-                                                                                        <div className="mt-2 rounded border border-sky-300/40 bg-sky-500/10 p-2">
+                                                                                        <div className="mt-2 rounded border border-sky-300/40 bg-sky-500/10 p-2 space-y-1">
                                                                                             <p className="text-xs text-sky-200 font-medium">Filled by AI once when the workflow is built</p>
-                                                                                            <p className="text-[11px] text-sky-100/80">Value is produced during generation or attach steps, not on every run.</p>
+                                                                                            <p className="text-[11px] text-sky-100/80">
+                                                                                                {fieldOwnershipCopy.aiBuild}
+                                                                                            </p>
+                                                                                            {fieldOwnershipCopy.example && (
+                                                                                                <p className="text-[10px] text-sky-200/60 font-mono">{fieldOwnershipCopy.example}</p>
+                                                                                            )}
                                                                                         </div>
                                                                                     )}
                                                                                     {!locked && selectedMode === 'runtime_ai' && (
-                                                                                        <div className="mt-2 rounded border border-amber-300/40 bg-amber-500/10 p-2">
+                                                                                        <div className="mt-2 rounded border border-amber-300/40 bg-amber-500/10 p-2 space-y-1">
                                                                                             <p className="text-xs text-amber-200 font-medium">Filled automatically by AI at runtime</p>
-                                                                                            <p className="text-[11px] text-amber-100/80">This field will be generated dynamically from previous node output and workflow intent.</p>
+                                                                                            <p className="text-[11px] text-amber-100/80">
+                                                                                                {fieldOwnershipCopy.aiRun}
+                                                                                            </p>
+                                                                                            {fieldOwnershipCopy.example && (
+                                                                                                <p className="text-[10px] text-amber-200/60 font-mono">{fieldOwnershipCopy.example}</p>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {!locked && selectedMode === 'manual_static' && fieldOwnershipCopy.you && (
+                                                                                        <div className="mt-2 rounded border border-border/40 bg-muted/10 p-2 space-y-1">
+                                                                                            <p className="text-[11px] text-muted-foreground">{fieldOwnershipCopy.you}</p>
+                                                                                            {fieldOwnershipCopy.example && (
+                                                                                                <p className="text-[10px] text-muted-foreground/60 font-mono">{fieldOwnershipCopy.example}</p>
+                                                                                            )}
                                                                                         </div>
                                                                                     )}
                                                                                     {!locked && workflowPreviewText ? (

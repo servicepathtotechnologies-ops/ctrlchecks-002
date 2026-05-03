@@ -6,14 +6,17 @@ import { useCredentialTypes } from '@/hooks/useCredentialTypes';
 import type { CredentialTypeDefinition } from '@/lib/api/connections';
 
 const CATEGORIES: Record<string, string[]> = {
-  'Google Suite':       ['google'],
-  'Microsoft Suite':    ['microsoft'],
-  'Project Management': ['notion', 'asana', 'jira', 'clickup', 'monday', 'linear', 'trello'],
-  'CRM & Sales':        ['hubspot', 'salesforce', 'pipedrive', 'zoho', 'airtable', 'freshdesk', 'intercom'],
-  'Communication':      ['slack', 'discord', 'telegram', 'whatsapp', 'twilio', 'sendgrid', 'mailchimp'],
-  'Cloud & DevOps':     ['aws', 'github', 'gitlab', 'cloudflare', 'dropbox', 'supabase', 'mongodb'],
-  'AI & Data':          ['openai', 'anthropic', 'pinecone', 'qdrant', 'cohere', 'huggingface', 'mistral'],
-  'Payments & Business':['stripe', 'paypal', 'quickbooks', 'xero', 'shopify', 'woocommerce', 'typeform'],
+  'Google Suite':        ['google', 'youtube'],
+  'Microsoft Suite':     ['microsoft'],
+  'Social Media':        ['twitter', 'facebook', 'instagram', 'linkedin'],
+  'Project Management':  ['notion', 'asana', 'jira', 'clickup', 'monday', 'linear', 'trello'],
+  'CRM & Sales':         ['hubspot', 'salesforce', 'pipedrive', 'zoho', 'airtable', 'freshdesk', 'intercom', 'zendesk', 'activecampaign'],
+  'Communication':       ['slack', 'discord', 'telegram', 'whatsapp', 'twilio', 'sendgrid', 'mailchimp', 'mailgun', 'calendly'],
+  'Cloud & DevOps':      ['aws', 'github', 'gitlab', 'bitbucket', 'cloudflare', 'dropbox', 'supabase', 'mongodb'],
+  'Databases':           ['postgresql', 'mysql', 'firebase', 'redis'],
+  'File Transfer':       ['ftp', 'sftp'],
+  'AI & Data':           ['openai', 'anthropic', 'pinecone', 'qdrant', 'cohere', 'huggingface', 'mistral'],
+  'Payments & Business': ['stripe', 'paypal', 'quickbooks', 'xero', 'shopify', 'woocommerce', 'typeform'],
 };
 
 function categoryFor(provider: string): string {

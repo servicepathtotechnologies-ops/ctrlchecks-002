@@ -25,8 +25,10 @@ export const INTEGRATION_LOGO_MAP: Record<string, string> = {
   openai_gpt:       '/integrations-logos/OpenAI-GPT.svg',
   anthropic:        '/integrations-logos/Anthropic.svg',
   claude:           '/integrations-logos/Claude.svg',
+  cohere:           '/integrations-logos/Cohere.svg',
   google_gemini:    '/integrations-logos/Google-Gemini.svg',
   ollama:           '/integrations-logos/Ollama.svg',
+  pinecone:         '/integrations-logos/Pinecone.svg',
 
   // Google Suite
   google_sheets:    '/integrations-logos/Google-Sheets.svg',
@@ -41,11 +43,13 @@ export const INTEGRATION_LOGO_MAP: Record<string, string> = {
   mysql:            '/integrations-logos/MySQL.svg',
   postgresql:       '/integrations-logos/Postgre-Sql.svg',
   postgres:         '/integrations-logos/Postgre-Sql.svg',
+  firebase:         '/integrations-logos/Firebase.svg',
   redis:            '/integrations-logos/Redis.svg',
   supabase:         '/integrations-logos/Supabase.svg',
 
   // Storage
   dropbox:          '/integrations-logos/Dropbox.svg',
+  cloudflare:       '/integrations-logos/Cloudflare.svg',
   onedrive:         '/integrations-logos/OneDrive.svg',
   aws_s3:           '/integrations-logos/AWS-S3.svg',
   ftp:              '/integrations-logos/FTP.svg',
@@ -67,7 +71,9 @@ export const INTEGRATION_LOGO_MAP: Record<string, string> = {
   airtable:         '/integrations-logos/Airtable.svg',
   clickup:          '/integrations-logos/ClickUp.svg',
   jira:             '/integrations-logos/Jira.svg',
+  monday:           '/integrations-logos/monday.svg',
   outlook:          '/integrations-logos/Outlook.svg',
+  microsoft:        '/integrations-logos/Microsoft.svg.svg',
   microsoft_teams:  '/integrations-logos/Microsoft-Teams.svg',
 
   // DevOps
@@ -84,6 +90,7 @@ export const INTEGRATION_LOGO_MAP: Record<string, string> = {
   // Communication
   slack:            '/integrations-logos/Slack.svg',
   twilio:           '/integrations-logos/Twilio.svg',
+  sendgrid:         '/integrations-logos/Sendgrid.svg',
 
   // Misc
   wordpress:        '/integrations-logos/WooCommerce.svg',
@@ -91,5 +98,6 @@ export const INTEGRATION_LOGO_MAP: Record<string, string> = {
 
 /** Returns the logo path for a given node type, or undefined if none exists. */
 export function getIntegrationLogo(nodeType: string): string | undefined {
-  return INTEGRATION_LOGO_MAP[nodeType.toLowerCase()];
+  const key = nodeType.toLowerCase().replace(/[-\s]+/g, '_');
+  return INTEGRATION_LOGO_MAP[key];
 }
