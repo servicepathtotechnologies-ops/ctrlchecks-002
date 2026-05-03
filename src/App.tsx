@@ -55,9 +55,9 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Subscriptions = lazy(() => import("./pages/Subscriptions"));
 const Connections = lazy(() => import("./pages/Connections"));
-const IntroductionPage = lazy(() => import("./pages/docs/IntroductionPage"));
-const GettingStartedPage = lazy(() => import("./pages/docs/GettingStartedPage"));
-const NodeDocPage = lazy(() => import("./pages/docs/NodeDocPage"));
+const IntroductionPage = lazy(() => import("./pages/doc-pages/IntroductionPage"));
+const GettingStartedPage = lazy(() => import("./pages/doc-pages/GettingStartedPage"));
+const NodeDocPage = lazy(() => import("./pages/doc-pages/NodeDocPage"));
 
 // Component to conditionally render Chatbot only on landing page
 const ConditionalChatbot = () => {
