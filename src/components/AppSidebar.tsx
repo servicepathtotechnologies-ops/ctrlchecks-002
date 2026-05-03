@@ -1,16 +1,18 @@
-import { 
-  LayoutDashboard, 
-  GitBranch, 
-  Play, 
-  Settings, 
-  Users, 
+import {
+  LayoutDashboard,
+  GitBranch,
+  Play,
+  Settings,
+  Users,
   Key,
   Bell,
   User,
   LogOut,
   ChevronDown,
   LayoutTemplate,
-  Shield
+  Shield,
+  Link2,
+  BookOpen
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/lib/auth";
@@ -45,6 +47,8 @@ const mainNavItems = [
   { title: "Templates", url: "/templates", icon: LayoutTemplate },
   { title: "Workflows", url: "/workflows", icon: GitBranch },
   { title: "Executions", url: "/executions", icon: Play },
+  { title: "Connections", url: "/connections", icon: Link2 },
+  { title: "Documentation", url: "/docs", icon: BookOpen },
 ];
 
 const settingsNavItems = [

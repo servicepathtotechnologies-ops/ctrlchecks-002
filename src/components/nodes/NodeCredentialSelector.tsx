@@ -1,0 +1,126 @@
+import { useState } from 'react';
+import { Plus, ExternalLink, ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Label } from '@/components/ui/label';
+import { ConnectionStatusBadge } from '@/components/connections/ConnectionStatusBadge';
+import { ProviderLogo } from '@/components/connections/ProviderLogo';
+import { NewConnectionModal } from '@/components/connections/NewConnectionModal';
+import { useConnections } from '@/hooks/useConnections';
+import { useCredentialType } from '@/hooks/useCredentialTypes';
+import type { ConnectionRecord } from '@/lib/api/connections';
+
+interface Props {
+  /** Credential type IDs this node accepts (e.g. ['google_oauth2']) */
+  credentialTypeIds: string[];
+  /** Currently selected connection ID */
+  value?: string;
+  onChange: (connectionId: string) => void;
+  label?: string;
+}
+
+function SelectedItem({ connection }: { connection: ConnectionRecord }) {
+  const credType = useCredentialType(connection.credentialTypeId);
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <ProviderLogo provider={connection.provider} size={20} />
+      <span className="truncate text-sm font-medium">{connection.name}</span>
+      <ConnectionStatusBadge status={connection.status} />
+      {credType && (
+        <span className="text-xs text-muted-foreground hidden sm:block truncate">
+          {credType.displayName}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function NodeCredentialSelector({ credentialTypeIds, value, onChange, label = 'Connection' }: Props) {
+  const { data: allConnections = [] } = useConnections();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTypeId, setModalTypeId] = useState<string | undefined>();
+
+  const compatible = allConnections.filter((c) => credentialTypeIds.includes(c.credentialTypeId));
+  const selected = compatible.find((c) => c.id === value);
+
+  function openAddModal(typeId?: string) {
+    setModalTypeId(typeId);
+    setModalOpen(true);
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+        {label}
+      </Label>
+
+      {compatible.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-muted-foreground/30 p-3 flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">No connections yet</p>
+          <Button size="sm" variant="outline" onClick={() => openAddModal(credentialTypeIds[0])}>
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            Add
+          </Button>
+        </div>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="w-full flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm hover:bg-accent/50 transition-colors"
+            >
+              {selected ? (
+                <SelectedItem connection={selected} />
+              ) : (
+                <span className="text-muted-foreground">Select a connection…</span>
+              )}
+              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-72">
+            {compatible.map((conn) => (
+              <DropdownMenuItem
+                key={conn.id}
+                onSelect={() => onChange(conn.id)}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <ProviderLogo provider={conn.provider} size={20} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{conn.name}</p>
+                </div>
+                <ConnectionStatusBadge status={conn.status} />
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={() => openAddModal(credentialTypeIds[0])}
+              className="flex items-center gap-2 cursor-pointer text-primary"
+            >
+              <Plus className="h-4 w-4" />
+              Add new connection
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => window.open('/connections', '_blank')}
+              className="flex items-center gap-2 cursor-pointer text-muted-foreground"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Manage connections
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      <NewConnectionModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        preselectedCredentialTypeId={modalTypeId}
+      />
+    </div>
+  );
+}

@@ -22,6 +22,7 @@ export function Header() {
     { name: "Verticals", href: "#verticals" },
     { name: "Why us", href: "#why-ctrlchecks" },
     { name: "Beta", href: "#features" },
+    { name: "Docs", href: "/docs", isRoute: true },
     { name: "Plans", href: "/subscriptions", isRoute: true },
   ];
 

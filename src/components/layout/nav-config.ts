@@ -4,6 +4,8 @@ import {
   LayoutTemplate,
   GitBranch,
   Play,
+  Link2,
+  BookOpen,
   User,
   Shield,
   Users,
@@ -22,6 +24,8 @@ export const USER_PRIMARY_NAV: UserNavItem[] = [
   { title: 'Templates', path: '/templates', icon: LayoutTemplate },
   { title: 'Workflows', path: '/workflows', icon: GitBranch },
   { title: 'Executions', path: '/executions', icon: Play },
+  { title: 'Connections', path: '/connections', icon: Link2 },
+  { title: 'Documentation', path: '/docs', icon: BookOpen },
 ];
 
 export interface AdminNavItem {
@@ -35,6 +39,7 @@ export const ADMIN_SECTION_NAV: AdminNavItem[] = [
   { title: 'Templates', path: '/admin/templates', icon: LayoutTemplate },
   { title: 'Users', path: '/admin/users', icon: Users },
   { title: 'Subscriptions', path: '/admin/subscriptions', icon: CreditCard },
+  { title: 'Documentation', path: '/docs', icon: BookOpen },
 ];
 
 export const ADMIN_BACK_TO_APP = {

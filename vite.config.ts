@@ -65,7 +65,7 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
-      chunkSizeWarningLimit: 500,
+      chunkSizeWarningLimit: 1000,
       // Target modern browsers for smaller bundle
       target: 'esnext',
     },

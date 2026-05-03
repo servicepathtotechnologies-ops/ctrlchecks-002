@@ -118,6 +118,16 @@ export function Hero() {
                 <a href="#how-it-works">How it works</a>
               </Button>
             </motion.div>
+            <motion.div {...(reduceMotion ? {} : { whileHover: { scale: 1.02 }, whileTap: { scale: 0.98 } })}>
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="border-border/80 bg-transparent shadow-none hover:bg-accent/15 dark:hover:bg-accent/10"
+              >
+                <Link to="/docs">Documentation</Link>
+              </Button>
+            </motion.div>
           </motion.div>
         </div>
       </div>

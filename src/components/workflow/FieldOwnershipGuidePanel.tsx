@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bot, Loader2, Send } from "lucide-react";
 import { ENDPOINTS } from "@/config/endpoints";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ type Message = {
   content: string;
 };
 
-/** nodeId → fieldName → fillMode string (read-only snapshot from buildManifest). */
+/** nodeId ? fieldName ? fillMode string (read-only snapshot from buildManifest). */
 export type ManifestFieldOwnershipSnapshot = Record<string, Record<string, string>>;
 
 type Props = {
@@ -79,9 +79,14 @@ export default function FieldOwnershipGuidePanel({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const requestSeq = useRef(0);
 
   const canRequest = enabled && isVisible;
   const endpoint = useMemo(() => `${ENDPOINTS.itemBackend}/api/ai/field-ownership-guide`, []);
+  const selectedContextKey = useMemo(() => {
+    const selected = contextPayload?.selectedField as { nodeId?: unknown; fieldName?: unknown } | undefined;
+    return `${String(selected?.nodeId || "")}:${String(selected?.fieldName || "")}`;
+  }, [contextPayload]);
 
   const buildContextualQuestion = (
     question: string,
@@ -108,6 +113,7 @@ export default function FieldOwnershipGuidePanel({
 
   const send = async (question: string, source: "bootstrap" | "quick_action" | "manual") => {
     if (!canRequest || !question.trim()) return;
+    const seq = ++requestSeq.current;
     setLoading(true);
     const contextualQuestion = buildContextualQuestion(question, source);
     if (source !== "bootstrap") {
@@ -129,12 +135,14 @@ export default function FieldOwnershipGuidePanel({
         throw new Error(`Guide API failed (${response.status})`);
       }
       const data = await response.json();
+      if (seq !== requestSeq.current) return;
       const reply: GuideReply = data?.guidance || data;
       setMessages((prev) => [
         ...prev,
         { id: `a_${Date.now()}`, role: "assistant", content: formatGuideReply(reply) },
       ]);
     } catch {
+      if (seq !== requestSeq.current) return;
       setMessages((prev) => [
         ...prev,
         {
@@ -145,20 +153,25 @@ export default function FieldOwnershipGuidePanel({
         },
       ]);
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     if (!canRequest) return;
-    if (messages.length > 0) return;
+    setMessages([]);
+    setLoading(false);
     trackFieldOwnershipGuideEvent("panel_opened", { selectedFieldLabel: selectedFieldLabel || null });
     void send(
-      "Guide me for credentials and ownership on this workflow. Explain You vs AI build vs AI runtime and what happens next.",
+      selectedFieldLabel
+        ? "Explain this field and how I should fill it for this node operation."
+        : "Guide me for credentials and ownership on this workflow. Explain You vs AI build vs AI runtime and what happens next.",
       "bootstrap"
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canRequest]);
+  }, [canRequest, selectedContextKey]);
 
   useEffect(() => {
     if (!canRequest || !selectedFieldLabel) return;
@@ -192,15 +205,8 @@ export default function FieldOwnershipGuidePanel({
               size="sm"
               onClick={() => {
                 trackFieldOwnershipGuideEvent("suggestion_clicked", { label });
-                // Route ownership-related quick actions through onOwnershipChange
-                // so ownership state is always user-initiated, never autonomous.
-                const nodeId = String(contextPayload?.nodeId || '');
-                const fieldName = String(contextPayload?.fieldName || '');
-                if (onOwnershipChange && nodeId && fieldName) {
-                  if (label === "What happens if I choose AI runtime?") {
-                    onOwnershipChange(nodeId, fieldName, 'ai_runtime');
-                  }
-                }
+                // This panel explains ownership choices only. The row-level controls
+                // are the single place that may change You / AI build / AI runtime.
                 onQuickAction?.(label);
                 void send(label, "quick_action");
               }}
@@ -288,3 +294,4 @@ export default function FieldOwnershipGuidePanel({
     </div>
   );
 }
+

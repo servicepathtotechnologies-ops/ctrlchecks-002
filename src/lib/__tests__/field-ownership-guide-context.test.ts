@@ -6,7 +6,22 @@ describe('buildFieldOwnershipGuideContext', () => {
     const result = buildFieldOwnershipGuideContext({
       prompt: 'sync google sheets',
       workflowId: 'wf_123',
-      nodes: [{ id: 'n1' }],
+      nodes: [
+        {
+          id: 'n1',
+          type: 'google_sheets',
+          data: {
+            label: 'Google Sheets',
+            config: { operation: 'append' },
+            inputSchema: {
+              spreadsheetId: {
+                description: 'Google Sheets spreadsheet ID',
+                required: true,
+              },
+            },
+          },
+        },
+      ],
       edges: [],
       ownershipQuestions: [
         {
@@ -29,5 +44,9 @@ describe('buildFieldOwnershipGuideContext', () => {
     expect(result.ownershipRows).toHaveLength(1);
     expect(result.ownershipRows[0].effectiveMode).toBe('manual_static');
     expect(result.selectedField).toEqual({ nodeId: 'n1', fieldName: 'spreadsheetId' });
+    expect(result.selectedRow?.fieldName).toBe('spreadsheetId');
+    expect(result.selectedNode?.type).toBe('google_sheets');
+    expect(result.selectedNode?.operation).toBe('append');
+    expect(result.selectedFieldSchema?.description).toBe('Google Sheets spreadsheet ID');
   });
 });

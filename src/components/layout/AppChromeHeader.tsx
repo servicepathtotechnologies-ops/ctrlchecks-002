@@ -1,6 +1,5 @@
 import { AppBrand } from '@/components/brand/AppBrand';
 import { NavLink } from '@/components/NavLink';
-import ConnectionsPanel from '@/components/ConnectionsPanel';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -20,14 +19,12 @@ import { USER_PRIMARY_NAV } from './nav-config';
 export interface AppChromeHeaderProps {
   className?: string;
   endSlot?: React.ReactNode;
-  showConnections?: boolean;
   showThemeToggle?: boolean;
 }
 
 export function AppChromeHeader({
   className,
   endSlot,
-  showConnections = true,
   showThemeToggle = true,
 }: AppChromeHeaderProps) {
   const { user, signOut } = useAuth();
@@ -74,7 +71,6 @@ export function AppChromeHeader({
 
         <div className="flex items-center gap-2 sm:gap-3">
           {endSlot}
-          {showConnections && <ConnectionsPanel />}
           {showThemeToggle && (
             <Button
               variant="ghost"

@@ -35,6 +35,7 @@ import { validateAndFixWorkflow } from '@/lib/workflowValidation';
 import { extractNodeConfigForAttachInputs } from '@/lib/attach-inputs-payload';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
 import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
+import { NodeHelpButton } from '@/components/docs/NodeHelpButton';
 
 /** Stable JSON for deduping attach-inputs auto-persist (sorted keys). */
 function stableStringifyForAttachInputs(obj: Record<string, unknown>): string {
@@ -1763,6 +1764,12 @@ export default function PropertiesPanel({
           {/* Facebook Connection Button - Show in header when Facebook node is selected */}
           {viewMode === 'properties' && selectedNode?.data.type === 'facebook' && (
             <FacebookConnectionStatus compact={false} />
+          )}
+          {viewMode === 'properties' && (
+            <NodeHelpButton
+              nodeSlug={selectedNode.data.type}
+              nodeDisplayName={canonicalTypeDisplayName}
+            />
           )}
           {viewMode === 'properties' && (
             <button

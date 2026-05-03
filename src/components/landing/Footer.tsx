@@ -15,10 +15,10 @@ const footerLinks = {
     { name: "FAQ", href: "#faq" },
   ],
   Resources: [
-    { name: "Documentation", href: "#" },
-    { name: "API Reference", href: "#" },
-    { name: "Tutorials", href: "#" },
-    { name: "Templates", href: "#" },
+    { name: "Documentation", href: "/docs", isRoute: true },
+    { name: "Getting Started", href: "/docs/getting-started/what-is-ctrlchecks", isRoute: true },
+    { name: "Node docs", href: "/docs/introduction", isRoute: true },
+    { name: "Templates", href: "/templates", isRoute: true },
     { name: "Community", href: "#" },
   ],
   Company: [

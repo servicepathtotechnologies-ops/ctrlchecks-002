@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { WorkflowAuthProvider } from "@/contexts/WorkflowAuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -54,6 +54,10 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Subscriptions = lazy(() => import("./pages/Subscriptions"));
+const Connections = lazy(() => import("./pages/Connections"));
+const IntroductionPage = lazy(() => import("./pages/docs/IntroductionPage"));
+const GettingStartedPage = lazy(() => import("./pages/docs/GettingStartedPage"));
+const NodeDocPage = lazy(() => import("./pages/docs/NodeDocPage"));
 
 // Component to conditionally render Chatbot only on landing page
 const ConditionalChatbot = () => {
@@ -121,6 +125,11 @@ const App = () => (
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/settings/profile" element={<Profile />} />
                   <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/connections" element={<Connections />} />
+                  <Route path="/docs" element={<Navigate to="/docs/introduction" replace />} />
+                  <Route path="/docs/introduction" element={<IntroductionPage />} />
+                  <Route path="/docs/getting-started/:slug" element={<GettingStartedPage />} />
+                  <Route path="/docs/nodes/:nodeSlug" element={<NodeDocPage />} />
                   <Route path="/settings/api-keys" element={<SettingsApiKeys />} />
                   <Route path="/settings/teams" element={<SettingsTeams />} />
                   <Route path="/settings/notifications" element={<SettingsNotifications />} />
