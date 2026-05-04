@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Mail, Lock, User, Shield, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { AppBrand } from "@/components/brand/AppBrand";
 import { GoogleLogo } from "@/components/icons/GoogleLogo";
+import { getPublicAuthRedirectPath } from "@/lib/auth-session";
 import { z } from "zod";
 
 const signUpSchema = z.object({
@@ -42,9 +43,21 @@ export default function SignUp() {
   const [facebookLoading, setFacebookLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { signUp, confirmSignUp, resendSignUpCode, signIn, signInWithGoogle, signInWithGitHub, signInWithFacebook } = useAuth();
+  const {
+    user,
+    session,
+    loading: authLoading,
+    signUp,
+    confirmSignUp,
+    resendSignUpCode,
+    signIn,
+    signInWithGoogle,
+    signInWithGitHub,
+    signInWithFacebook,
+  } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const redirectPath = getPublicAuthRedirectPath({ loading: authLoading, session });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +147,24 @@ export default function SignUp() {
       if (error) { setFacebookLoading(false); toast({ title: "Error", description: error.message, variant: "destructive" }); }
     } catch { setFacebookLoading(false); toast({ title: "Error", description: "Failed to sign in with Facebook.", variant: "destructive" }); }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <div className="w-full max-w-sm text-center space-y-4">
+          <div className="flex justify-center">
+            <AppBrand context="marketing" className="justify-center" />
+          </div>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Checking your session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (redirectPath || user) {
+    return <Navigate to={redirectPath || "/dashboard"} replace />;
+  }
 
   return (
     <div className="min-h-screen flex">

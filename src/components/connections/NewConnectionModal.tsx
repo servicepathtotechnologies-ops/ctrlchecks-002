@@ -12,8 +12,10 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { ServicePickerGrid } from './ServicePickerGrid';
 import { CredentialFormRenderer } from './CredentialFormRenderer';
+import { CredentialGuidePanel } from './CredentialGuidePanel';
 import { OAuthConnectButton } from './OAuthConnectButton';
 import { ProviderLogo } from './ProviderLogo';
+import { isComingSoonProvider } from './connectionAvailability';
 import { useCreateConnection } from '@/hooks/useConnections';
 import { useCredentialTypes } from '@/hooks/useCredentialTypes';
 import { useToast } from '@/hooks/use-toast';
@@ -35,21 +37,39 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
   const [step, setStep] = useState<Step>('pick');
   const [selectedType, setSelectedType] = useState<CredentialTypeDefinition | null>(null);
   const [connectionName, setConnectionName] = useState('');
+  const [activeFieldName, setActiveFieldName] = useState<string | null>(null);
 
   // When types load and a preset is given, jump straight to the form step
   useEffect(() => {
     if (!open || !preselectedCredentialTypeId || types.length === 0) return;
     const found = types.find((t) => t.id === preselectedCredentialTypeId);
     if (found && step === 'pick') {
+      if (isComingSoonProvider(found.provider)) {
+        toast({
+          title: 'Coming soon',
+          description: `${found.displayName} connections are not available yet.`,
+        });
+        onOpenChange(false);
+        return;
+      }
       setSelectedType(found);
       setConnectionName(`My ${found.displayName}`);
+      setActiveFieldName(found.inputFields[0]?.name ?? null);
       setStep('form');
     }
-  }, [open, preselectedCredentialTypeId, types, step]);
+  }, [open, onOpenChange, preselectedCredentialTypeId, step, toast, types]);
 
   function handleSelect(type: CredentialTypeDefinition) {
+    if (isComingSoonProvider(type.provider)) {
+      toast({
+        title: 'Coming soon',
+        description: `${type.displayName} connections are not available yet.`,
+      });
+      return;
+    }
     setSelectedType(type);
     setConnectionName(`My ${type.displayName}`);
+    setActiveFieldName(type.inputFields[0]?.name ?? null);
     setStep('form');
   }
 
@@ -57,6 +77,7 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
     setStep('pick');
     setSelectedType(null);
     setConnectionName('');
+    setActiveFieldName(null);
   }
 
   async function handleCredentialSubmit(credentials: Record<string, string>) {
@@ -86,6 +107,15 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
     setStep('pick');
     setSelectedType(null);
     setConnectionName('');
+    setActiveFieldName(null);
+  }
+
+  function handleGuideFieldSelect(fieldName: string) {
+    setActiveFieldName(fieldName);
+    if (typeof document === 'undefined') return;
+    const field = document.getElementById(`credential-${selectedType?.id}-${fieldName}`);
+    field?.focus();
+    field?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   function handleOpenChange(val: boolean) {
@@ -98,7 +128,7 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className={step === 'form' ? 'max-w-4xl max-h-[90vh] overflow-y-auto' : 'max-w-lg max-h-[90vh] overflow-y-auto'}>
         <DialogHeader>
           <div className="flex items-center gap-3">
             {step === 'form' && !preselectedCredentialTypeId && (
@@ -121,51 +151,72 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
         {step === 'pick' && <ServicePickerGrid onSelect={handleSelect} />}
 
         {step === 'form' && selectedType && (
-          <div className="space-y-5 pt-1">
-            {/* Connection name */}
-            <div className="space-y-1.5">
-              <Label htmlFor="conn-name">Connection Name</Label>
-              <Input
-                id="conn-name"
-                value={connectionName}
-                onChange={(e) => setConnectionName(e.target.value)}
-                placeholder={`My ${selectedType.displayName}`}
+          <div className="grid gap-5 pt-1 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-5">
+              <CredentialGuidePanel
+                credentialType={selectedType}
+                activeFieldName={activeFieldName}
+                onFieldSelect={handleGuideFieldSelect}
+                compact
+                className="lg:hidden"
               />
-            </div>
 
-            {/* OAuth flow */}
-            {isOAuth && (
-              <div className="space-y-3">
-                {hasFields && (
-                  <CredentialFormRenderer
-                    credentialType={selectedType}
-                    onSubmit={handleCredentialSubmit}
-                    isSubmitting={createMut.isPending}
-                  />
-                )}
-                <OAuthConnectButton
-                  credentialType={selectedType}
-                  onSuccess={handleOAuthSuccess}
-                  className="w-full"
+              {/* Connection name */}
+              <div className="space-y-1.5">
+                <Label htmlFor="conn-name">Connection Name</Label>
+                <Input
+                  id="conn-name"
+                  value={connectionName}
+                  onChange={(e) => setConnectionName(e.target.value)}
+                  placeholder={`My ${selectedType.displayName}`}
                 />
               </div>
-            )}
 
-            {/* API key / manual flow */}
-            {!isOAuth && hasFields && (
-              <CredentialFormRenderer
-                credentialType={selectedType}
-                onSubmit={handleCredentialSubmit}
-                isSubmitting={createMut.isPending}
-                submitLabel={selectedType.form.submitLabel ?? 'Save & Test Connection'}
-              />
-            )}
+              {/* OAuth flow */}
+              {isOAuth && (
+                <div className="space-y-3">
+                  {hasFields && (
+                    <CredentialFormRenderer
+                      credentialType={selectedType}
+                      onSubmit={handleCredentialSubmit}
+                      isSubmitting={createMut.isPending}
+                      activeFieldName={activeFieldName}
+                      onFieldFocus={setActiveFieldName}
+                    />
+                  )}
+                  <OAuthConnectButton
+                    credentialType={selectedType}
+                    onSuccess={handleOAuthSuccess}
+                    className="w-full"
+                  />
+                </div>
+              )}
 
-            {!isOAuth && !hasFields && (
-              <p className="text-sm text-muted-foreground">
-                No additional configuration required for this connection type.
-              </p>
-            )}
+              {/* API key / manual flow */}
+              {!isOAuth && hasFields && (
+                <CredentialFormRenderer
+                  credentialType={selectedType}
+                  onSubmit={handleCredentialSubmit}
+                  isSubmitting={createMut.isPending}
+                  submitLabel={selectedType.form.submitLabel ?? 'Save & Test Connection'}
+                  activeFieldName={activeFieldName}
+                  onFieldFocus={setActiveFieldName}
+                />
+              )}
+
+              {!isOAuth && !hasFields && (
+                <p className="text-sm text-muted-foreground">
+                  No additional configuration required for this connection type.
+                </p>
+              )}
+            </div>
+
+            <CredentialGuidePanel
+              credentialType={selectedType}
+              activeFieldName={activeFieldName}
+              onFieldSelect={handleGuideFieldSelect}
+              className="hidden max-h-[70vh] overflow-y-auto lg:block"
+            />
           </div>
         )}
       </DialogContent>

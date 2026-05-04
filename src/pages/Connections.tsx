@@ -9,6 +9,7 @@ import { WorkflowAuthGate } from '@/components/WorkflowAuthGate';
 import { ConnectionCard } from '@/components/connections/ConnectionCard';
 import { NewConnectionModal } from '@/components/connections/NewConnectionModal';
 import { ProviderLogo } from '@/components/connections/ProviderLogo';
+import { isComingSoonProvider } from '@/components/connections/connectionAvailability';
 import { useConnections } from '@/hooks/useConnections';
 import { useCredentialTypes } from '@/hooks/useCredentialTypes';
 import type { ConnectionRecord, CredentialTypeDefinition } from '@/lib/api/connections';
@@ -107,19 +108,41 @@ function ServiceCatalog({ onSelect }: { onSelect: (t: CredentialTypeDefinition) 
                 {cat}
               </p>
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                {grouped[cat].map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => onSelect(t)}
-                    className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border/60 hover:border-primary/50 hover:bg-muted/60 transition-all group"
-                  >
-                    <ProviderLogo provider={t.provider} size={36} />
-                    <span className="text-[11px] text-center font-medium leading-tight text-muted-foreground group-hover:text-foreground truncate w-full">
-                      {t.provider.charAt(0).toUpperCase() + t.provider.slice(1)}
-                    </span>
-                  </button>
-                ))}
+                {grouped[cat].map((t) => {
+                  const comingSoon = isComingSoonProvider(t.provider);
+                  const providerName = t.provider.charAt(0).toUpperCase() + t.provider.slice(1);
+
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      disabled={comingSoon}
+                      title={comingSoon ? `${providerName} is coming soon` : `Connect ${providerName}`}
+                      onClick={() => {
+                        if (!comingSoon) onSelect(t);
+                      }}
+                      className={`relative flex flex-col items-center gap-2 rounded-xl border p-3 transition-all group ${
+                        comingSoon
+                          ? 'cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground opacity-75'
+                          : 'border-border/60 hover:border-primary/50 hover:bg-muted/60'
+                      }`}
+                    >
+                      {comingSoon && (
+                        <span className="absolute right-1 top-1 rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
+                          Coming soon
+                        </span>
+                      )}
+                      <ProviderLogo provider={t.provider} size={36} />
+                      <span
+                        className={`w-full truncate text-center text-[11px] font-medium leading-tight ${
+                          comingSoon ? 'text-muted-foreground' : 'text-muted-foreground group-hover:text-foreground'
+                        }`}
+                      >
+                        {providerName}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}

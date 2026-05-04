@@ -1,6 +1,8 @@
 ﻿import { useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/aws/client";
+import { useCallback } from "react";
 import { AuthContext, AuthUser, AuthSession } from "@/lib/auth-context";
+import { isAlreadySignedInAuthError, normalizeAuthState } from "@/lib/auth-session";
 
 function mergeSession(prev: AuthSession | null, next: AuthSession | null): AuthSession | null {
   if (!next) return null;
@@ -29,16 +31,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const applySession = useCallback((nextSession: AuthSession | null | undefined) => {
+    const normalized = normalizeAuthState(nextSession);
+    setSession((prev) => mergeSession(prev, normalized.session));
+    setUser((prev) => mergeUser(prev, normalized.user));
+    setLoading(false);
+    return normalized.session;
+  }, []);
+
+  const refreshSession = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    return applySession(data.session as AuthSession | null);
+  }, [applySession]);
+
   useEffect(() => {
+    let mounted = true;
+
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        if (mounted) applySession(data.session as AuthSession | null);
+      })
+      .catch(() => {
+        if (mounted) applySession(null);
+      });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event: string, nextSession: AuthSession | null) => {
-        setSession((prev) => mergeSession(prev, nextSession));
-        setUser((prev) => mergeUser(prev, nextSession?.user ?? null));
-        setLoading(false);
+        if (mounted) applySession(nextSession);
       }
     );
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [applySession]);
 
   const syncUserRole = async (role: "user" | "admin") => {
     const { data } = await supabase.auth.getUser();
@@ -78,8 +104,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: new Error(error.message) };
+    if (error) {
+      if (isAlreadySignedInAuthError(error.message)) {
+        const existingSession = await refreshSession();
+        if (existingSession?.user) return { error: null };
+      }
+      return { error: new Error(error.message) };
+    }
     if (!data.user) return { error: new Error("Sign-in failed — no user returned") };
+    applySession(data.session as AuthSession | null);
 
     const pendingRoleKey = `ctrlchecks:signup-role:${email.toLowerCase()}`;
     const pendingRole = window.localStorage.getItem(pendingRoleKey);
@@ -96,6 +129,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/google/callback` },
     });
+    if (error && isAlreadySignedInAuthError(error.message)) {
+      const existingSession = await refreshSession();
+      if (existingSession?.user) return { error: null };
+    }
     return { error: error ? new Error(error.message) : null };
   };
 
@@ -113,6 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider: "facebook",
       options: { redirectTo: `${window.location.origin}/auth/facebook/callback` },
     });
+    if (error && isAlreadySignedInAuthError(error.message)) {
+      const existingSession = await refreshSession();
+      if (existingSession?.user) return { error: null };
+    }
     return { error: error ? new Error(error.message) : null };
   };
 
@@ -124,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, loading, signUp, confirmSignUp, resendSignUpCode, signIn, signInWithGoogle, signInWithGitHub, signInWithFacebook, signOut }}
+      value={{ user, session, loading, signUp, confirmSignUp, resendSignUpCode, signIn, signInWithGoogle, signInWithGitHub, signInWithFacebook, refreshSession, signOut }}
     >
       {children}
     </AuthContext.Provider>

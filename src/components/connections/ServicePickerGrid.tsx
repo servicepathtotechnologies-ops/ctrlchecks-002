@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ProviderLogo } from './ProviderLogo';
+import { isComingSoonProvider } from './connectionAvailability';
 import { useCredentialTypes } from '@/hooks/useCredentialTypes';
 import type { CredentialTypeDefinition } from '@/lib/api/connections';
 
@@ -84,19 +85,41 @@ export function ServicePickerGrid({ onSelect }: Props) {
               {cat}
             </p>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {items.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => onSelect(t)}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg border border-transparent hover:border-border hover:bg-muted/50 transition-colors group"
-                >
-                  <ProviderLogo provider={t.provider} size={36} />
-                  <span className="text-xs text-center font-medium leading-tight group-hover:text-primary">
-                    {t.provider.charAt(0).toUpperCase() + t.provider.slice(1)}
-                  </span>
-                </button>
-              ))}
+              {items.map((t) => {
+                const comingSoon = isComingSoonProvider(t.provider);
+                const providerName = t.provider.charAt(0).toUpperCase() + t.provider.slice(1);
+
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    disabled={comingSoon}
+                    title={comingSoon ? `${providerName} is coming soon` : `Connect ${providerName}`}
+                    onClick={() => {
+                      if (!comingSoon) onSelect(t);
+                    }}
+                    className={`relative flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors group ${
+                      comingSoon
+                        ? 'cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground opacity-75'
+                        : 'border-transparent hover:border-border hover:bg-muted/50'
+                    }`}
+                  >
+                    {comingSoon && (
+                      <span className="absolute right-1 top-1 rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
+                        Coming soon
+                      </span>
+                    )}
+                    <ProviderLogo provider={t.provider} size={36} />
+                    <span
+                      className={`text-xs text-center font-medium leading-tight ${
+                        comingSoon ? 'text-muted-foreground' : 'group-hover:text-primary'
+                      }`}
+                    >
+                      {providerName}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         ))}

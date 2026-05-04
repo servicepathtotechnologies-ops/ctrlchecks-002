@@ -27,6 +27,7 @@ export interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   signInWithGitHub: () => Promise<{ error: Error | null }>;
   signInWithFacebook: () => Promise<{ error: Error | null }>;
+  refreshSession: () => Promise<AuthSession | null>;
   signOut: () => Promise<void>;
 }
 

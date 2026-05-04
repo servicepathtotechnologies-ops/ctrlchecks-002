@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -67,6 +68,8 @@ interface Props {
   submitLabel?: string;
   isSubmitting?: boolean;
   helpDocUrl?: string;
+  activeFieldName?: string | null;
+  onFieldFocus?: (fieldName: string) => void;
 }
 
 export function CredentialFormRenderer({
@@ -76,6 +79,8 @@ export function CredentialFormRenderer({
   submitLabel,
   isSubmitting,
   helpDocUrl,
+  activeFieldName,
+  onFieldFocus,
 }: Props) {
   const schema = buildSchema(credentialType.inputFields);
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
@@ -93,9 +98,19 @@ export function CredentialFormRenderer({
 
   return (
     <form onSubmit={handleSubmit(onValid)} className="space-y-4">
-      {credentialType.inputFields.map((field) => (
-        <div key={field.name} className="space-y-1.5">
-          <Label htmlFor={field.name}>
+      {credentialType.inputFields.map((field) => {
+        const fieldId = `credential-${credentialType.id}-${field.name}`;
+        const isActive = activeFieldName === field.name;
+
+        return (
+        <div
+          key={field.name}
+          className={cn(
+            'space-y-1.5 rounded-md border border-transparent p-1.5 transition-colors',
+            isActive && 'border-primary/40 bg-primary/5',
+          )}
+        >
+          <Label htmlFor={fieldId}>
             {field.label}
             {field.required && <span className="text-destructive ml-0.5">*</span>}
           </Label>
@@ -105,7 +120,7 @@ export function CredentialFormRenderer({
               defaultValue={String(field.defaultValue ?? '')}
               onValueChange={(v) => setValue(field.name, v)}
             >
-              <SelectTrigger id={field.name}>
+              <SelectTrigger id={fieldId} onFocus={() => onFieldFocus?.(field.name)}>
                 <SelectValue placeholder={`Select ${field.label}`} />
               </SelectTrigger>
               <SelectContent>
@@ -116,20 +131,32 @@ export function CredentialFormRenderer({
                 ))}
               </SelectContent>
             </Select>
+          ) : field.type === 'textarea' ? (
+            <Textarea
+              id={fieldId}
+              placeholder={field.placeholder}
+              disabled={isSubmitting}
+              value={(watch(field.name) as string) ?? ''}
+              onFocus={() => onFieldFocus?.(field.name)}
+              onChange={(e) => setValue(field.name, e.target.value)}
+              className="min-h-28 font-mono text-xs"
+            />
           ) : field.secret || field.type === 'password' ? (
             <SecretInput
-              id={field.name}
+              id={fieldId}
               placeholder={field.placeholder}
               value={watch(field.name) as string}
               onChange={(v) => setValue(field.name, v)}
+              onFocus={() => onFieldFocus?.(field.name)}
               disabled={isSubmitting}
             />
           ) : (
             <Input
-              id={field.name}
-              type={field.type === 'url' ? 'url' : 'text'}
+              id={fieldId}
+              type={field.type === 'url' ? 'url' : field.type === 'number' ? 'number' : 'text'}
               placeholder={field.placeholder}
               disabled={isSubmitting}
+              onFocus={() => onFieldFocus?.(field.name)}
               {...register(field.name)}
             />
           )}
@@ -143,7 +170,8 @@ export function CredentialFormRenderer({
             </p>
           )}
         </div>
-      ))}
+      );
+      })}
 
       {helpDocUrl && (
         <Collapsible>
