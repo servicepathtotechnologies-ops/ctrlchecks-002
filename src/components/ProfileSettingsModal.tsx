@@ -2,9 +2,8 @@
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/aws/client';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
-import { getFacebookOAuthOptions } from '@/lib/facebookSignInOptions';
-import { buildConnectorCallbackUrl, rememberOAuthReturnTo } from '@/lib/oauth-return';
-import { startGoogleConnectorOAuth } from '@/lib/google-connector-oauth';
+import { rememberOAuthReturnTo } from '@/lib/oauth-return';
+import { startConnectorOAuth } from '@/lib/google-connector-oauth';
 import { isGeneratedCognitoEmail, resolveProfileEmail } from '@/lib/profile-email';
 import { Button } from '@/components/ui/button';
 import {
@@ -278,38 +277,9 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
     }));
 
     try {
-      if (service === 'google') {
-        startGoogleConnectorOAuth(user.id);
+      if (service === 'google' || service === 'linkedin' || service === 'github' || service === 'facebook') {
+        startConnectorOAuth(service, user.id);
         return;
-      } else if (service === 'linkedin') {
-        const redirectUrl = buildConnectorCallbackUrl('/auth/linkedin/callback');
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'linkedin_oidc',
-          options: {
-            redirectTo: redirectUrl,
-            queryParams: {
-              scope: 'openid profile email w_member_social',
-            },
-          },
-        });
-        if (error) throw error;
-      } else if (service === 'github') {
-        const redirectUrl = buildConnectorCallbackUrl('/auth/github/callback');
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'github',
-          options: {
-            redirectTo: redirectUrl,
-            scopes: 'repo user read:org',
-          },
-        });
-        if (error) throw error;
-      } else if (service === 'facebook') {
-        const redirectUrl = buildConnectorCallbackUrl('/auth/facebook/callback');
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'facebook',
-          options: getFacebookOAuthOptions(redirectUrl),
-        });
-        if (error) throw error;
       } else if (service === 'notion') {
         const backendUrl = getBackendUrl();
         rememberOAuthReturnTo();
