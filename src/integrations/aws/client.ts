@@ -232,6 +232,8 @@ class QueryBuilder {
   private _table:   string;
   private _op:      DbOp = 'select';
   private _cols     = '*';
+  private _count?:  'exact' | 'planned' | 'estimated';
+  private _head     = false;
   private _eqs:     Array<{ col: string; val: any }> = [];
   private _ins:     Array<{ col: string; vals: any[] }> = [];
   private _notIsNulls: string[] = [];
@@ -245,8 +247,10 @@ class QueryBuilder {
 
   constructor(table: string) { this._table = table; }
 
-  select(cols = '*')  {
+  select(cols = '*', opts?: { count?: 'exact' | 'planned' | 'estimated'; head?: boolean })  {
     this._cols = cols;
+    this._count = opts?.count;
+    this._head = opts?.head === true;
     // Mutation chains such as insert(...).select().single() keep the active mutation op.
     // A fresh builder with no data remains a SELECT.
     if (!this._data && this._op !== 'delete') this._op = 'select';
@@ -310,7 +314,9 @@ class QueryBuilder {
           qs.set('order_col', this._orderCol);
           qs.set('order_dir', this._orderAsc ? 'ASC' : 'DESC');
         }
-        if (this._limitVal) qs.set('limit', String(this._limitVal));
+        if (this._limitVal !== undefined) qs.set('limit', String(this._limitVal));
+        if (this._count) qs.set('count', this._count);
+        if (this._head) qs.set('head', 'true');
         for (const { col, val } of this._eqs) {
           qs.set(`filter_${col}`, String(val));
         }
@@ -327,7 +333,11 @@ class QueryBuilder {
         if (!r.ok) return { data: null, error: { message: `HTTP ${r.status}` } };
         const body = await r.json();
         const rows = body.data ?? body;
-        return { data: this._single ? (rows[0] ?? null) : rows, error: null };
+        return {
+          data: this._single ? (rows[0] ?? null) : rows,
+          error: null,
+          count: typeof body.count === 'number' ? body.count : null,
+        } as any;
       }
 
       if (this._op === 'insert') {

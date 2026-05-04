@@ -155,4 +155,26 @@ describe('aws db-proxy client mutation chains', () => {
     expect(url.pathname).toContain('/api/db/workflows');
     expect(url.searchParams.get('notnull_cron_expression')).toBe('true');
   });
+
+  it('passes count-only select options through the db proxy query contract', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [], count: 42, error: null }),
+    } as any);
+    const { supabase } = await import('../client');
+
+    const { count, data, error } = await supabase
+      .from('executions')
+      .select('id', { count: 'exact' })
+      .limit(0) as any;
+
+    const url = new URL(String((fetch as any).mock.calls[0][0]));
+    expect(url.pathname).toContain('/api/db/executions');
+    expect(url.searchParams.get('count')).toBe('exact');
+    expect(url.searchParams.get('limit')).toBe('0');
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+    expect(count).toBe(42);
+  });
 });

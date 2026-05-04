@@ -17,29 +17,30 @@ export function useOAuthFlow() {
         return;
       }
 
-      const poll = setInterval(() => {
-        try {
-          if (popup.closed) {
-            clearInterval(poll);
-            resolve();
-          }
-        } catch {
-          // cross-origin: ignore
-        }
-      }, 500);
+      let settled = false;
+
+      const cleanup = () => {
+        window.removeEventListener('message', onMessage);
+        clearTimeout(timeout);
+      };
+
+      const finish = (callback: () => void) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        callback();
+      };
+
+      const timeout = window.setTimeout(() => {
+        finish(() => reject(new Error('OAuth window timed out. Please try connecting again.')));
+      }, 5 * 60_000);
 
       // Listen for postMessage from callback page
       const onMessage = (event: MessageEvent) => {
         if (event.data?.type === 'oauth-success') {
-          clearInterval(poll);
-          window.removeEventListener('message', onMessage);
-          popup.close();
-          resolve();
+          finish(resolve);
         } else if (event.data?.type === 'oauth-error') {
-          clearInterval(poll);
-          window.removeEventListener('message', onMessage);
-          popup.close();
-          reject(new Error(event.data.message || 'OAuth failed'));
+          finish(() => reject(new Error(event.data.message || 'OAuth failed')));
         }
       };
       window.addEventListener('message', onMessage);

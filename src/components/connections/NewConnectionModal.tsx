@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -109,6 +110,11 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
             <DialogTitle>
               {step === 'pick' ? 'Choose a service' : `Connect ${selectedType?.displayName ?? ''}`}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              {step === 'pick'
+                ? 'Choose a service to create a new connection.'
+                : `Authorize or configure ${selectedType?.displayName ?? 'this service'} for workflow use.`}
+            </DialogDescription>
           </div>
         </DialogHeader>
 

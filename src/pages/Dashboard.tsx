@@ -42,6 +42,7 @@ export default function Dashboard() {
   });
   const [showCreateOptions, setShowCreateOptions] = useState(false);
   const [filterActive, setFilterActive] = useState(false);
+  const loadWorkflowsRunRef = useRef(0);
 
   // Suppress 406 errors from executions queries (expected when workflows have no executions)
   useEffect(() => {
@@ -100,6 +101,9 @@ export default function Dashboard() {
   };
 
   const loadWorkflows = useCallback(async () => {
+    const runId = ++loadWorkflowsRunRef.current;
+    setWorkflowsLoading(true);
+
     try {
       let query = supabase
         .from('workflows')
@@ -116,8 +120,24 @@ export default function Dashboard() {
 
       if (workflowsError) throw workflowsError;
 
+      const baseWorkflows = (workflowsData || []).map((workflow) => ({
+        ...workflow,
+        last_execution: null,
+        execution_count: 0,
+        workflow_type: detectWorkflowType(workflow.nodes),
+      }));
+
+      if (loadWorkflowsRunRef.current === runId) {
+        setWorkflows(baseWorkflows);
+        setWorkflowsLoading(false);
+      }
+
+      if (baseWorkflows.length === 0) {
+        return;
+      }
+
       const workflowsWithStats = await Promise.all(
-        (workflowsData || []).map(async (workflow) => {
+        baseWorkflows.map(async (workflow) => {
           try {
             // Use maybeSingle() instead of single() to handle workflows with no executions
             let lastExec = null;
@@ -220,7 +240,6 @@ export default function Dashboard() {
               ...workflow,
               last_execution: lastExec || null,
               execution_count: count || 0,
-              workflow_type: detectWorkflowType(workflow.nodes),
             };
           } catch (error) {
             // If there's an error loading stats for a workflow, still return the workflow with defaults
@@ -229,17 +248,20 @@ export default function Dashboard() {
               ...workflow,
               last_execution: null,
               execution_count: 0,
-              workflow_type: detectWorkflowType(workflow.nodes),
             };
           }
         })
       );
 
-      setWorkflows(workflowsWithStats);
+      if (loadWorkflowsRunRef.current === runId) {
+        setWorkflows(workflowsWithStats);
+      }
     } catch (error) {
       console.error('Error loading workflows:', error);
     } finally {
-      setWorkflowsLoading(false);
+      if (loadWorkflowsRunRef.current === runId) {
+        setWorkflowsLoading(false);
+      }
     }
   }, [filterActive]);
 
