@@ -1,6 +1,6 @@
 ﻿import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Save, Settings, Upload, Download, Square } from 'lucide-react';
+import { ArrowLeft, Link2, Play, Save, Settings, Upload, Download, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,6 @@ import { AppBrand } from '@/components/brand/AppBrand';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import WebhookSettings from './WebhookSettings';
 import ScheduleSettings from './ScheduleSettings';
-import ConnectionsPanel from '@/components/ConnectionsPanel';
 import { WorkflowActionButton } from '@/components/WorkflowActionButton';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/aws/client';
@@ -67,6 +66,11 @@ export default function WorkflowHeader({
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleConnectionsClick = () => {
+    const returnTo = workflowId && workflowId !== 'new' ? `/workflow/${workflowId}` : '/workflows';
+    navigate(`/connections?returnTo=${encodeURIComponent(returnTo)}`);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,7 +240,15 @@ export default function WorkflowHeader({
       </div>
 
       <div className="flex items-center gap-2">
-        <ConnectionsPanel />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleConnectionsClick}
+          className="flex items-center gap-2"
+        >
+          <Link2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Connections</span>
+        </Button>
         <ScheduleSettings workflowId={workflowId} onScheduleChange={setIsScheduleActive} />
         <WebhookSettings workflowId={workflowId} />
 

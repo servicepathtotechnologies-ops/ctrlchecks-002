@@ -1,7 +1,7 @@
 ﻿import { useEffect, useCallback, useState, useRef, Suspense, lazy } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { useWorkflowStore, WorkflowNode } from '@/stores/workflowStore';
+import { useWorkflowStore } from '@/stores/workflowStore';
 import { supabase } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { toast } from '@/hooks/use-toast';
@@ -17,7 +17,6 @@ import { validateAndFixWorkflow } from '@/lib/workflowValidation';
 import { extractNodeConfigForAttachInputs } from '@/lib/attach-inputs-payload';
 import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { enforceFrontendRenderContract, normalizeBackendWorkflow, validateNodeTypesRegistered } from '@/lib/node-type-normalizer';
-import { CredentialStatusPanel, type CredentialPanelData } from '@/components/workflow/CredentialStatusPanel';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
 import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
 import { useExecutionNotifications } from '../hooks/useExecutionNotifications';
@@ -61,8 +60,6 @@ export default function WorkflowBuilder() {
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
   const [lastResolvedInputs, setLastResolvedInputs] = useState<LastResolvedInputsMap>({});
   const [reliabilityStatus, setReliabilityStatus] = useState<ReliabilityUiState | null>(null);
-  // Credential status panel state removed — credentials are handled via the header Connections route
-  const credentialPanelData = null;
   const { debugNodeId } = useDebugStore();
   const hasAutoRun = useRef(false); // Track if we've already auto-run for this workflow load
   const isSavingRef = useRef(false); // Ref-based lock to prevent concurrent handleSave calls
@@ -77,34 +74,6 @@ export default function WorkflowBuilder() {
     resetWorkflow,
     resetAllNodeStatuses,
   } = useWorkflowStore();
-
-  // Open a node's property panel by selecting it in the store
-  const handleOpenNodePanel = useCallback((nodeId: string) => {
-    const node = useWorkflowStore.getState().nodes.find((n) => n.id === nodeId);
-    if (node) {
-      useWorkflowStore.getState().selectNode(node as WorkflowNode);
-      setPropertiesPanelOpen(true);
-    }
-  }, []);
-
-  // Auto-open the first missing credential's node panel when the workflow loads
-  useEffect(() => {
-    if (!credentialPanelData || credentialPanelData.missing.length === 0) return;
-    const firstMissing = credentialPanelData.missing[0];
-    if (!firstMissing?.nodeId) return;
-    // Wait for nodes to be loaded into the store before selecting
-    const trySelect = () => {
-      const node = useWorkflowStore.getState().nodes.find((n) => n.id === firstMissing.nodeId);
-      if (node) {
-        useWorkflowStore.getState().selectNode(node as WorkflowNode);
-        setPropertiesPanelOpen(true);
-      }
-    };
-    // Try immediately, then retry once after a short wait for async load
-    trySelect();
-    const t = setTimeout(trySelect, 600);
-    return () => clearTimeout(t);
-  }, [credentialPanelData]);
 
   useEffect(() => {
     if (!authLoading && !user) {

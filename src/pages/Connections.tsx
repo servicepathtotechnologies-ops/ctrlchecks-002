@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, RefreshCw, Plus } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -156,10 +157,14 @@ function ServiceCatalog({ onSelect }: { onSelect: (t: CredentialTypeDefinition) 
 export default function Connections() {
   const { user } = useAuth();
   const { data: connections = [], isLoading, refetch, isFetching } = useConnections();
+  const { data: credentialTypes = [], isLoading: credentialTypesLoading } = useCredentialTypes();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [connSearch, setConnSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalPreset, setModalPreset] = useState<string | undefined>();
   const [editingConnection, setEditingConnection] = useState<ConnectionRecord | null>(null);
+
+  const requestedService = searchParams.get('service') || searchParams.get('credentialType');
 
   function openModalForType(t: CredentialTypeDefinition) {
     setModalPreset(t.id);
@@ -173,6 +178,28 @@ export default function Connections() {
       refetch();
     }
   }
+
+  useEffect(() => {
+    const service = requestedService?.trim().toLowerCase();
+    if (!service || credentialTypesLoading) return;
+
+    const matchingType = credentialTypes.find((t) => {
+      const candidates = [t.id, t.provider, t.displayName].map((value) => value.toLowerCase());
+      return candidates.some((value) => value === service || value.includes(service));
+    });
+
+    if (matchingType && !isComingSoonProvider(matchingType.provider)) {
+      setModalPreset(matchingType.id);
+      setModalOpen(true);
+    } else {
+      setConnSearch(service);
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('service');
+    nextParams.delete('credentialType');
+    setSearchParams(nextParams, { replace: true });
+  }, [credentialTypes, credentialTypesLoading, requestedService, searchParams, setSearchParams]);
 
   const filteredConns = connSearch.trim()
     ? connections.filter(

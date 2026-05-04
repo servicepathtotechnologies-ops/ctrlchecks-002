@@ -38,7 +38,7 @@ export function AppChromeHeader({
   };
 
   return (
-    <header className={cn('border-b border-border bg-card', className)}>
+    <header className={cn('sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85', className)}>
       <div className="container mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3">
         <AppBrand context="app" />
 
