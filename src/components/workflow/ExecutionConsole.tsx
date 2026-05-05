@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { Json } from '@/integrations/aws/types';
 import ExecutionLogBlock from './ExecutionLogBlock';
+import { ENDPOINTS } from '@/config/endpoints';
 
 interface Execution {
   id: string;
@@ -45,7 +46,7 @@ interface ExecutionConsoleProps {
   onToggle: () => void;
 }
 
-type ResolvedInputSource = 'runtime_ai' | 'static_config';
+type ResolvedInputSource = 'static_config' | 'template' | 'deterministic_runtime' | 'runtime_ai';
 
 /** Returns true when the execution has reached a terminal state. */
 function isTerminalStatus(status: string): boolean {
@@ -72,7 +73,17 @@ function normalizeLogStatus(status?: string | null): 'running' | 'success' | 'fa
 
 function logsNeedStepHydration(execution: Execution, steps: ExecutionStep[]): boolean {
   if (steps.length === 0) return false;
-  if (!Array.isArray(execution.logs) || execution.logs.length < steps.length) return true;
+  // If execution.logs is a non-empty array and the execution is terminal, trust the logs
+  // column — it was written by execute-workflow.ts with full node names and data flow.
+  // Only fall back to steps when logs is missing, empty, or has stale running/pending entries.
+  if (isTerminalStatus(execution.status) && Array.isArray(execution.logs) && execution.logs.length > 0) {
+    const hasStaleEntries = execution.logs.some((log: any) => log?.status === 'running' || log?.status === 'pending');
+    if (!hasStaleEntries) return false; // logs are complete and final — use them
+  }
+  if (!Array.isArray(execution.logs) || execution.logs.length === 0) return true;
+  // During a live run, hydrate from steps if steps have more entries (real-time progress)
+  if (!isTerminalStatus(execution.status) && steps.length > execution.logs.length) return true;
+  // Stale running/pending entries in a terminal execution — replace with steps
   if (isTerminalStatus(execution.status)) {
     return execution.logs.some((log: any) => log?.status === 'running' || log?.status === 'pending');
   }
@@ -177,7 +188,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
     try {
       const { data, error } = await supabase
         .from('executions')
-        .select('id, status, started_at, finished_at, duration_ms, error, logs, output, input')
+        .select('id, status, started_at, finished_at, duration_ms, error')
         .eq('workflow_id', workflowId)
         .order('started_at', { ascending: false })
         .limit(10);
@@ -217,6 +228,8 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
           if (!currentSelectedExecution || currentSelectedExecution.id !== mostRecent.id) {
             const fullExecution = await loadExecution(mostRecent.id);
             setSelectedExecution(fullExecution || mostRecent);
+          } else if (!isTerminalStatus(mostRecent.status)) {
+            setSelectedExecution({ ...currentSelectedExecution, ...mostRecent });
           } else {
             const fullExecution = await loadExecution(currentSelectedExecution.id);
             setSelectedExecution(fullExecution || mostRecent);
@@ -226,8 +239,12 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
           if (currentSelectedExecution) {
             const updatedExecution = uniqueExecutions.find(e => e.id === currentSelectedExecution.id);
             if (updatedExecution) {
-              const fullExecution = await loadExecution(updatedExecution.id);
-              setSelectedExecution(fullExecution || updatedExecution);
+              if (isTerminalStatus(updatedExecution.status) || !currentSelectedExecution.logs) {
+                const fullExecution = await loadExecution(updatedExecution.id);
+                setSelectedExecution(fullExecution || updatedExecution);
+              } else {
+                setSelectedExecution({ ...currentSelectedExecution, ...updatedExecution });
+              }
             }
           }
         }
@@ -256,42 +273,85 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
       const { executionId, workflowId: eventWorkflowId } = event.detail;
       if (eventWorkflowId === workflowId) {
         console.log('Workflow execution started, refreshing executions...', executionId);
-        // ✅ FIX: DO NOT reset manual selection when a new execution starts
-        // This preserves the user's selection of past logs even when a new execution starts
-        // The user can manually switch to the new execution if they want to see it
-        // Force refresh executions immediately (but don't change selection)
-        loadExecutions();
+        const startedSummary = {
+          id: executionId,
+          status: 'running',
+          started_at: new Date().toISOString(),
+          workflow_id: eventWorkflowId,
+        } as Execution;
+        setExecutions((prev) => [startedSummary, ...prev.filter((e) => e.id !== executionId)].slice(0, 10));
+        if (!isManualSelectionRef.current) {
+          setSelectedExecution(startedSummary);
+        }
 
-        // Exponential-backoff polling: 1s → 2s → 4s → 8s → cap at 10s
+        // Lightweight status polling while active. Full rows/logs load only at terminal state.
         let pollStopped = false;
-        let attempt = 0;
-        const MAX_DELAY_MS = 10_000;
+        let notFoundCount = 0;
+        const ACTIVE_DELAY_MS = 1000;
         const MAX_DURATION_MS = 5 * 60_000; // give up after 5 minutes
         const startedAt = Date.now();
 
         const scheduleNext = () => {
           if (pollStopped) return;
-          const delay = Math.min(1000 * Math.pow(2, attempt), MAX_DELAY_MS);
-          attempt++;
           setTimeout(async () => {
             if (pollStopped) return;
-            await loadExecutions();
-            const currentExec = selectedExecutionRef.current;
-            if (currentExec && currentExec.id === executionId && isTerminalStatus(currentExec.status)) {
-              pollStopped = true;
-              try {
-                window.dispatchEvent(new CustomEvent('workflow-execution-terminal', {
-                  detail: { execution: currentExec },
-                }));
-              } catch { /* ignore dispatch errors */ }
-              return;
+            try {
+              const statusResponse = await fetch(`${ENDPOINTS.itemBackend}/api/execution-status/${executionId}?lite=1`);
+              if (statusResponse.ok) {
+                const statusData = await statusResponse.json();
+                const liveSteps: ExecutionStep[] = Array.isArray(statusData.steps) ? statusData.steps : [];
+                const nextSummary = {
+                  id: executionId,
+                  workflow_id: statusData.workflow_id || eventWorkflowId,
+                  status: statusData.status,
+                  started_at: statusData.started_at,
+                  finished_at: statusData.completed_at,
+                  error: statusData.error || null,
+                  ...(liveSteps.length > 0 ? { logs: buildLogsFromSteps(liveSteps) as unknown as Json } : {}),
+                } as Execution;
+                setExecutions((prev) => [nextSummary, ...prev.filter((e) => e.id !== executionId)].slice(0, 10));
+                if (!isManualSelectionRef.current || selectedExecutionRef.current?.id === executionId) {
+                  setSelectedExecution((prev) => ({ ...(prev || nextSummary), ...nextSummary }));
+                }
+
+                if (isTerminalStatus(String(statusData.status))) {
+                  const fullExecution = await loadExecution(executionId);
+                  const terminalExecution = fullExecution || nextSummary;
+                  setSelectedExecution(terminalExecution);
+                  setExecutions((prev) => [terminalExecution, ...prev.filter((e) => e.id !== executionId)].slice(0, 10));
+                  pollStopped = true;
+                  window.dispatchEvent(new CustomEvent('workflow-execution-terminal', {
+                    detail: { execution: terminalExecution },
+                  }));
+                  return;
+                }
+              } else if (statusResponse.status === 404) {
+                notFoundCount += 1;
+                // Bug 3 fix: the original threshold of 3 was too aggressive.
+                // The background execute-workflow.ts task starts ~100ms after the HTTP
+                // response, and with the user_id fix the record becomes visible immediately.
+                // Still, give the system at least 15 seconds AND 10 consecutive misses
+                // before giving up, to handle any transient DB propagation delays.
+                const elapsedMs = Date.now() - startedAt;
+                if (notFoundCount >= 10 && elapsedMs >= 15_000) {
+                  pollStopped = true;
+                  await loadExecutions();
+                  return;
+                }
+                await new Promise((r) => setTimeout(r, 1000));
+              } else {
+                await loadExecutions();
+              }
+            } catch {
+              await loadExecutions();
             }
+
             if (Date.now() - startedAt >= MAX_DURATION_MS) {
               pollStopped = true;
               return;
             }
             scheduleNext();
-          }, delay);
+          }, ACTIVE_DELAY_MS);
         };
 
         scheduleNext();

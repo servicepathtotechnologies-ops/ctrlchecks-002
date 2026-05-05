@@ -287,7 +287,7 @@ export default function UserDetails() {
       <Card>
         <CardHeader>
           <CardTitle>Workflows</CardTitle>
-          <CardDescription>Workflow title, run count, AI build usage, and status.</CardDescription>
+          <CardDescription>Workflow title, run count, AI execution usage, and status.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -295,8 +295,8 @@ export default function UserDetails() {
               <TableRow>
                 <TableHead>Workflow Title</TableHead>
                 <TableHead>Workflow runs</TableHead>
-                <TableHead>AI calls (build)</TableHead>
-                <TableHead>Tokens (build)</TableHead>
+                <TableHead>AI calls (run)</TableHead>
+                <TableHead>Tokens (run)</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -305,8 +305,8 @@ export default function UserDetails() {
                 <TableRow key={workflow.id}>
                   <TableCell className="font-medium">{workflow.title}</TableCell>
                   <TableCell>{workflow.workflowRuns ?? workflow.apiCalls ?? 0}</TableCell>
-                  <TableCell>{workflow.aiBuildCalls ?? 0}</TableCell>
-                  <TableCell>{workflow.tokensUsedToBuild}</TableCell>
+                  <TableCell>{workflow.aiRunCalls ?? 0}</TableCell>
+                  <TableCell>{workflow.aiRunTokens ?? 0}</TableCell>
                   <TableCell>
                     <Badge variant={workflow.status === 'active' ? 'default' : 'secondary'}>
                       {workflow.status}

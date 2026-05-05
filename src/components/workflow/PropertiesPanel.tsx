@@ -32,18 +32,16 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
-import { extractNodeConfigForAttachInputs } from '@/lib/attach-inputs-payload';
+import {
+  extractNodeConfigForAttachInputs,
+  markAttachInputsPayloadPersisted,
+  stableStringifyForAttachInputs,
+  wasAttachInputsPayloadRecentlyPersisted,
+} from '@/lib/attach-inputs-payload';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
 import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
 import { NodeHelpButton } from '@/components/docs/NodeHelpButton';
 
-/** Stable JSON for deduping attach-inputs auto-persist (sorted keys). */
-function stableStringifyForAttachInputs(obj: Record<string, unknown>): string {
-  const keys = Object.keys(obj).sort();
-  const sorted: Record<string, unknown> = {};
-  for (const k of keys) sorted[k] = obj[k];
-  return JSON.stringify(sorted);
-}
 import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { useRole } from '@/hooks/useRole';
 import { mergeCapabilityHints } from '@/lib/aiEditorPermissions';
@@ -116,7 +114,7 @@ interface PropertiesPanelProps {
   debugInputData?: unknown;
   lastResolvedInputs?: Record<
     string,
-    Record<string, { value: unknown; source?: 'runtime_ai' | 'static_config'; executionId: string; startedAt: string }>
+    Record<string, { value: unknown; source?: 'static_config' | 'template' | 'deterministic_runtime' | 'runtime_ai'; executionId: string; startedAt: string }>
   >;
 }
 
@@ -1049,11 +1047,34 @@ export default function PropertiesPanel({
   const suppressAutoPersistUntilRef = useRef(0);
   /** Per-node hash of last successful attach-inputs payload (non-credential keys only). */
   const lastSuccessfulAttachInputsRef = useRef<Map<string, string>>(new Map());
+  const executionActiveRef = useRef(false);
 
   useEffect(() => {
     if (!workflowId) return;
     suppressAutoPersistUntilRef.current = Date.now() + 650;
     lastSuccessfulAttachInputsRef.current.clear();
+    executionActiveRef.current = false;
+  }, [workflowId]);
+
+  useEffect(() => {
+    const handleStarted = (event: Event) => {
+      const detail = (event as CustomEvent).detail || {};
+      if (!workflowId || detail.workflowId === workflowId) {
+        executionActiveRef.current = true;
+      }
+    };
+    const handleTerminal = (event: Event) => {
+      const execution = (event as CustomEvent).detail?.execution;
+      if (!workflowId || !execution?.workflow_id || execution.workflow_id === workflowId) {
+        executionActiveRef.current = false;
+      }
+    };
+    window.addEventListener('workflow-execution-started', handleStarted as EventListener);
+    window.addEventListener('workflow-execution-terminal', handleTerminal as EventListener);
+    return () => {
+      window.removeEventListener('workflow-execution-started', handleStarted as EventListener);
+      window.removeEventListener('workflow-execution-terminal', handleTerminal as EventListener);
+    };
   }, [workflowId]);
 
   useEffect(() => {
@@ -1068,6 +1089,7 @@ export default function PropertiesPanel({
     autoPersistTimerRef.current = setTimeout(async () => {
       try {
         if (Date.now() < suppressAutoPersistUntilRef.current) return;
+        if (executionActiveRef.current) return;
 
         const { supabase } = await import('@/integrations/aws/client');
         const { data: sessionData } = await supabase.auth.getSession();
@@ -1106,14 +1128,18 @@ export default function PropertiesPanel({
         // Send config inputs
         if (Object.keys(nodeInputs).length > 0) {
           const inputsKey = stableStringifyForAttachInputs(nodeInputs as Record<string, unknown>);
-          if (lastSuccessfulAttachInputsRef.current.get(selectedNode.id) === inputsKey) {
+          const nestedInputs = { [selectedNode.id]: nodeInputs };
+          if (
+            lastSuccessfulAttachInputsRef.current.get(selectedNode.id) === inputsKey ||
+            wasAttachInputsPayloadRecentlyPersisted(workflowId, nestedInputs)
+          ) {
             return;
           }
 
           const attachRes = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-inputs`, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ inputs: { [selectedNode.id]: nodeInputs } }),
+            body: JSON.stringify({ inputs: nestedInputs }),
           });
           if (!attachRes.ok) {
             const errJson = await attachRes.json().catch(() => ({}));
@@ -1133,6 +1159,7 @@ export default function PropertiesPanel({
             });
           } else {
             lastSuccessfulAttachInputsRef.current.set(selectedNode.id, inputsKey);
+            markAttachInputsPayloadPersisted(workflowId, nestedInputs);
             setGuidedStatus(null);
             const body = await attachRes.json().catch(() => ({}));
             const invalid = body?.diagnostics?.invalidBareNodeIdInputKeys as string[] | undefined;

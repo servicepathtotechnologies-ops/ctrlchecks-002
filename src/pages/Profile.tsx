@@ -451,7 +451,11 @@ export default function Profile() {
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || 'Failed to delete account');
+        throw new Error(
+          (typeof errorData.error === 'string' ? errorData.error : errorData.error?.message) ||
+          errorData.message ||
+          'Failed to delete account'
+        );
       }
       await signOut();
       navigate('/');

@@ -14,7 +14,11 @@ import { useDebugStore } from '@/stores/debugStore';
 import { Edge } from '@xyflow/react';
 import { Json } from '@/integrations/aws/types';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
-import { extractNodeConfigForAttachInputs } from '@/lib/attach-inputs-payload';
+import {
+  extractNodeConfigForAttachInputs,
+  markAttachInputsPayloadPersisted,
+  wasAttachInputsPayloadRecentlyPersisted,
+} from '@/lib/attach-inputs-payload';
 import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { enforceFrontendRenderContract, normalizeBackendWorkflow, validateNodeTypesRegistered } from '@/lib/node-type-normalizer';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
@@ -31,7 +35,7 @@ const DebugPanel = lazy(() => import('@/components/workflow/debug/DebugPanel'));
 
 type LastResolvedInputsMap = Record<
   string,
-  Record<string, { value: unknown; source?: 'runtime_ai' | 'static_config'; executionId: string; startedAt: string }>
+  Record<string, { value: unknown; source?: 'static_config' | 'template' | 'deterministic_runtime' | 'runtime_ai'; executionId: string; startedAt: string }>
 >;
 
 type ReliabilityUiState = {
@@ -269,9 +273,11 @@ export default function WorkflowBuilder() {
   useEffect(() => {
     if (!user) return; // Wait for auth
     
-    // Reset auto-run flag when workflow ID changes
+    // Reset auto-run flag and execution error state when workflow ID changes
     hasAutoRun.current = false;
-    
+    setReliabilityStatus(null);
+    setExecutionGuidance(null);
+
     if (id && id !== 'new') {
       // Check if we're already loading this workflow to prevent duplicate loads
       const currentWorkflowId = useWorkflowStore.getState().workflowId;
@@ -420,40 +426,46 @@ export default function WorkflowBuilder() {
           
           // Attach inputs if any exist
           if (Object.keys(inputsToAttach).length > 0) {
-            console.log('[handleSave] Auto-attaching inputs after save:', inputsToAttach);
-            
-            const attachInputsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflowId}/attach-inputs`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                ...(currentSessionData?.session?.access_token
-                  ? { Authorization: `Bearer ${currentSessionData.session.access_token}` }
-                  : {}),
-              },
-              body: JSON.stringify({
-                inputs: inputsToAttach,
-              }),
-            });
-            
-            if (attachInputsResponse.ok) {
-              console.log('[handleSave] ✅ Inputs attached successfully');
-              
-              // Check if credentials are required
-              const attachResult = await attachInputsResponse.json();
-              
-              // If no credentials required, status should already be ready_for_execution
-              // If credentials required, status will be configuring_credentials
-              // Either way, workflow is ready to run (credentials can be attached later)
+            const attachRecentlyPersisted = wasAttachInputsPayloadRecentlyPersisted(savedWorkflowId, inputsToAttach);
+            if (attachRecentlyPersisted) {
+              console.log('[handleSave] Attach inputs payload already persisted recently, skipping duplicate call');
             } else {
-              const attachError = await attachInputsResponse.json().catch(() => ({ error: 'Failed to attach inputs' }));
+              console.log('[handleSave] Auto-attaching inputs after save:', inputsToAttach);
               
-              // If error is phase locking (already configured), that's fine
-              if (attachError.code === 'PHASE_LOCKED' || 
-                  attachError.code === 'INVALID_PHASE' ||
-                  (attachError.currentPhase && ['ready_for_execution', 'executing'].includes(attachError.currentPhase))) {
-                console.log('[handleSave] Workflow already configured, skipping input attachment');
+              const attachInputsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflowId}/attach-inputs`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(currentSessionData?.session?.access_token
+                    ? { Authorization: `Bearer ${currentSessionData.session.access_token}` }
+                    : {}),
+                },
+                body: JSON.stringify({
+                  inputs: inputsToAttach,
+                }),
+              });
+              
+              if (attachInputsResponse.ok) {
+                console.log('[handleSave] ✅ Inputs attached successfully');
+                markAttachInputsPayloadPersisted(savedWorkflowId, inputsToAttach);
+                
+                // Check if credentials are required
+                const attachResult = await attachInputsResponse.json();
+                
+                // If no credentials required, status should already be ready_for_execution
+                // If credentials required, status will be configuring_credentials
+                // Either way, workflow is ready to run (credentials can be attached later)
               } else {
-                console.warn('[handleSave] Failed to auto-attach inputs (non-fatal):', attachError);
+                const attachError = await attachInputsResponse.json().catch(() => ({ error: 'Failed to attach inputs' }));
+                
+                // If error is phase locking (already configured), that's fine
+                if (attachError.code === 'PHASE_LOCKED' || 
+                    attachError.code === 'INVALID_PHASE' ||
+                    (attachError.currentPhase && ['ready_for_execution', 'executing'].includes(attachError.currentPhase))) {
+                  console.log('[handleSave] Workflow already configured, skipping input attachment');
+                } else {
+                  console.warn('[handleSave] Failed to auto-attach inputs (non-fatal):', attachError);
+                }
               }
             }
           } else {
@@ -613,6 +625,8 @@ export default function WorkflowBuilder() {
         logs: execution.logs ?? execution.node_logs ?? null,
         error: execution.error ?? null,
       });
+      setIsRunning(false);
+      setActiveExecutionId(null);
     };
     window.addEventListener('workflow-execution-terminal', handler);
     return () => window.removeEventListener('workflow-execution-terminal', handler);
@@ -734,11 +748,12 @@ export default function WorkflowBuilder() {
       return;
     }
 
+    let workflowCheckForRun: { id: string; name?: string | null; status?: string | null; phase?: string | null } | null = null;
     // Verify workflow exists in database before execution
     try {
       const { data: workflowCheck, error: checkError } = await supabase
         .from('workflows')
-        .select('id, name, status')
+        .select('id, name, status, phase')
         .eq('id', finalWorkflowId)
         .single();
 
@@ -752,6 +767,7 @@ export default function WorkflowBuilder() {
         return;
       }
 
+      workflowCheckForRun = workflowCheck;
       console.log('[execute-workflow] Workflow verified in database:', { id: workflowCheck.id, name: workflowCheck.name });
     } catch (verifyError) {
       console.error('[execute-workflow] Error verifying workflow:', verifyError);
@@ -1029,8 +1045,18 @@ export default function WorkflowBuilder() {
       
       console.log('[execute-workflow] ✅ Auto-attach operating on cloned graph (immutable)');
       
-      // Attach inputs if any exist
-      if (Object.keys(inputsToAttach).length > 0) {
+      const workflowReadyForExecution = ['ready_for_execution', 'active', 'ready'].includes(
+        String(workflowCheckForRun?.phase || workflowCheckForRun?.status || '').toLowerCase()
+      );
+      const shouldAttachBeforeRun =
+        Object.keys(inputsToAttach).length > 0 &&
+        (useWorkflowStore.getState().isDirty || !workflowReadyForExecution);
+
+      // Attach inputs only when local config changed or the persisted workflow is not ready yet.
+      if (shouldAttachBeforeRun) {
+        if (wasAttachInputsPayloadRecentlyPersisted(finalWorkflowId, inputsToAttach)) {
+          console.log('[execute-workflow] Attach inputs payload already persisted recently, skipping duplicate call');
+        } else {
         console.log('[execute-workflow] Auto-attaching inputs before execution:', inputsToAttach);
         
         const attachInputsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${finalWorkflowId}/attach-inputs`, {
@@ -1062,9 +1088,11 @@ export default function WorkflowBuilder() {
           }
         } else {
           console.log('[execute-workflow] ✅ Inputs attached successfully');
+          markAttachInputsPayloadPersisted(finalWorkflowId, inputsToAttach);
+        }
         }
       } else {
-        console.log('[execute-workflow] No inputs to attach (workflow may not require inputs)');
+        console.log('[execute-workflow] Skipping attach-inputs before run (unchanged payload or workflow already ready)');
       }
     } catch (attachError) {
       console.warn('[execute-workflow] Error auto-attaching inputs (non-fatal):', attachError);
@@ -1087,7 +1115,7 @@ export default function WorkflowBuilder() {
 
     try {
       const { data: sessionData } = await supabase.auth.getSession();
-      const response = await fetch(`${ENDPOINTS.itemBackend}/api/execute-workflow`, {
+      const response = await fetch(`${ENDPOINTS.itemBackend}/api/distributed-execute-workflow`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1097,6 +1125,7 @@ export default function WorkflowBuilder() {
         },
         body: JSON.stringify({
           workflowId: finalWorkflowId,
+          useQueue: true,
           input: {
             ...testInput,
             _trigger: 'manual',
@@ -1163,6 +1192,7 @@ export default function WorkflowBuilder() {
           description: guidance.description,
           duration: 9000,
         });
+        setIsRunning(false);
         return;
       }
 
@@ -1175,31 +1205,27 @@ export default function WorkflowBuilder() {
         lastErrorCode: undefined,
       }));
 
-      // Build and set the execution notification result
-      setExecutionNotificationResult(buildExecutionNotificationResult(data, nodes));
-      if (data.executionId) setActiveExecutionId(data.executionId);
+      const executionId = data.executionId || data.execution_id;
+      if (executionId) setActiveExecutionId(executionId);
 
-      // Force refresh execution console to show new execution immediately
-      // The realtime subscription will handle updates, but we trigger a refresh for immediate feedback
-      setTimeout(() => {
-        // Trigger a refresh by dispatching a custom event that ExecutionConsole can listen to
-        window.dispatchEvent(new CustomEvent('workflow-execution-started', { 
-          detail: { executionId: data.executionId, workflowId: finalWorkflowId } 
-        }));
-      }, 500);
+      window.dispatchEvent(new CustomEvent('workflow-execution-started', {
+        detail: { executionId, workflowId: finalWorkflowId }
+      }));
 
       toast({
-        title: data.status === 'success' ? 'Execution complete' : data.status === 'waiting' ? 'Waiting for form submission' : 'Execution failed',
-        description: data.status === 'success'
+        title: data.status === 'queued' ? 'Execution started' : data.status === 'success' ? 'Execution complete' : data.status === 'waiting' ? 'Waiting for form submission' : 'Execution started',
+        description: data.status === 'queued'
+          ? 'Workflow is running in the background. The execution console will update live.'
+          : data.status === 'success'
           ? `Completed in ${data.durationMs}ms`
           : data.status === 'waiting'
           ? `Workflow paused at form node. Form URL: ${data.formUrl || 'N/A'}`
-          : data.error || 'Unknown error',
+          : data.error || 'Execution started',
         variant: 'default',
         duration: data.status === 'waiting' ? 10000 : 5000,
       });
 
-      if (data.status !== 'success' && data.status !== 'waiting') {
+      if (data.status && !['queued', 'success', 'waiting', 'started'].includes(data.status)) {
         const guidance = mapWorkflowIssueToGuidance({
           message: data.error || 'Execution could not be completed.',
           code: data.code,
@@ -1253,8 +1279,7 @@ export default function WorkflowBuilder() {
         duration: 10000, // Show longer for detailed errors
       });
     } finally {
-      setIsRunning(false);
-      setActiveExecutionId(null);
+      // Async execution stays "running" until ExecutionConsole emits a terminal event.
     }
   }, [nodes, consoleExpanded, resetAllNodeStatuses]);
 

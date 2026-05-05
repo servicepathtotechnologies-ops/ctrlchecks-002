@@ -46,3 +46,53 @@ export function buildNestedAttachInputsFromNodes(
   }
   return out;
 }
+
+export function stableStringifyForAttachInputs(obj: Record<string, unknown>): string {
+  const keys = Object.keys(obj).sort();
+  const sorted: Record<string, unknown> = {};
+  for (const k of keys) {
+    const value = obj[k];
+    sorted[k] =
+      value && typeof value === 'object' && !Array.isArray(value)
+        ? JSON.parse(stableStringifyForAttachInputs(value as Record<string, unknown>))
+        : value;
+  }
+  return JSON.stringify(sorted);
+}
+
+export function attachInputsPayloadKey(inputs: Record<string, Record<string, unknown>>): string {
+  return stableStringifyForAttachInputs(inputs as unknown as Record<string, unknown>);
+}
+
+function recentStorageKey(workflowId: string): string {
+  return `attach-inputs:last:${workflowId}`;
+}
+
+export function wasAttachInputsPayloadRecentlyPersisted(
+  workflowId: string,
+  inputs: Record<string, Record<string, unknown>>,
+  maxAgeMs = 30_000
+): boolean {
+  try {
+    const raw = sessionStorage.getItem(recentStorageKey(workflowId));
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as { key?: string; savedAt?: number };
+    return parsed.key === attachInputsPayloadKey(inputs) && Date.now() - Number(parsed.savedAt || 0) <= maxAgeMs;
+  } catch {
+    return false;
+  }
+}
+
+export function markAttachInputsPayloadPersisted(
+  workflowId: string,
+  inputs: Record<string, Record<string, unknown>>
+): void {
+  try {
+    sessionStorage.setItem(
+      recentStorageKey(workflowId),
+      JSON.stringify({ key: attachInputsPayloadKey(inputs), savedAt: Date.now() })
+    );
+  } catch {
+    // Browser storage can be unavailable; dedupe is an optimization only.
+  }
+}

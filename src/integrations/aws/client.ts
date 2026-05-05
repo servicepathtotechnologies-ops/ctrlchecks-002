@@ -310,6 +310,9 @@ class QueryBuilder {
       // ── Generic db-proxy (whitelisted tables) ────────────────────────────
       if (this._op === 'select') {
         const qs = new URLSearchParams();
+        if (this._cols && this._cols !== '*') {
+          qs.set('select', this._cols);
+        }
         if (this._orderCol) {
           qs.set('order_col', this._orderCol);
           qs.set('order_dir', this._orderAsc ? 'ASC' : 'DESC');

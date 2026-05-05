@@ -88,6 +88,10 @@ import { getCurrentPathWithQuery } from '@/lib/oauth-return';
 import { startGoogleConnectorOAuth } from '@/lib/google-connector-oauth';
 import FieldOwnershipGuidePanel from './FieldOwnershipGuidePanel';
 import { buildFieldOwnershipGuideContext } from '@/lib/field-ownership-guide-context';
+import {
+    markAttachInputsPayloadPersisted,
+    wasAttachInputsPayloadRecentlyPersisted,
+} from '@/lib/attach-inputs-payload';
 import { nodesBySlug } from '@/docs-content';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
 import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
@@ -800,7 +804,7 @@ function applyFillModesToNodes(
 export function AutonomousAgentWizard() {
     type LastResolvedInputsMap = Record<
         string,
-        Record<string, { value: unknown; source?: 'runtime_ai' | 'static_config'; executionId: string; startedAt: string }>
+        Record<string, { value: unknown; source?: 'static_config' | 'template' | 'deterministic_runtime' | 'runtime_ai'; executionId: string; startedAt: string }>
     >;
     const [step, setStep] = useState<WizardStep>('idle');
     const [prompt, setPrompt] = useState('');
@@ -3579,9 +3583,11 @@ export function AutonomousAgentWizard() {
                         ...sanitizedModeInputs,
                         ...unlockPayload,
                     };
-                    // Always call attach-inputs: it applies visible user values, persists ownership
-                    // metadata, freezes the graph boundary, and injects satisfied vault credentials.
-                    if (Object.keys(combinedInputs).length >= 0) {
+                    // Attach only when there is a real payload and it was not just persisted.
+                    if (
+                        Object.keys(combinedInputs).length > 0 &&
+                        !wasAttachInputsPayloadRecentlyPersisted(savedWorkflow.id, combinedInputs)
+                    ) {
                         console.log('?? Attaching node inputs...');
                         console.log('?? Input values:', combinedInputs);
                         
@@ -3627,6 +3633,7 @@ export function AutonomousAgentWizard() {
                             // Non-blocking: continue to open workbench regardless
                         } else {
                             inputsResult = await inputsResponse.json();
+                            markAttachInputsPayloadPersisted(savedWorkflow.id, combinedInputs);
                             console.log('? Inputs attached successfully:', inputsResult);
                             const effectiveModesFromBackend = inputsResult?.diagnostics?.effectiveFillModes as
                                 | Record<string, string>
@@ -4391,6 +4398,9 @@ export function AutonomousAgentWizard() {
                                 variant: 'destructive',
                             });
                         }
+                        markAttachInputsPayloadPersisted(savedWorkflow.id, combinedInputs);
+                    } else {
+                        console.log('[Wizard] Skipping duplicate or empty attach-inputs payload');
                     }
                     setAllQuestions(combinedQuestions);
                     setCurrentQuestionIndex(0);

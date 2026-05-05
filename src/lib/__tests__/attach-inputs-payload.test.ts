@@ -3,6 +3,7 @@ import {
   ATTACH_INPUTS_PERSISTABLE_META_KEYS,
   extractNodeConfigForAttachInputs,
   buildNestedAttachInputsFromNodes,
+  attachInputsPayloadKey,
 } from '../attach-inputs-payload';
 
 describe('attach-inputs-payload', () => {
@@ -35,5 +36,11 @@ describe('attach-inputs-payload', () => {
 
   it('documents known meta keys set', () => {
     expect(ATTACH_INPUTS_PERSISTABLE_META_KEYS.has('_fillMode')).toBe(true);
+  });
+
+  it('builds the same dedupe key for equivalent payloads with different key order', () => {
+    const a = { n1: { b: 2, a: 1 }, n2: { c: 'x' } };
+    const b = { n2: { c: 'x' }, n1: { a: 1, b: 2 } };
+    expect(attachInputsPayloadKey(a)).toBe(attachInputsPayloadKey(b));
   });
 });

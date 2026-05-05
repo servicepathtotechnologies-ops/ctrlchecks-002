@@ -80,6 +80,7 @@ export default function FieldOwnershipGuidePanel({
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const requestSeq = useRef(0);
+  const responseCacheRef = useRef<Map<string, string>>(new Map());
 
   const canRequest = enabled && isVisible;
   const endpoint = useMemo(() => `${ENDPOINTS.itemBackend}/api/ai/field-ownership-guide`, []);
@@ -113,6 +114,17 @@ export default function FieldOwnershipGuidePanel({
 
   const send = async (question: string, source: "bootstrap" | "quick_action" | "manual") => {
     if (!canRequest || !question.trim()) return;
+    if (source === "bootstrap") {
+      setMessages([
+        {
+          id: `a_boot_${Date.now()}`,
+          role: "assistant",
+          content:
+            "Choose You for values you already know, AI (build) for one-time generated values, and AI (runtime) only when the value must be created from live run data.",
+        },
+      ]);
+      return;
+    }
     const seq = ++requestSeq.current;
     setLoading(true);
     const contextualQuestion = buildContextualQuestion(question, source);
@@ -120,6 +132,15 @@ export default function FieldOwnershipGuidePanel({
       setMessages((prev) => [...prev, { id: `u_${Date.now()}`, role: "user", content: question }]);
     }
     try {
+      const cacheKey = `${selectedContextKey}:${contextualQuestion}`;
+      const cached = responseCacheRef.current.get(cacheKey);
+      if (cached) {
+        setMessages((prev) => [
+          ...prev,
+          { id: `a_cached_${Date.now()}`, role: "assistant", content: cached },
+        ]);
+        return;
+      }
       const session = (await supabase.auth.getSession()).data.session;
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
@@ -137,9 +158,11 @@ export default function FieldOwnershipGuidePanel({
       const data = await response.json();
       if (seq !== requestSeq.current) return;
       const reply: GuideReply = data?.guidance || data;
+      const formattedReply = formatGuideReply(reply);
+      responseCacheRef.current.set(cacheKey, formattedReply);
       setMessages((prev) => [
         ...prev,
-        { id: `a_${Date.now()}`, role: "assistant", content: formatGuideReply(reply) },
+        { id: `a_${Date.now()}`, role: "assistant", content: formattedReply },
       ]);
     } catch {
       if (seq !== requestSeq.current) return;
