@@ -167,17 +167,11 @@ function ContainerCard({ container, selectedNodeType, onSelect, index }: Contain
 // ─── Capability Stage ─────────────────────────────────────────────────────────
 
 export function CapabilityStage({ containers, onComplete, onBack }: CapabilityStageProps) {
-  const [selections, setSelections] = useState<NodeSelectionMap>(() => {
-    const initial: NodeSelectionMap = {};
-    for (const container of containers) {
-      if (container.candidates.length === 1) {
-        initial[container.containerId] = container.candidates[0].nodeType;
-      }
-    }
-    return initial;
-  });
+  // Req 2.7 — no pre-selection; all selections are deferred to the user
+  const [selections, setSelections] = useState<NodeSelectionMap>({});
 
-  // Req 3.4, 3.6 — at least one container must have a selection; not all containers need to be filled
+  // Req 3.4, 3.6 — preserve only valid prior user selections when containers change;
+  // never auto-select any node the user has not explicitly chosen
   useEffect(() => {
     setSelections((prev) => {
       const next: NodeSelectionMap = {};
@@ -185,9 +179,8 @@ export function CapabilityStage({ containers, onComplete, onBack }: CapabilitySt
         const current = prev[container.containerId];
         if (current && container.candidates.some((candidate) => candidate.nodeType === current)) {
           next[container.containerId] = current;
-        } else if (container.candidates.length === 1) {
-          next[container.containerId] = container.candidates[0].nodeType;
         }
+        // No auto-selection for single-candidate containers — user must choose explicitly
       }
       return next;
     });
@@ -201,7 +194,8 @@ export function CapabilityStage({ containers, onComplete, onBack }: CapabilitySt
   );
   const selectedCount = Object.keys(selections).length;
   const totalCount = containers.length;
-  const isComplete = totalCount > 0 && selectedCount === totalCount;
+  // Req 3.4 — Continue enabled as soon as at least one selection exists across any container
+  const isComplete = totalCount > 0 && selectedCount >= 1;
 
   function handleSelect(containerId: string, nodeType: string) {
     setSelections((prev) => {
@@ -228,7 +222,7 @@ export function CapabilityStage({ containers, onComplete, onBack }: CapabilitySt
       <div className="space-y-1">
         <h2 className="text-xl font-semibold">Choose your integrations</h2>
         <p className="text-sm text-muted-foreground">
-          Select one registry node for each workflow step.{' '}
+          Select the integrations you need for your workflow.{' '}
           <span className="font-medium text-foreground">
             {selectedCount} of {totalCount}
           </span>{' '}
