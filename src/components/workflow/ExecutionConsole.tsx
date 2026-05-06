@@ -116,6 +116,8 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
   const [selectedExecution, setSelectedExecution] = useState<Execution | null>(null);
   // ✅ FIX: Track if user has manually selected an execution (don't auto-select if true)
   const [isManualSelection, setIsManualSelection] = useState(false);
+  // Live execution ID drives the WebSocket connection for real-time node updates
+  const [liveExecutionId, setLiveExecutionId] = useState<string | null>(null);
 
   // ✅ FIX: Use refs to track current values so callbacks always have latest state
   const selectedExecutionRef = useRef<Execution | null>(null);
@@ -128,6 +130,45 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
   useEffect(() => {
     isManualSelectionRef.current = isManualSelection;
   }, [isManualSelection]);
+
+  // WebSocket for real-time node-by-node updates (supplements 1s polling)
+  useEffect(() => {
+    if (!liveExecutionId) return;
+
+    const backendUrl = ENDPOINTS.itemBackend;
+    let wsUrl: string;
+    try {
+      const url = new URL(backendUrl);
+      const proto = url.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${proto}//${url.host}/ws/executions?executionId=${liveExecutionId}`;
+    } catch {
+      wsUrl = `ws://localhost:3001/ws/executions?executionId=${liveExecutionId}`;
+    }
+
+    let ws: WebSocket | null = null;
+    try {
+      ws = new WebSocket(wsUrl);
+      ws.onopen = () => ws?.send(JSON.stringify({ type: 'SUBSCRIBE', executionId: liveExecutionId }));
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          const applyNodeState = (nodeId: string, status: string) => {
+            const map: Record<string, 'idle' | 'running' | 'success' | 'error'> = {
+              running: 'running', success: 'success', error: 'error', skipped: 'idle', pending: 'idle',
+            };
+            updateNodeStatus(nodeId, map[status] ?? 'idle');
+          };
+          if (msg.type === 'NODE_UPDATE' && msg.data?.nodeId) {
+            applyNodeState(msg.data.nodeId, msg.data.status);
+          } else if (msg.type === 'EXECUTION_SNAPSHOT' && Array.isArray(msg.data?.nodes)) {
+            msg.data.nodes.forEach((n: any) => applyNodeState(n.nodeId, n.status));
+          }
+        } catch { /* ignore malformed messages */ }
+      };
+    } catch { /* WebSocket unavailable — polling covers this */ }
+
+    return () => { ws?.close(); };
+  }, [liveExecutionId, updateNodeStatus]);
 
   const loadExecutionSteps = useCallback(async (executionId: string): Promise<ExecutionStep[]> => {
     const { data, error } = await (supabase as any)
@@ -273,6 +314,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
       const { executionId, workflowId: eventWorkflowId } = event.detail;
       if (eventWorkflowId === workflowId) {
         console.log('Workflow execution started, refreshing executions...', executionId);
+        setLiveExecutionId(executionId);
         const startedSummary = {
           id: executionId,
           status: 'running',
@@ -320,6 +362,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
                   setSelectedExecution(terminalExecution);
                   setExecutions((prev) => [terminalExecution, ...prev.filter((e) => e.id !== executionId)].slice(0, 10));
                   pollStopped = true;
+                  setLiveExecutionId(null);
                   window.dispatchEvent(new CustomEvent('workflow-execution-terminal', {
                     detail: { execution: terminalExecution },
                   }));
