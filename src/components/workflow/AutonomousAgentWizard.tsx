@@ -874,6 +874,14 @@ export function AutonomousAgentWizard() {
         Record<string, { loading: boolean; data: FieldDescMap | null }>
     >({});
     const [fieldHelpExpanded, setFieldHelpExpanded] = useState<Record<string, boolean>>({});
+    // Global walk-through: sequential field-by-field AI explanations across the entire ownership stage
+    const [globalWalkActive, setGlobalWalkActive] = useState<{
+        currentNodeLabel: string;
+        currentFieldLabel: string;
+        currentFieldIdx: number;
+        totalFields: number;
+    } | null>(null);
+    const globalWalkAbortRef = useRef<boolean>(false);
     const [progress, setProgress] = useState(0);
     const [currentPhase, setCurrentPhase] = useState<string>('');
     const [isComplete, setIsComplete] = useState(false);
@@ -5277,6 +5285,121 @@ export function AutonomousAgentWizard() {
         [fieldDescriptions, pendingWorkflowData, prompt]
     );
 
+    /**
+     * Walks through every field across ALL nodes in the entire Field Ownership stage,
+     * expanding each field panel and fetching a per-field AI explanation one at a time.
+     * Results are DB-cached (field_walk_cache) so repeat visits are instant.
+     */
+    const startGlobalWalkThrough = useCallback(
+        async (
+            structuralGroups: Array<{ nodeId: string; nodeType: string; nodeLabel: string; fields: any[] }>,
+            secretGroups: Array<{ nodeId: string; nodeType: string; nodeLabel: string; fields: any[] }>
+        ) => {
+            if (globalWalkActive) {
+                globalWalkAbortRef.current = true;
+                setGlobalWalkActive(null);
+                return;
+            }
+
+            // Flatten: all fields from all node groups, in display order
+            type FlatField = { nodeId: string; nodeType: string; nodeLabel: string; question: any };
+            const allFields: FlatField[] = [];
+            for (const group of [...structuralGroups, ...secretGroups]) {
+                for (const question of group.fields) {
+                    if (String(question.fieldName || '').trim()) {
+                        allFields.push({ nodeId: group.nodeId, nodeType: group.nodeType, nodeLabel: group.nodeLabel, question });
+                    }
+                }
+            }
+            if (allFields.length === 0) return;
+
+            globalWalkAbortRef.current = false;
+            const total = allFields.length;
+
+            const session = (await supabase.auth.getSession()).data.session;
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+
+            const blueprint = (pendingWorkflowData as any)?.update?.structuralBlueprint;
+            const workflowOverview = blueprint?.overviewText;
+
+            for (let i = 0; i < total; i++) {
+                if (globalWalkAbortRef.current) break;
+
+                const { nodeId, nodeType, nodeLabel, question } = allFields[i];
+                const fieldName = String(question.fieldName || '').trim();
+                const fieldLabel = String(question.text || question.label || fieldName);
+
+                setGlobalWalkActive({ currentNodeLabel: nodeLabel, currentFieldLabel: fieldLabel, currentFieldIdx: i, totalFields: total });
+
+                // Expand this field's help panel
+                setFieldHelpExpanded((prev) => ({ ...prev, [`fieldhelp_${nodeId}_${fieldName}`]: true }));
+
+                const alreadyHasData = !!(fieldDescriptions[nodeId]?.data?.[fieldName]);
+                if (!alreadyHasData) {
+                    setFieldDescriptions((prev) => ({
+                        ...prev,
+                        [nodeId]: { loading: true, data: prev[nodeId]?.data || null },
+                    }));
+
+                    try {
+                        const nodeNarrative = (blueprint?.nodeNarratives as any[])?.find((n: any) => n.nodeId === nodeId)?.text;
+                        const resp = await fetch(`${ENDPOINTS.itemBackend}/api/ai/field-walk-step`, {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify({
+                                workflowId: generatedWorkflowId,
+                                nodeId,
+                                nodeType,
+                                nodeLabel,
+                                nodeNarrative,
+                                workflowOverview,
+                                userPrompt: prompt,
+                                field: {
+                                    fieldName,
+                                    label: fieldLabel,
+                                    fieldType: String(question.type || 'string'),
+                                    description: String(question.description || question.helpText || ''),
+                                    example: String(question.exampleValue || question.example || ''),
+                                    required: question.required !== false,
+                                    selectedMode: String(question.selectedMode || ''),
+                                    fieldEnabled: question.fieldEnabled === true,
+                                    supportsRuntimeAI: question.supportsRuntimeAI !== false,
+                                    supportsBuildtimeAI: question.supportsBuildtimeAI !== false,
+                                    fillModeDefault: String(question.fillModeDefault || 'manual_static'),
+                                    ownership: String(question.ownershipClass || ''),
+                                },
+                            }),
+                        });
+                        const data = await resp.json();
+                        setFieldDescriptions((prev) => ({
+                            ...prev,
+                            [nodeId]: {
+                                loading: false,
+                                data: data.description
+                                    ? { ...(prev[nodeId]?.data || {}), [fieldName]: data.description }
+                                    : (prev[nodeId]?.data || null),
+                            },
+                        }));
+                    } catch {
+                        setFieldDescriptions((prev) => ({
+                            ...prev,
+                            [nodeId]: { loading: false, data: prev[nodeId]?.data || null },
+                        }));
+                    }
+                }
+
+                if (i < total - 1 && !globalWalkAbortRef.current) {
+                    await new Promise<void>((resolve) => setTimeout(resolve, 400));
+                }
+            }
+
+            setGlobalWalkActive(null);
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [globalWalkActive, fieldDescriptions, pendingWorkflowData, prompt, generatedWorkflowId]
+    );
+
     const proceedFromOwnershipStage = () => {
         if (ownershipEffectiveModes.coerced.length > 0) {
             toast({
@@ -6604,6 +6727,31 @@ export function AutonomousAgentWizard() {
                                                 </div>
                                             );
                                         })()}
+                                        {/* Walk Me Through All Fields — single button for the entire ownership stage */}
+                                        <div className="flex items-center gap-3 py-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => startGlobalWalkThrough(ownershipStructuralByNode as any, ownershipSecretsByNode as any)}
+                                                className="flex items-center gap-1.5 text-[12px] text-violet-400 hover:text-violet-300 transition-colors px-0 bg-transparent border-0 cursor-pointer font-medium"
+                                            >
+                                                {globalWalkActive ? (
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                ) : (
+                                                    <Sparkles className="h-3.5 w-3.5" />
+                                                )}
+                                                {globalWalkActive
+                                                    ? `${globalWalkActive.currentNodeLabel} · ${globalWalkActive.currentFieldLabel} (${globalWalkActive.currentFieldIdx + 1}/${globalWalkActive.totalFields}) — click to stop`
+                                                    : 'Walk me through all fields'}
+                                            </button>
+                                            {globalWalkActive && (
+                                                <div className="flex-1 h-1 rounded-full bg-muted/30 overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full bg-violet-500/60 transition-all duration-500"
+                                                        style={{ width: `${Math.round(((globalWalkActive.currentFieldIdx + 1) / globalWalkActive.totalFields) * 100)}%` }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                         <div className="space-y-8">
                                             {(
                                                 [

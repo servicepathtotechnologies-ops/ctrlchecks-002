@@ -63,9 +63,10 @@ import { resolveExpression, detectExpressionType } from '@/lib/expressionResolve
 import { InputGuideLink } from './InputGuideLink';
 import ConditionBuilder, { ConditionRule } from './ConditionBuilder';
 import { workflowScheduler } from '@/lib/workflowScheduler';
-import { resolveEffectiveFieldFillMode, supportsRuntimeAI } from '@/lib/fillMode';
+import { resolveEffectiveFieldFillMode, supportsRuntimeAI, type FieldFillMode } from '@/lib/fillMode';
 import { collectUpstreamFieldHints } from '@/lib/upstreamFieldHints';
 import { normalizeIfElseConfig, normalizeIfElseConditions } from '@/lib/ifElseConditions';
+import { FieldOwnershipToggle } from '@/components/FieldOwnershipToggle';
 
 // Droppable field wrapper component - MUST be outside PropertiesPanel to avoid hook violations
 interface DroppableFieldWrapperProps {
@@ -1028,16 +1029,144 @@ export default function PropertiesPanel({
     [selectedNodeId, selectedNode, updateNodeConfig]
   );
 
-  // Per-field fill mode — writes to config._fillMode[fieldName]
+  // Per-field fill mode — writes to config._fillMode[fieldName] and persists via attach-inputs
   const handleFillModeChange = useCallback(
-    (fieldKey: string, mode: 'manual_static' | 'buildtime_ai_once' | 'runtime_ai') => {
-      if (!selectedNodeId || !selectedNode) return;
-      const current = (selectedNode.data.config?._fillMode as Record<string, string> | undefined) ?? {};
+    async (fieldKey: string, mode: 'manual_static' | 'buildtime_ai_once' | 'runtime_ai', restoredValue?: unknown) => {
+      if (!selectedNodeId || !selectedNode || !workflowId) return;
+      
+      // Store previous mode for rollback on error
+      const previousFillMode = (selectedNode.data.config?._fillMode as Record<string, string> | undefined) ?? {};
+      const previousMode = previousFillMode[fieldKey];
+      
+      // Optimistic UI update
+      const current = { ...previousFillMode };
       updateNodeConfig(selectedNodeId, {
         _fillMode: { ...current, [fieldKey]: mode },
       });
+      
+      try {
+        // Call attach-inputs endpoint with mode_<nodeId>_<fieldName> key
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        
+        if (!token) {
+          throw new Error('Authentication required');
+        }
+        
+        const modeKey = `mode_${selectedNodeId}_${fieldKey}`;
+        const inputs: Record<string, unknown> = {
+          [modeKey]: mode,
+        };
+        
+        // If restoring a value (switching back to AI-built), include the restored value
+        if (restoredValue !== undefined && mode === 'buildtime_ai_once') {
+          const inputKey = `input_${selectedNodeId}_${fieldKey}`;
+          inputs[inputKey] = restoredValue;
+          console.log(`[PropertiesPanel] Restoring AI-built value for ${fieldKey}:`, restoredValue);
+        }
+        
+        const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-inputs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            inputs,
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || errorData.message || `Failed to update mode: ${response.status}`);
+        }
+        
+        // Success - mode persisted to backend
+        console.log(`[PropertiesPanel] Mode updated for ${fieldKey}: ${mode}`);
+      } catch (error: any) {
+        // Revert optimistic update on failure
+        console.error('[PropertiesPanel] Failed to update fill mode:', error);
+        updateNodeConfig(selectedNodeId, {
+          _fillMode: { ...previousFillMode, [fieldKey]: previousMode },
+        });
+        
+        toast({
+          title: 'Failed to update mode',
+          description: error?.message || 'Could not persist mode change to server',
+          variant: 'destructive',
+        });
+      }
     },
-    [selectedNodeId, selectedNode, updateNodeConfig]
+    [selectedNodeId, selectedNode, workflowId, updateNodeConfig, toast]
+  );
+
+  // Per-field ownership unlock — writes to config._ownershipUnlock[fieldName] and persists via attach-inputs
+  const handleFieldUnlock = useCallback(
+    async (fieldKey: string) => {
+      if (!selectedNodeId || !selectedNode || !workflowId) return;
+      
+      // Store previous unlock state for rollback on error
+      const previousOwnershipUnlock = (selectedNode.data.config?._ownershipUnlock as Record<string, boolean> | undefined) ?? {};
+      const previousUnlockState = previousOwnershipUnlock[fieldKey];
+      
+      // Optimistic UI update
+      const current = { ...previousOwnershipUnlock };
+      updateNodeConfig(selectedNodeId, {
+        _ownershipUnlock: { ...current, [fieldKey]: true },
+      });
+      
+      try {
+        // Call attach-inputs endpoint with unlock_<nodeId>_<fieldName> key
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        
+        if (!token) {
+          throw new Error('Authentication required');
+        }
+        
+        const unlockKey = `unlock_${selectedNodeId}_${fieldKey}`;
+        const inputs: Record<string, unknown> = {
+          [unlockKey]: true,
+        };
+        
+        const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-inputs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            inputs,
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || errorData.message || `Failed to unlock field: ${response.status}`);
+        }
+        
+        // Success - unlock persisted to backend
+        console.log(`[PropertiesPanel] Field unlocked: ${fieldKey}`);
+        
+        toast({
+          title: 'Field unlocked',
+          description: `You can now change the ownership mode for ${fieldKey}`,
+        });
+      } catch (error: any) {
+        // Revert optimistic update on failure
+        console.error('[PropertiesPanel] Failed to unlock field:', error);
+        updateNodeConfig(selectedNodeId, {
+          _ownershipUnlock: { ...previousOwnershipUnlock, [fieldKey]: previousUnlockState },
+        });
+        
+        toast({
+          title: 'Failed to unlock field',
+          description: error?.message || 'Could not persist unlock to server',
+          variant: 'destructive',
+        });
+      }
+    },
+    [selectedNodeId, selectedNode, workflowId, updateNodeConfig, toast]
   );
 
   // Auto-persist node config changes to backend.
@@ -2405,44 +2534,48 @@ export default function PropertiesPanel({
                                 {/* ── When ON: mode selector + input ── */}
                                 {fieldEnabled && (
                                   <div className="px-3 pb-3 space-y-2 border-t border-border/30 pt-2">
-                                    {/* You / AI (build) / AI (runtime) selector */}
-                                    <div className="flex gap-1">
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant={currentFillMode === 'manual_static' ? 'default' : 'outline'}
-                                        className="h-6 px-2 text-[11px]"
-                                        onClick={() => handleFillModeChange(field.key, 'manual_static')}
-                                      >
-                                        You
-                                      </Button>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant={currentFillMode === 'buildtime_ai_once' ? 'default' : 'outline'}
-                                        className="h-6 px-2 text-[11px]"
-                                        onClick={() => handleFillModeChange(field.key, 'buildtime_ai_once')}
-                                      >
-                                        AI (build)
-                                      </Button>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant={currentFillMode === 'runtime_ai' ? 'default' : 'outline'}
-                                        className="h-6 px-2 text-[11px]"
-                                        onClick={() => handleFillModeChange(field.key, 'runtime_ai')}
-                                      >
-                                        AI (runtime)
-                                      </Button>
-                                    </div>
-
-                                    {/* Mode hint */}
-                                    {currentFillMode === 'buildtime_ai_once' && (
-                                      <p className="text-[10px] text-sky-500/80">Filled by AI once when the workflow is built</p>
-                                    )}
-                                    {currentFillMode === 'runtime_ai' && (
-                                      <p className="text-[10px] text-amber-500/80">AI resolves this from previous node output at runtime</p>
-                                    )}
+                                    {/* Field Ownership Toggle Component */}
+                                    {(() => {
+                                      // Get credential ownership information from backend schema
+                                      const backendInputSchema = backendSchema?.inputSchema as Record<string, any> | undefined;
+                                      const fieldDef = backendInputSchema?.[field.key];
+                                      const fieldOwnership = fieldDef?.ownership;
+                                      const credentialTogglePolicy = fieldDef?.credentialTogglePolicy;
+                                      
+                                      // Determine if field is credential-owned and locked/unlockable
+                                      const isCredentialOwned = fieldOwnership === 'credential';
+                                      const isLocked = isCredentialOwned && credentialTogglePolicy === 'locked';
+                                      const isUnlockable = isCredentialOwned && credentialTogglePolicy === 'unlockable';
+                                      
+                                      // Get unlock state from config._ownershipUnlock
+                                      const ownershipUnlockMap = (selectedNode.data.config?._ownershipUnlock as Record<string, boolean> | undefined) ?? {};
+                                      const isUnlocked = ownershipUnlockMap[field.key] === true;
+                                      
+                                      return (
+                                        <FieldOwnershipToggle
+                                          fieldName={field.key}
+                                          nodeId={selectedNode.id}
+                                          currentMode={currentFillMode}
+                                          onModeChange={(newMode, restoredValue) => {
+                                            // When switching to AI-built mode with a restored value,
+                                            // pass it to handleFillModeChange so it gets sent to attach-inputs
+                                            handleFillModeChange(field.key, newMode, restoredValue);
+                                          }}
+                                          currentValue={rawFieldValue}
+                                          onRestoreValue={(originalValue) => {
+                                            // Restore the original AI-built value locally (for immediate UI update)
+                                            handleConfigChange(field.key, originalValue);
+                                          }}
+                                          isLocked={isLocked}
+                                          isUnlockable={isUnlockable}
+                                          isUnlocked={isUnlocked}
+                                          onUnlock={() => {
+                                            // Call attach-inputs with unlock_<nodeId>_<fieldName> key
+                                            handleFieldUnlock(field.key);
+                                          }}
+                                        />
+                                      );
+                                    })()}
 
                                     {/* ✅ SCHEMA-DRIVEN UI: Show validation error inline */}
                                     {fieldError && (

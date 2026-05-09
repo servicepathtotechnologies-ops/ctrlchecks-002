@@ -287,7 +287,7 @@ export default function UserDetails() {
       <Card>
         <CardHeader>
           <CardTitle>Workflows</CardTitle>
-          <CardDescription>Workflow title, run count, AI execution usage, and status.</CardDescription>
+          <CardDescription>Workflow title, run count, and status.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -295,8 +295,6 @@ export default function UserDetails() {
               <TableRow>
                 <TableHead>Workflow Title</TableHead>
                 <TableHead>Workflow runs</TableHead>
-                <TableHead>AI calls (run)</TableHead>
-                <TableHead>Tokens (run)</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -305,8 +303,6 @@ export default function UserDetails() {
                 <TableRow key={workflow.id}>
                   <TableCell className="font-medium">{workflow.title}</TableCell>
                   <TableCell>{workflow.workflowRuns ?? workflow.apiCalls ?? 0}</TableCell>
-                  <TableCell>{workflow.aiRunCalls ?? 0}</TableCell>
-                  <TableCell>{workflow.aiRunTokens ?? 0}</TableCell>
                   <TableCell>
                     <Badge variant={workflow.status === 'active' ? 'default' : 'secondary'}>
                       {workflow.status}
@@ -316,7 +312,7 @@ export default function UserDetails() {
               ))}
               {user.workflows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={3} className="text-center text-muted-foreground">
                     No workflows found for this user.
                   </TableCell>
                 </TableRow>

@@ -33,10 +33,6 @@ export interface AdminUserWorkflowSummary {
   /** LLM calls recorded during workflow build/configure */
   aiBuildCalls: number;
   tokensUsedToBuild: number;
-  /** LLM API calls made during workflow execution (runtime) */
-  aiRunCalls: number;
-  /** Total tokens consumed during workflow execution (runtime) */
-  aiRunTokens: number;
   status: 'active' | 'inactive';
   /** @deprecated Same as workflowRuns */
   apiCalls?: number;

@@ -78,19 +78,20 @@ export function CapabilityReviewStep({
   const selectionCount = Object.keys(selections).length;
 
   // Parse the structured prompt into sections: WORKFLOW, TRIGGER, FLOW, CONNECTIONS
+  // Handles both "SECTION: content" and "SECTION\ncontent" formats for robustness
   const parseStructuredPrompt = (raw: string) => {
-    const workflowMatch = raw.match(/^WORKFLOW:\s*(.+?)(?=\n\n|\nTRIGGER:)/ms);
-    const triggerMatch = raw.match(/TRIGGER:\s*(.+?)(?=\n\nFLOW:|\nFLOW:)/ms);
-    const flowMatch = raw.match(/FLOW:\s*([\s\S]+?)(?=\n\nCONNECTIONS:|\nCONNECTIONS:|$)/ms);
-    const connectionsMatch = raw.match(/CONNECTIONS:\s*(.+?)$/ms);
+    const workflowMatch = raw.match(/^WORKFLOW:\s*(.+?)(?=\n\n|\nTRIGGER)/ms);
+    const triggerMatch = raw.match(/TRIGGER:?\s*\n?([\s\S]+?)(?=\n\nFLOW|\nFLOW)/ms);
+    const flowMatch = raw.match(/FLOW:?\s*\n?([\s\S]+?)(?=\n\nCONNECTIONS|\nCONNECTIONS|$)/ms);
+    const connectionsMatch = raw.match(/CONNECTIONS:?\s*\n?([\s\S]+?)$/ms);
 
     return {
       workflow: workflowMatch?.[1]?.trim() ?? '',
       trigger: triggerMatch?.[1]?.trim() ?? '',
       flow: flowMatch?.[1]?.trim() ?? '',
       connections: connectionsMatch?.[1]?.trim() ?? '',
-      // Legacy fallback: if no structured format, use raw as narrative
-      isStructured: raw.includes('WORKFLOW:') && raw.includes('FLOW:'),
+      // Structured if it has at least WORKFLOW and FLOW sections
+      isStructured: raw.includes('WORKFLOW:') && (raw.includes('FLOW:') || raw.includes('\nFLOW\n') || raw.includes('\nFLOW\r\n')),
     };
   };
 
