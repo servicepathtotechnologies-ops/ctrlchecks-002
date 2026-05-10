@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { startGoogleConnectorOAuth } from '@/lib/google-connector-oauth';
+import { fetchRuntimeCredentialStatus } from '@/lib/api/credentialStatus';
 import {
   Tooltip,
   TooltipContent,
@@ -27,21 +28,8 @@ export default function GoogleConnectionStatus() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('google_oauth_tokens' as any)
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error || !data) {
-        setIsAuthenticated(false);
-      } else {
-        // Check if token is expired
-        const tokenData = data as unknown as { id: string; expires_at?: string | null };
-        const expiresAt = tokenData.expires_at ? new Date(tokenData.expires_at) : null;
-        const now = new Date();
-        setIsAuthenticated(expiresAt ? expiresAt > now : true);
-      }
+      const status = await fetchRuntimeCredentialStatus('google');
+      setIsAuthenticated(Boolean(status.connected));
     } catch (error) {
       console.error('Error checking auth status:', error);
       setIsAuthenticated(false);

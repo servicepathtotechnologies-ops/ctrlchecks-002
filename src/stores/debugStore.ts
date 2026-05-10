@@ -12,6 +12,13 @@ export interface DebugNodeState {
   preferredView?: 'tree' | 'json' | 'table' | 'schema';
 }
 
+export interface DebugEdge {
+  source: string;
+  target: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
+}
+
 interface DebugState {
   // Current debug node
   debugNodeId: string | null;
@@ -25,9 +32,10 @@ interface DebugState {
   setNodeInput: (nodeId: string, input: unknown) => void;
   setNodeOutput: (nodeId: string, output: unknown, executionTime?: number) => void;
   setNodeStatus: (nodeId: string, status: DebugNodeState['executionStatus'], error?: string) => void;
+  propagateNodeOutput: (nodeId: string, nodes: WorkflowNode[], edges: DebugEdge[]) => void;
   clearNodeState: (nodeId: string) => void;
   getNodeState: (nodeId: string) => DebugNodeState | undefined;
-  getPreviousNodeOutput: (nodeId: string, nodes: WorkflowNode[], edges: Array<{ source: string; target: string }>) => unknown;
+  getPreviousNodeOutput: (nodeId: string, nodes: WorkflowNode[], edges: DebugEdge[]) => unknown;
   setPreferredView: (nodeId: string, view: 'tree' | 'json' | 'table' | 'schema') => void;
 }
 
@@ -37,6 +45,58 @@ const initialNodeState: DebugNodeState = {
   lastOutput: null,
   executionStatus: 'idle',
 };
+
+function hasValue(value: unknown): boolean {
+  return value !== null && value !== undefined;
+}
+
+function pickOutputForHandle(output: unknown, sourceHandle?: string | null): unknown {
+  if (!sourceHandle || sourceHandle === 'output' || sourceHandle === 'main') return output;
+  if (output && typeof output === 'object' && !Array.isArray(output) && sourceHandle in output) {
+    return (output as Record<string, unknown>)[sourceHandle];
+  }
+  return output;
+}
+
+function buildInputFromIncomingEdges(
+  nodeId: string,
+  nodes: WorkflowNode[],
+  edges: DebugEdge[],
+  nodeStates: Record<string, DebugNodeState>,
+): unknown {
+  const incomingEdges = edges.filter((edge) => edge.target === nodeId);
+  const available = incomingEdges
+    .map((edge) => {
+      const sourceNode = nodes.find((node) => node.id === edge.source);
+      const sourceState = nodeStates[edge.source];
+      if (!hasValue(sourceState?.lastOutput)) return null;
+
+      return {
+        edge,
+        sourceNode,
+        output: pickOutputForHandle(sourceState.lastOutput, edge.sourceHandle),
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+  if (available.length === 0) return null;
+  if (available.length === 1) return available[0].output;
+
+  const byNode: Record<string, unknown> = {};
+  const inputs = available.map(({ edge, sourceNode, output }) => {
+    const key = sourceNode?.data?.label || sourceNode?.data?.type || edge.source;
+    byNode[edge.source] = output;
+    return {
+      nodeId: edge.source,
+      label: key,
+      type: sourceNode?.data?.type,
+      targetHandle: edge.targetHandle || null,
+      output,
+    };
+  });
+
+  return { inputs, byNode };
+}
 
 export const useDebugStore = create<DebugState>((set, get) => ({
   debugNodeId: null,
@@ -92,6 +152,31 @@ export const useDebugStore = create<DebugState>((set, get) => ({
     }));
   },
 
+  propagateNodeOutput: (nodeId: string, nodes: WorkflowNode[], edges: DebugEdge[]) => {
+    set((state) => {
+      const downstreamNodeIds = Array.from(new Set(edges
+        .filter((edge) => edge.source === nodeId)
+        .map((edge) => edge.target)));
+
+      if (downstreamNodeIds.length === 0) return state;
+
+      const nodeStates = { ...state.nodeStates };
+      for (const downstreamNodeId of downstreamNodeIds) {
+        const nextInput = buildInputFromIncomingEdges(downstreamNodeId, nodes, edges, nodeStates);
+        if (!hasValue(nextInput)) continue;
+
+        nodeStates[downstreamNodeId] = {
+          ...(nodeStates[downstreamNodeId] || initialNodeState),
+          nodeId: downstreamNodeId,
+          lastInput: nextInput,
+          executionStatus: nodeStates[downstreamNodeId]?.executionStatus || 'idle',
+        };
+      }
+
+      return { nodeStates };
+    });
+  },
+
   clearNodeState: (nodeId: string) => {
     set((state) => {
       const newStates = { ...state.nodeStates };
@@ -104,22 +189,8 @@ export const useDebugStore = create<DebugState>((set, get) => ({
     return get().nodeStates[nodeId];
   },
 
-  getPreviousNodeOutput: (nodeId: string, nodes: WorkflowNode[], edges: Array<{ source: string; target: string }>) => {
-    // Find the edge that connects to this node
-    const incomingEdge = edges.find((e) => e.target === nodeId);
-    if (!incomingEdge) {
-      return null;
-    }
-
-    // Find the source node
-    const sourceNode = nodes.find((n) => n.id === incomingEdge.source);
-    if (!sourceNode) {
-      return null;
-    }
-
-    // Get the output from the source node's debug state
-    const sourceState = get().nodeStates[sourceNode.id];
-    return sourceState?.lastOutput || null;
+  getPreviousNodeOutput: (nodeId: string, nodes: WorkflowNode[], edges: DebugEdge[]) => {
+    return buildInputFromIncomingEdges(nodeId, nodes, edges, get().nodeStates);
   },
 
   setPreferredView: (nodeId: string, view: 'tree' | 'json' | 'table' | 'schema') => {

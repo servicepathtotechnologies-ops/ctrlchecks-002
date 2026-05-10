@@ -75,54 +75,7 @@ export default function InstagramAuthCallback() {
           console.warn('[InstagramCallback] ig_user_id not resolved at connect time — will auto-resolve at execution');
         }
 
-        setStatus('Saving Instagram connection...');
-
-        // Delete existing row first, then insert fresh (avoids upsert RLS issues)
-        await supabase
-          .from('instagram_oauth_tokens' as any)
-          .delete()
-          .eq('user_id', session.user.id);
-
-        const { error: dbError } = await supabase
-          .from('instagram_oauth_tokens' as any)
-          .insert({
-            user_id: session.user.id,
-            access_token: tokenData.access_token,
-            expires_at: tokenData.expires_at ?? null,
-            scope: tokenData.scope ?? null,
-            ig_user_id: tokenData.ig_user_id ?? null,
-            username: tokenData.username ?? null,
-            name: tokenData.name ?? null,
-            profile_picture_url: tokenData.profile_picture_url ?? null,
-          });
-
-        if (dbError) {
-          console.error('[InstagramCallback] DB error:', dbError);
-          throw new Error(`Failed to save token: ${dbError.message}`);
-        }
-
-        // Mirror to user_credentials vault for node executor fallback (non-critical)
-        try {
-          await supabase
-            .from('user_credentials' as any)
-            .delete()
-            .eq('user_id', session.user.id)
-            .eq('service', 'instagram');
-
-          await supabase
-            .from('user_credentials' as any)
-            .insert({
-              user_id: session.user.id,
-              service: 'instagram',
-              credentials: {
-                accessToken: tokenData.access_token,
-                expiresAt: tokenData.expires_at,
-                igUserId: tokenData.ig_user_id,
-                username: tokenData.username,
-                name: tokenData.name,
-              },
-            });
-        } catch { /* non-fatal — primary token is already saved */ }
+        setStatus('Verifying Instagram connection...');
 
         const displayName = tokenData.username
           ? `@${tokenData.username}`

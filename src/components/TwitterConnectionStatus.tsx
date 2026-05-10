@@ -5,6 +5,7 @@ import { ENDPOINTS } from '@/config/endpoints';
 import { Loader2, CheckCircle2, XCircle, Twitter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { rememberOAuthReturnTo } from '@/lib/oauth-return';
+import { fetchRuntimeCredentialStatus } from '@/lib/api/credentialStatus';
 
 interface TwitterConnectionStatusProps {
   onStatusChange?: (connected: boolean) => void;
@@ -28,27 +29,15 @@ export default function TwitterConnectionStatus({ onStatusChange }: TwitterConne
         return;
       }
 
-      const { data, error } = await supabase
-        .from('twitter_oauth_tokens')
-        .select('username, name')
-        .eq('user_id', session.user.id)
-        .single();
-
-      if (error || !data) {
-        setIsConnected(false);
-        setUsername(null);
-      } else {
-        setIsConnected(true);
-        setUsername(data.username || data.name || null);
-      }
+      const status = await fetchRuntimeCredentialStatus('twitter');
+      setIsConnected(Boolean(status.connected));
+      setUsername(null);
+      onStatusChange?.(Boolean(status.connected));
     } catch (error) {
       console.error('Error checking Twitter connection:', error);
       setIsConnected(false);
     } finally {
       setIsLoading(false);
-      if (onStatusChange) {
-        onStatusChange(isConnected);
-      }
     }
   };
 
@@ -109,12 +98,11 @@ export default function TwitterConnectionStatus({ onStatusChange }: TwitterConne
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const { error } = await supabase
-        .from('twitter_oauth_tokens')
-        .delete()
-        .eq('user_id', session.user.id);
-
-      if (error) throw error;
+      const response = await fetch(`${ENDPOINTS.itemBackend}/api/connections/twitter`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!response.ok) throw new Error(`Disconnect failed: ${response.status}`);
 
       setIsConnected(false);
       setUsername(null);

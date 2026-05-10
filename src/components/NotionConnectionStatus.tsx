@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { rememberOAuthReturnTo } from '@/lib/oauth-return';
+import { fetchRuntimeCredentialStatus } from '@/lib/api/credentialStatus';
 
 interface NotionConnectionStatusProps {
   onConnect?: () => void;
@@ -33,28 +34,9 @@ export default function NotionConnectionStatus({
     }
 
     try {
-      const { data, error } = await supabase
-        .from('notion_oauth_tokens' as any)
-        .select('id, expires_at, workspace_name')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) {
-        if (error.code === 'PGRST116' || error.message?.includes('406')) {
-          setIsAuthenticated(false);
-        } else {
-          console.error('Error checking Notion auth status:', error);
-          setIsAuthenticated(false);
-        }
-      } else if (!data) {
-        setIsAuthenticated(false);
-      } else {
-        const tokenData = data as unknown as { id: string; expires_at?: string | null; workspace_name?: string | null };
-        const expiresAt = tokenData.expires_at ? new Date(tokenData.expires_at) : null;
-        const now = new Date();
-        setIsAuthenticated(expiresAt ? expiresAt > now : true);
-        setWorkspaceName(tokenData.workspace_name || null);
-      }
+      const status = await fetchRuntimeCredentialStatus('notion');
+      setIsAuthenticated(Boolean(status.connected));
+      setWorkspaceName(null);
     } catch (error) {
       console.error('Error checking Notion auth status:', error);
       setIsAuthenticated(false);
@@ -113,12 +95,13 @@ export default function NotionConnectionStatus({
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('notion_oauth_tokens' as any)
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      const response = await fetch(`${getBackendUrl()}/api/connections/notion`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error(`Disconnect failed: ${response.status}`);
 
       setIsAuthenticated(false);
       setWorkspaceName(null);

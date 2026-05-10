@@ -71,37 +71,7 @@ export default function WhatsAppAuthCallback() {
           throw new Error('No access token received');
         }
 
-        setStatus('Saving WhatsApp connection...');
-
-        const { error: dbError } = await supabase
-          .from('whatsapp_oauth_tokens' as any)
-          .upsert({
-            user_id: session.user.id,
-            access_token: tokenData.access_token,
-            expires_at: tokenData.expires_at ?? null,
-            scope: tokenData.scope ?? null,
-            phone_number_id: tokenData.phone_number_id ?? null,
-            business_account_id: tokenData.business_account_id ?? null,
-            phone_number: tokenData.phone_number ?? null,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id' });
-
-        if (dbError) throw dbError;
-
-        // Mirror to user_credentials vault
-        await supabase
-          .from('user_credentials' as any)
-          .upsert({
-            user_id: session.user.id,
-            service: 'whatsapp',
-            credentials: {
-              accessToken: tokenData.access_token,
-              expiresAt: tokenData.expires_at,
-              phoneNumberId: tokenData.phone_number_id,
-              businessAccountId: tokenData.business_account_id,
-              phoneNumber: tokenData.phone_number,
-            },
-          }, { onConflict: 'user_id,service' });
+        setStatus('Verifying WhatsApp connection...');
 
         // Clean up sessionStorage
         sessionStorage.removeItem('wa_phone_number_id');

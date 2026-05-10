@@ -73,55 +73,7 @@ export default function NotionAuthCallback() {
           throw new Error('No access token received from Notion');
         }
 
-        setStatus('Saving Notion connection...');
-
-        // Calculate expiry (Notion tokens typically don't expire, but we'll set a far future date)
-        const expiresAt = tokenData.expires_in
-          ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
-          : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 year default
-
-        // Save to database
-        const { error: dbError } = await supabase
-          .from('notion_oauth_tokens' as any)
-          .upsert({
-            user_id: session.user.id,
-            access_token: tokenData.access_token,
-            refresh_token: tokenData.refresh_token || null,
-            expires_at: expiresAt,
-            token_type: tokenData.token_type || 'Bearer',
-            scope: tokenData.scope || null,
-            bot_id: tokenData.bot_id || null,
-            workspace_id: tokenData.workspace_id || null,
-            workspace_name: tokenData.workspace_name || null,
-            updated_at: new Date().toISOString(),
-          }, {
-            onConflict: 'user_id',
-          });
-
-        if (dbError) throw dbError;
-
-        // Mirror into user_credentials vault
-        const { error: vaultError } = await supabase
-          .from('user_credentials' as any)
-          .upsert({
-            user_id: session.user.id,
-            service: 'notion',
-            credentials: {
-              accessToken: tokenData.access_token,
-              refreshToken: tokenData.refresh_token || null,
-              expiresAt,
-              scope: tokenData.scope,
-              botId: tokenData.bot_id,
-              workspaceId: tokenData.workspace_id,
-              workspaceName: tokenData.workspace_name,
-            },
-          }, {
-            onConflict: 'user_id,service',
-          });
-
-        if (vaultError) {
-          console.warn('Failed to save to user_credentials vault (non-fatal):', vaultError);
-        }
+        setStatus('Verifying Notion connection...');
 
         toast({
           title: 'Success',

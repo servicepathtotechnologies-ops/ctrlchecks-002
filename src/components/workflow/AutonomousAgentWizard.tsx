@@ -30,6 +30,7 @@ import { GlassBlurLoader } from '@/components/ui/glass-blur-loader';
 import { ThemedBorderGlow } from '@/components/ui/themed-border-glow';
 import { WorkflowConfirmationStep } from './WorkflowConfirmationStep';
 import { CredentialStatusPanel } from './CredentialStatusPanel';
+import { fetchRuntimeCredentialStatus } from '@/lib/api/credentialStatus';
 import { CapabilityStage } from './CapabilityStage';
 import { CapabilityReviewStep } from './CapabilityReviewStep';
 import type { CapabilityContainer, NodeSelectionMap } from '../../types/capability-selection';
@@ -1094,13 +1095,9 @@ export function AutonomousAgentWizard() {
                     // Check if Google OAuth is now connected
                     const { data: { user } } = await supabase.auth.getUser();
                     if (user) {
-                        const { data: tokenData } = await (supabase as any)
-                            .from('google_oauth_tokens')
-                            .select('access_token, refresh_token, expires_at')
-                            .eq('user_id', user.id)
-                            .single();
-                        
-                        if (tokenData && tokenData.access_token) {
+                        const credentialStatus = await fetchRuntimeCredentialStatus('google');
+
+                        if (credentialStatus.connected) {
                             // OAuth connected successfully - refresh credential check
                             toast({
                                 title: 'Google Connected',
@@ -1582,14 +1579,8 @@ export function AutonomousAgentWizard() {
                     if (!cancelled) setGoogleOAuthConnectedLive(false);
                     return;
                 }
-                // Table exists in DB but is not in generated Supabase types — avoid deep instantiation errors.
-                const { data: googleRow } = await (supabase as any)
-                    .from('google_oauth_tokens')
-                    .select('access_token')
-                    .eq('user_id', user.id)
-                    .maybeSingle();
-                const token = googleRow as { access_token?: string } | null;
-                if (!cancelled) setGoogleOAuthConnectedLive(!!token?.access_token);
+                const credentialStatus = await fetchRuntimeCredentialStatus('google');
+                if (!cancelled) setGoogleOAuthConnectedLive(Boolean(credentialStatus.connected));
             } catch {
                 if (!cancelled) setGoogleOAuthConnectedLive(false);
             }

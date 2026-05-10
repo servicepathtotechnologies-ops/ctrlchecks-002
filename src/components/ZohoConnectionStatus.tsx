@@ -53,36 +53,24 @@ export default function ZohoConnectionStatus({
     }
 
     try {
-      const { data, error } = await supabase
-        .from('zoho_oauth_tokens' as any)
-        .select('id, expires_at, region')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) {
-        if (error.code === 'PGRST116' || error.message?.includes('406')) {
-          setIsAuthenticated(false);
-        } else {
-          console.error('Error checking Zoho auth status:', error);
-          setIsAuthenticated(false);
-        }
-      } else if (!data) {
+      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!authToken) {
         setIsAuthenticated(false);
-      } else {
-        const tokenData = data as unknown as { id: string; expires_at?: string | null; region?: string };
-        const expiresAt = tokenData.expires_at ? new Date(tokenData.expires_at) : null;
-        const now = new Date();
-        setIsAuthenticated(expiresAt ? expiresAt > now : true);
-        if (tokenData.region) {
-          setRegion(tokenData.region);
-        }
+        return;
       }
+
+      const backendUrl = getBackendUrl();
+      const statusResp = await fetch(`${backendUrl}/api/credentials/status?provider=zoho`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (!statusResp.ok) throw new Error(`Zoho credential status failed: ${statusResp.status}`);
+
+      const statusJson = await statusResp.json();
+      setIsAuthenticated(Boolean(statusJson.connected));
 
       // Fetch additional metadata via backend status endpoint
       try {
-        const authToken = (await supabase.auth.getSession()).data.session?.access_token;
         if (authToken) {
-          const backendUrl = getBackendUrl();
           const resp = await fetch(`${backendUrl}/api/connections/zoho/status`, {
             headers: {
               Authorization: `Bearer ${authToken}`,

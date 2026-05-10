@@ -153,7 +153,30 @@ export default function InputPanel({ inputData }: InputPanelProps) {
         return;
       }
 
-      if (typeof obj === 'object' && !Array.isArray(obj)) {
+      if (Array.isArray(obj)) {
+        if (obj.length === 0 && prefix === '') return;
+        if (prefix !== '') {
+          keys.push({
+            path: prefix,
+            key: prefix.split('.').pop() || 'array',
+            value: obj,
+            level,
+          });
+        }
+
+        obj.forEach((item, index) => {
+          const itemPath = prefix ? `${prefix}.${index}` : `${index}`;
+          keys.push({
+            path: itemPath,
+            key: `[${index}]`,
+            value: item,
+            level: prefix ? level + 1 : level,
+          });
+          if (typeof item === 'object' && item !== null) {
+            traverse(item, itemPath, prefix ? level + 2 : level + 1);
+          }
+        });
+      } else if (typeof obj === 'object') {
         const objKeys = Object.keys(obj);
         if (objKeys.length === 0 && prefix === '') {
           // Empty object at root - don't add a key, let the empty state message show
@@ -183,7 +206,7 @@ export default function InputPanel({ inputData }: InputPanelProps) {
             } else if (Array.isArray(value)) {
               // For arrays, add array item keys
               value.forEach((item, index) => {
-                const itemPath = `${fullPath}[${index}]`;
+                const itemPath = `${fullPath}.${index}`;
                 keys.push({
                   path: itemPath,
                   key: `[${index}]`,

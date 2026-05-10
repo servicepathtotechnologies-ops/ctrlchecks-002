@@ -69,216 +69,26 @@ export default function ConnectionsPanel() {
         fetchConnectionStatuses().catch(() => ({})),
       ]);
 
-      if (catalog.length > 0 || Object.keys(statuses).length > 0) {
-        setCatalogSummary({
-          total: catalog.length,
-          oauth: catalog.filter((entry) => entry.authType === 'oauth').length,
-          manual: catalog.filter((entry) => entry.authType !== 'oauth').length,
-          missingEnv: catalog.filter((entry) => entry.oauthImplemented && !entry.configured).length,
-        });
-        setGoogleConnected(Boolean(statuses.google?.connected));
-        setLinkedInConnected(Boolean(statuses.linkedin?.connected));
-        setGithubConnected(Boolean(statuses.github?.connected));
-        setFacebookConnected(Boolean(statuses.facebook?.connected));
-        setNotionConnected(Boolean(statuses.notion?.connected));
-        setTwitterConnected(Boolean(statuses.twitter?.connected));
-        setInstagramConnected(Boolean(statuses.instagram?.connected));
-        setInstagramNeedsReconnect(Boolean(statuses.instagram?.expiresAt && !statuses.instagram.connected));
-        setWhatsappConnected(Boolean(statuses.whatsapp?.connected));
-        setWhatsappNeedsReconnect(Boolean(statuses.whatsapp?.expiresAt && !statuses.whatsapp.connected));
-        setZohoConnected(Boolean(statuses.zoho?.connected));
-        setSalesforceConnected(Boolean(statuses.salesforce?.connected));
-        setIsChecking(false);
-        return;
-      }
-
-      // Check Google connection
-      const { data: googleData } = await supabase
-        .from('google_oauth_tokens' as any)
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .single();
-
-      if (googleData) {
-        const expiresAt = googleData.expires_at ? new Date(googleData.expires_at) : null;
-        const now = new Date();
-        setGoogleConnected(expiresAt ? expiresAt > now : true);
-      } else {
-        setGoogleConnected(false);
-      }
-
-      // Check LinkedIn connection
-      const { data: linkedInData, error: linkedInError } = await supabase
-        .from('linkedin_oauth_tokens' as any)
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .maybeSingle(); // Use maybeSingle() to handle empty results gracefully
-
-      // Handle 406 errors gracefully (RLS blocking when no tokens exist)
-      if (linkedInError && linkedInError.code !== 'PGRST116' && !linkedInError.message?.includes('406')) {
-        console.error('Error checking LinkedIn connection:', linkedInError);
-        setLinkedInConnected(false);
-      } else if (linkedInData) {
-        const expiresAt = linkedInData.expires_at ? new Date(linkedInData.expires_at) : null;
-        const now = new Date();
-        setLinkedInConnected(expiresAt ? expiresAt > now : true);
-      } else {
-        setLinkedInConnected(false);
-      }
-
-      // Check GitHub connection
-      const { data: githubData, error: githubError } = await supabase
-        .from('social_tokens')
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .eq('provider', 'github')
-        .maybeSingle();
-
-      if (githubError && githubError.code !== 'PGRST116' && !githubError.message?.includes('406')) {
-        console.error('Error checking GitHub connection:', githubError);
-        setGithubConnected(false);
-      } else if (githubData) {
-        const expiresAt = githubData.expires_at ? new Date(githubData.expires_at) : null;
-        const now = new Date();
-        setGithubConnected(expiresAt ? expiresAt > now : true);
-      } else {
-        setGithubConnected(false);
-      }
-
-      // Check Facebook connection
-      const { data: facebookData, error: facebookError } = await supabase
-        .from('social_tokens')
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .eq('provider', 'facebook')
-        .maybeSingle();
-
-      if (facebookError && facebookError.code !== 'PGRST116' && !facebookError.message?.includes('406')) {
-        console.error('Error checking Facebook connection:', facebookError);
-        setFacebookConnected(false);
-      } else if (facebookData) {
-        const expiresAt = facebookData.expires_at ? new Date(facebookData.expires_at) : null;
-        const now = new Date();
-        setFacebookConnected(expiresAt ? expiresAt > now : true);
-      } else {
-        setFacebookConnected(false);
-      }
-
-      // Check Notion connection
-      const { data: notionData, error: notionError } = await supabase
-        .from('notion_oauth_tokens' as any)
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (notionError && notionError.code !== 'PGRST116' && !notionError.message?.includes('406')) {
-        console.error('Error checking Notion connection:', notionError);
-        setNotionConnected(false);
-      } else if (notionData) {
-        const expiresAt = notionData.expires_at ? new Date(notionData.expires_at) : null;
-        const now = new Date();
-        setNotionConnected(expiresAt ? expiresAt > now : true);
-      } else {
-        setNotionConnected(false);
-      }
-
-      // Check Twitter connection
-      const { data: twitterData, error: twitterError } = await supabase
-        .from('twitter_oauth_tokens' as any)
-        .select('id, expires_at, username')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (twitterError && twitterError.code !== 'PGRST116' && !twitterError.message?.includes('406')) {
-        console.error('Error checking Twitter connection:', twitterError);
-        setTwitterConnected(false);
-      } else if (twitterData) {
-        const expiresAt = twitterData.expires_at ? new Date(twitterData.expires_at) : null;
-        const now = new Date();
-        setTwitterConnected(expiresAt ? expiresAt > now : true);
-      } else {
-        setTwitterConnected(false);
-      }
-
-      // Check Instagram connection
-      const { data: instagramData, error: instagramError } = await supabase
-        .from('instagram_oauth_tokens' as any)
-        .select('id, expires_at, username')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (instagramError && instagramError.code !== 'PGRST116') {
-        setInstagramConnected(false);
-        setInstagramNeedsReconnect(false);
-      } else if (instagramData) {
-        const expiresAt = instagramData.expires_at ? new Date(instagramData.expires_at) : null;
-        const isValid = expiresAt ? expiresAt > new Date() : true;
-        setInstagramConnected(isValid);
-        setInstagramNeedsReconnect(!isValid);
-        setInstagramUsername(instagramData.username ?? null);
-      } else {
-        setInstagramConnected(false);
-        setInstagramNeedsReconnect(false);
-        setInstagramUsername(null);
-      }
-
-      // Check WhatsApp connection
-      const { data: whatsappData, error: whatsappError } = await supabase
-        .from('whatsapp_oauth_tokens' as any)
-        .select('id, expires_at, phone_number')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (whatsappError && whatsappError.code !== 'PGRST116') {
-        setWhatsappConnected(false);
-        setWhatsappNeedsReconnect(false);
-      } else if (whatsappData) {
-        const expiresAt = whatsappData.expires_at ? new Date(whatsappData.expires_at) : null;
-        const isValid = expiresAt ? expiresAt > new Date() : true;
-        setWhatsappConnected(isValid);
-        setWhatsappNeedsReconnect(!isValid);
-        setWhatsappPhone(whatsappData.phone_number ?? null);
-      } else {
-        setWhatsappConnected(false);
-        setWhatsappNeedsReconnect(false);
-        setWhatsappPhone(null);
-      }
-
-      // Check Zoho connection
-      const { data: zohoData, error: zohoError } = await supabase
-        .from('zoho_oauth_tokens' as any)
-        .select('id, expires_at, region')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (zohoError && zohoError.code !== 'PGRST116' && !zohoError.message?.includes('406')) {
-        console.error('Error checking Zoho connection:', zohoError);
-        setZohoConnected(false);
-      } else if (zohoData) {
-        const expiresAt = zohoData.expires_at ? new Date(zohoData.expires_at) : null;
-        const now = new Date();
-        setZohoConnected(expiresAt ? expiresAt > now : true);
-      } else {
-        setZohoConnected(false);
-      }
-
-      // Check Salesforce connection
-      const { data: salesforceData, error: salesforceError } = await supabase
-        .from('salesforce_oauth_tokens' as any)
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (salesforceError && salesforceError.code !== 'PGRST116' && !salesforceError.message?.includes('406')) {
-        console.error('Error checking Salesforce connection:', salesforceError);
-        setSalesforceConnected(false);
-      } else if (salesforceData) {
-        const expiresAt = salesforceData.expires_at ? new Date(salesforceData.expires_at) : null;
-        const now = new Date();
-        setSalesforceConnected(expiresAt ? expiresAt > now : true);
-      } else {
-        setSalesforceConnected(false);
-      }
+      setCatalogSummary({
+        total: catalog.length,
+        oauth: catalog.filter((entry) => entry.authType === 'oauth').length,
+        manual: catalog.filter((entry) => entry.authType !== 'oauth').length,
+        missingEnv: catalog.filter((entry) => entry.oauthImplemented && !entry.configured).length,
+      });
+      setGoogleConnected(Boolean(statuses.google?.connected));
+      setLinkedInConnected(Boolean(statuses.linkedin?.connected));
+      setGithubConnected(Boolean(statuses.github?.connected));
+      setFacebookConnected(Boolean(statuses.facebook?.connected));
+      setNotionConnected(Boolean(statuses.notion?.connected));
+      setTwitterConnected(Boolean(statuses.twitter?.connected));
+      setInstagramConnected(Boolean(statuses.instagram?.connected));
+      setInstagramNeedsReconnect(Boolean(statuses.instagram?.expiresAt && !statuses.instagram.connected));
+      setInstagramUsername(null);
+      setWhatsappConnected(Boolean(statuses.whatsapp?.connected));
+      setWhatsappNeedsReconnect(Boolean(statuses.whatsapp?.expiresAt && !statuses.whatsapp.connected));
+      setWhatsappPhone(null);
+      setZohoConnected(Boolean(statuses.zoho?.connected));
+      setSalesforceConnected(Boolean(statuses.salesforce?.connected));
     } catch (error) {
       console.error('Error checking connections:', error);
       setGoogleConnected(false);

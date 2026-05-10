@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { getCurrentPathWithQuery, rememberOAuthReturnTo } from '@/lib/oauth-return';
+import { fetchRuntimeCredentialStatus } from '@/lib/api/credentialStatus';
 
 interface GitHubConnectionStatusProps {
   onConnect?: () => void;
@@ -33,27 +34,8 @@ export default function GitHubConnectionStatus({
     }
 
     try {
-      const { data, error } = await supabase
-        .from('social_tokens')
-        .select('id, expires_at, scope, provider_user_id')
-        .eq('user_id', user.id)
-        .eq('provider', 'github')
-        .maybeSingle();
-
-      if (error) {
-        if (error.code === 'PGRST116' || error.message?.includes('406')) {
-          setIsAuthenticated(false);
-        } else {
-          console.error('Error checking GitHub auth status:', error);
-          setIsAuthenticated(false);
-        }
-      } else if (!data) {
-        setIsAuthenticated(false);
-      } else {
-        const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
-        const now = new Date();
-        setIsAuthenticated(expiresAt ? expiresAt > now : true);
-      }
+      const status = await fetchRuntimeCredentialStatus('github');
+      setIsAuthenticated(Boolean(status.connected));
 
       // Fetch additional metadata via backend status endpoint (non-fatal)
       try {

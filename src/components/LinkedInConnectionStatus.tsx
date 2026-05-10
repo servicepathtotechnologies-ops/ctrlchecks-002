@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { getCurrentPathWithQuery, rememberOAuthReturnTo } from '@/lib/oauth-return';
+import { fetchRuntimeCredentialStatus } from '@/lib/api/credentialStatus';
 
 interface LinkedInConnectionStatusProps {
   onConnect?: () => void;
@@ -33,32 +34,8 @@ export default function LinkedInConnectionStatus({
     }
 
     try {
-      const { data, error } = await supabase
-        .from('linkedin_oauth_tokens' as any)
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .maybeSingle(); // Use maybeSingle() instead of single() to handle empty results gracefully
-
-      // Handle 406 errors gracefully (RLS blocking when no tokens exist)
-      if (error) {
-        // 406 means "Not Acceptable" - usually means no rows exist or RLS blocked
-        // Treat it as "not authenticated" rather than an error
-        if (error.code === 'PGRST116' || error.message?.includes('406')) {
-          setIsAuthenticated(false);
-        } else {
-          console.error('Error checking LinkedIn auth status:', error);
-          setIsAuthenticated(false);
-        }
-      } else if (!data) {
-        // No token exists
-        setIsAuthenticated(false);
-      } else {
-        // Check if token is expired
-        const tokenData = data as unknown as { id: string; expires_at?: string | null };
-        const expiresAt = tokenData.expires_at ? new Date(tokenData.expires_at) : null;
-        const now = new Date();
-        setIsAuthenticated(expiresAt ? expiresAt > now : true);
-      }
+      const status = await fetchRuntimeCredentialStatus('linkedin');
+      setIsAuthenticated(Boolean(status.connected));
 
       // Fetch additional metadata via backend status endpoint (non-fatal)
       try {
@@ -149,12 +126,13 @@ export default function LinkedInConnectionStatus({
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('linkedin_oauth_tokens' as any)
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      const response = await fetch(`${getBackendUrl()}/api/connections/linkedin`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error(`Disconnect failed: ${response.status}`);
 
       setIsAuthenticated(false);
       

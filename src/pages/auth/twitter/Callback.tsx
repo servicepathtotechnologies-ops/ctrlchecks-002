@@ -77,50 +77,7 @@ export default function TwitterAuthCallback() {
           throw new Error('No access token received from Twitter');
         }
 
-        setStatus('Saving Twitter connection...');
-
-        // Save to database
-        const { error: dbError } = await supabase
-          .from('twitter_oauth_tokens' as any)
-          .upsert({
-            user_id: session.user.id,
-            access_token: tokenData.access_token,
-            refresh_token: tokenData.refresh_token || null,
-            expires_at: tokenData.expires_at || null,
-            token_type: tokenData.token_type || 'Bearer',
-            scope: tokenData.scope || null,
-            user_id_twitter: tokenData.user_id_twitter || null,
-            username: tokenData.username || null,
-            name: tokenData.name || null,
-            updated_at: new Date().toISOString(),
-          }, {
-            onConflict: 'user_id',
-          });
-
-        if (dbError) throw dbError;
-
-        // Mirror into user_credentials vault
-        const { error: vaultError } = await supabase
-          .from('user_credentials' as any)
-          .upsert({
-            user_id: session.user.id,
-            service: 'twitter',
-            credentials: {
-              accessToken: tokenData.access_token,
-              refreshToken: tokenData.refresh_token || null,
-              expiresAt: tokenData.expires_at || null,
-              scope: tokenData.scope,
-              userIdTwitter: tokenData.user_id_twitter,
-              username: tokenData.username,
-              name: tokenData.name,
-            },
-          }, {
-            onConflict: 'user_id,service',
-          });
-
-        if (vaultError) {
-          console.warn('Failed to save to user_credentials vault (non-fatal):', vaultError);
-        }
+        setStatus('Verifying Twitter connection...');
 
         toast({
           title: 'Success',

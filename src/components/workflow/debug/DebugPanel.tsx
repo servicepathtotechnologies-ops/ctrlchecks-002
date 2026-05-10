@@ -18,7 +18,7 @@ interface DebugPanelProps {
 }
 
 export default function DebugPanel({ onClose }: DebugPanelProps) {
-  const { debugNodeId, closeDebug, getNodeState, getPreviousNodeOutput, setNodeInput, setNodeOutput, setNodeStatus, setPreferredView } = useDebugStore();
+  const { debugNodeId, closeDebug, getNodeState, getPreviousNodeOutput, setNodeInput, setNodeOutput, setNodeStatus, propagateNodeOutput, setPreferredView } = useDebugStore();
   const { nodes, edges, workflowId, selectNode } = useWorkflowStore();
   const { toast } = useToast();
   const [isRunning, setIsRunning] = useState(false);
@@ -37,10 +37,10 @@ export default function DebugPanel({ onClose }: DebugPanelProps) {
     
     // First, try to get from previous node's output
     const prevOutput = getPreviousNodeOutput(debugNodeId, nodes, edges);
-    if (prevOutput && prevOutput !== null) return prevOutput;
+    if (prevOutput !== null && prevOutput !== undefined) return prevOutput;
     
     // Second, try to get from stored lastInput
-    if (nodeState?.lastInput) return nodeState.lastInput;
+    if (nodeState?.lastInput !== null && nodeState?.lastInput !== undefined) return nodeState.lastInput;
     
     // For trigger nodes (no incoming edges), provide sample input
     const incomingEdges = edges.filter(e => e.target === debugNodeId);
@@ -80,7 +80,9 @@ export default function DebugPanel({ onClose }: DebugPanelProps) {
   useEffect(() => {
     if (!debugNodeId || lastInitializedNodeIdRef.current === debugNodeId || nodeState?.lastInput) return;
     const initialInput = inputData;
-    if (initialInput && Object.keys(initialInput).length > 0) {
+    if (initialInput !== null && initialInput !== undefined && (
+      typeof initialInput !== 'object' || Object.keys(initialInput as Record<string, unknown>).length > 0
+    )) {
       setNodeInput(debugNodeId, initialInput);
       lastInitializedNodeIdRef.current = debugNodeId;
     }
@@ -144,11 +146,11 @@ export default function DebugPanel({ onClose }: DebugPanelProps) {
       const currentInputData = (() => {
         // First, try to get from previous node's output
         const prevOutput = getPreviousNodeOutput(debugNodeId, nodes, edges);
-        if (prevOutput && prevOutput !== null) return prevOutput;
+        if (prevOutput !== null && prevOutput !== undefined) return prevOutput;
         
         // Second, try to get from stored lastInput
         const currentState = getNodeState(debugNodeId);
-        if (currentState?.lastInput) return currentState.lastInput;
+        if (currentState?.lastInput !== null && currentState?.lastInput !== undefined) return currentState.lastInput;
         
         // For trigger nodes (no incoming edges), provide sample input
         const incomingEdges = edges.filter(e => e.target === debugNodeId);
@@ -193,6 +195,7 @@ export default function DebugPanel({ onClose }: DebugPanelProps) {
 
       if (data.success) {
         setNodeOutput(debugNodeId, data.output, data.executionTime);
+        propagateNodeOutput(debugNodeId, nodes, edges);
         setNodeStatus(debugNodeId, 'success');
         toast({
           title: 'Node Executed',
@@ -217,7 +220,7 @@ export default function DebugPanel({ onClose }: DebugPanelProps) {
     } finally {
       setIsRunning(false);
     }
-  }, [debugNodeId, workflowId, nodes, edges, getPreviousNodeOutput, getNodeState, setNodeOutput, setNodeStatus, toast]);
+  }, [debugNodeId, workflowId, nodes, edges, getPreviousNodeOutput, getNodeState, setNodeOutput, propagateNodeOutput, setNodeStatus, toast]);
 
   if (!debugNodeId || !debugNode) {
     return null;

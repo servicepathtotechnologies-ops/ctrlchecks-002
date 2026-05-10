@@ -112,103 +112,29 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
     }
 
     try {
-      // Check Google connection
-      const { data: googleData } = await supabase
-        .from('google_oauth_tokens' as any)
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!token) throw new Error('No auth token available');
 
-      setConnections((prev) => ({
-        ...prev,
-        google: {
-          connected: googleData ? (googleData.expires_at ? new Date(googleData.expires_at) > new Date() : true) : false,
-          checking: false,
-          connecting: false,
-        },
-      }));
+      const response = await fetch(`${getBackendUrl()}/api/connections/status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error(`Connection status failed: ${response.status}`);
 
-      // Check LinkedIn connection
-      const { data: linkedInData, error: linkedInError } = await supabase
-        .from('linkedin_oauth_tokens' as any)
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const data = await response.json();
+      const statuses = data.connections || {};
+      const services = ['google', 'linkedin', 'github', 'facebook', 'notion'] as const;
 
-      if (linkedInError && linkedInError.code !== 'PGRST116' && !linkedInError.message?.includes('406')) {
-        console.error('Error checking LinkedIn connection:', linkedInError);
-      }
-
-      setConnections((prev) => ({
-        ...prev,
-        linkedin: {
-          connected: linkedInData ? (linkedInData.expires_at ? new Date(linkedInData.expires_at) > new Date() : true) : false,
-          checking: false,
-          connecting: false,
-        },
-      }));
-
-      // Check GitHub connection
-      const { data: githubData, error: githubError } = await supabase
-        .from('social_tokens')
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .eq('provider', 'github')
-        .maybeSingle();
-
-      if (githubError && githubError.code !== 'PGRST116' && !githubError.message?.includes('406')) {
-        console.error('Error checking GitHub connection:', githubError);
-      }
-
-      setConnections((prev) => ({
-        ...prev,
-        github: {
-          connected: githubData ? (githubData.expires_at ? new Date(githubData.expires_at) > new Date() : true) : false,
-          checking: false,
-          connecting: false,
-        },
-      }));
-
-      // Check Facebook connection
-      const { data: facebookData, error: facebookError } = await supabase
-        .from('social_tokens')
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .eq('provider', 'facebook')
-        .maybeSingle();
-
-      if (facebookError && facebookError.code !== 'PGRST116' && !facebookError.message?.includes('406')) {
-        console.error('Error checking Facebook connection:', facebookError);
-      }
-
-      setConnections((prev) => ({
-        ...prev,
-        facebook: {
-          connected: facebookData ? (facebookData.expires_at ? new Date(facebookData.expires_at) > new Date() : true) : false,
-          checking: false,
-          connecting: false,
-        },
-      }));
-
-      // Check Notion connection
-      const { data: notionData, error: notionError } = await supabase
-        .from('notion_oauth_tokens' as any)
-        .select('id, expires_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (notionError && notionError.code !== 'PGRST116' && !notionError.message?.includes('406')) {
-        console.error('Error checking Notion connection:', notionError);
-      }
-
-      setConnections((prev) => ({
-        ...prev,
-        notion: {
-          connected: notionData ? (notionData.expires_at ? new Date(notionData.expires_at) > new Date() : true) : false,
-          checking: false,
-          connecting: false,
-        },
-      }));
+      setConnections((prev) => {
+        const next = { ...prev };
+        for (const service of services) {
+          next[service] = {
+            connected: Boolean(statuses[service]?.connected),
+            checking: false,
+            connecting: false,
+          };
+        }
+        return next;
+      });
     } catch (error) {
       console.error('Error checking connections:', error);
       Object.keys(connections).forEach((key) => {
