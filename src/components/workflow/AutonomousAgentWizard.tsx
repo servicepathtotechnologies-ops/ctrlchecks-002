@@ -3501,6 +3501,36 @@ export function AutonomousAgentWizard() {
         return result;
     }, []);
 
+    const handleWizardClose = useCallback(async () => {
+        if (!generatedWorkflowId) {
+            navigate('/workflows');
+            return;
+        }
+        const confirmed = window.confirm(
+            'Exit the workflow wizard? Your in-progress workflow will be discarded.'
+        );
+        if (!confirmed) return;
+        // Best-effort delete — only removes uncommitted drafts (setup_completed = false)
+        await supabase
+            .from('workflows')
+            .delete()
+            .eq('id', generatedWorkflowId)
+            .eq('setup_completed', false)
+            .catch(() => null);
+        navigate('/workflows');
+    }, [generatedWorkflowId, navigate, supabase]);
+
+    // Warn the user before closing the tab/browser while a workflow draft is in progress
+    useEffect(() => {
+        if (!generatedWorkflowId || step === 'idle') return;
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            e.returnValue = '';
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [generatedWorkflowId, step]);
+
     const handleConnectGoogleOAuth = useCallback(async () => {
         try {
             const {
@@ -5836,7 +5866,7 @@ export function AutonomousAgentWizard() {
                     <Badge variant="outline" className="h-8 px-3">
                         {step === 'idle' ? 'Ready' : step === 'complete' ? 'Completed' : 'Processing'}
                     </Badge>
-                    <Button variant="ghost" onClick={() => navigate('/workflows')}>Close</Button>
+                    <Button variant="ghost" onClick={handleWizardClose}>Close</Button>
                 </div>
             </div>
 
@@ -8398,11 +8428,10 @@ export function AutonomousAgentWizard() {
 
                                                 if (saveResponse.ok) {
                                                     setGeneratedWorkflowId(confirmationData.workflowId);
-                                                    await commitSetupWorkflow(confirmationData.workflowId).catch(() => null);
                                                     setStep('complete');
                                                     toast({
                                                         title: 'Workflow Confirmed',
-                                                        description: 'Workflow has been confirmed. Complete any remaining setup before opening it.',
+                                                        description: 'Your workflow is ready. Set up credentials and click "View Workflow" to continue.',
                                                     });
                                                 } else {
                                                     throw new Error('Failed to save workflow');
