@@ -1,8 +1,8 @@
 import { getBackendUrl } from './getBackendUrl';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 
 async function authHeaders(): Promise<Record<string, string>> {
-  const { data } = await supabase.auth.getSession();
+  const { data } = await awsClient.auth.getSession();
   const token = data?.session?.access_token;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
@@ -15,7 +15,14 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(body || `Request failed: ${res.status}`);
+    let parsedMessage = '';
+    try {
+      const parsed = JSON.parse(body) as { error?: string; message?: string };
+      parsedMessage = parsed.error || parsed.message || '';
+    } catch {
+      // Body was not JSON; use the raw response text below.
+    }
+    throw new Error(parsedMessage || body || `Request failed: ${res.status}`);
   }
   if (res.status === 204 || res.headers.get('content-length') === '0') {
     return undefined as T;
@@ -37,6 +44,10 @@ export interface ConnectionRecord {
   status: ConnectionStatus;
   metadata: Record<string, unknown>;
   expiresAt: string | null;
+  revokedAt?: string | null;
+  replacedByConnectionId?: string | null;
+  externalAccountId?: string | null;
+  externalAccountEmail?: string | null;
   lastTestedAt: string | null;
   lastUsedAt: string | null;
   createdAt: string;
@@ -158,10 +169,13 @@ export async function startOAuth(
   );
 }
 
-export async function reconnectOAuth(connectionId: string): Promise<{ authorizationUrl: string; state: string }> {
+export async function reconnectOAuth(
+  connectionId: string,
+  opts?: { returnTo?: string },
+): Promise<{ authorizationUrl: string; state: string }> {
   return apiFetch<{ authorizationUrl: string; state: string }>(
     `/api/credential-connections/connections/${connectionId}/reconnect`,
-    { method: 'POST', body: '{}' },
+    { method: 'POST', body: JSON.stringify(opts || {}) },
   );
 }
 

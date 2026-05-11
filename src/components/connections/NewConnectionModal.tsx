@@ -14,9 +14,11 @@ import { ServicePickerGrid } from './ServicePickerGrid';
 import { CredentialFormRenderer } from './CredentialFormRenderer';
 import { CredentialGuidePanel } from './CredentialGuidePanel';
 import { OAuthConnectButton } from './OAuthConnectButton';
+import { ConnectionCard } from './ConnectionCard';
 import { ProviderLogo } from './ProviderLogo';
 import { isComingSoonProvider } from './connectionAvailability';
 import { useCreateConnection } from '@/hooks/useConnections';
+import { useConnections } from '@/hooks/useConnections';
 import { useCredentialTypes } from '@/hooks/useCredentialTypes';
 import { useToast } from '@/hooks/use-toast';
 import type { CredentialTypeDefinition } from '@/lib/api/connections';
@@ -32,6 +34,7 @@ interface Props {
 export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTypeId }: Props) {
   const { toast } = useToast();
   const { data: types = [] } = useCredentialTypes();
+  const { data: connections = [] } = useConnections();
   const createMut = useCreateConnection();
 
   const [step, setStep] = useState<Step>('pick');
@@ -92,10 +95,16 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
       onOpenChange(false);
       reset();
     } catch (err) {
+      // Error is surfaced inline via apiError prop on CredentialFormRenderer.
+      // Keep a toast as well so the user gets confirmation even if the form is scrolled.
       const msg = err instanceof Error ? err.message : 'Failed to save connection';
       toast({ title: 'Save failed', description: msg, variant: 'destructive' });
     }
   }
+
+  const credentialFormApiError = createMut.isError
+    ? (createMut.error instanceof Error ? createMut.error.message : 'Failed to save connection')
+    : null;
 
   function handleOAuthSuccess() {
     toast({ title: 'Connected!', description: `${selectedType?.displayName} connected successfully.` });
@@ -125,6 +134,10 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
 
   const isOAuth = selectedType?.authType === 'oauth2';
   const hasFields = (selectedType?.inputFields?.length ?? 0) > 0;
+  const connectedTypeIds = new Set(connections.map((connection) => connection.credentialTypeId));
+  const existingConnection = selectedType
+    ? connections.find((connection) => connection.credentialTypeId === selectedType.id)
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -148,75 +161,95 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
           </div>
         </DialogHeader>
 
-        {step === 'pick' && <ServicePickerGrid onSelect={handleSelect} />}
+        {step === 'pick' && <ServicePickerGrid onSelect={handleSelect} connectedTypeIds={connectedTypeIds} />}
 
         {step === 'form' && selectedType && (
           <div className="grid gap-5 pt-1 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-5">
-              <CredentialGuidePanel
-                credentialType={selectedType}
-                activeFieldName={activeFieldName}
-                onFieldSelect={handleGuideFieldSelect}
-                compact
-                className="lg:hidden"
-              />
-
-              {/* Connection name */}
-              <div className="space-y-1.5">
-                <Label htmlFor="conn-name">Connection Name</Label>
-                <Input
-                  id="conn-name"
-                  value={connectionName}
-                  onChange={(e) => setConnectionName(e.target.value)}
-                  placeholder={`My ${selectedType.displayName}`}
-                />
-              </div>
-
-              {/* OAuth flow */}
-              {isOAuth && (
+              {existingConnection ? (
                 <div className="space-y-3">
-                  {hasFields && (
+                  <p className="text-sm text-muted-foreground">
+                    This service is already connected. Disconnect it before connecting another account.
+                  </p>
+                  <ConnectionCard connection={existingConnection} />
+                  {!preselectedCredentialTypeId && (
+                    <Button variant="outline" onClick={handleBack}>
+                      Choose another service
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <CredentialGuidePanel
+                    credentialType={selectedType}
+                    activeFieldName={activeFieldName}
+                    onFieldSelect={handleGuideFieldSelect}
+                    compact
+                    className="lg:hidden"
+                  />
+
+                  {/* Connection name */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="conn-name">Connection Name</Label>
+                    <Input
+                      id="conn-name"
+                      value={connectionName}
+                      onChange={(e) => setConnectionName(e.target.value)}
+                      placeholder={`My ${selectedType.displayName}`}
+                    />
+                  </div>
+
+                  {/* OAuth flow */}
+                  {isOAuth && (
+                    <div className="space-y-3">
+                      {hasFields && (
+                        <CredentialFormRenderer
+                          credentialType={selectedType}
+                          onSubmit={handleCredentialSubmit}
+                          isSubmitting={createMut.isPending}
+                          activeFieldName={activeFieldName}
+                          onFieldFocus={setActiveFieldName}
+                          apiError={credentialFormApiError}
+                        />
+                      )}
+                      <OAuthConnectButton
+                        credentialType={selectedType}
+                        onSuccess={handleOAuthSuccess}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+
+                  {/* API key / manual flow */}
+                  {!isOAuth && hasFields && (
                     <CredentialFormRenderer
                       credentialType={selectedType}
                       onSubmit={handleCredentialSubmit}
                       isSubmitting={createMut.isPending}
+                      submitLabel={selectedType.form.submitLabel ?? 'Save & Test Connection'}
                       activeFieldName={activeFieldName}
                       onFieldFocus={setActiveFieldName}
+                      apiError={credentialFormApiError}
                     />
                   )}
-                  <OAuthConnectButton
-                    credentialType={selectedType}
-                    onSuccess={handleOAuthSuccess}
-                    className="w-full"
-                  />
-                </div>
-              )}
 
-              {/* API key / manual flow */}
-              {!isOAuth && hasFields && (
-                <CredentialFormRenderer
-                  credentialType={selectedType}
-                  onSubmit={handleCredentialSubmit}
-                  isSubmitting={createMut.isPending}
-                  submitLabel={selectedType.form.submitLabel ?? 'Save & Test Connection'}
-                  activeFieldName={activeFieldName}
-                  onFieldFocus={setActiveFieldName}
-                />
-              )}
-
-              {!isOAuth && !hasFields && (
-                <p className="text-sm text-muted-foreground">
-                  No additional configuration required for this connection type.
-                </p>
+                  {!isOAuth && !hasFields && (
+                    <p className="text-sm text-muted-foreground">
+                      No additional configuration required for this connection type.
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
-            <CredentialGuidePanel
-              credentialType={selectedType}
-              activeFieldName={activeFieldName}
-              onFieldSelect={handleGuideFieldSelect}
-              className="hidden max-h-[70vh] overflow-y-auto lg:block"
-            />
+            {!existingConnection && (
+              <CredentialGuidePanel
+                credentialType={selectedType}
+                activeFieldName={activeFieldName}
+                onFieldSelect={handleGuideFieldSelect}
+                className="hidden max-h-[70vh] overflow-y-auto lg:block"
+              />
+            )}
           </div>
         )}
       </DialogContent>

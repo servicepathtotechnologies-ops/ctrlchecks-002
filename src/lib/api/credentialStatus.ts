@@ -15,9 +15,14 @@ export async function fetchRuntimeCredentialStatus(provider: string): Promise<Ru
   const token = (await supabase.auth.getSession()).data.session?.access_token;
   if (!token) return { connected: false, provider, reason: 'Unauthorized' };
 
-  const response = await fetch(`${getBackendUrl()}/api/credentials/status?provider=${encodeURIComponent(provider)}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${getBackendUrl()}/api/credentials/status?provider=${encodeURIComponent(provider)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    return { connected: false, provider, reason: 'network_error' };
+  }
 
   if (!response.ok) {
     return { connected: false, provider, reason: `HTTP_${response.status}` };

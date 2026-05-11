@@ -29,6 +29,7 @@ interface ConnectionStatus {
   connected: boolean;
   checking: boolean;
   connecting: boolean;
+  reason?: string | null;
 }
 
 export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModalProps) {
@@ -131,6 +132,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
             connected: Boolean(statuses[service]?.connected),
             checking: false,
             connecting: false,
+            reason: statuses[service]?.reason || null,
           };
         }
         return next;
@@ -140,7 +142,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
       Object.keys(connections).forEach((key) => {
         setConnections((prev) => ({
           ...prev,
-          [key]: { ...prev[key as keyof typeof prev], connected: false, checking: false },
+          [key]: { ...prev[key as keyof typeof prev], checking: false, reason: 'network_error' },
         }));
       });
     }
@@ -327,6 +329,23 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
           <div className="flex items-center gap-2 text-muted-foreground">
             <RefreshCw className="h-4 w-4 animate-spin" />
             <span className="text-sm">Checking connection...</span>
+          </div>
+        ) : status.reason === 'network_error' ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">Connection status unavailable</span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={checkConnections}
+              disabled={loading}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
           </div>
         ) : status.connected ? (
           <div className="space-y-3">

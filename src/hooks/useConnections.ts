@@ -7,18 +7,18 @@ import {
   testConnection,
   type ConnectionRecord,
 } from '@/lib/api/connections';
-
-const KEY = ['connections'] as const;
+import { QUERY_KEYS } from '@/lib/queryKeys';
+import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 
 export function useConnections() {
-  return useQuery({ queryKey: KEY, queryFn: listConnections });
+  return useQuery({ queryKey: QUERY_KEYS.connections, queryFn: listConnections });
 }
 
 export function useCreateConnection() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createConnection,
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => invalidateAfterConnectionChange(qc),
   });
 }
 
@@ -27,7 +27,7 @@ export function useUpdateConnection() {
   return useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof updateConnection>[1] }) =>
       updateConnection(id, patch),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => invalidateAfterConnectionChange(qc),
   });
 }
 
@@ -35,7 +35,7 @@ export function useDeleteConnection() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteConnection(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => invalidateAfterConnectionChange(qc),
   });
 }
 
@@ -43,7 +43,7 @@ export function useTestConnection() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => testConnection(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => invalidateAfterConnectionChange(qc),
   });
 }
 

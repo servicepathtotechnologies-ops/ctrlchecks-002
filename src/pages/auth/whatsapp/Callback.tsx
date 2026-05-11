@@ -1,14 +1,17 @@
-﻿import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { resolveOAuthReturnTo } from '@/lib/oauth-return';
+import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 
 export default function WhatsAppAuthCallback() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('Processing WhatsApp authentication...');
@@ -18,6 +21,7 @@ export default function WhatsAppAuthCallback() {
   useEffect(() => {
     if (processedRef.current) return;
     const returnTo = resolveOAuthReturnTo(searchParams, '/profile');
+    const isPopup = window.opener !== null && window.opener !== window;
 
     const processCallback = async () => {
       try {
@@ -38,7 +42,6 @@ export default function WhatsAppAuthCallback() {
           throw new Error('Not authenticated. Please sign in first.');
         }
 
-        // Retrieve phone_number_id / business_account_id stored before redirect
         const phoneNumberId = sessionStorage.getItem('wa_phone_number_id') ?? undefined;
         const businessAccountId = sessionStorage.getItem('wa_business_account_id') ?? undefined;
 
@@ -73,10 +76,16 @@ export default function WhatsAppAuthCallback() {
 
         setStatus('Verifying WhatsApp connection...');
 
-        // Clean up sessionStorage
         sessionStorage.removeItem('wa_phone_number_id');
         sessionStorage.removeItem('wa_business_account_id');
 
+        if (isPopup) {
+          window.opener?.postMessage({ type: 'oauth-success' }, window.location.origin);
+          setTimeout(() => window.close(), 300);
+          return;
+        }
+
+        invalidateAfterConnectionChange(qc);
         toast({
           title: 'WhatsApp Connected',
           description: tokenData.phone_number
@@ -88,20 +97,27 @@ export default function WhatsAppAuthCallback() {
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to connect WhatsApp';
         setError(msg);
+
+        if (window.opener !== null && window.opener !== window) {
+          window.opener?.postMessage({ type: 'oauth-error', message: msg }, window.location.origin);
+          setTimeout(() => window.close(), 300);
+          return;
+        }
+
         toast({ title: 'Connection Failed', description: msg, variant: 'destructive' });
         setTimeout(() => navigate(returnTo), 4000);
       }
     };
 
     processCallback();
-  }, [navigate, toast, searchParams]);
+  }, [navigate, toast, searchParams, qc]);
 
   if (error) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-8 text-center">
         <div className="text-destructive font-semibold text-lg">WhatsApp Connection Failed</div>
         <p className="text-muted-foreground max-w-md">{error}</p>
-        <Button onClick={() => navigate(returnTo)} variant="outline">
+        <Button onClick={() => navigate(resolveOAuthReturnTo(searchParams, '/profile'))} variant="outline">
           Back to Profile
         </Button>
       </div>

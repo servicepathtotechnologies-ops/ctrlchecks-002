@@ -99,9 +99,8 @@ export default function ExecutionDetail() {
       const data = await response.json();
 
       toast({
-        title: data.status === 'success' ? 'Success' : 'Failed',
-        description: data.status === 'success' ? 'Workflow executed successfully' : 'Workflow execution failed',
-        variant: data.status === 'success' ? 'default' : 'destructive',
+        title: 'Execution started',
+        description: 'The workflow is running. Refresh to see the result.',
       });
 
       // Navigate to new execution

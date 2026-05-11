@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { listCredentialTypes, type CredentialTypeDefinition } from '@/lib/api/connections';
-
-const KEY = ['credential-types'] as const;
+import { QUERY_KEYS } from '@/lib/queryKeys';
 
 export function useCredentialTypes() {
-  return useQuery({ queryKey: KEY, queryFn: listCredentialTypes, staleTime: 5 * 60_000 });
+  return useQuery({ queryKey: QUERY_KEYS.credentialTypes, queryFn: listCredentialTypes, staleTime: 5 * 60_000 });
 }
 
 export function useCredentialType(id: string): CredentialTypeDefinition | undefined {

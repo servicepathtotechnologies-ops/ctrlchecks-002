@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Search, RefreshCw, Plus } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { awsClient } from '@/integrations/aws/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +15,8 @@ import { ProviderLogo } from '@/components/connections/ProviderLogo';
 import { isComingSoonProvider } from '@/components/connections/connectionAvailability';
 import { useConnections } from '@/hooks/useConnections';
 import { useCredentialTypes } from '@/hooks/useCredentialTypes';
+import { useToast } from '@/hooks/use-toast';
+import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 import type { ConnectionRecord, CredentialTypeDefinition } from '@/lib/api/connections';
 
 // ─── Provider categories ──────────────────────────────────────────────────────
@@ -52,7 +56,13 @@ function groupByCategory<T extends { provider: string }>(items: T[]): Record<str
 }
 
 // ─── Inline service catalog ───────────────────────────────────────────────────
-function ServiceCatalog({ onSelect }: { onSelect: (t: CredentialTypeDefinition) => void }) {
+function ServiceCatalog({
+  onSelect,
+  connectedTypeIds,
+}: {
+  onSelect: (t: CredentialTypeDefinition) => void;
+  connectedTypeIds: Set<string>;
+}) {
   const { data: types = [], isLoading } = useCredentialTypes();
   const [search, setSearch] = useState('');
 
@@ -111,26 +121,33 @@ function ServiceCatalog({ onSelect }: { onSelect: (t: CredentialTypeDefinition) 
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                 {grouped[cat].map((t) => {
                   const comingSoon = isComingSoonProvider(t.provider);
+                  const alreadyConnected = connectedTypeIds.has(t.id);
                   const providerName = t.provider.charAt(0).toUpperCase() + t.provider.slice(1);
 
                   return (
                     <button
                       key={t.id}
                       type="button"
-                      disabled={comingSoon}
-                      title={comingSoon ? `${providerName} is coming soon` : `Connect ${providerName}`}
+                      disabled={comingSoon || alreadyConnected}
+                      title={
+                        comingSoon
+                          ? `${providerName} is coming soon`
+                          : alreadyConnected
+                            ? `${providerName} is already connected`
+                            : `Connect ${providerName}`
+                      }
                       onClick={() => {
-                        if (!comingSoon) onSelect(t);
+                        if (!comingSoon && !alreadyConnected) onSelect(t);
                       }}
                       className={`relative flex flex-col items-center gap-2 rounded-xl border p-3 transition-all group ${
-                        comingSoon
+                        comingSoon || alreadyConnected
                           ? 'cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground opacity-75'
                           : 'border-border/60 hover:border-primary/50 hover:bg-muted/60'
                       }`}
                     >
-                      {comingSoon && (
+                      {(comingSoon || alreadyConnected) && (
                         <span className="absolute right-1 top-1 rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
-                          Coming soon
+                          {alreadyConnected ? 'Connected' : 'Coming soon'}
                         </span>
                       )}
                       <ProviderLogo provider={t.provider} size={36} />
@@ -156,6 +173,8 @@ function ServiceCatalog({ onSelect }: { onSelect: (t: CredentialTypeDefinition) 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Connections() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const qc = useQueryClient();
   const { data: connections = [], isLoading, refetch, isFetching } = useConnections();
   const { data: credentialTypes = [], isLoading: credentialTypesLoading } = useCredentialTypes();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -166,7 +185,40 @@ export default function Connections() {
 
   const requestedService = searchParams.get('service') || searchParams.get('credentialType');
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = awsClient
+      .channel(`connections-page-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'connections',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          invalidateAfterConnectionChange(qc);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      awsClient.removeChannel(channel);
+    };
+  }, [qc, user?.id]);
+
   function openModalForType(t: CredentialTypeDefinition) {
+    const existing = connections.find((connection) => connection.credentialTypeId === t.id);
+    if (existing) {
+      toast({
+        title: 'Already connected',
+        description: 'Disconnect the existing connection before connecting another account.',
+      });
+      setConnSearch(t.provider);
+      return;
+    }
     setModalPreset(t.id);
     setModalOpen(true);
   }
@@ -189,8 +241,7 @@ export default function Connections() {
     });
 
     if (matchingType && !isComingSoonProvider(matchingType.provider)) {
-      setModalPreset(matchingType.id);
-      setModalOpen(true);
+      openModalForType(matchingType);
     } else {
       setConnSearch(service);
     }
@@ -201,13 +252,18 @@ export default function Connections() {
     setSearchParams(nextParams, { replace: true });
   }, [credentialTypes, credentialTypesLoading, requestedService, searchParams, setSearchParams]);
 
+  const visibleConnections = connections.filter((connection, index, all) => (
+    all.findIndex((candidate) => candidate.credentialTypeId === connection.credentialTypeId) === index
+  ));
+  const connectedTypeIds = new Set(visibleConnections.map((connection) => connection.credentialTypeId));
+
   const filteredConns = connSearch.trim()
-    ? connections.filter(
+    ? visibleConnections.filter(
         (c) =>
           c.name.toLowerCase().includes(connSearch.toLowerCase()) ||
           c.provider.toLowerCase().includes(connSearch.toLowerCase()),
       )
-    : connections;
+    : visibleConnections;
 
   const grouped = groupByCategory(filteredConns);
   const orderedCategories = CATEGORY_ORDER.filter((cat) => grouped[cat]?.length);
@@ -241,7 +297,7 @@ export default function Connections() {
               </Button>
             </div>
 
-            {connections.length > 0 && (
+            {visibleConnections.length > 0 && (
               <div className="relative max-w-sm mb-4">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -261,13 +317,13 @@ export default function Connections() {
               </div>
             )}
 
-            {!isLoading && connections.length === 0 && (
+            {!isLoading && visibleConnections.length === 0 && (
               <div className="rounded-xl border border-dashed border-muted-foreground/25 bg-muted/20 px-6 py-5 text-sm text-muted-foreground">
                 No saved connections yet — connect a service below to get started.
               </div>
             )}
 
-            {!isLoading && connections.length > 0 && (
+            {!isLoading && visibleConnections.length > 0 && (
               <div className="space-y-8">
                 {orderedCategories.map((cat) => (
                   <section key={cat} className="space-y-2">
@@ -304,7 +360,7 @@ export default function Connections() {
               </Button>
             </div>
 
-            <ServiceCatalog onSelect={openModalForType} />
+            <ServiceCatalog onSelect={openModalForType} connectedTypeIds={connectedTypeIds} />
           </section>
 
         </WorkflowAuthGate>

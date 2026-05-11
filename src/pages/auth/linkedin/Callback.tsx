@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { resolveOAuthReturnTo } from '@/lib/oauth-return';
+import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 
 function safeReturnTo(params: URLSearchParams) {
   const raw = params.get('return_to');
@@ -20,6 +22,7 @@ function safeReturnTo(params: URLSearchParams) {
 
 export default function LinkedInAuthCallback() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { toast } = useToast();
   const handled = useRef(false);
   const params = new URLSearchParams(window.location.search);
@@ -30,11 +33,17 @@ export default function LinkedInAuthCallback() {
     if (handled.current) return;
     handled.current = true;
 
-    const success = params.get('success') === 'true';
+    const success    = params.get('success') === 'true';
     const oauthError = params.get('error_description') || params.get('error');
-    const name = params.get('name');
+    const name       = params.get('name');
+    const isPopup    = window.opener !== null && window.opener !== window;
 
     if (oauthError) {
+      if (isPopup) {
+        window.opener?.postMessage({ type: 'oauth-error', message: oauthError }, window.location.origin);
+        setTimeout(() => window.close(), 300);
+        return;
+      }
       setError(oauthError);
       toast({ title: 'LinkedIn connection failed', description: oauthError, variant: 'destructive' });
       setTimeout(() => navigate(returnTo, { replace: true }), 3000);
@@ -42,6 +51,12 @@ export default function LinkedInAuthCallback() {
     }
 
     if (success) {
+      if (isPopup) {
+        window.opener?.postMessage({ type: 'oauth-success' }, window.location.origin);
+        setTimeout(() => window.close(), 300);
+        return;
+      }
+      invalidateAfterConnectionChange(qc);
       toast({
         title: 'LinkedIn connected',
         description: name ? `Connected ${name}` : 'LinkedIn account connected successfully.',
@@ -50,10 +65,15 @@ export default function LinkedInAuthCallback() {
       return;
     }
 
+    if (isPopup) {
+      window.opener?.postMessage({ type: 'oauth-error', message: 'LinkedIn connection did not complete.' }, window.location.origin);
+      setTimeout(() => window.close(), 300);
+      return;
+    }
     setError('LinkedIn connection did not complete.');
     toast({ title: 'Connection failed', description: 'LinkedIn connection did not complete.', variant: 'destructive' });
     setTimeout(() => navigate(returnTo, { replace: true }), 3000);
-  }, [navigate, params, returnTo, toast]);
+  }, [navigate, params, returnTo, toast, qc]);
 
   if (error) {
     return (

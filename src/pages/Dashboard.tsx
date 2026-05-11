@@ -107,7 +107,8 @@ export default function Dashboard() {
     try {
       let query = supabase
         .from('workflows')
-        .select('*');
+        .select('*')
+        .eq('setup_completed', true);
 
       // Filter by active status if filterActive is true
       if (filterActive) {
@@ -271,6 +272,7 @@ export default function Dashboard() {
       const { count: totalCount } = await supabase
         .from('workflows')
         .select('id', { count: 'exact' })
+        .eq('setup_completed', true)
         .limit(0);
 
       // Executions today
@@ -286,6 +288,7 @@ export default function Dashboard() {
       const { count: activeCount } = await supabase
         .from('workflows')
         .select('id', { count: 'exact' })
+        .eq('setup_completed', true)
         .eq('status', 'active')
         .limit(0);
 

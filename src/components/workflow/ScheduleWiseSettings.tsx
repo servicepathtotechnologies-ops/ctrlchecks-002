@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import { InputGuideLink } from './InputGuideLink';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/aws/client';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 
@@ -147,41 +147,45 @@ export default function ScheduleWiseSettings({
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
-  // Fetch credentials on mount
-  useEffect(() => {
-    const fetchCredentials = async () => {
-      if (!workflowId) return;
+  const fetchCredentials = useCallback(async () => {
+    if (!workflowId) return;
 
-      setLoadingCredentials(true);
-      try {
-        const token = (await supabase.auth.getSession()).data.session?.access_token;
-        if (!token) throw new Error('No authentication token');
+    setLoadingCredentials(true);
+    try {
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!token) throw new Error('No authentication token');
 
-        const response = await fetch(
-          `${getBackendUrl()}/api/credentials/list?workflowId=${encodeURIComponent(workflowId)}`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-        if (!response.ok) throw new Error('Failed to load ScheduleWise credentials');
+      const response = await fetch(
+        `${getBackendUrl()}/api/credentials/list?workflowId=${encodeURIComponent(workflowId)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!response.ok) throw new Error('Failed to load ScheduleWise credentials');
 
-        const data = await response.json();
-        const scheduleWiseCredentials = (data.credentials || [])
-          .filter((cred: any) => String(cred.key || '').toLowerCase() === 'schedulewise')
-          .map((cred: any) => ({
-            id: String(cred.key),
-            name: cred.metadata?.name || 'ScheduleWise',
-            provider: String(cred.key),
-          }));
+      const data = await response.json();
+      const scheduleWiseCredentials = (data.credentials || [])
+        .filter((cred: any) => String(cred.key || '').toLowerCase() === 'schedulewise')
+        .map((cred: any) => ({
+          id: String(cred.key),
+          name: cred.metadata?.name || 'ScheduleWise',
+          provider: String(cred.key),
+        }));
 
-        setCredentials(scheduleWiseCredentials);
-      } catch (error) {
-        console.error('[ScheduleWiseSettings] Error fetching credentials:', error);
-      } finally {
-        setLoadingCredentials(false);
-      }
-    };
-
-    fetchCredentials();
+      setCredentials(scheduleWiseCredentials);
+    } catch (error) {
+      console.error('[ScheduleWiseSettings] Error fetching credentials:', error);
+    } finally {
+      setLoadingCredentials(false);
+    }
   }, [workflowId]);
+
+  // Fetch credentials on mount and when the PropertiesPanel realtime bridge observes changes.
+  useEffect(() => {
+    fetchCredentials();
+    window.addEventListener('connections-realtime-changed', fetchCredentials);
+    return () => {
+      window.removeEventListener('connections-realtime-changed', fetchCredentials);
+    };
+  }, [fetchCredentials]);
 
   const updateConfig = (key: string, value: unknown) => {
     const newConfig = { ...config, [key]: value };

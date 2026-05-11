@@ -10,17 +10,19 @@
  *
  * B. GOOGLE WORKFLOW CONNECTION (user connects Google Drive/Sheets to a workflow)
  *    The worker redirects here with ?success=true&email=...  or ?error=...
- *    We show a toast and navigate back to the return_to path.
+ *    We detect popup mode, postMessage to opener, or invalidate queries and navigate.
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { Hub } from 'aws-amplify/utils';
 import { resolveOAuthReturnTo } from '@/lib/oauth-return';
 import { supabase } from '@/integrations/aws/client';
+import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 
 function safeReturnTo(params: URLSearchParams) {
   const raw = params.get('return_to');
@@ -37,6 +39,7 @@ function safeReturnTo(params: URLSearchParams) {
 
 export default function GoogleAuthCallback() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { toast } = useToast();
   const handled = useRef(false);
   const params = new URLSearchParams(window.location.search);
@@ -52,9 +55,15 @@ export default function GoogleAuthCallback() {
     const email        = params.get('email');
     const hasCode      = params.has('code');   // Amplify OAuth callback
     const hasState     = params.has('state');  // Amplify OAuth callback
+    const isPopup      = window.opener !== null && window.opener !== window;
 
     // ── B: Workflow connection callback ────────────────────────────────────
     if (oauthError && !hasCode) {
+      if (isPopup) {
+        window.opener?.postMessage({ type: 'oauth-error', message: oauthError }, window.location.origin);
+        setTimeout(() => window.close(), 300);
+        return;
+      }
       setError(oauthError);
       toast({ title: 'Google connection failed', description: oauthError, variant: 'destructive' });
       setTimeout(() => navigate(returnTo, { replace: true }), 3000);
@@ -62,6 +71,12 @@ export default function GoogleAuthCallback() {
     }
 
     if (success) {
+      if (isPopup) {
+        window.opener?.postMessage({ type: 'oauth-success' }, window.location.origin);
+        setTimeout(() => window.close(), 300);
+        return;
+      }
+      invalidateAfterConnectionChange(qc);
       toast({
         title: 'Google connected',
         description: email ? `Connected ${email}` : 'Google account connected successfully.',
@@ -72,8 +87,6 @@ export default function GoogleAuthCallback() {
 
     // ── A: Amplify OAuth login callback (code + state present) ─────────────
     if (hasCode && hasState) {
-      // Amplify processes the code automatically on page load.
-      // Listen for the signedIn event; fall back to polling getSession().
       let done = false;
       const TIMEOUT_MS = 15_000;
 
@@ -107,8 +120,6 @@ export default function GoogleAuthCallback() {
         }
       });
 
-      // Also check immediately — Amplify may have already stored the session
-      // before this component mounted.
       supabase.auth.getSession().then(({ data }) => {
         if (data?.session) finish(true);
       }).catch(() => {});
@@ -117,6 +128,11 @@ export default function GoogleAuthCallback() {
     }
 
     // ── Fallback: no code, no success → unknown state ─────────────────────
+    if (isPopup) {
+      window.opener?.postMessage({ type: 'oauth-error', message: 'Google connection did not complete.' }, window.location.origin);
+      setTimeout(() => window.close(), 300);
+      return;
+    }
     setError('Google connection did not complete.');
     toast({ title: 'Connection failed', description: 'Google connection did not complete.', variant: 'destructive' });
     setTimeout(() => navigate(returnTo, { replace: true }), 3000);

@@ -70,6 +70,8 @@ interface Props {
   helpDocUrl?: string;
   activeFieldName?: string | null;
   onFieldFocus?: (fieldName: string) => void;
+  /** Server-side error returned after a failed credential save attempt. */
+  apiError?: string | null;
 }
 
 export function CredentialFormRenderer({
@@ -81,6 +83,7 @@ export function CredentialFormRenderer({
   helpDocUrl,
   activeFieldName,
   onFieldFocus,
+  apiError,
 }: Props) {
   const schema = buildSchema(credentialType.inputFields);
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
@@ -196,6 +199,12 @@ export function CredentialFormRenderer({
             </a>
           </CollapsibleContent>
         </Collapsible>
+      )}
+
+      {apiError && (
+        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {apiError}
+        </p>
       )}
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>

@@ -49,6 +49,7 @@ export default function FormTrigger() {
       }
 
       const config = await response.json();
+      setError(null);
       setResolvedFormNodeId(config.nodeId || nodeId || null);
       const fields: FormField[] = Array.isArray(config.fields) ? config.fields : [];
 
@@ -77,6 +78,17 @@ export default function FormTrigger() {
 
     loadFormConfig();
   }, [workflowId, nodeId, loadFormConfig]);
+
+  useEffect(() => {
+    if (!loading) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setError('This form is taking too long to load. Please check your connection and try again.');
+      setLoading(false);
+    }, 15_000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [loading]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

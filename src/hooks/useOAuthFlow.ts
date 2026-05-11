@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { startOAuth, reconnectOAuth } from '@/lib/api/connections';
+import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
+import { getBackendUrl } from '@/lib/api/getBackendUrl';
 
 type OAuthStatus = 'idle' | 'opening' | 'waiting' | 'success' | 'error';
 
@@ -22,6 +24,7 @@ export function useOAuthFlow() {
       const cleanup = () => {
         window.removeEventListener('message', onMessage);
         clearTimeout(timeout);
+        clearInterval(closedInterval);
       };
 
       const finish = (callback: () => void) => {
@@ -35,8 +38,14 @@ export function useOAuthFlow() {
         finish(() => reject(new Error('OAuth window timed out. Please try connecting again.')));
       }, 5 * 60_000);
 
+      const allowedOrigins = new Set([
+        window.location.origin,
+        new URL(getBackendUrl()).origin,
+      ]);
+
       // Listen for postMessage from callback page
       const onMessage = (event: MessageEvent) => {
+        if (!allowedOrigins.has(event.origin)) return;
         if (event.data?.type === 'oauth-success') {
           finish(resolve);
         } else if (event.data?.type === 'oauth-error') {
@@ -44,6 +53,19 @@ export function useOAuthFlow() {
         }
       };
       window.addEventListener('message', onMessage);
+
+      // Poll for the popup being closed without posting a success/error message.
+      // This catches the case where the user manually closes the popup window.
+      const closedInterval = window.setInterval(() => {
+        try {
+          if (popup.closed) {
+            finish(() => reject(new Error('Connection cancelled')));
+          }
+        } catch {
+          // Cross-Origin-Opener-Policy can block popup.closed while OAuth is on
+          // the provider domain. Keep waiting for the callback postMessage.
+        }
+      }, 500);
     });
   }, []);
 
@@ -52,11 +74,14 @@ export function useOAuthFlow() {
       setStatus('opening');
       setError(null);
       try {
-        const { authorizationUrl } = await startOAuth(credentialTypeId, opts);
+        const { authorizationUrl } = await startOAuth(credentialTypeId, {
+          returnTo: `${window.location.origin}/connections`,
+          ...opts,
+        });
         setStatus('waiting');
         await openOAuthPopup(authorizationUrl);
         setStatus('success');
-        qc.invalidateQueries({ queryKey: ['connections'] });
+        invalidateAfterConnectionChange(qc);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'OAuth connection failed';
         setError(msg);
@@ -72,11 +97,13 @@ export function useOAuthFlow() {
       setStatus('opening');
       setError(null);
       try {
-        const { authorizationUrl } = await reconnectOAuth(connectionId);
+        const { authorizationUrl } = await reconnectOAuth(connectionId, {
+          returnTo: `${window.location.origin}/connections`,
+        });
         setStatus('waiting');
         await openOAuthPopup(authorizationUrl);
         setStatus('success');
-        qc.invalidateQueries({ queryKey: ['connections'] });
+        invalidateAfterConnectionChange(qc);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Reconnect failed';
         setError(msg);

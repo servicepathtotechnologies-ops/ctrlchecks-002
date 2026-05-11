@@ -1,6 +1,6 @@
 /**
  * AWS Cognito auth client — backed by AWS Amplify + Cognito.
- * Exports `supabase` with the same interface so all callers work unchanged.
+ * Exports `awsClient`; a deprecated `supabase` alias remains only for older imports.
  *
  * Auth: AWS Amplify + Cognito.
  * DB `from()` calls: forwarded to the worker /api/db proxy.
@@ -410,10 +410,13 @@ function makeNoOpChannel() {
 
 // ─── Exported AWS db client ────────────────────────────────────────────────
 
-export const supabase = {
+export const awsClient = {
   auth,
   from:          (table: string) => new QueryBuilder(table),
   channel:       (_name: string) => makeNoOpChannel(),
   removeChannel: (_ch: any)      => {},
   rpc:           async (_fn: string, _params?: any) => ({ data: null, error: null }),
 };
+
+/** @deprecated Use awsClient. This alias remains only for old imports during migration. */
+export const supabase = awsClient;

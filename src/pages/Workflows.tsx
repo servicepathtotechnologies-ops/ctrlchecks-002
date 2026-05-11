@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,6 +61,7 @@ export default function Workflows() {
   const navigate = useNavigate();
   const [workflows, setWorkflows] = useState<WorkflowRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowRecord | null>(null);
   const [workflowExecutions, setWorkflowExecutions] = useState<Execution[]>([]);
@@ -83,10 +85,12 @@ export default function Workflows() {
   const loadWorkflows = useCallback(async () => {
     try {
       setLoading(true);
+      setStatsLoading(true);
       // Phase 1: Load workflows fast and render immediately
       const { data: workflowsData, error: workflowsError } = await supabase
         .from('workflows')
         .select('*')
+        .eq('setup_completed', true)
         .order('updated_at', { ascending: false });
 
       if (workflowsError) throw workflowsError;
@@ -103,7 +107,10 @@ export default function Workflows() {
 
       // Phase 2: Batch load execution stats in one query (avoids 2*N requests)
       const workflowIds = baseWorkflows.map((w) => w.id);
-      if (workflowIds.length === 0) return;
+      if (workflowIds.length === 0) {
+        if (mountedRef.current) setStatsLoading(false);
+        return;
+      }
 
       const CHUNK_SIZE = 100;
       const executionRows: any[] = [];
@@ -144,17 +151,20 @@ export default function Workflows() {
       }
 
       if (mountedRef.current) {
+        const applyExecutionStats = (workflow: WorkflowRecord): WorkflowRecord => {
+          const stats = statsByWorkflow.get(workflow.id);
+          if (!stats) return workflow;
+          return {
+            ...workflow,
+            execution_count: stats.execution_count,
+            last_execution: stats.last_execution,
+          };
+        };
         setWorkflows((prev) =>
-          prev.map((workflow) => {
-            const stats = statsByWorkflow.get(workflow.id);
-            if (!stats) return workflow;
-            return {
-              ...workflow,
-              execution_count: stats.execution_count,
-              last_execution: stats.last_execution,
-            };
-          })
+          prev.map(applyExecutionStats)
         );
+        setSelectedWorkflow((prev) => (prev ? applyExecutionStats(prev) : prev));
+        setStatsLoading(false);
       }
     } catch (error) {
       console.error('Error loading workflows:', error);
@@ -165,6 +175,7 @@ export default function Workflows() {
       });
     } finally {
       if (mountedRef.current) setLoading(false);
+      if (mountedRef.current) setStatsLoading(false);
     }
   }, []);
 
@@ -421,7 +432,11 @@ export default function Workflows() {
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Play className="h-3 w-3" />
-                        {workflow.execution_count || 0} executions
+                        {statsLoading ? (
+                          <Skeleton className="h-3.5 w-20" />
+                        ) : (
+                          <span>{workflow.execution_count || 0} executions</span>
+                        )}
                       </div>
                       {workflow.last_execution && (
                         <div className="flex items-center gap-1">
@@ -564,7 +579,9 @@ export default function Workflows() {
                       <CardTitle className="text-sm">Total Executions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{selectedWorkflow.execution_count || 0}</div>
+                      <div className="text-2xl font-bold">
+                        {statsLoading ? <Skeleton className="h-8 w-12" /> : selectedWorkflow.execution_count || 0}
+                      </div>
                     </CardContent>
                   </Card>
                   <Card>

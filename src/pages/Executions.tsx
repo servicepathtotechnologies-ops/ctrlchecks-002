@@ -82,12 +82,11 @@ export default function Executions() {
         throw new Error(error.error || error.message || 'Execution failed');
       }
 
-      const data = await response.json();
+      await response.json().catch(() => ({}));
 
       toast({
-        title: data.status === 'success' ? 'Success' : 'Failed',
-        description: data.status === 'success' ? 'Workflow executed successfully' : 'Workflow execution failed',
-        variant: data.status === 'success' ? 'default' : 'destructive',
+        title: 'Execution started',
+        description: 'The workflow is running. Refresh to see the result.',
       });
 
       loadExecutions();

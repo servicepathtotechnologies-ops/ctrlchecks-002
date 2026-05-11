@@ -32,6 +32,7 @@ interface ConnectionStatus {
   checking: boolean;
   connecting: boolean;
   expiresAt?: string | null;
+  reason?: string | null;
 }
 
 export default function Profile() {
@@ -144,6 +145,7 @@ export default function Profile() {
             checking: false,
             connecting: false,
             expiresAt: status.expiresAt || null,
+            reason: status.reason || null,
           };
         }
         return next;
@@ -153,7 +155,7 @@ export default function Profile() {
       Object.keys(connections).forEach((key) => {
         setConnections((prev) => ({
           ...prev,
-          [key]: { ...prev[key as keyof typeof prev], connected: false, checking: false },
+          [key]: { ...prev[key as keyof typeof prev], checking: false, reason: 'network_error' },
         }));
       });
     }
@@ -429,13 +431,31 @@ export default function Profile() {
           <div>
             <div className="font-medium text-sm">{name}</div>
             <div className="text-xs text-muted-foreground">
-              {status.checking ? 'Checking...' : status.connected ? 'Connected' : 'Not connected'}
+              {status.checking
+                ? 'Checking...'
+                : status.reason === 'network_error'
+                  ? 'Status unavailable'
+                  : status.connected
+                    ? 'Connected'
+                    : 'Not connected'}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
           {status.checking ? (
             <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+          ) : status.reason === 'network_error' ? (
+            <>
+              <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={checkConnections}
+                className="h-7 text-xs px-2"
+              >
+                Retry
+              </Button>
+            </>
           ) : status.connected ? (
             <>
               <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />

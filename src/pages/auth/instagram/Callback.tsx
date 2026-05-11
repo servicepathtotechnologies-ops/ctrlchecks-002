@@ -1,14 +1,17 @@
-﻿import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { resolveOAuthReturnTo } from '@/lib/oauth-return';
+import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 
 export default function InstagramAuthCallback() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('Processing Instagram authentication...');
@@ -18,6 +21,7 @@ export default function InstagramAuthCallback() {
   useEffect(() => {
     if (processedRef.current) return;
     const returnTo = resolveOAuthReturnTo(searchParams, '/profile');
+    const isPopup = window.opener !== null && window.opener !== window;
 
     const processCallback = async () => {
       try {
@@ -70,8 +74,6 @@ export default function InstagramAuthCallback() {
           // ig_user_id couldn't be resolved from Facebook Pages at connect time.
           // This is OK — it will be auto-resolved at workflow execution time
           // via getInstagramBusinessAccountId() in the token manager.
-          // Common reason: Instagram account not linked to a Facebook Page,
-          // or pages_show_list permission not granted.
           console.warn('[InstagramCallback] ig_user_id not resolved at connect time — will auto-resolve at execution');
         }
 
@@ -81,6 +83,13 @@ export default function InstagramAuthCallback() {
           ? `@${tokenData.username}`
           : tokenData.name ?? 'your account';
 
+        if (isPopup) {
+          window.opener?.postMessage({ type: 'oauth-success' }, window.location.origin);
+          setTimeout(() => window.close(), 300);
+          return;
+        }
+
+        invalidateAfterConnectionChange(qc);
         toast({
           title: 'Instagram Connected',
           description: `Connected as ${displayName}`,
@@ -90,13 +99,20 @@ export default function InstagramAuthCallback() {
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to connect Instagram';
         setError(msg);
+
+        if (window.opener !== null && window.opener !== window) {
+          window.opener?.postMessage({ type: 'oauth-error', message: msg }, window.location.origin);
+          setTimeout(() => window.close(), 300);
+          return;
+        }
+
         toast({ title: 'Connection Failed', description: msg, variant: 'destructive' });
         setTimeout(() => navigate(returnTo), 5000);
       }
     };
 
     processCallback();
-  }, [navigate, toast, searchParams]);
+  }, [navigate, toast, searchParams, qc]);
 
   if (error) {
     return (
@@ -104,7 +120,7 @@ export default function InstagramAuthCallback() {
         <div className="text-destructive font-semibold text-lg">Instagram Connection Failed</div>
         <p className="text-muted-foreground max-w-md">{error}</p>
         <p className="text-xs text-muted-foreground">Redirecting back in 5 seconds...</p>
-        <Button onClick={() => navigate(returnTo)} variant="outline">
+        <Button onClick={() => navigate(resolveOAuthReturnTo(searchParams, '/profile'))} variant="outline">
           Back to Profile
         </Button>
       </div>

@@ -385,6 +385,7 @@ class WorkflowScheduler {
       const { data: workflows, error } = await supabase
         .from('workflows')
         .select('id, cron_expression')
+        .eq('setup_completed', true)
         .not('cron_expression', 'is', null);
 
       if (error) {
@@ -428,6 +429,7 @@ class WorkflowScheduler {
       const { data: workflow, error } = await supabase
         .from('workflows')
         .select('id, cron_expression')
+        .eq('setup_completed', true)
         .eq('id', workflowId)
         .single();
 
@@ -457,4 +459,3 @@ class WorkflowScheduler {
 
 // Singleton instance
 export const workflowScheduler = new WorkflowScheduler();
-

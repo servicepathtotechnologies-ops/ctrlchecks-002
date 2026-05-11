@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/aws/client';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import {
   CheckCircle, XCircle, Loader2, Clock, ChevronDown, ChevronUp,
-  Terminal, RefreshCw, Trash2, Copy, ExternalLink
+  Terminal, RefreshCw, Trash2, Copy, ExternalLink, AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
@@ -114,6 +114,8 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
   const [executions, setExecutions] = useState<Execution[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedExecution, setSelectedExecution] = useState<Execution | null>(null);
+  const [liveUpdatesDegraded, setLiveUpdatesDegraded] = useState(false);
+  const [stepsLoadError, setStepsLoadError] = useState<string | null>(null);
   // ✅ FIX: Track if user has manually selected an execution (don't auto-select if true)
   const [isManualSelection, setIsManualSelection] = useState(false);
   // Live execution ID drives the WebSocket connection for real-time node updates
@@ -133,7 +135,10 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
 
   // WebSocket for real-time node-by-node updates (supplements 1s polling)
   useEffect(() => {
-    if (!liveExecutionId) return;
+    if (!liveExecutionId) {
+      setLiveUpdatesDegraded(false);
+      return;
+    }
 
     const backendUrl = ENDPOINTS.itemBackend;
     let wsUrl: string;
@@ -146,11 +151,16 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
     }
 
     let ws: WebSocket | null = null;
+    let closedByCleanup = false;
     try {
       ws = new WebSocket(wsUrl);
-      ws.onopen = () => ws?.send(JSON.stringify({ type: 'SUBSCRIBE', executionId: liveExecutionId }));
+      ws.onopen = () => {
+        setLiveUpdatesDegraded(false);
+        ws?.send(JSON.stringify({ type: 'SUBSCRIBE', executionId: liveExecutionId }));
+      };
       ws.onmessage = (event) => {
         try {
+          setLiveUpdatesDegraded(false);
           const msg = JSON.parse(event.data);
           const applyNodeState = (nodeId: string, status: string) => {
             const map: Record<string, 'idle' | 'running' | 'success' | 'error'> = {
@@ -165,9 +175,18 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
           }
         } catch { /* ignore malformed messages */ }
       };
-    } catch { /* WebSocket unavailable — polling covers this */ }
+      ws.onerror = () => setLiveUpdatesDegraded(true);
+      ws.onclose = () => {
+        if (!closedByCleanup) setLiveUpdatesDegraded(true);
+      };
+    } catch {
+      setLiveUpdatesDegraded(true);
+    }
 
-    return () => { ws?.close(); };
+    return () => {
+      closedByCleanup = true;
+      ws?.close();
+    };
   }, [liveExecutionId, updateNodeStatus]);
 
   const loadExecutionSteps = useCallback(async (executionId: string): Promise<ExecutionStep[]> => {
@@ -179,9 +198,11 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
 
     if (error) {
       console.warn('Execution steps unavailable:', error);
+      setStepsLoadError('Could not load execution steps. Check your connection and refresh.');
       return [];
     }
 
+    setStepsLoadError(null);
     return (data || []) as ExecutionStep[];
   }, []);
 
@@ -594,7 +615,12 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
       const isRunning = selectedExecution?.status === 'running' || selectedExecution?.status === 'waiting';
       return (
         <div className="text-sm text-muted-foreground p-4 text-center">
-          {isRunning ? (
+          {stepsLoadError ? (
+            <div className="flex flex-col items-center gap-2 text-destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <span>{stepsLoadError}</span>
+            </div>
+          ) : isRunning ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
               <span>Execution in progress... Logs will appear here as nodes execute.</span>
@@ -755,6 +781,12 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
 
           {/* Execution Details */}
           <div className="flex-1 overflow-y-auto">
+            {liveUpdatesDegraded && (
+              <div className="mx-4 mt-4 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>Live updates unavailable — showing polled data</span>
+              </div>
+            )}
             {selectedExecution ? (
               <div className="p-4 space-y-4">
                   <div className="flex items-center gap-3">

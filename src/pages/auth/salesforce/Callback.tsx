@@ -1,14 +1,17 @@
-﻿import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { resolveOAuthReturnTo } from '@/lib/oauth-return';
+import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 
 export default function SalesforceAuthCallback() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<string>('Processing Salesforce authentication...');
@@ -18,6 +21,7 @@ export default function SalesforceAuthCallback() {
   useEffect(() => {
     if (processedRef.current) return;
     const returnTo = resolveOAuthReturnTo(searchParams, '/workflows');
+    const isPopup = window.opener !== null && window.opener !== window;
 
     const processCallback = async () => {
       try {
@@ -27,6 +31,11 @@ export default function SalesforceAuthCallback() {
         const errorParam = searchParams.get('error');
 
         if (errorParam === 'access_denied') {
+          if (isPopup) {
+            window.opener?.postMessage({ type: 'oauth-error', message: 'Salesforce authorization was cancelled.' }, window.location.origin);
+            setTimeout(() => window.close(), 300);
+            return;
+          }
           toast({ title: 'Cancelled', description: 'Salesforce authorization was cancelled.' });
           navigate(returnTo);
           return;
@@ -72,26 +81,40 @@ export default function SalesforceAuthCallback() {
 
         setStatus('Salesforce connected!');
 
-        toast({ title: 'Success', description: 'Salesforce account connected successfully!' });
+        if (isPopup) {
+          window.opener?.postMessage({ type: 'oauth-success' }, window.location.origin);
+          setTimeout(() => window.close(), 300);
+          return;
+        }
+
+        invalidateAfterConnectionChange(qc);
+        toast({ title: 'Salesforce connected', description: 'Salesforce account connected successfully!' });
         navigate(returnTo);
       } catch (err) {
         console.error('Salesforce callback error:', err);
         const msg = err instanceof Error ? err.message : 'Failed to connect Salesforce';
         setError(msg);
+
+        if (window.opener !== null && window.opener !== window) {
+          window.opener?.postMessage({ type: 'oauth-error', message: msg }, window.location.origin);
+          setTimeout(() => window.close(), 300);
+          return;
+        }
+
         toast({ title: 'Connection Failed', description: msg, variant: 'destructive' });
         setTimeout(() => navigate(returnTo), 3000);
       }
     };
 
     processCallback();
-  }, [navigate, toast, searchParams]);
+  }, [navigate, toast, searchParams, qc]);
 
   if (error) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-8 text-center">
         <div className="text-destructive font-semibold">Connection Failed</div>
         <p className="text-muted-foreground">{error}</p>
-        <Button onClick={() => navigate(returnTo)} variant="outline">
+        <Button onClick={() => navigate(resolveOAuthReturnTo(searchParams, '/workflows'))} variant="outline">
           Return to Workflows
         </Button>
       </div>

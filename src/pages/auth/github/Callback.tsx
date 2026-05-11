@@ -1,8 +1,6 @@
 /**
  * GitHub OAuth Callback
  *
- * Handles two flows redirected from the worker:
- *
  * LOGIN flow  (?mode=login&session_code=<uuid>&return_to=<path>)
  *   — Exchanges session_code for Cognito tokens, injects into Amplify
  *     localStorage, then navigates to return_to. Amplify picks up the
@@ -10,8 +8,9 @@
  *     fetchAuthSession() call.
  *
  * CONNECT flow (?success=true&login=<github_login>&return_to=<path>)
- *   — Shows toast and navigates; no token handling needed (user already
- *     has a Cognito session).
+ *   — Detects popup mode and postMessages success; otherwise invalidates
+ *     queries and navigates. No token handling needed (user already has
+ *     a Cognito session).
  *
  * ERROR (?error=<message>)
  *   — Shows error toast and navigates back.
@@ -19,8 +18,10 @@
 
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 
 const API_URL    = import.meta.env.VITE_API_URL    || 'http://localhost:3001';
 const CLIENT_ID  = import.meta.env.VITE_COGNITO_CLIENT_ID || '';
@@ -41,6 +42,7 @@ function injectAmplifyTokens(
 
 export default function GitHubAuthCallback() {
   const navigate  = useNavigate();
+  const qc        = useQueryClient();
   const { toast } = useToast();
   const handled   = useRef(false);
 
@@ -55,16 +57,23 @@ export default function GitHubAuthCallback() {
     const login       = params.get('login');
     const error       = params.get('error');
     const returnTo    = decodeURIComponent(params.get('return_to') || '/dashboard');
+    const isPopup     = window.opener !== null && window.opener !== window;
 
     if (error) {
       const msg = decodeURIComponent(error);
+      if (isPopup) {
+        window.opener?.postMessage({ type: 'oauth-error', message: msg }, window.location.origin);
+        setTimeout(() => window.close(), 300);
+        return;
+      }
       toast({ title: 'GitHub sign-in failed', description: msg, variant: 'destructive' });
       setTimeout(() => navigate(returnTo, { replace: true }), 2500);
       return;
     }
 
     if (mode === 'login' && sessionCode) {
-      // Exchange session code for Cognito tokens, inject into Amplify storage
+      // Exchange session code for Cognito tokens, inject into Amplify storage.
+      // This is a login flow, not a connection flow — no popup handling.
       (async () => {
         try {
           const res = await fetch(`${API_URL}/api/oauth/github/exchange-session`, {
@@ -78,19 +87,13 @@ export default function GitHubAuthCallback() {
             throw new Error(data.error || 'Token exchange failed');
           }
 
-          injectAmplifyTokens(
-            data.username,
-            data.accessToken,
-            data.idToken,
-            data.refreshToken,
-          );
+          injectAmplifyTokens(data.username, data.accessToken, data.idToken, data.refreshToken);
 
           toast({
             title:       'Signed in with GitHub!',
             description: login ? `Welcome, @${login}` : 'GitHub sign-in successful.',
           });
 
-          // Hard-navigate so Amplify re-initialises from fresh localStorage
           window.location.href = returnTo;
         } catch (err: any) {
           toast({
@@ -106,16 +109,27 @@ export default function GitHubAuthCallback() {
 
     // CONNECT flow (success / already-authenticated user linked GitHub)
     if (success) {
+      if (isPopup) {
+        window.opener?.postMessage({ type: 'oauth-success' }, window.location.origin);
+        setTimeout(() => window.close(), 300);
+        return;
+      }
+      invalidateAfterConnectionChange(qc);
       toast({
         title:       'GitHub connected!',
         description: login ? `Connected as @${login}` : 'GitHub account connected successfully.',
       });
       navigate(returnTo, { replace: true });
     } else {
+      if (isPopup) {
+        window.opener?.postMessage({ type: 'oauth-error', message: 'GitHub connection failed.' }, window.location.origin);
+        setTimeout(() => window.close(), 300);
+        return;
+      }
       toast({ title: 'Connection failed', description: 'GitHub connection failed.', variant: 'destructive' });
       setTimeout(() => navigate(returnTo, { replace: true }), 2500);
     }
-  }, [navigate, toast]);
+  }, [navigate, toast, qc]);
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center gap-4">

@@ -1,5 +1,6 @@
 ﻿import { useWorkflowStore } from '@/stores/workflowStore';
 import { useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getNodeDefinition, ConfigField } from './nodeTypes';
 import { NODE_USAGE_GUIDES } from './nodeUsageGuides';
 import { nodeSchemaService, NodeDefinition } from '@/services/nodeSchemaService';
@@ -67,6 +68,7 @@ import { resolveEffectiveFieldFillMode, supportsRuntimeAI, type FieldFillMode } 
 import { collectUpstreamFieldHints } from '@/lib/upstreamFieldHints';
 import { normalizeIfElseConfig, normalizeIfElseConditions } from '@/lib/ifElseConditions';
 import { FieldOwnershipToggle } from '@/components/FieldOwnershipToggle';
+import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 
 // Droppable field wrapper component - MUST be outside PropertiesPanel to avoid hook violations
 interface DroppableFieldWrapperProps {
@@ -149,9 +151,41 @@ export default function PropertiesPanel({
     clearAiEditedNodeHighlight,
   } = useWorkflowStore();
   const { role: appRole } = useRole();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { pendingExpression, clearPendingExpression } = useExpressionDropStore();
   const [guidedStatus, setGuidedStatus] = useState<GuidedStatusContent | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (cancelled || !data.user?.id) return;
+
+      channel = supabase
+        .channel(`properties-connections-${data.user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'connections',
+            filter: `user_id=eq.${data.user.id}`,
+          },
+          () => {
+            invalidateAfterConnectionChange(queryClient);
+            window.dispatchEvent(new Event('connections-realtime-changed'));
+          },
+        )
+        .subscribe();
+    });
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   /** Canonical form URL from graph (not selection) — matches persisted workflow node id */
   const formPublicUrl = useMemo(
@@ -1274,6 +1308,7 @@ export default function PropertiesPanel({
             const errJson = await attachRes.json().catch(() => ({}));
             const guidance = mapWorkflowIssueToGuidance({
               ...errJson,
+              currentPhase: errJson?.details?.currentPhase || errJson?.currentPhase,
               message:
                 typeof errJson?.message === 'string'
                   ? errJson.message
@@ -1314,7 +1349,10 @@ export default function PropertiesPanel({
           });
           if (!attachCredsRes.ok) {
             const errJson = await attachCredsRes.json().catch(() => ({}));
-            const guidance = mapWorkflowIssueToGuidance(errJson);
+            const guidance = mapWorkflowIssueToGuidance({
+              ...errJson,
+              currentPhase: errJson?.details?.currentPhase || errJson?.currentPhase,
+            });
             setGuidedStatus(guidance);
             toast({
               title: guidance.title,
@@ -1964,6 +2002,8 @@ export default function PropertiesPanel({
                   description={guidedStatus.description}
                   resolution={guidedStatus.resolution}
                   details={guidedStatus.details}
+                  missingItems={guidedStatus.missingItems}
+                  nextSteps={guidedStatus.nextSteps}
                   tone={guidedStatus.tone}
                   onDismiss={() => setGuidedStatus(null)}
                 />

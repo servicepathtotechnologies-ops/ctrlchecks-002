@@ -490,7 +490,7 @@ type SummaryV2 = {
 
 /**
  * Parse a structuredSummary string into its display sections.
- * Strips the configuration contract boilerplate � only Goal, Intent alignment,
+ * Strips the configuration contract boilerplate ? only Goal, Intent alignment,
  * Execution steps, and Terminals are shown to the user.
  */
 function parseStructuredSummary(raw: string): {
@@ -510,7 +510,7 @@ function parseStructuredSummary(raw: string): {
     return { goal, intentAlignment, executionSteps, terminals };
 }
 
-/** Clean structured display of the workflow plan � no boilerplate, no config contract. */
+/** Clean structured display of the workflow plan ? no boilerplate, no config contract. */
 function StructuredPlanDisplay({ summary, compact = false }: { summary: string; compact?: boolean }) {
     const { goal, intentAlignment, executionSteps, terminals } = parseStructuredSummary(summary);
     if (!goal && executionSteps.length === 0) {
@@ -602,7 +602,7 @@ function SummaryV2Display({ summaryV2, compact = false }: { summaryV2: SummaryV2
     );
 }
 
-/** Visual pipeline stage trace � shows each AI stage result as a node card. */
+/** Visual pipeline stage trace ? shows each AI stage result as a node card. */
 function PipelineStageTrace({ stageTrace }: { stageTrace: Array<{ stage: string; durationMs: number; outputSummary: string; error?: string }> }) {
     if (!stageTrace || stageTrace.length === 0) return null;
 
@@ -733,7 +733,7 @@ function buildGenerateWorkflowCreateBody(params: {
         originalPrompt: originalPrompt || finalPrompt,
         selectedVariationId: selectedVariationMeta?.id ?? null,
         selectedStructuredPrompt: finalPrompt,
-        // Use original user prompt as confirmedStructuredPrompt � not the full structured summary
+        // Use original user prompt as confirmedStructuredPrompt ? not the full structured summary
         // which contains registry contract text that causes false node detection
         confirmedStructuredPrompt: originalPrompt || finalPrompt,
         registryTags:
@@ -870,7 +870,7 @@ export function AutonomousAgentWizard() {
     const [nodeDescriptions, setNodeDescriptions] = useState<
         Record<string, { loading: boolean; text: string | null; open: boolean }>
     >({});
-    // Per-field AI descriptions: key = nodeId, value = map of fieldName → description object
+    // Per-field AI descriptions: key = nodeId, value = map of fieldName ? description object
     const [fieldDescriptions, setFieldDescriptions] = useState<
         Record<string, { loading: boolean; data: FieldDescMap | null }>
     >({});
@@ -928,7 +928,7 @@ export function AutonomousAgentWizard() {
         /** Field ownership map from pipeline response: nodeId ? fieldName ? FieldFillMode. */
         fieldOwnershipMap?: Record<string, Record<string, string>>,
     } | null>(null);
-    // Credential status panel � shown after save when credentials are missing (friendly, not error)
+    // Credential status panel ? shown after save when credentials are missing (friendly, not error)
     type CredentialEntry = { vaultKey: string; displayName: string; nodeId: string; satisfied: boolean; required: boolean };
     type CredentialPanelData = { workflowId: string; satisfied: CredentialEntry[]; missing: CredentialEntry[] };
     const [credentialPanelData, setCredentialPanelData] = useState<CredentialPanelData | null>(null);
@@ -968,18 +968,18 @@ export function AutonomousAgentWizard() {
     const [capabilityDefaultConfirmStepIds, setCapabilityDefaultConfirmStepIds] = useState<string[]>([]);
     const [planDiagnosticsOpen, setPlanDiagnosticsOpen] = useState(false);
 
-    // ── Capability-Node-Selection-Flow state (tasks 10.1, 10.2) ──────────────
+    // -- Capability-Node-Selection-Flow state (tasks 10.1, 10.2) --------------
     /** Containers returned by Phase 1 (/api/capability-selection/analyze) */
     const [capNodeContainers, setCapNodeContainers] = useState<CapabilityContainer[]>([]);
     /** correlationId returned by Phase 1, threaded through Phase 2 and Phase 3 */
     const [capNodeCorrelationId, setCapNodeCorrelationId] = useState<string>('');
-    /** Selections made by the user in CapabilityStage (containerId → nodeType) */
+    /** Selections made by the user in CapabilityStage (containerId ? nodeType) */
     const [capNodeSelections, setCapNodeSelections] = useState<NodeSelectionMap>({});
     /** Structural prompt returned by Phase 2 (/api/capability-selection/generate) */
     const [capNodeStructuralPrompt, setCapNodeStructuralPrompt] = useState<string>('');
     /** Workflow returned by Phase 2 */
     const [capNodeWorkflow, setCapNodeWorkflow] = useState<any>(null);
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     /** User toggles for unlockable credential fields (`unlock_<nodeId>_<field>` on attach-inputs). */
     const [credentialUnlockOverrides, setCredentialUnlockOverrides] = useState<Record<string, boolean>>({});
@@ -1520,7 +1520,7 @@ export function AutonomousAgentWizard() {
         [credentialQuestionsStrictForStep]
     );
 
-    /** Optional vault questions not in the strict Credentials list � user can force-include. */
+    /** Optional vault questions not in the strict Credentials list ? user can force-include. */
     const credentialOptionalIncludeCandidates = useMemo(
         () =>
             credentialQuestions.filter((q: any) => {
@@ -1624,7 +1624,7 @@ export function AutonomousAgentWizard() {
         return blockingOAuthCredentials.length === 0;
     }, [credentialQuestionsForStep, getCredentialAnswerForQuestion, blockingOAuthCredentials]);
 
-    /** Manual config questions (excluding pure credential vault rows � those use credentials step). */
+    /** Manual config questions (excluding pure credential vault rows ? those use credentials step). */
     /** Execution-order rank: recomputes only when graph topology changes, not on every input change. */
     const executionOrderRank = useMemo(() => {
         const nodes = pendingWorkflowData?.nodes;
@@ -1873,7 +1873,7 @@ export function AutonomousAgentWizard() {
                     next[key] = 'runtime_ai';
                     changed = true;
                 } else if (fillModeDefault === 'buildtime_ai_once' || fillModeDefault === 'runtime_ai') {
-                    // Schema says AI should handle this � respect it as the default
+                    // Schema says AI should handle this ? respect it as the default
                     next[key] = fillModeDefault;
                     changed = true;
                 }
@@ -1931,13 +1931,13 @@ export function AutonomousAgentWizard() {
 
     // Cognitive progress text rotation (every 1.5s)
     const cognitiveTexts = [
-        'Initializing cognitive engine�',
-        'Mapping workflow paths�',
-        'Optimizing decision nodes�',
-        'Finalizing intelligence layer�',
-        'Synthesizing requirements�',
-        'Building node connections�',
-        'Validating workflow structure�',
+        'Initializing cognitive engine?',
+        'Mapping workflow paths?',
+        'Optimizing decision nodes?',
+        'Finalizing intelligence layer?',
+        'Synthesizing requirements?',
+        'Building node connections?',
+        'Validating workflow structure?',
     ];
 
     useEffect(() => {
@@ -2333,7 +2333,7 @@ export function AutonomousAgentWizard() {
         }
         const mainPrompt = planSummary.trim();
         setPrompt(mainPrompt);
-        // Go directly to building screen � no need to re-show the analyze loader
+        // Go directly to building screen ? no need to re-show the analyze loader
         setStep('building');
         setProgress(5);
         setIsComplete(false);
@@ -2365,7 +2365,7 @@ export function AutonomousAgentWizard() {
             if (!confirmStructuredPlanForBuild()) {
                 toast({
                     title: 'Could not confirm plan',
-                    description: 'Try �Start over� and run Analyze again, then continue.',
+                    description: 'Try ?Start over? and run Analyze again, then continue.',
                     variant: 'destructive',
                 });
                 setHasWorkflowPlan(true);
@@ -2619,7 +2619,7 @@ export function AutonomousAgentWizard() {
         // Execution Flow Architecture (STEP-2): Validate state transition
         // Allow transition if questions are empty (auto-continue scenario) or if in correct state
         // Also allow if coming from summarize layer (step is 'refining' or 'questioning' with no questions)
-        // When analysisSnapshot is passed (structured plan ? proceed), skip this gate � user already confirmed intent
+        // When analysisSnapshot is passed (structured plan ? proceed), skip this gate ? user already confirmed intent
         if (!analysisSnapshot) {
             const currentState = mapWizardStepToState(step);
             const hasQuestions = effectiveAnalysis?.questions && effectiveAnalysis.questions.length > 0;
@@ -2650,7 +2650,7 @@ export function AutonomousAgentWizard() {
         setQuestionsAnswered(false);
 
         // Keep the step as 'building' (already set by handleConfirmPlanAndAnalyze) while
-        // the backend pipeline runs. Do NOT advance to 'refining' here � the overlay must
+        // the backend pipeline runs. Do NOT advance to 'refining' here ? the overlay must
         // only appear after the user has submitted answers (questionsAnswered === true).
         // If there are no questions the pipeline will advance to 'refining' after the
         // backend responds (pipelineReady = true, questionsAnswered implicitly true).
@@ -2897,7 +2897,7 @@ export function AutonomousAgentWizard() {
 
                         const { data: savedWorkflow, error: saveError } = await supabase
                             .from('workflows')
-                            .insert(workflowData as any)
+                            .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                             .select()
                             .single();
 
@@ -2931,7 +2931,7 @@ export function AutonomousAgentWizard() {
             // Removed: phase === 'configuration' and phase === 'credentials' handling
             // Backend now always returns phase === 'ready' with discoveredInputs and discoveredCredentials
 
-            // Handle ready phase � AI-first pipeline: save workflow then show field-ownership wizard
+            // Handle ready phase ? AI-first pipeline: save workflow then show field-ownership wizard
             if (data.phase === 'ready' && data.workflow) {
                 console.log('? [Frontend] Ready phase - saving workflow and opening field-ownership wizard');
 
@@ -2957,7 +2957,7 @@ export function AutonomousAgentWizard() {
 
                         const { data: savedWorkflow, error: saveError } = await supabase
                             .from('workflows')
-                            .insert(workflowData as any)
+                            .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                             .select()
                             .single();
 
@@ -2987,12 +2987,12 @@ export function AutonomousAgentWizard() {
                                 fieldOwnershipMap: data.fieldOwnershipMap || undefined,
                             });
 
-                            // Bug A fix: pipeline backend has completed � set pipelineReady flag.
+                            // Bug A fix: pipeline backend has completed ? set pipelineReady flag.
                             // Only advance to 'field-ownership' (questions UI) or 'complete' here.
                             // The 'refining' overlay must NOT appear until questionsAnswered === true.
                             setPipelineReady(true);
                             if (comprehensiveQuestions.length > 0 || discoveredCreds.length > 0) {
-                                // Questions exist � show questions UI and wait for user to submit answers.
+                                // Questions exist ? show questions UI and wait for user to submit answers.
                                 // The 'refining' overlay is skipped; user goes directly to field-ownership.
                                 setAllQuestions(comprehensiveQuestions.map((q: any) => {
                                     const fieldName = String(q.fieldName || '').trim() || 'credential';
@@ -3012,7 +3012,7 @@ export function AutonomousAgentWizard() {
                                 }));
                                 setStep('field-ownership');
                             } else if (data.fieldOwnershipMap && typeof data.fieldOwnershipMap === 'object' && Object.keys(data.fieldOwnershipMap).length > 0) {
-                                // Bug B fix: no comprehensiveQuestions but fieldOwnershipMap is non-empty � synthesize field rows.
+                                // Bug B fix: no comprehensiveQuestions but fieldOwnershipMap is non-empty ? synthesize field rows.
                                 const fom = data.fieldOwnershipMap as Record<string, Record<string, string>>;
                                 console.log(`[Frontend] Synthesizing field rows from fieldOwnershipMap (AI-first path, ${Object.keys(fom).length} nodes)`);
                                 const nodeMap = new Map<string, any>();
@@ -3058,7 +3058,7 @@ export function AutonomousAgentWizard() {
                                 setAllQuestions(synthesized);
                                 setStep('field-ownership');
                             } else {
-                                // No questions � user has nothing to answer, proceed directly.
+                                // No questions ? user has nothing to answer, proceed directly.
                                 setQuestionsAnswered(true);
                                 setStep('complete');
                             }
@@ -3116,7 +3116,7 @@ export function AutonomousAgentWizard() {
 
                             const { data: savedWorkflow, error: saveError } = await supabase
                                 .from('workflows')
-                                .insert(workflowData as any)
+                                .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                                 .select()
                                 .single();
 
@@ -3356,7 +3356,7 @@ export function AutonomousAgentWizard() {
             setExecutionId(execId);
             setExecutionProgress(10);
             
-            // Poll for execution status with exponential backoff (2s → 4s → 8s → max 30s)
+            // Poll for execution status with exponential backoff (2s ? 4s ? 8s ? max 30s)
             let pollDelay = 2000;
             const MAX_POLL_DELAY = 30000;
             let pollTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -3449,6 +3449,58 @@ export function AutonomousAgentWizard() {
         }
     };
 
+    const markWorkflowDataAsPendingSetup = useCallback((workflowData: Record<string, unknown>) => {
+        const metadata =
+            workflowData.metadata && typeof workflowData.metadata === 'object' && !Array.isArray(workflowData.metadata)
+                ? { ...(workflowData.metadata as Record<string, unknown>) }
+                : {};
+        const aiSetup =
+            metadata.aiSetup && typeof metadata.aiSetup === 'object' && !Array.isArray(metadata.aiSetup)
+                ? { ...(metadata.aiSetup as Record<string, unknown>) }
+                : {};
+        const pendingMetadata = {
+            ...metadata,
+            aiSetup: {
+                ...aiSetup,
+                pending: true,
+                stage: 'ai_setup_pending',
+                updatedAt: new Date().toISOString(),
+            },
+        };
+
+        workflowData.metadata = pendingMetadata;
+        if (workflowData.nodes && workflowData.edges) {
+            workflowData.graph = {
+                nodes: workflowData.nodes,
+                edges: workflowData.edges,
+                metadata: pendingMetadata,
+            };
+        }
+        workflowData.setup_completed = false;
+        workflowData.setup_stage = 'ai_setup_pending';
+        workflowData.setup_completed_at = null;
+        workflowData.status = 'draft';
+        workflowData.phase = 'draft';
+        workflowData.confirmed = false;
+        return workflowData;
+    }, []);
+
+    const commitSetupWorkflow = useCallback(async (workflowId: string) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/commit-setup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session?.access_token || ''}`,
+            },
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(result?.message || result?.error || 'Workflow setup is incomplete');
+        }
+        return result;
+    }, []);
+
     const handleConnectGoogleOAuth = useCallback(async () => {
         try {
             const {
@@ -3478,7 +3530,7 @@ export function AutonomousAgentWizard() {
             if (!userId) throw new Error('Please sign in first to connect Google.');
             const returnTo = getCurrentPathWithQuery();
             toast({
-                title: 'Redirecting to Google�',
+                title: 'Redirecting to Google?',
                 description: 'Authorize access; you will return here afterward.',
             });
             startGoogleConnectorOAuth(userId, returnTo);
@@ -3549,7 +3601,7 @@ export function AutonomousAgentWizard() {
                 
                 const { data: workflowResult, error: saveError } = await supabase
                     .from('workflows')
-                    .insert(workflowData as any)
+                    .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                     .select()
                     .single();
                 
@@ -3689,7 +3741,7 @@ export function AutonomousAgentWizard() {
                         console.log(`?? Skipping credential attachment for phase "${inputPhase}" (inputs still pending)`);
                     } else {
                         // ? FIX: Derive satisfied/missing from discoveredCredentials (already populated during generation)
-                        // Do NOT call attach-credentials when credentials are missing � show friendly panel instead
+                        // Do NOT call attach-credentials when credentials are missing ? show friendly panel instead
                         const discoveredCreds: CredentialEntry[] = Array.isArray(pendingWorkflowData?.discoveredCredentials)
                             ? (pendingWorkflowData.discoveredCredentials as CredentialEntry[])
                             : [];
@@ -3697,11 +3749,13 @@ export function AutonomousAgentWizard() {
                         const satisfiedCreds = discoveredCreds.filter((c) => c.satisfied);
 
                         if (missingCreds.length > 0) {
-                            // ? FIX: Don't show credential panel � navigate directly to workflow.
-                            // Credentials are handled via the header Connections route, not inline.
                             console.log('?? Missing credentials (will be configured via Connections):', missingCreds.map((c) => c.vaultKey || c.displayName));
                             setGeneratedWorkflowId(savedWorkflow.id);
-                            navigate(`/workflow/${savedWorkflow.id}`, { replace: true });
+                            toast({
+                                title: 'Credentials still required',
+                                description: 'Connect or provide all required credentials before opening the workflow.',
+                                variant: 'destructive',
+                            });
                             return;
                         }
                         console.log('?? Attaching credentials...');
@@ -3823,6 +3877,7 @@ export function AutonomousAgentWizard() {
                     // ? CRITICAL: Always redirect to workflow view after successful configuration
                     console.log('?? Redirecting to workflow view...');
                     // Avoid intermediate navigation that looks like a "reload"/flicker
+                    await commitSetupWorkflow(savedWorkflow.id);
                     navigate(`/workflow/${savedWorkflow.id}`, { replace: true });
                     return;
                 }
@@ -4186,7 +4241,7 @@ export function AutonomousAgentWizard() {
                             const isCredentialQ = q.category === 'credential' || q.ownershipClass === 'credential';
                             const matchedCred = isCredentialQ ? discoveredCredByNodeId.get(q.nodeId) : undefined;
                             // Keep registry field names (e.g. webhookUrl) for unlock_/mode_/cred_ attach-inputs keys.
-                            // Vault matching uses q.credential.vaultKey � do not replace fieldName with vaultKey.
+                            // Vault matching uses q.credential.vaultKey ? do not replace fieldName with vaultKey.
                             const fieldName = String(q.fieldName || '').trim() || 'credential';
                             const credMeta =
                                 q.credential?.vaultKey
@@ -4504,7 +4559,7 @@ export function AutonomousAgentWizard() {
                                 });
 
                                 // ? FIX: Surface credential discovery immediately when the backend
-                                // reports it � don't wait for the full pipeline to finish.
+                                // reports it ? don't wait for the full pipeline to finish.
                                 if (update.current_phase === 'credential_discovery' && Array.isArray(update.discoveredCredentials) && update.discoveredCredentials.length > 0) {
                                     const missing = update.discoveredCredentials.filter((c: any) => !c.satisfied);
                                     const satisfied = update.discoveredCredentials.filter((c: any) => c.satisfied);
@@ -4577,7 +4632,7 @@ export function AutonomousAgentWizard() {
                                             const preSaveGraph = revalidateWorkflowGraph(wNodes, wEdges, 10);
                                             const { data: preSaved, error: preSaveErr } = await supabase
                                                 .from('workflows')
-                                                .insert({
+                                                .insert(markWorkflowDataAsPendingSetup({
                                                     name: (analysis?.summary && typeof analysis.summary === 'string')
                                                         ? analysis.summary.substring(0, 50)
                                                         : 'AI Generated Workflow',
@@ -4585,7 +4640,7 @@ export function AutonomousAgentWizard() {
                                                     edges: preSaveGraph.edges,
                                                     user_id: wUser?.id,
                                                     updated_at: new Date().toISOString(),
-                                                } as any)
+                                                }) as any)
                                                 .select()
                                                 .single();
                                             if (!preSaveErr && preSaved?.id) {
@@ -4618,7 +4673,7 @@ export function AutonomousAgentWizard() {
                                     return;
                                 }
 
-                                // contractReady (phase ready, success) and no unified wizard questions � save
+                                // contractReady (phase ready, success) and no unified wizard questions ? save
                                 setProgress(100);
                                 setIsComplete(true);
                                 setBuildingLogs((prev) => [...prev, 'Workflow Generated Successfully!']);
@@ -4697,7 +4752,7 @@ export function AutonomousAgentWizard() {
 
                                     const { data: savedWorkflow, error: saveError } = await supabase
                                         .from('workflows')
-                                        .insert(workflowData as any)
+                                        .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                                         .select()
                                         .single();
 
@@ -4757,6 +4812,7 @@ export function AutonomousAgentWizard() {
                                             description: 'Your workflow has been created successfully!',
                                         });
                                         // Avoid intermediate navigation that looks like a "reload"/flicker
+                                        await commitSetupWorkflow(savedWorkflow.id);
                                         navigate(`/workflow/${savedWorkflow.id}`, { replace: true });
                                     } else {
                                         console.error('Workflow saved but no ID returned');
@@ -4835,7 +4891,7 @@ export function AutonomousAgentWizard() {
                             const preSaveGraph = revalidateWorkflowGraph(wNodes, wEdges, 10);
                             const { data: preSaved, error: preSaveErr } = await supabase
                                 .from('workflows')
-                                .insert({
+                                .insert(markWorkflowDataAsPendingSetup({
                                     name: (analysis?.summary && typeof analysis.summary === 'string')
                                         ? analysis.summary.substring(0, 50)
                                         : 'AI Generated Workflow',
@@ -4843,7 +4899,7 @@ export function AutonomousAgentWizard() {
                                     edges: preSaveGraph.edges,
                                     user_id: wUser?.id,
                                     updated_at: new Date().toISOString(),
-                                } as any)
+                                }) as any)
                                 .select()
                                 .single();
                             if (!preSaveErr && preSaved?.id) {
@@ -4919,7 +4975,7 @@ export function AutonomousAgentWizard() {
 
                     const { data: savedWorkflow, error: saveError } = await supabase
                         .from('workflows')
-                        .insert(workflowData as any)
+                        .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                         .select()
                         .single();
 
@@ -5013,7 +5069,7 @@ export function AutonomousAgentWizard() {
 
                         const { data: savedWorkflow, error: saveError } = await supabase
                             .from('workflows')
-                            .insert(workflowData as any)
+                            .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                             .select()
                             .single();
 
@@ -5407,7 +5463,7 @@ export function AutonomousAgentWizard() {
                 setFillModeValues((prev) => ({ ...prev, ...updates }));
             }
         }
-        // Bug A fix: user has submitted answers � set questionsAnswered = true.
+        // Bug A fix: user has submitted answers ? set questionsAnswered = true.
         // Now that pipelineReady is also true, it is safe to advance past the questions gate.
         setQuestionsAnswered(true);
         // Credentials are collected inline during the field-ownership step.
@@ -5416,7 +5472,7 @@ export function AutonomousAgentWizard() {
         setStep('configuration');
     };
 
-    // ── Capability-Node-Selection-Flow handlers (tasks 10.1, 10.2, 10.3) ─────
+    // -- Capability-Node-Selection-Flow handlers (tasks 10.1, 10.2, 10.3) -----
 
     /**
      * Phase 1: Call /api/capability-selection/analyze after prompt submission.
@@ -5570,10 +5626,10 @@ export function AutonomousAgentWizard() {
             setProgress(80);
             setBuildingLogs((prev) => [...prev, 'Saving workflow...']);
 
-            // ── Save to Supabase ──────────────────────────────────────────────
+            // -- Save to Supabase ----------------------------------------------
             const { normalizeBackendWorkflow } = await import('@/lib/node-type-normalizer');
             const normalizedBackend = normalizeBackendWorkflow({ nodes: workflowNodes, edges: workflowEdges });
-            // ✅ Use preserveTopology=true: the backend already built the correct branching graph.
+            // ? Use preserveTopology=true: the backend already built the correct branching graph.
             // Without this, validateAndFixWorkflow re-runs linearization which adds spurious
             // log_output fan-in edges from all branch terminals.
             const normalized = revalidateWorkflowGraph(
@@ -5585,13 +5641,13 @@ export function AutonomousAgentWizard() {
 
             const { data: savedWorkflow, error: saveError } = await supabase
                 .from('workflows')
-                .insert({
+                .insert(markWorkflowDataAsPendingSetup({
                     name: (prompt || originalPrompt || 'AI Generated Workflow').substring(0, 50),
                     nodes: normalized.nodes,
                     edges: normalized.edges,
                     user_id: userId,
                     updated_at: new Date().toISOString(),
-                } as any)
+                }) as any)
                 .select()
                 .single();
 
@@ -5604,7 +5660,7 @@ export function AutonomousAgentWizard() {
             setProgress(100);
             setIsComplete(true);
 
-            // ── Wire field-ownership wizard (same as legacy phase:'ready' path) ──
+            // -- Wire field-ownership wizard (same as legacy phase:'ready' path) --
             const comprehensiveQuestions: any[] = data.comprehensiveQuestions ?? [];
             const discoveredCreds: any[] = data.discoveredCredentials ?? [];
 
@@ -5693,7 +5749,7 @@ export function AutonomousAgentWizard() {
         }
     };
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     const reset = () => {
         // Execution Flow Architecture (STEP-2): Reset state manager
@@ -5902,7 +5958,7 @@ export function AutonomousAgentWizard() {
                         />
                     )}
 
-                    {/* STEP 2: Plan review / clarifying questions only � hide once we move to refine+ (linear flow, no overlap) */}
+                    {/* STEP 2: Plan review / clarifying questions only ? hide once we move to refine+ (linear flow, no overlap) */}
                     {step === 'questioning' && (hasWorkflowPlan || analysis) && (
                         <div ref={step2Ref} className="scroll-mt-6">
                             <motion.div
@@ -6205,7 +6261,7 @@ export function AutonomousAgentWizard() {
                         </div>
                     )}
 
-                    {/* ── Capability-Node-Selection-Flow: CapabilityStage (task 10.1) ── */}
+                    {/* -- Capability-Node-Selection-Flow: CapabilityStage (task 10.1) -- */}
                     {/* Req 3.1–3.8, 7.1, 7.3: shown after Phase 1 analyze; legacy structural prompt NOT called here */}
                     {step === 'capability-node-selection' && capNodeContainers.length > 0 && (
                         <div className="scroll-mt-6 py-4">
@@ -6224,7 +6280,7 @@ export function AutonomousAgentWizard() {
                         </div>
                     )}
 
-                    {/* ── Capability-Node-Selection-Flow: CapabilityReviewStep (task 10.2) ── */}
+                    {/* -- Capability-Node-Selection-Flow: CapabilityReviewStep (task 10.2) -- */}
                     {/* Req 5.1–5.6, 6.1: shown after Phase 2 generate; Continue is sole gate for Backend_Generation */}
                     {step === 'capability-review' && capNodeStructuralPrompt && capNodeWorkflow && (
                         <div className="scroll-mt-6 py-4">
@@ -6273,7 +6329,7 @@ export function AutonomousAgentWizard() {
                                         <div className="bg-green-500/10 p-6 rounded-md border border-green-500/20 space-y-4">
                                             <div className="space-y-3">
                                                 <div>
-                                                    <span className="font-semibold text-green-400">� Trigger:</span>
+                                                    <span className="font-semibold text-green-400">? Trigger:</span>
                                                     <p className="text-foreground mt-1 ml-4">
                                                         {(() => {
                                                             const trigger = refinement.systemPrompt?.toLowerCase().match(/(?:trigger|when|on|schedule|form|webhook|manual)[^.]*/i)?.[0] ||
@@ -6283,7 +6339,7 @@ export function AutonomousAgentWizard() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <span className="font-semibold text-green-400">� Actions:</span>
+                                                    <span className="font-semibold text-green-400">? Actions:</span>
                                                     <p className="text-foreground mt-1 ml-4">
                                                         {(() => {
                                                             const actions = refinement.systemPrompt || analysis?.summary || 'Process and execute workflow steps';
@@ -6294,7 +6350,7 @@ export function AutonomousAgentWizard() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <span className="font-semibold text-green-400">� Logic:</span>
+                                                    <span className="font-semibold text-green-400">? Logic:</span>
                                                     <p className="text-foreground mt-1 ml-4">
                                                         {(() => {
                                                             const hasConditions = answers && Object.values(answers).some(a => 
@@ -6305,7 +6361,7 @@ export function AutonomousAgentWizard() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <span className="font-semibold text-green-400">� Output:</span>
+                                                    <span className="font-semibold text-green-400">? Output:</span>
                                                     <p className="text-foreground mt-1 ml-4">
                                                         {(() => {
                                                             const outputDest = answers && Object.values(answers).find(a => 
@@ -6316,7 +6372,7 @@ export function AutonomousAgentWizard() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <span className="font-semibold text-green-400">� Error handling:</span>
+                                                    <span className="font-semibold text-green-400">? Error handling:</span>
                                                     <p className="text-foreground mt-1 ml-4">
                                                         Automatic error detection and recovery with validation
                                                     </p>
@@ -6339,14 +6395,14 @@ export function AutonomousAgentWizard() {
                                             )}
                                         </div>
 
-                                        {/* Pipeline Stage Trace � shows each AI stage result */}
+                                        {/* Pipeline Stage Trace ? shows each AI stage result */}
                                         {refinement.stageTrace && refinement.stageTrace.length > 0 && (
                                             <div className="bg-muted/20 p-4 rounded-lg border border-border/40">
                                                 <PipelineStageTrace stageTrace={refinement.stageTrace} />
                                             </div>
                                         )}
 
-                                        {/* Confirmation Buttons � only in FSM states that allow confirmUnderstanding (STATE_1 / STATE_2).
+                                        {/* Confirmation Buttons ? only in FSM states that allow confirmUnderstanding (STATE_1 / STATE_2).
                                             After STATE_3+ or building, the same card can stay visible when scrolling; hide buttons to avoid duplicate confirm + toast error. */}
                                         {(() => {
                                             const fsm = stateManager.getCurrentState();
@@ -6357,7 +6413,7 @@ export function AutonomousAgentWizard() {
                                                 return (
                                                     <p className="text-sm text-muted-foreground pt-2 border-t border-border/60 mt-2">
                                                         This plan was already confirmed or building has started. Use the steps below
-                                                        (field ownership, credentials, configuration) � you do not need to confirm
+                                                        (field ownership, credentials, configuration) ? you do not need to confirm
                                                         again.
                                                     </p>
                                                 );
@@ -6576,7 +6632,7 @@ export function AutonomousAgentWizard() {
                                             <AlertCircle className="h-5 w-5" /> Field Ownership Required
                                         </CardTitle>
                                         <CardDescription>
-                                            Two areas: workflow structure (forms, logic), then secrets and fill mode. Locked rows use OAuth, vault, or AI-filled values�finish accounts on the Credentials step.
+                                            Two areas: workflow structure (forms, logic), then secrets and fill mode. Locked rows use OAuth, vault, or AI-filled values?finish accounts on the Credentials step.
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
@@ -6997,13 +7053,13 @@ export function AutonomousAgentWizard() {
                                                                                                 {question.aiBuildTimePending && !question.aiFilledAtBuildTime ? (
                                                                                                     <span className="inline-flex items-center gap-1 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.5 text-[10px] text-sky-200">
                                                                                                         <Sparkles className="h-3 w-3 shrink-0" aria-hidden />
-                                                                                                        AI build � empty
+                                                                                                        AI build ? empty
                                                                                                     </span>
                                                                                                 ) : null}
                                                                                             </div>
                                                                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                                                                 <span className="font-medium text-foreground/80">{group.nodeLabel}</span>
-                                                                                                <span className="mx-1 opacity-40">�</span>
+                                                                                                <span className="mx-1 opacity-40">?</span>
                                                                                                 <span className="font-mono text-[11px] opacity-75">{question.fieldName}</span>
                                                                                             </p>
                                                                                             <button
@@ -7262,7 +7318,7 @@ export function AutonomousAgentWizard() {
                                                                                                     onClick={() => setCredHelpExpanded(prev => ({ ...prev, [helpKey]: !isExpanded }))}
                                                                                                 >
                                                                                                     <span>Why do I need this? How do I get it?</span>
-                                                                                                    <span className="ml-2 opacity-60">{isExpanded ? '▲' : '▼'}</span>
+                                                                                                    <span className="ml-2 opacity-60">{isExpanded ? '?' : '?'}</span>
                                                                                                 </button>
                                                                                                 {isExpanded && (
                                                                                                     <div className="px-2 pb-2 pt-1 bg-muted/10 space-y-2">
@@ -7638,12 +7694,12 @@ export function AutonomousAgentWizard() {
                                                 })()}
                                             </div>
                                         ) : manualConfigurationQuestions.length > 0 && currentQuestionIndex >= manualConfigurationQuestions.length ? (
-                                            /* Always ready � workbench opens at any cost */
+                                            /* Always ready ? workbench opens at any cost */
                                             <div className="space-y-4 text-center">
                                                 <CheckCircle2 className="h-12 w-12 mx-auto text-green-500" />
                                                 <h3 className="text-lg font-semibold">Ready to open workflow</h3>
                                                 <p className="text-sm text-muted-foreground">
-                                                    Your workflow is saved. Any missing credentials can be filled inside the workbench.
+                                                    Your workflow setup is saved privately until completion. Any missing credentials must be finished before the workflow opens.
                                                 </p>
                                             </div>
                                         ) : (
@@ -8322,13 +8378,14 @@ export function AutonomousAgentWizard() {
                                             setNodes(normalized.nodes);
                                             setEdges(normalized.edges);
                                             
-                                            // Save workflow
+                                            // Save as hidden setup draft; commit only when readiness passes.
                                             const { data: { user } } = await supabase.auth.getUser();
                                             if (user && result.workflow) {
-                                                const saveResponse = await fetch(`${ENDPOINTS.itemBackend}/api/save-workflow`, {
+                                                const saveResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/setup-draft`, {
                                                     method: 'POST',
                                                     headers: {
                                                         'Content-Type': 'application/json',
+                                                        'Authorization': `Bearer ${session?.access_token || ''}`,
                                                     },
                                                     body: JSON.stringify({
                                                         workflowId: confirmationData.workflowId,
@@ -8341,10 +8398,11 @@ export function AutonomousAgentWizard() {
 
                                                 if (saveResponse.ok) {
                                                     setGeneratedWorkflowId(confirmationData.workflowId);
+                                                    await commitSetupWorkflow(confirmationData.workflowId).catch(() => null);
                                                     setStep('complete');
                                                     toast({
                                                         title: 'Workflow Confirmed',
-                                                        description: 'Workflow has been confirmed and saved successfully.',
+                                                        description: 'Workflow has been confirmed. Complete any remaining setup before opening it.',
                                                     });
                                                 } else {
                                                     throw new Error('Failed to save workflow');
@@ -8694,6 +8752,7 @@ export function AutonomousAgentWizard() {
                                                                 title: 'Success',
                                                                 description: 'Workflow configured successfully!',
                                                             });
+                                                            await commitSetupWorkflow(generatedWorkflowId);
                                                             navigate(`/workflow/${generatedWorkflowId}`, { replace: true });
                                                         } catch (error: any) {
                                                             const guidance = mapWorkflowIssueToGuidance({
@@ -8783,12 +8842,21 @@ export function AutonomousAgentWizard() {
                                     <RefreshCw className="mr-2 h-4 w-4" /> Create Another
                                 </Button>
                                 <Button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (generatedWorkflowId) {
                                             console.log('Navigating to workflow:', generatedWorkflowId);
                                             // Use replace to prevent back button issues and ensure clean navigation
                                             // Add autoRun query parameter to automatically start the workflow
-                                            navigate(`/workflow/${generatedWorkflowId}?autoRun=true`, { replace: false });
+                                            try {
+                                                await commitSetupWorkflow(generatedWorkflowId);
+                                                navigate(`/workflow/${generatedWorkflowId}?autoRun=true`, { replace: false });
+                                            } catch (error: any) {
+                                                toast({
+                                                    title: 'Workflow setup incomplete',
+                                                    description: error?.message || 'Complete required setup before opening the workflow.',
+                                                    variant: 'destructive',
+                                                });
+                                            }
                                         } else {
                                             console.error('Cannot navigate: generatedWorkflowId is null');
                                             toast({
@@ -8835,3 +8903,4 @@ export function AutonomousAgentWizard() {
         </div>
     );
 }
+

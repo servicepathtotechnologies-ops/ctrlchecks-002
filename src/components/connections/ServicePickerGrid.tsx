@@ -29,9 +29,10 @@ function categoryFor(provider: string): string {
 
 interface Props {
   onSelect: (type: CredentialTypeDefinition) => void;
+  connectedTypeIds?: Set<string>;
 }
 
-export function ServicePickerGrid({ onSelect }: Props) {
+export function ServicePickerGrid({ onSelect, connectedTypeIds = new Set() }: Props) {
   const { data: types = [], isLoading } = useCredentialTypes();
   const [search, setSearch] = useState('');
 
@@ -87,26 +88,33 @@ export function ServicePickerGrid({ onSelect }: Props) {
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {items.map((t) => {
                 const comingSoon = isComingSoonProvider(t.provider);
+                const alreadyConnected = connectedTypeIds.has(t.id);
                 const providerName = t.provider.charAt(0).toUpperCase() + t.provider.slice(1);
 
                 return (
                   <button
                     key={t.id}
                     type="button"
-                    disabled={comingSoon}
-                    title={comingSoon ? `${providerName} is coming soon` : `Connect ${providerName}`}
+                    disabled={comingSoon || alreadyConnected}
+                    title={
+                      comingSoon
+                        ? `${providerName} is coming soon`
+                        : alreadyConnected
+                          ? `${providerName} is already connected`
+                          : `Connect ${providerName}`
+                    }
                     onClick={() => {
-                      if (!comingSoon) onSelect(t);
+                      if (!comingSoon && !alreadyConnected) onSelect(t);
                     }}
                     className={`relative flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors group ${
-                      comingSoon
+                      comingSoon || alreadyConnected
                         ? 'cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground opacity-75'
                         : 'border-transparent hover:border-border hover:bg-muted/50'
                     }`}
                   >
-                    {comingSoon && (
+                    {(comingSoon || alreadyConnected) && (
                       <span className="absolute right-1 top-1 rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
-                        Coming soon
+                        {alreadyConnected ? 'Connected' : 'Coming soon'}
                       </span>
                     )}
                     <ProviderLogo provider={t.provider} size={36} />

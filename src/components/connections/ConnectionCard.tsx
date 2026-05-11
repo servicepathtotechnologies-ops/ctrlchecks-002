@@ -33,6 +33,39 @@ interface Props {
   onEdit?: (connection: ConnectionRecord) => void;
 }
 
+/** Maps a raw error message from the reconnect/test flow to a user-readable string. */
+function humaniseReconnectError(msg: string): string {
+  const lower = msg.toLowerCase();
+  if (lower.includes('popup') || lower.includes('blocked')) {
+    return 'Please allow popups for this site and try again.';
+  }
+  if (lower.includes('timed out') || lower.includes('timeout')) {
+    return 'Connection timed out. Please try again.';
+  }
+  if (lower.includes('cancelled') || lower.includes('canceled')) {
+    return 'Connection was cancelled.';
+  }
+  if (lower.includes('declined') || lower.includes('denied') || lower.includes('rejected')) {
+    return 'Authentication was declined. Check your account permissions and try again.';
+  }
+  return msg;
+}
+
+/** Maps a test-connection result/error to a specific human-readable message. */
+function humaniseTestError(msg: string): string {
+  const lower = msg.toLowerCase();
+  if (lower.includes('expired') || lower.includes('401') || lower.includes('unauthorized')) {
+    return 'Token has expired. Use "Reconnect" to get a fresh token.';
+  }
+  if (lower.includes('scope') || lower.includes('permission') || lower.includes('403')) {
+    return 'Missing required permissions. Reconnect and grant the necessary scopes.';
+  }
+  if (lower.includes('network') || lower.includes('fetch') || lower.includes('econnrefused')) {
+    return 'Network error — could not reach the service. Check your internet connection.';
+  }
+  return msg;
+}
+
 export function ConnectionCard({ connection, onEdit }: Props) {
   const { toast } = useToast();
   const credType = useCredentialType(connection.credentialTypeId);
@@ -45,16 +78,28 @@ export function ConnectionCard({ connection, onEdit }: Props) {
     ? formatDistanceToNow(new Date(connection.lastUsedAt), { addSuffix: true })
     : null;
 
+  // Each action has its own independent loading state so buttons don't block each other.
+  const isTestBusy      = testMut.isPending;
+  const isReconnectBusy = oauthFlow.isLoading;
+  const isDeleteBusy    = deleteMut.isPending;
+
   async function handleTest() {
     try {
       const result = await testMut.mutateAsync(connection.id);
       toast({
         title: result.ok ? 'Connection OK' : 'Connection failed',
-        description: result.message,
+        description: result.ok
+          ? (result.message || 'The connection is working correctly.')
+          : humaniseTestError(result.message || 'Connection test failed.'),
         variant: result.ok ? 'default' : 'destructive',
       });
-    } catch {
-      toast({ title: 'Test failed', variant: 'destructive' });
+    } catch (err) {
+      const raw = err instanceof Error ? err.message : 'Could not test connection';
+      toast({
+        title: 'Test failed',
+        description: humaniseTestError(raw),
+        variant: 'destructive',
+      });
     }
   }
 
@@ -62,8 +107,13 @@ export function ConnectionCard({ connection, onEdit }: Props) {
     try {
       await oauthFlow.reconnect(connection.id);
       toast({ title: 'Reconnected successfully' });
-    } catch {
-      toast({ title: 'Reconnect failed', description: oauthFlow.error ?? undefined, variant: 'destructive' });
+    } catch (err) {
+      const raw = err instanceof Error ? err.message : 'Reconnect failed';
+      toast({
+        title: 'Reconnect failed',
+        description: humaniseReconnectError(raw),
+        variant: 'destructive',
+      });
     }
   }
 
@@ -72,13 +122,12 @@ export function ConnectionCard({ connection, onEdit }: Props) {
       await deleteMut.mutateAsync(connection.id);
       toast({ title: 'Connection deleted' });
     } catch {
-      toast({ title: 'Delete failed', variant: 'destructive' });
+      toast({ title: 'Delete failed', description: 'Could not delete the connection. Please try again.', variant: 'destructive' });
     }
     setConfirmDelete(false);
   }
 
   const isOAuth = connection.authType === 'oauth2';
-  const isBusy = testMut.isPending || deleteMut.isPending || oauthFlow.isLoading;
 
   return (
     <>
@@ -99,14 +148,14 @@ export function ConnectionCard({ connection, onEdit }: Props) {
 
           <div className="flex items-center gap-2 shrink-0">
             {connection.status === 'expired' && isOAuth && (
-              <Button size="sm" variant="outline" onClick={handleReconnect} disabled={isBusy}>
-                {oauthFlow.isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              <Button size="sm" variant="outline" onClick={handleReconnect} disabled={isReconnectBusy}>
+                {isReconnectBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
                 <span className="ml-1.5">Reconnect</span>
               </Button>
             )}
             {connection.status === 'error' && (
-              <Button size="sm" variant="outline" onClick={handleTest} disabled={isBusy}>
-                {testMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+              <Button size="sm" variant="outline" onClick={handleTest} disabled={isTestBusy}>
+                {isTestBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                 <span className="ml-1.5">Test</span>
               </Button>
             )}
@@ -119,7 +168,7 @@ export function ConnectionCard({ connection, onEdit }: Props) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleTest} disabled={testMut.isPending}>
+                <DropdownMenuItem onClick={handleTest} disabled={isTestBusy}>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                   Test connection
                 </DropdownMenuItem>
@@ -130,7 +179,7 @@ export function ConnectionCard({ connection, onEdit }: Props) {
                   </DropdownMenuItem>
                 )}
                 {isOAuth && (
-                  <DropdownMenuItem onClick={handleReconnect} disabled={oauthFlow.isLoading}>
+                  <DropdownMenuItem onClick={handleReconnect} disabled={isReconnectBusy}>
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Reconnect
                   </DropdownMenuItem>
@@ -139,6 +188,7 @@ export function ConnectionCard({ connection, onEdit }: Props) {
                 <DropdownMenuItem
                   onClick={() => setConfirmDelete(true)}
                   className="text-destructive focus:text-destructive"
+                  disabled={isDeleteBusy}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
@@ -164,7 +214,7 @@ export function ConnectionCard({ connection, onEdit }: Props) {
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {isDeleteBusy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

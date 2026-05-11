@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { ToastAction } from '@/components/ui/toast';
 import { Copy, ExternalLink, ChevronRight, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NodeTypeDefinition } from '@/components/workflow/nodeTypes';
@@ -46,6 +47,91 @@ type ReliabilityUiState = {
   selfCorrectionTriggered?: boolean;
   lastErrorCode?: string;
 };
+
+const CREDENTIAL_PROVIDER_LABELS: Record<string, string> = {
+  google: 'Google',
+  google_sheets: 'Google (Sheets)',
+  googleSheets: 'Google (Sheets)',
+  gmail: 'Gmail',
+  slack: 'Slack',
+  github: 'GitHub',
+  linkedin: 'LinkedIn',
+  twitter: 'Twitter',
+  x: 'X',
+  facebook: 'Facebook',
+  notion: 'Notion',
+  whatsapp: 'WhatsApp',
+};
+
+function toTitleLabel(value: string): string {
+  const normalized = value
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .trim();
+
+  if (!normalized) return value;
+
+  return normalized
+    .split(/\s+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function normalizeCredentialProviderName(raw: unknown): string | null {
+  if (!raw) return null;
+
+  if (typeof raw === 'string') {
+    return CREDENTIAL_PROVIDER_LABELS[raw] || toTitleLabel(raw);
+  }
+
+  if (typeof raw !== 'object') return null;
+
+  const detail = raw as Record<string, unknown>;
+  const directName = detail.displayName || detail.label || detail.name || detail.providerName;
+  if (typeof directName === 'string' && directName.trim()) {
+    return CREDENTIAL_PROVIDER_LABELS[directName] || toTitleLabel(directName);
+  }
+
+  const provider = typeof detail.provider === 'string' ? detail.provider : null;
+  const service =
+    typeof detail.service === 'string' ? detail.service :
+    typeof detail.credentialType === 'string' ? detail.credentialType :
+    typeof detail.credentialTypeId === 'string' ? detail.credentialTypeId :
+    typeof detail.type === 'string' ? detail.type :
+    null;
+
+  const combined = [provider, service].filter(Boolean).join('_');
+  if (combined && CREDENTIAL_PROVIDER_LABELS[combined]) return CREDENTIAL_PROVIDER_LABELS[combined];
+  if (provider && CREDENTIAL_PROVIDER_LABELS[provider]) {
+    return service && service !== provider
+      ? `${CREDENTIAL_PROVIDER_LABELS[provider]} (${toTitleLabel(service)})`
+      : CREDENTIAL_PROVIDER_LABELS[provider];
+  }
+  if (combined) return toTitleLabel(combined);
+
+  return null;
+}
+
+function formatList(items: string[]): string {
+  if (items.length <= 1) return items[0] || '';
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
+}
+
+function getMissingCredentialProviderNames(details: any): string[] {
+  const rawList = Array.isArray(details?.missingCredentials) ? details.missingCredentials : [];
+  const names = rawList
+    .map(normalizeCredentialProviderName)
+    .filter((name): name is string => Boolean(name));
+
+  return Array.from(new Set(names));
+}
+
+function buildMissingCredentialsToastTitle(details: any): string | null {
+  const providerNames = getMissingCredentialProviderNames(details);
+  if (providerNames.length === 0) return null;
+  return `Execution failed: ${formatList(providerNames)} ${providerNames.length === 1 ? 'is' : 'are'} not connected.`;
+}
 
 export default function WorkflowBuilder() {
   const { id } = useParams();
@@ -126,6 +212,16 @@ export default function WorkflowBuilder() {
       if (error) throw error;
 
       if (data) {
+        if ((data as any).setup_completed === false) {
+          toast({
+            title: 'Workflow setup is still in progress',
+            description: 'Finish the AI setup flow before opening this workflow.',
+            variant: 'destructive',
+          });
+          navigate('/workflows', { replace: true });
+          return;
+        }
+
         setWorkflowId(data.id);
         setWorkflowName(data.name);
 
@@ -448,23 +544,23 @@ export default function WorkflowBuilder() {
               if (attachInputsResponse.ok) {
                 console.log('[handleSave] ✅ Inputs attached successfully');
                 markAttachInputsPayloadPersisted(savedWorkflowId, inputsToAttach);
-                
-                // Check if credentials are required
-                const attachResult = await attachInputsResponse.json();
-                
-                // If no credentials required, status should already be ready_for_execution
-                // If credentials required, status will be configuring_credentials
-                // Either way, workflow is ready to run (credentials can be attached later)
+                await attachInputsResponse.json();
               } else {
                 const attachError = await attachInputsResponse.json().catch(() => ({ error: 'Failed to attach inputs' }));
-                
-                // If error is phase locking (already configured), that's fine
-                if (attachError.code === 'PHASE_LOCKED' || 
+
+                // PHASE_LOCKED / INVALID_PHASE means the workflow is already configured — silent, non-fatal.
+                if (attachError.code === 'PHASE_LOCKED' ||
                     attachError.code === 'INVALID_PHASE' ||
                     (attachError.currentPhase && ['ready_for_execution', 'executing'].includes(attachError.currentPhase))) {
                   console.log('[handleSave] Workflow already configured, skipping input attachment');
                 } else {
-                  console.warn('[handleSave] Failed to auto-attach inputs (non-fatal):', attachError);
+                  // Any other attach-inputs failure is surfaced to the user.
+                  console.warn('[handleSave] Failed to auto-attach inputs:', attachError);
+                  toast({
+                    title: 'Warning: inputs could not be updated',
+                    description: 'Workflow inputs could not be updated. Please refresh and try again before running.',
+                    variant: 'destructive',
+                  });
                 }
               }
             }
@@ -663,6 +759,9 @@ export default function WorkflowBuilder() {
 
   const handleRun = useCallback(async (autoSave = false) => {
     setExecutionGuidance(null);
+    // Show loading immediately on click — before any async work — so the user
+    // gets feedback within a frame rather than waiting 1-2 s for validation.
+    setIsRunning(true);
     const workflowId = useWorkflowStore.getState().workflowId;
 
     if (nodes.length === 0) {
@@ -671,12 +770,13 @@ export default function WorkflowBuilder() {
         description: 'Add some nodes to your workflow before running',
         variant: 'destructive',
       });
+      setIsRunning(false);
       return;
     }
 
     // Auto-save if needed and requested
     if (autoSave && (!workflowId || useWorkflowStore.getState().isDirty)) {
-      if (!user) return;
+      if (!user) { setIsRunning(false); return; }
       
       try {
         setIsSaving(true);
@@ -727,11 +827,12 @@ export default function WorkflowBuilder() {
       } catch (error) {
         console.error('Error auto-saving workflow:', error);
         toast({
-          title: 'Error',
-          description: 'Failed to save workflow before running',
+          title: 'Save failed — execution blocked',
+          description: 'Workflow could not be saved. Execution cancelled. Please try again.',
           variant: 'destructive',
         });
         setIsSaving(false);
+        setIsRunning(false);
         return;
       } finally {
         setIsSaving(false);
@@ -745,6 +846,7 @@ export default function WorkflowBuilder() {
         description: 'Please save your workflow before running',
         variant: 'destructive',
       });
+      setIsRunning(false);
       return;
     }
 
@@ -787,6 +889,7 @@ export default function WorkflowBuilder() {
         description: 'Manual Run is disabled when a schedule is active. The workflow is running automatically.',
         variant: 'default',
       });
+      setIsRunning(false);
       return;
     }
 
@@ -814,6 +917,7 @@ export default function WorkflowBuilder() {
           description: `Workflow validation failed: ${errorMessages}`,
           variant: 'destructive',
         });
+        setIsRunning(false);
         return;
       }
     } catch (validationError: any) {
@@ -823,6 +927,7 @@ export default function WorkflowBuilder() {
         description: validationError?.message || 'Failed to validate workflow',
         variant: 'destructive',
       });
+      setIsRunning(false);
       return;
     }
 
@@ -948,14 +1053,39 @@ export default function WorkflowBuilder() {
                   detailedMessage += `\n\nMissing Inputs: ${errorData.details.missingInputsCount}`;
                 }
                 if (errorData.details.missingCredentialsCount > 0) {
-                  detailedMessage += `\n\nMissing Credentials: ${errorData.details.missingCredentialsCount}`;
+                  const missingCredentialNames = getMissingCredentialProviderNames(errorData.details);
+                  detailedMessage += missingCredentialNames.length > 0
+                    ? `\n\nMissing Credentials: ${formatList(missingCredentialNames)}`
+                    : `\n\nMissing Credentials: ${errorData.details.missingCredentialsCount}`;
                 }
               }
               if (errorHint) {
                 detailedMessage += `\n\n💡 ${errorHint}`;
               }
-              
-              throw new Error(detailedMessage);
+
+              const guidance = mapWorkflowIssueToGuidance(errorData);
+              setExecutionGuidance(guidance);
+              const missingCredentialsTitle = buildMissingCredentialsToastTitle(errorData.details);
+              if (missingCredentialsTitle) {
+                toast({
+                  title: missingCredentialsTitle,
+                  description: 'Go to Connections to fix this.',
+                  variant: 'destructive',
+                  duration: 9000,
+                  action: (
+                    <ToastAction altText="Open Connections" onClick={() => navigate('/connections')}>
+                      Connections
+                    </ToastAction>
+                  ),
+                });
+              } else {
+                toast({
+                  title: guidance.title,
+                  description: guidance.description,
+                  duration: 9000,
+                });
+              }
+              return;
             }
 
             setReliabilityStatus((prev) => ({
@@ -1102,7 +1232,6 @@ export default function WorkflowBuilder() {
     // Reset all node statuses to 'idle' before starting new execution
     resetAllNodeStatuses();
 
-    setIsRunning(true);
     // Expand console to show logs
     if (!consoleExpanded) {
       setConsoleExpanded(true);
@@ -1172,7 +1301,10 @@ export default function WorkflowBuilder() {
             detailedMessage += `\n\nMissing Inputs: ${errorData.details.missingInputsCount}`;
           }
           if (errorData.details.missingCredentialsCount > 0) {
-            detailedMessage += `\n\nMissing Credentials: ${errorData.details.missingCredentialsCount}`;
+            const missingCredentialNames = getMissingCredentialProviderNames(errorData.details);
+            detailedMessage += missingCredentialNames.length > 0
+              ? `\n\nMissing Credentials: ${formatList(missingCredentialNames)}`
+              : `\n\nMissing Credentials: ${errorData.details.missingCredentialsCount}`;
           }
           if (errorData.details.requiredCredentialsCount > 0) {
             detailedMessage += `\n\nRequired Credentials: ${errorData.details.requiredCredentialsCount}`;
@@ -1182,11 +1314,24 @@ export default function WorkflowBuilder() {
           detailedMessage += `\n\n💡 ${errorHint}`;
         }
 
-        const guidance = mapWorkflowIssueToGuidance({
-          ...errorData,
-          message: detailedMessage,
-        });
+        const guidance = mapWorkflowIssueToGuidance(errorData);
         setExecutionGuidance(guidance);
+        const missingCredentialsTitle = buildMissingCredentialsToastTitle(errorData.details);
+        if (missingCredentialsTitle) {
+          toast({
+            title: missingCredentialsTitle,
+            description: 'Go to Connections to fix this.',
+            variant: 'destructive',
+            duration: 9000,
+            action: (
+              <ToastAction altText="Open Connections" onClick={() => navigate('/connections')}>
+                Connections
+              </ToastAction>
+            ),
+          });
+          setIsRunning(false);
+          return;
+        }
         toast({
           title: guidance.title,
           description: guidance.description,
@@ -1389,13 +1534,15 @@ export default function WorkflowBuilder() {
             </div>
           )}
           {!debugNodeId && (executionGuidance || notificationConfigs.length > 0) && (
-            <div className="absolute right-4 top-4 z-[70] w-[min(420px,calc(100%-2rem))] flex flex-col gap-3">
+            <div className="absolute right-4 top-4 z-[70] w-[min(520px,calc(100%-2rem))] flex flex-col gap-3">
               {executionGuidance && (
                 <GuidedStatusCard
                   title={executionGuidance.title}
                   description={executionGuidance.description}
                   resolution={executionGuidance.resolution}
                   details={executionGuidance.details}
+                  missingItems={executionGuidance.missingItems}
+                  nextSteps={executionGuidance.nextSteps}
                   tone={executionGuidance.tone}
                   onDismiss={() => setExecutionGuidance(null)}
                 />
