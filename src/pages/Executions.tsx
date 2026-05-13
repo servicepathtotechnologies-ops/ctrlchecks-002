@@ -25,6 +25,7 @@ export default function Executions() {
   const navigate = useNavigate();
   const [executions, setExecutions] = useState<Execution[]>([]);
   const [loading, setLoading] = useState(true);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -62,9 +63,9 @@ export default function Executions() {
   };
 
   const retryExecution = async (execution: Execution) => {
+    if (retryingId) return;
+    setRetryingId(execution.id);
     try {
-      toast({ title: 'Retrying...', description: 'Starting execution' });
-      
       const { data: sessionData } = await supabase.auth.getSession();
       const response = await fetch(`${ENDPOINTS.itemBackend}/api/execute-workflow`, {
         method: 'POST',
@@ -82,14 +83,15 @@ export default function Executions() {
         throw new Error(error.error || error.message || 'Execution failed');
       }
 
-      await response.json().catch(() => ({}));
+      const data = await response.json().catch(() => ({}));
 
-      toast({
-        title: 'Execution started',
-        description: 'The workflow is running. Refresh to see the result.',
-      });
+      toast({ title: 'Execution started', description: 'Workflow is now running' });
 
-      loadExecutions();
+      if (data.executionId) {
+        navigate(`/execution/${data.executionId}`);
+      } else {
+        loadExecutions();
+      }
     } catch (error) {
       console.error('Retry error:', error);
       toast({
@@ -97,6 +99,8 @@ export default function Executions() {
         description: 'Failed to retry execution',
         variant: 'destructive',
       });
+    } finally {
+      setRetryingId(null);
     }
   };
 
@@ -237,9 +241,12 @@ export default function Executions() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          disabled={retryingId === execution.id}
                           onClick={(e) => { e.stopPropagation(); retryExecution(execution); }}
                         >
-                          <RefreshCw className="h-4 w-4" />
+                          {retryingId === execution.id
+                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                            : <RefreshCw className="h-4 w-4" />}
                         </Button>
                       )}
 

@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { Tables, Json } from '@/integrations/aws/types';
 import { is406Error } from '@/lib/utils';
+import { workflowAPI } from '@/lib/api/workflowAPI';
 
 type WorkflowRecord = Tables<'workflows'> & {
   last_execution?: { started_at: string; status: string } | null;
@@ -222,16 +223,19 @@ export default function Workflows() {
   };
 
   const deleteWorkflow = async (id: string) => {
+    // Optimistic: remove immediately so the UI feels instant
+    setWorkflows(prev => prev.filter(w => w.id !== id));
+
     try {
-      const { error } = await supabase.from('workflows').delete().eq('id', id);
-      if (error) throw error;
-      setWorkflows(workflows.filter((w) => w.id !== id));
+      await workflowAPI.deleteWorkflow(id);
       toast({
         title: 'Deleted',
         description: 'Workflow deleted successfully',
       });
     } catch (error) {
       console.error('Error deleting workflow:', error);
+      // Rollback: reload list from server
+      loadWorkflows();
       toast({
         title: 'Error',
         description: 'Failed to delete workflow',

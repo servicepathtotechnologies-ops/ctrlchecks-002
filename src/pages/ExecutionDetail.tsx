@@ -38,6 +38,8 @@ export default function ExecutionDetail() {
   const { user, loading: authLoading } = useAuth();
   const [execution, setExecution] = useState<Execution | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -74,11 +76,9 @@ export default function ExecutionDetail() {
   };
 
   const retryExecution = async () => {
-    if (!execution) return;
-    
+    if (!execution || retrying) return;
+    setRetrying(true);
     try {
-      toast({ title: 'Retrying...', description: 'Starting execution' });
-      
       const { data: sessionData } = await supabase.auth.getSession();
       const response = await fetch(`${ENDPOINTS.itemBackend}/api/execute-workflow`, {
         method: 'POST',
@@ -97,28 +97,24 @@ export default function ExecutionDetail() {
       }
 
       const data = await response.json();
+      toast({ title: 'Execution started', description: 'Workflow is now running' });
 
-      toast({
-        title: 'Execution started',
-        description: 'The workflow is running. Refresh to see the result.',
-      });
-
-      // Navigate to new execution
       if (data.executionId) {
         navigate(`/execution/${data.executionId}`);
       }
     } catch (error) {
       console.error('Retry error:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to retry execution',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to retry execution', variant: 'destructive' });
+    } finally {
+      setRetrying(false);
     }
   };
 
   const cancelExecution = async () => {
-    if (!execution) return;
+    if (!execution || cancelling) return;
+    setCancelling(true);
+    // Optimistic: hide the cancel button and update badge immediately
+    setExecution(prev => prev ? { ...prev, status: 'cancelled' } : prev);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const res = await fetch(`${ENDPOINTS.itemBackend}/api/executions/${execution.id}/cancel`, {
@@ -135,10 +131,15 @@ export default function ExecutionDetail() {
         loadExecution(execution.id);
       } else {
         const err = await res.json().catch(() => ({}));
+        // Rollback optimistic update
+        setExecution(prev => prev ? { ...prev, status: 'running' } : prev);
         toast({ title: 'Cancel failed', description: err.error || 'Unknown error', variant: 'destructive' });
       }
     } catch {
+      setExecution(prev => prev ? { ...prev, status: 'running' } : prev);
       toast({ title: 'Cancel failed', description: 'Network error', variant: 'destructive' });
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -200,13 +201,19 @@ export default function ExecutionDetail() {
               {execution.status}
             </Badge>
             {execution.status === 'running' && (
-              <Button size="sm" variant="destructive" onClick={cancelExecution}>
-                <Square className="mr-2 h-3.5 w-3.5 fill-current" /> Cancel
+              <Button size="sm" variant="destructive" disabled={cancelling} onClick={cancelExecution}>
+                {cancelling
+                  ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                  : <Square className="mr-2 h-3.5 w-3.5 fill-current" />}
+                {cancelling ? 'Cancelling…' : 'Cancel'}
               </Button>
             )}
             {execution.status === 'failed' && (
-              <Button size="sm" onClick={retryExecution}>
-                <RefreshCw className="mr-2 h-4 w-4" /> Retry
+              <Button size="sm" disabled={retrying} onClick={retryExecution}>
+                {retrying
+                  ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  : <RefreshCw className="mr-2 h-4 w-4" />}
+                {retrying ? 'Starting…' : 'Retry'}
               </Button>
             )}
           </div>

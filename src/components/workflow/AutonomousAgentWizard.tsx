@@ -36,6 +36,7 @@ import { CapabilityReviewStep } from './CapabilityReviewStep';
 import type { CapabilityContainer, NodeSelectionMap } from '../../types/capability-selection';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
 import { generateFieldGuide } from './guideGenerator';
+import { FieldOwnershipHelpPanel } from './FieldOwnershipHelpPanel';
 import {
     resolveEffectiveFieldFillMode,
     resolveWizardFieldFillMode,
@@ -334,35 +335,28 @@ function buildFieldOwnershipCopy(
     const example = aiFieldDesc?.example || buildDeterministicFieldExample(question, fieldDoc);
     const you =
         aiFieldDesc?.you ||
-        `You means you choose and keep this ${humanField} fixed for the workflow.`;
+        `You provide this value manually and it stays fixed for every run — right for a specific ${humanField} that won't change.`;
     const aiBuild =
-        aiFieldDesc?.aiBuild && aiFieldDesc.aiBuild !== 'N/A'
+        aiFieldDesc?.aiBuild && aiFieldDesc.aiBuild !== 'N/A' && aiFieldDesc.aiBuild !== 'Not available for this field.'
             ? aiFieldDesc.aiBuild
-            : `AI build means AI chooses this ${humanField} once while creating the workflow, based on your intent.`;
+            : `AI will determine this ${humanField} once during workflow setup, then reuse it on every run.`;
     const aiRun =
-        aiFieldDesc?.aiRun && aiFieldDesc.aiRun !== 'N/A'
+        aiFieldDesc?.aiRun && aiFieldDesc.aiRun !== 'N/A' && aiFieldDesc.aiRun !== 'Not available for this field.'
             ? aiFieldDesc.aiRun
-            : `AI runtime means AI decides this ${humanField} fresh on each run using incoming data and workflow intent.`;
+            : `AI will decide this ${humanField} fresh on every run from the live data flowing through the workflow.`;
     const toggleOff =
         `Toggle off leaves ${humanField} out of this setup for now. Toggle on lets you choose who owns it: You, AI build, or AI runtime.`;
     const requiredText = aiFieldDesc?.needed || (
         question.required === false
-            ? `This field looks optional for this workflow. Keep it off unless your intent needs ${humanField}.`
-            : `This field is likely required for this workflow step to work correctly.`
+            ? `Leave this off for now — it looks optional for this workflow step.`
+            : `Toggle this on and enter the value — this field is required for the step to work.`
     );
-    const recommendedOwner = aiFieldDesc?.bestOwner || (opts.locked
-        ? 'This field is locked because the workflow, OAuth, vault, or an AI-filled value already controls it.'
-        : opts.selectedMode === 'runtime_ai'
-          ? `Current choice: AI runtime. The value can change on every run based on incoming data.`
-          : opts.selectedMode === 'buildtime_ai_once'
-            ? `Current choice: AI build. AI prepares this value once during setup, then it stays fixed.`
-            : `Current choice: You. Use this when the value should stay predictable and be reviewed by you.`);
     const dataImpact = aiFieldDesc?.dataImpact || (
         opts.fieldEnabled === false
             ? `Because it is off, this input will not shape how this step handles data yet.`
             : `When enabled, this input changes how this step reads, filters, writes, or prepares data for the next step.`
     );
-    return { what, you, aiBuild, aiRun, example, toggleOff, requiredText, recommendedOwner, dataImpact };
+    return { what, you, aiBuild, aiRun, example, toggleOff, requiredText, dataImpact };
 }
 
 function credentialWizardFriendlyStatus(status: string): string {
@@ -856,6 +850,7 @@ export function AutonomousAgentWizard() {
     const [configureCredentials, setConfigureCredentials] = useState<Record<string, Record<string, any>>>({});
     const [configureInputs, setConfigureInputs] = useState<Array<{ nodeId: string; fieldName: string; value: any }>>([]);
     const [isConfiguring, setIsConfiguring] = useState(false);
+    const [isNavigating, setIsNavigating] = useState(false);
     const [configureGuidance, setConfigureGuidance] = useState<GuidedStatusContent | null>(null);
     const [workflowReady, setWorkflowReady] = useState(false);
     // ? STEP-BY-STEP: Track current question index for wizard flow
@@ -3496,7 +3491,12 @@ export function AutonomousAgentWizard() {
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error(result?.message || result?.error || 'Workflow setup is incomplete');
+            const detailErrors: string[] = result?.details?.errors ?? [];
+            const topMessage = result?.message || result?.error || 'Workflow setup is incomplete';
+            const fullMessage = detailErrors.length > 0
+                ? `${topMessage}\n\n${detailErrors.join('\n')}`
+                : topMessage;
+            throw new Error(fullMessage);
         }
         return result;
     }, []);
@@ -3888,13 +3888,6 @@ export function AutonomousAgentWizard() {
                         console.log('[StateManager] Workflow already ready - skipping blueprint setting');
                     }
                     
-                    setGeneratedWorkflowId(savedWorkflow.id);
-                    setNodes(normalized.nodes as any[]);
-                    setEdges(normalized.edges as any[]);
-                    setPendingWorkflowData(null);
-                    setProgress(100);
-                    setIsComplete(true);
-                    
                     const finalPhase = (finalWorkflow?.phase || '').toString();
                     const readyForExecution = finalPhase === 'ready_for_execution';
                     toast({
@@ -3903,18 +3896,28 @@ export function AutonomousAgentWizard() {
                             ? 'Workflow saved. Some credentials are still required before run.'
                             : 'Your workflow has been created and configured!',
                     });
-                    
+
                     // ? CRITICAL: Always redirect to workflow view after successful configuration
                     console.log('?? Redirecting to workflow view...');
-                    // Avoid intermediate navigation that looks like a "reload"/flicker
+                    // setIsNavigating disables the button and shows a spinner — prevents re-clicks
+                    // and avoids any state-driven re-render before the await completes.
+                    // State setters are intentionally placed AFTER navigate so they never
+                    // trigger a visible re-render (the component unmounts on navigation).
+                    setIsNavigating(true);
                     await commitSetupWorkflow(savedWorkflow.id);
                     navigate(`/workflow/${savedWorkflow.id}`, { replace: true });
+                    // No-ops from here — component is unmounting
+                    setGeneratedWorkflowId(savedWorkflow.id);
+                    setNodes(normalized.nodes as any[]);
+                    setEdges(normalized.edges as any[]);
+                    setPendingWorkflowData(null);
+                    setProgress(100);
+                    setIsComplete(true);
                     return;
                 }
             } catch (err: any) {
                 console.error('Error saving workflow with configuration:', err);
-
-                // Keep user on the unified setup page when configuration/credential submission fails.
+                setIsNavigating(false);
                 toast({
                     title: 'Error',
                     description: 'Failed to save workflow: ' + (err.message || 'Unknown error'),
@@ -4841,7 +4844,6 @@ export function AutonomousAgentWizard() {
                                             title: 'Workflow Created',
                                             description: 'Your workflow has been created successfully!',
                                         });
-                                        // Avoid intermediate navigation that looks like a "reload"/flicker
                                         await commitSetupWorkflow(savedWorkflow.id);
                                         navigate(`/workflow/${savedWorkflow.id}`, { replace: true });
                                     } else {
@@ -7161,39 +7163,50 @@ export function AutonomousAgentWizard() {
                                                                                         </div>
                                                                                     )}
 
-                                                                                    {fieldHelpOpen && (
-                                                                                        <div className="px-3 py-3 border-t border-border/20 bg-indigo-500/5 space-y-2">
-                                                                                            {nodeFieldDescState?.loading && !aiFieldDesc ? (
-                                                                                                <div className="space-y-2">
-                                                                                                    <div className="h-3 w-5/6 rounded bg-muted/40 animate-pulse" />
-                                                                                                    <div className="h-3 w-2/3 rounded bg-muted/40 animate-pulse" />
-                                                                                                </div>
-                                                                                            ) : (
-                                                                                                <>
-                                                                                                    <div>
-                                                                                                        <p className="text-[11px] font-medium text-foreground/85">What this field does in this workflow</p>
-                                                                                                        <p className="text-xs text-muted-foreground leading-relaxed">{fieldOwnershipCopy.what}</p>
-                                                                                                    </div>
-                                                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                                                                        <div className="rounded border border-border/40 bg-background/40 p-2">
-                                                                                                            <p className="text-[11px] font-medium text-foreground/85">Do you need it?</p>
-                                                                                                            <p className="text-[11px] text-muted-foreground leading-relaxed">{fieldOwnershipCopy.requiredText}</p>
-                                                                                                        </div>
-                                                                                                        <div className="rounded border border-border/40 bg-background/40 p-2">
-                                                                                                            <p className="text-[11px] font-medium text-foreground/85">Best ownership choice</p>
-                                                                                                            <p className="text-[11px] text-muted-foreground leading-relaxed">{fieldOwnershipCopy.recommendedOwner}</p>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <div>
-                                                                                                        <p className="text-[11px] font-medium text-foreground/85">How this changes the data</p>
-                                                                                                        <p className="text-[11px] text-muted-foreground leading-relaxed">{fieldOwnershipCopy.dataImpact}</p>
-                                                                                                    </div>
-                                                                                                    <p className="text-[10px] text-muted-foreground/60 font-mono">{fieldOwnershipCopy.example}</p>
-                                                                                                    <p className="text-[10px] text-muted-foreground/55">{fieldOwnershipCopy.toggleOff}</p>
-                                                                                                </>
-                                                                                            )}
+                                                                                    {/* -- ON: compact ownership hint when help panel is closed -- */}
+                                                                                    {fieldEnabled && !fieldHelpOpen && !locked && (
+                                                                                        <div className="px-3 py-1.5 border-t border-border/20 flex items-center justify-between gap-2">
+                                                                                            <p className="text-[11px] text-muted-foreground">
+                                                                                                Owner:{' '}
+                                                                                                <span className="font-medium text-foreground/80">
+                                                                                                    {selectedMode === 'manual_static' ? 'You'
+                                                                                                        : selectedMode === 'buildtime_ai_once' ? 'AI Build'
+                                                                                                        : 'AI Runtime'}
+                                                                                                </span>
+                                                                                            </p>
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                className="text-[10px] text-muted-foreground/70 hover:text-foreground/90 underline"
+                                                                                                onClick={() =>
+                                                                                                    setFieldHelpExpanded((prev) => ({
+                                                                                                        ...prev,
+                                                                                                        [fieldHelpKey]: true,
+                                                                                                    }))
+                                                                                                }
+                                                                                            >
+                                                                                                Change ownership
+                                                                                            </button>
                                                                                         </div>
                                                                                     )}
+
+                                                                                    <FieldOwnershipHelpPanel
+                                                                                        fieldHelpOpen={fieldHelpOpen}
+                                                                                        isLoading={!!nodeFieldDescState?.loading}
+                                                                                        hasAiData={!!aiFieldDesc}
+                                                                                        fieldEnabled={fieldEnabled}
+                                                                                        locked={locked}
+                                                                                        selectedMode={selectedMode}
+                                                                                        showBuildButton={showBuildButton}
+                                                                                        showRuntimeButton={showRuntimeButton}
+                                                                                        ownershipFooterText={ownershipFooterText}
+                                                                                        fieldOwnershipCopy={fieldOwnershipCopy}
+                                                                                        onModeChange={(mode) =>
+                                                                                            setFillModeValues((prev) => ({
+                                                                                                ...prev,
+                                                                                                [modeKey]: mode,
+                                                                                            }))
+                                                                                        }
+                                                                                    />
 
                                                                                     {/* -- ON: full controls -- */}
                                                                                     {fieldEnabled && (
@@ -7219,60 +7232,6 @@ export function AutonomousAgentWizard() {
                                                                                             />
                                                                                         </div>
                                                                                     ) : null}
-                                                                                    <div className="flex items-start justify-between gap-3">
-                                                                                        <div className="min-w-0 flex-1">
-                                                                                            {ownershipFooterText ? (
-                                                                                                <p className="text-xs text-muted-foreground mt-1">
-                                                                                                    {ownershipFooterText}
-                                                                                                </p>
-                                                                                            ) : null}
-                                                                                        </div>
-                                                                                        <div className="flex flex-wrap items-center gap-2 shrink-0 justify-end">
-                                                                                            <Button
-                                                                                                type="button"
-                                                                                                size="sm"
-                                                                                                variant={selectedMode === 'manual_static' ? 'default' : 'outline'}
-                                                                                                onClick={() =>
-                                                                                                    setFillModeValues((prev) => ({
-                                                                                                        ...prev,
-                                                                                                        [modeKey]: 'manual_static',
-                                                                                                    }))
-                                                                                                }
-                                                                                            >
-                                                                                                You
-                                                                                            </Button>
-                                                                                            {showBuildButton && (
-                                                                                                <Button
-                                                                                                    type="button"
-                                                                                                    size="sm"
-                                                                                                    variant={selectedMode === 'buildtime_ai_once' ? 'default' : 'outline'}
-                                                                                                    onClick={() =>
-                                                                                                        setFillModeValues((prev) => ({
-                                                                                                            ...prev,
-                                                                                                            [modeKey]: 'buildtime_ai_once',
-                                                                                                        }))
-                                                                                                    }
-                                                                                                >
-                                                                                                    AI (build)
-                                                                                                </Button>
-                                                                                            )}
-                                                                                            {showRuntimeButton && (
-                                                                                                <Button
-                                                                                                    type="button"
-                                                                                                    size="sm"
-                                                                                                    variant={selectedMode === 'runtime_ai' ? 'default' : 'outline'}
-                                                                                                    onClick={() =>
-                                                                                                        setFillModeValues((prev) => ({
-                                                                                                            ...prev,
-                                                                                                            [modeKey]: 'runtime_ai',
-                                                                                                        }))
-                                                                                                    }
-                                                                                                >
-                                                                                                    AI (runtime)
-                                                                                                </Button>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </div>
                                                                                     {locked && question.aiFilledAtBuildTime ? (
                                                                                         <div className="mt-2 rounded border border-muted p-2 space-y-1">
                                                                                             <p className="text-[11px] text-muted-foreground">Value was set at generation; this row stays locked for this field type.</p>
@@ -7281,36 +7240,6 @@ export function AutonomousAgentWizard() {
                                                                                             ) : null}
                                                                                         </div>
                                                                                     ) : null}
-                                                                                    {!locked && selectedMode === 'buildtime_ai_once' && (
-                                                                                        <div className="mt-2 rounded border border-sky-300/40 bg-sky-500/10 p-2 space-y-1">
-                                                                                            <p className="text-xs text-sky-200 font-medium">Filled by AI once when the workflow is built</p>
-                                                                                            <p className="text-[11px] text-sky-100/80">
-                                                                                                {fieldOwnershipCopy.aiBuild}
-                                                                                            </p>
-                                                                                            {fieldOwnershipCopy.example && (
-                                                                                                <p className="text-[10px] text-sky-200/60 font-mono">{fieldOwnershipCopy.example}</p>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    )}
-                                                                                    {!locked && selectedMode === 'runtime_ai' && (
-                                                                                        <div className="mt-2 rounded border border-amber-300/40 bg-amber-500/10 p-2 space-y-1">
-                                                                                            <p className="text-xs text-amber-200 font-medium">Filled automatically by AI at runtime</p>
-                                                                                            <p className="text-[11px] text-amber-100/80">
-                                                                                                {fieldOwnershipCopy.aiRun}
-                                                                                            </p>
-                                                                                            {fieldOwnershipCopy.example && (
-                                                                                                <p className="text-[10px] text-amber-200/60 font-mono">{fieldOwnershipCopy.example}</p>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    )}
-                                                                                    {!locked && selectedMode === 'manual_static' && fieldOwnershipCopy.you && (
-                                                                                        <div className="mt-2 rounded border border-border/40 bg-muted/10 p-2 space-y-1">
-                                                                                            <p className="text-[11px] text-muted-foreground">{fieldOwnershipCopy.you}</p>
-                                                                                            {fieldOwnershipCopy.example && (
-                                                                                                <p className="text-[10px] text-muted-foreground/60 font-mono">{fieldOwnershipCopy.example}</p>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    )}
                                                                                     {!locked && workflowPreviewText ? (
                                                                                         <div className="mt-2 rounded border border-emerald-500/25 bg-emerald-500/5 p-2">
                                                                                             <p className="text-[11px] text-muted-foreground mb-1">Current value in workflow (edit on Configuration step)</p>
@@ -7892,9 +7821,12 @@ export function AutonomousAgentWizard() {
                                                     type="button"
                                                     onClick={() => { void handleBuild(); }}
                                                     className="w-full"
+                                                    disabled={isNavigating}
                                                 >
-                                                    <Check className="h-4 w-4 mr-2" />
-                                                    Continue Building Workflow
+                                                    {isNavigating
+                                                        ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                        : <Check className="h-4 w-4 mr-2" />}
+                                                    {isNavigating ? 'Opening workflow…' : 'Continue Building Workflow'}
                                                 </Button>
                                             </div>
                                         )}

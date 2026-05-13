@@ -76,6 +76,17 @@ export const workflowAPI = {
     }
   },
   
+  async deleteWorkflow(id: string) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const authHeader = sessionData?.session?.access_token
+      ? { 'Authorization': `Bearer ${sessionData.session.access_token}` }
+      : {};
+    return api.request(`/api/workflows/${id}`, {
+      method: 'DELETE',
+      headers: authHeader,
+    });
+  },
+
   async getBackendInfo() {
     try {
       const response = await api.get('/health');

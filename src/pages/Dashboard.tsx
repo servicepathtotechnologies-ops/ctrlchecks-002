@@ -22,6 +22,7 @@ import {
 import { Tables, Json } from "@/integrations/aws/types";
 import { toast } from "@/hooks/use-toast";
 import { is406Error } from "@/lib/utils";
+import { workflowAPI } from "@/lib/api/workflowAPI";
 
 type WorkflowRecord = Tables<'workflows'> & {
   last_execution?: { started_at: string; status: string } | null;
@@ -340,7 +341,7 @@ export default function Dashboard() {
     }
   };
 
-  const duplicateWorkflow = async (workflow: Workflow) => {
+  const duplicateWorkflow = async (workflow: WorkflowRecord) => {
     if (!user) return;
     try {
       const { data, error } = await supabase
@@ -358,12 +359,21 @@ export default function Dashboard() {
 
       if (error) throw error;
 
+      if (data) {
+        const newWorkflow: WorkflowRecord = {
+          ...data,
+          last_execution: null,
+          execution_count: 0,
+          workflow_type: detectWorkflowType(data.nodes),
+        };
+        setWorkflows(prev => [newWorkflow, ...prev].slice(0, 6));
+        setStats(prev => ({ ...prev, total: prev.total + 1 }));
+      }
+
       toast({
-        title: 'Success',
+        title: 'Duplicated',
         description: 'Workflow duplicated successfully',
       });
-
-      loadWorkflows();
     } catch (error) {
       console.error('Error duplicating workflow:', error);
       toast({
@@ -377,23 +387,31 @@ export default function Dashboard() {
   const deleteWorkflow = async (id: string) => {
     if (!confirm('Are you sure you want to delete this workflow?')) return;
 
+    const deletedWorkflow = workflows.find(w => w.id === id);
+
+    // Optimistic: remove card and update stats counters immediately
+    setWorkflows(prev => prev.filter(w => w.id !== id));
+    if (deletedWorkflow) {
+      setStats(prev => ({
+        ...prev,
+        total: Math.max(0, prev.total - 1),
+        active: deletedWorkflow.status === 'active' ? Math.max(0, prev.active - 1) : prev.active,
+      }));
+    }
+
     try {
-      const { error } = await supabase
-        .from('workflows')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await workflowAPI.deleteWorkflow(id);
       toast({
-        title: 'Success',
+        title: 'Deleted',
         description: 'Workflow deleted successfully',
       });
-
-      loadWorkflows();
+      // Background sync to keep stats accurate
       loadStats();
     } catch (error) {
       console.error('Error deleting workflow:', error);
+      // Rollback: reload from server
+      loadWorkflows();
+      loadStats();
       toast({
         title: 'Error',
         description: 'Failed to delete workflow',
