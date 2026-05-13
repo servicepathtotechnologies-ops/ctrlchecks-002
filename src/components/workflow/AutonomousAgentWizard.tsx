@@ -3779,15 +3779,14 @@ export function AutonomousAgentWizard() {
                         const satisfiedCreds = discoveredCreds.filter((c) => c.satisfied);
 
                         if (missingCreds.length > 0) {
-                            console.log('?? Missing credentials (will be configured via Connections):', missingCreds.map((c) => c.vaultKey || c.displayName));
-                            setGeneratedWorkflowId(savedWorkflow.id);
+                            // Non-blocking: credentials can be connected from the workflow editor via Connections page
+                            console.log('ℹ️ Some credentials not yet connected — opening workflow editor for user to complete:', missingCreds.map((c) => c.vaultKey || c.displayName));
                             toast({
-                                title: 'Credentials still required',
-                                description: 'Connect or provide all required credentials before opening the workflow.',
-                                variant: 'destructive',
+                                title: 'Some credentials needed',
+                                description: 'Your workflow is saved. Connect missing credentials from the Connections page inside the workflow editor.',
                             });
-                            return;
-                        }
+                            // Skip attach-credentials and fall through to navigate
+                        } else {
                         console.log('?? Attaching credentials...');
                         const credentialsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/attach-credentials`, {
                             method: 'POST',
@@ -3808,10 +3807,17 @@ export function AutonomousAgentWizard() {
                             const errText = rejected
                                 ? `${base}${rejected ? ` Rejected keys: ${rejected}.` : ''}${allowed ? ` Allowed keys: ${allowed}.` : ''}`
                                 : base;
-                            throw new Error(errText);
-                        }
+                            // Non-blocking: log warning and continue to workflow editor
+                            console.warn('[AttachCredentials] Failed (non-blocking, user can connect from editor):', errText);
+                            toast({
+                                title: 'Some credentials not yet connected',
+                                description: 'Your workflow is saved. Connect missing credentials from the Connections page.',
+                            });
+                        } else {
                         credentialsResult = await credentialsResponse.json();
                         console.log('? Credentials attached successfully');
+                        }
+                        }
                     }
                     
                     // ? CRITICAL: Always redirect even when no inputs or credentials are required
@@ -7658,7 +7664,7 @@ export function AutonomousAgentWizard() {
                                                 <CheckCircle2 className="h-12 w-12 mx-auto text-green-500" />
                                                 <h3 className="text-lg font-semibold">Ready to open workflow</h3>
                                                 <p className="text-sm text-muted-foreground">
-                                                    Your workflow setup is saved privately until completion. Any missing credentials must be finished before the workflow opens.
+                                                    Your workflow is saved and ready to open. Any missing credentials can be connected from the Connections page inside the workflow editor.
                                                 </p>
                                             </div>
                                         ) : (
