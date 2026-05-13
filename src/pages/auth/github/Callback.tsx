@@ -22,6 +22,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
+import { getAIGuidance } from '@/lib/ai-error-guidance';
 
 const API_URL    = import.meta.env.VITE_API_URL    || 'http://localhost:3001';
 const CLIENT_ID  = import.meta.env.VITE_COGNITO_CLIENT_ID || '';
@@ -66,7 +67,7 @@ export default function GitHubAuthCallback() {
         setTimeout(() => window.close(), 300);
         return;
       }
-      toast({ title: 'GitHub sign-in failed', description: msg, variant: 'destructive' });
+      getAIGuidance({ code: 'OAUTH_FAILED', message: msg }, { provider: 'github', operation: 'sign_in' });
       setTimeout(() => navigate(returnTo, { replace: true }), 2500);
       return;
     }
@@ -96,11 +97,7 @@ export default function GitHubAuthCallback() {
 
           window.location.href = returnTo;
         } catch (err: any) {
-          toast({
-            title:       'GitHub sign-in failed',
-            description: err.message || 'Could not complete sign-in.',
-            variant:     'destructive',
-          });
+          getAIGuidance({ code: 'SIGN_IN_FAILED', message: err.message || 'Could not complete sign-in' }, { provider: 'github', operation: 'sign_in' });
           setTimeout(() => navigate('/auth', { replace: true }), 2500);
         }
       })();
@@ -126,7 +123,7 @@ export default function GitHubAuthCallback() {
         setTimeout(() => window.close(), 300);
         return;
       }
-      toast({ title: 'Connection failed', description: 'GitHub connection failed.', variant: 'destructive' });
+      getAIGuidance({ code: 'OAUTH_FAILED', message: 'GitHub connection did not complete' }, { provider: 'github', operation: 'connect' });
       setTimeout(() => navigate(returnTo, { replace: true }), 2500);
     }
   }, [navigate, toast, qc]);

@@ -18,6 +18,7 @@ import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/lib/auth";
 import { useRole } from "@/hooks/useRole";
 import { useNavigate } from "react-router-dom";
+import { useWorkflowStore } from "@/stores/workflowStore";
 import { useState } from "react";
 import {
   Sidebar,
@@ -64,6 +65,7 @@ export function AppSidebar() {
   const { canAccessAdmin } = useRole();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
+  const connectionAlertCount = useWorkflowStore(s => s.workflowConnectionAlertCount);
 
   const userInitials = user?.email?.slice(0, 2).toUpperCase() || "U";
 
@@ -90,12 +92,17 @@ export function AppSidebar() {
               {mainNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink 
-                      to={item.url} 
+                    <NavLink
+                      to={item.url}
                       className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-muted/50"
                       activeClassName="bg-muted text-primary font-medium"
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
+                      <div className="relative">
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {item.title === 'Connections' && connectionAlertCount > 0 && (
+                          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive animate-pulse" />
+                        )}
+                      </div>
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>

@@ -27,6 +27,9 @@ import { useToast } from '@/hooks/use-toast';
 import type { ConnectionRecord } from '@/lib/api/connections';
 import { ProviderLogo } from './ProviderLogo';
 import { formatDistanceToNow } from 'date-fns';
+import { GuidedStatusCard } from '@/components/ui/guided-status-card';
+import { getAIGuidance } from '@/lib/ai-error-guidance';
+import type { GuidedStatusContent } from '@/lib/workflow-guidance';
 
 interface Props {
   connection: ConnectionRecord;
@@ -73,6 +76,7 @@ export function ConnectionCard({ connection, onEdit }: Props) {
   const deleteMut = useDeleteConnection();
   const oauthFlow = useOAuthFlow();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [guidance, setGuidance] = useState<GuidedStatusContent | null>(null);
 
   const lastUsed = connection.lastUsedAt
     ? formatDistanceToNow(new Date(connection.lastUsedAt), { addSuffix: true })
@@ -84,36 +88,37 @@ export function ConnectionCard({ connection, onEdit }: Props) {
   const isDeleteBusy    = deleteMut.isPending;
 
   async function handleTest() {
+    setGuidance(null);
     try {
       const result = await testMut.mutateAsync(connection.id);
-      toast({
-        title: result.ok ? 'Connection OK' : 'Connection failed',
-        description: result.ok
-          ? (result.message || 'The connection is working correctly.')
-          : humaniseTestError(result.message || 'Connection test failed.'),
-        variant: result.ok ? 'default' : 'destructive',
-      });
+      if (result.ok) {
+        toast({ title: 'Connection OK', description: result.message || 'The connection is working correctly.' });
+      } else {
+        getAIGuidance(
+          { code: 'CONNECTION_TEST_FAILED', message: humaniseTestError(result.message || 'Connection test failed') },
+          { provider: connection.provider, operation: 'test' }
+        ).then(setGuidance);
+      }
     } catch (err) {
       const raw = err instanceof Error ? err.message : 'Could not test connection';
-      toast({
-        title: 'Test failed',
-        description: humaniseTestError(raw),
-        variant: 'destructive',
-      });
+      getAIGuidance(
+        { code: 'CONNECTION_TEST_FAILED', message: humaniseTestError(raw) },
+        { provider: connection.provider, operation: 'test' }
+      ).then(setGuidance);
     }
   }
 
   async function handleReconnect() {
+    setGuidance(null);
     try {
       await oauthFlow.reconnect(connection.id);
       toast({ title: 'Reconnected successfully' });
     } catch (err) {
       const raw = err instanceof Error ? err.message : 'Reconnect failed';
-      toast({
-        title: 'Reconnect failed',
-        description: humaniseReconnectError(raw),
-        variant: 'destructive',
-      });
+      getAIGuidance(
+        { code: 'OAUTH_RECONNECT_FAILED', message: humaniseReconnectError(raw) },
+        { provider: connection.provider, operation: 'connect' }
+      ).then(setGuidance);
     }
   }
 
@@ -122,7 +127,10 @@ export function ConnectionCard({ connection, onEdit }: Props) {
       await deleteMut.mutateAsync(connection.id);
       toast({ title: 'Connection deleted' });
     } catch {
-      toast({ title: 'Delete failed', description: 'Could not delete the connection. Please try again.', variant: 'destructive' });
+      getAIGuidance(
+        { code: 'DELETE_FAILED', message: 'Could not delete the connection' },
+        { provider: connection.provider, operation: 'delete' }
+      ).then(setGuidance);
     }
     setConfirmDelete(false);
   }
@@ -131,6 +139,16 @@ export function ConnectionCard({ connection, onEdit }: Props) {
 
   return (
     <>
+      {guidance && (
+        <GuidedStatusCard
+          title={guidance.title}
+          description={guidance.description}
+          resolution={guidance.resolution}
+          nextSteps={guidance.nextSteps}
+          tone={guidance.tone}
+          onDismiss={() => setGuidance(null)}
+        />
+      )}
       <Card className="group hover:shadow-md transition-shadow">
         <CardContent className="flex items-center gap-4 p-4">
           <ProviderLogo provider={connection.provider} size={40} />

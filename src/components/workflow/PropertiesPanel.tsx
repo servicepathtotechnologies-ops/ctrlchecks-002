@@ -2464,62 +2464,18 @@ export default function PropertiesPanel({
                               rawFieldValue !== '' &&
                               !(typeof rawFieldValue === 'object' && !Array.isArray(rawFieldValue) && Object.keys(rawFieldValue as object).length === 0);
 
-                            // ✅ BUG D FIX: Check registry-driven effectiveFillMode for runtime_ai fields
-                            const schemaInputSchema = (backendSchema?.inputSchema || {}) as Record<string, any>;
-                            const schemaEffectiveFillMode = resolveEffectiveFieldFillMode(field.key, schemaInputSchema, nodeConfig);
-                            const schemaRuntimeSupported = supportsRuntimeAI(field.key, schemaInputSchema);
-                            const isSchemaRuntimeAiField = schemaEffectiveFillMode === 'runtime_ai' && schemaRuntimeSupported;
-
-                            // If this is a runtime_ai field in the schema-driven path, show the banner
-                            if (isSchemaRuntimeAiField) {
-                              const runtimeValueMeta = lastResolvedInputs?.[selectedNode.id]?.[field.key];
-                              return (
-                                <div key={field.key} className={`rounded-md border border-border/40 bg-muted/10 transition-opacity ${fieldConditionActive ? 'opacity-100' : 'opacity-45'}`}>
-                                  <div className="flex items-center gap-1.5 px-3 py-2">
-                                    <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1 min-w-0">
-                                      <span className="truncate">{field.label}</span>
-                                      {backendSchema && (
-                                        <span className="text-[10px] text-muted-foreground/50 shrink-0" title="Rendered from backend schema">🎯</span>
-                                      )}
-                                    </Label>
-                                  </div>
-                                  <div className="px-3 pb-3">
-                                    <div
-                                      className="text-xs text-muted-foreground border border-dashed border-border/60 rounded px-3 py-2.5 bg-muted/40 overflow-hidden"
-                                      role="status"
-                                      aria-label="AI-managed field, empty until execution"
-                                      data-testid="ai-managed-field"
-                                    >
-                                      <p className="font-medium text-foreground/80 leading-snug">Filled automatically by AI at runtime</p>
-                                      <p className="mt-1 leading-relaxed break-words">
-                                        This field will be generated dynamically from previous node output and your workflow intent. You don&apos;t need to configure it manually.
-                                      </p>
-                                      {runtimeValueMeta && (
-                                        <div className="mt-2 p-2.5 rounded border border-border/40 bg-background/60 space-y-1.5">
-                                          <p className="text-[11px] text-foreground/80 font-medium leading-none">Last runtime value (read-only)</p>
-                                          <p className="text-[10px] text-muted-foreground leading-snug">
-                                            {new Date(runtimeValueMeta.startedAt).toLocaleString()} • {runtimeValueMeta.source === 'runtime_ai' ? 'AI runtime' : 'Static config'}
-                                          </p>
-                                          <pre className="max-h-28 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] whitespace-pre-wrap break-all w-full">
-                                            {typeof runtimeValueMeta.value === 'string' ? runtimeValueMeta.value : JSON.stringify(runtimeValueMeta.value, null, 2)}
-                                          </pre>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            }
-
-                            // Explicit user toggle takes precedence; fall back to auto-enable when AI filled
-                            const fieldEnabled: boolean =
-                              fieldEnabledMap[field.key] !== undefined
-                                ? fieldEnabledMap[field.key]
-                                : hasAiValue;
-
                             const currentFillMode: 'manual_static' | 'buildtime_ai_once' | 'runtime_ai' =
                               (fillModeMap[field.key] as 'manual_static' | 'buildtime_ai_once' | 'runtime_ai' | undefined) ??
                               (hasAiValue ? 'buildtime_ai_once' : 'manual_static');
+
+                            // Explicit user toggle takes precedence; fall back to auto-enable when AI filled.
+                            // Force-open when runtime_ai so the ownership toggle is always reachable.
+                            const fieldEnabled: boolean =
+                              currentFillMode === 'runtime_ai'
+                                ? true
+                                : fieldEnabledMap[field.key] !== undefined
+                                  ? fieldEnabledMap[field.key]
+                                  : hasAiValue;
 
                             return (
                               <div key={field.key} className={`rounded-md border border-border/40 bg-muted/10 transition-opacity ${fieldConditionActive ? 'opacity-100' : 'opacity-45'}`}>
@@ -2630,8 +2586,31 @@ export default function PropertiesPanel({
                                       <p className="text-xs text-muted-foreground/70 leading-relaxed">{effectiveHelpText}</p>
                                     )}
 
-                                    {/* Input — only shown when mode is manual_static or buildtime_ai_once */}
-                                    {currentFillMode !== 'runtime_ai' && (
+                                    {/* Input area — banner when runtime_ai, editable control otherwise */}
+                                    {currentFillMode === 'runtime_ai' ? (
+                                      <div
+                                        className="text-xs text-muted-foreground border border-dashed border-border/60 rounded px-3 py-2.5 bg-muted/40"
+                                        data-testid="ai-managed-field"
+                                      >
+                                        <p className="font-medium text-foreground/80 leading-snug">Filled automatically by AI at runtime</p>
+                                        <p className="mt-1 leading-relaxed break-words">
+                                          Switch to <strong>You</strong> above to enter a custom static value instead.
+                                        </p>
+                                        {lastResolvedInputs?.[selectedNode.id]?.[field.key] && (
+                                          <div className="mt-2 p-2.5 rounded border border-border/40 bg-background/60 space-y-1.5">
+                                            <p className="text-[11px] text-foreground/80 font-medium leading-none">Last runtime value</p>
+                                            <p className="text-[10px] text-muted-foreground leading-snug">
+                                              {new Date(lastResolvedInputs[selectedNode.id][field.key].startedAt).toLocaleString()}
+                                            </p>
+                                            <pre className="max-h-28 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] whitespace-pre-wrap break-all w-full">
+                                              {typeof lastResolvedInputs[selectedNode.id][field.key].value === 'string'
+                                                ? lastResolvedInputs[selectedNode.id][field.key].value as string
+                                                : JSON.stringify(lastResolvedInputs[selectedNode.id][field.key].value, null, 2)}
+                                            </pre>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ) : (
                                       <div className="space-y-1">
                                         {selectedNode.data.type === 'if_else' && field.key === 'conditions' ? (
                                           <div className="space-y-2">

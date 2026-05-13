@@ -12,6 +12,9 @@ import { AppBrand } from "@/components/brand/AppBrand";
 import { GoogleLogo } from "@/components/icons/GoogleLogo";
 import { getPublicAuthRedirectPath } from "@/lib/auth-session";
 import { z } from "zod";
+import { GuidedStatusCard } from "@/components/ui/guided-status-card";
+import { getAIGuidance } from "@/lib/ai-error-guidance";
+import type { GuidedStatusContent } from "@/lib/workflow-guidance";
 
 const signUpSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -42,6 +45,7 @@ export default function SignUp() {
   const [githubLoading, setGithubLoading] = useState(false);
   const [facebookLoading, setFacebookLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [authGuidance, setAuthGuidance] = useState<GuidedStatusContent | null>(null);
 
   const {
     user,
@@ -79,11 +83,9 @@ export default function SignUp() {
     const { error } = await signUp(email, password, fullName, role);
     setLoading(false);
     if (error) {
-      if (error.message.includes("already registered")) {
-        toast({ title: "Account exists", description: "Please sign in instead.", variant: "destructive" });
-      } else {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      }
+      getAIGuidance(
+        { code: error.message.includes("already registered") ? 'ACCOUNT_EXISTS' : 'SIGNUP_FAILED', message: error.message, operation: 'sign_up' } as any
+      ).then(setAuthGuidance);
       return;
     }
     setPendingVerification(true);
@@ -92,15 +94,16 @@ export default function SignUp() {
 
   const handleConfirmCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthGuidance(null);
     if (!email || !verificationCode.trim()) {
-      toast({ title: "Code required", description: "Enter the verification code from your email.", variant: "destructive" });
+      getAIGuidance({ code: 'CODE_REQUIRED', message: 'Enter the verification code from your email', operation: 'sign_up' } as any).then(setAuthGuidance);
       return;
     }
     setLoading(true);
     const { error } = await confirmSignUp(email, verificationCode.trim());
     if (error) {
       setLoading(false);
-      toast({ title: "Verification failed", description: error.message, variant: "destructive" });
+      getAIGuidance({ code: 'VERIFICATION_FAILED', message: error.message, operation: 'sign_up' } as any).then(setAuthGuidance);
       return;
     }
     const signInResult = await signIn(email, password);
@@ -117,35 +120,38 @@ export default function SignUp() {
   const handleResendCode = async () => {
     if (!email) return;
     const { error } = await resendSignUpCode(email);
-    toast({
-      title: error ? "Could not resend code" : "Code sent",
-      description: error ? error.message : "Check your inbox for a fresh verification code.",
-      variant: error ? "destructive" : "default",
-    });
+    if (error) {
+      getAIGuidance({ code: 'RESEND_FAILED', message: error.message, operation: 'sign_up' } as any).then(setAuthGuidance);
+    } else {
+      toast({ title: "Code sent", description: "Check your inbox for a fresh verification code." });
+    }
   };
 
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true);
+    setAuthGuidance(null);
     try {
       const { error } = await signInWithGoogle();
-      if (error) { setGoogleLoading(false); toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    } catch { setGoogleLoading(false); toast({ title: "Error", description: "Failed to sign in with Google.", variant: "destructive" }); }
+      if (error) { setGoogleLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: error.message, operation: 'sign_up' } as any, { provider: 'google' }).then(setAuthGuidance); }
+    } catch { setGoogleLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: 'Failed to sign up with Google', operation: 'sign_up' } as any, { provider: 'google' }).then(setAuthGuidance); }
   };
 
   const handleGitHubSignUp = async () => {
     setGithubLoading(true);
+    setAuthGuidance(null);
     try {
       const { error } = await signInWithGitHub();
-      if (error) { setGithubLoading(false); toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    } catch { setGithubLoading(false); toast({ title: "Error", description: "Failed to sign in with GitHub.", variant: "destructive" }); }
+      if (error) { setGithubLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: error.message, operation: 'sign_up' } as any, { provider: 'github' }).then(setAuthGuidance); }
+    } catch { setGithubLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: 'Failed to sign up with GitHub', operation: 'sign_up' } as any, { provider: 'github' }).then(setAuthGuidance); }
   };
 
   const handleFacebookSignUp = async () => {
     setFacebookLoading(true);
+    setAuthGuidance(null);
     try {
       const { error } = await signInWithFacebook();
-      if (error) { setFacebookLoading(false); toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    } catch { setFacebookLoading(false); toast({ title: "Error", description: "Failed to sign in with Facebook.", variant: "destructive" }); }
+      if (error) { setFacebookLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: error.message, operation: 'sign_up' } as any, { provider: 'facebook' }).then(setAuthGuidance); }
+    } catch { setFacebookLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: 'Failed to sign up with Facebook', operation: 'sign_up' } as any, { provider: 'facebook' }).then(setAuthGuidance); }
   };
 
   if (authLoading) {
@@ -303,6 +309,17 @@ export default function SignUp() {
               <p className="text-center text-xs text-muted-foreground">Or sign up with Google, GitHub or Facebook</p>
             </div>
           </form>
+          )}
+
+          {authGuidance && (
+            <GuidedStatusCard
+              title={authGuidance.title}
+              description={authGuidance.description}
+              resolution={authGuidance.resolution}
+              nextSteps={authGuidance.nextSteps}
+              tone={authGuidance.tone}
+              onDismiss={() => setAuthGuidance(null)}
+            />
           )}
 
           <p className="text-center text-sm text-muted-foreground">

@@ -22,6 +22,9 @@ import { useConnections } from '@/hooks/useConnections';
 import { useCredentialTypes } from '@/hooks/useCredentialTypes';
 import { useToast } from '@/hooks/use-toast';
 import type { CredentialTypeDefinition } from '@/lib/api/connections';
+import { GuidedStatusCard } from '@/components/ui/guided-status-card';
+import { getAIGuidance } from '@/lib/ai-error-guidance';
+import type { GuidedStatusContent } from '@/lib/workflow-guidance';
 
 type Step = 'pick' | 'form';
 
@@ -41,6 +44,7 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
   const [selectedType, setSelectedType] = useState<CredentialTypeDefinition | null>(null);
   const [connectionName, setConnectionName] = useState('');
   const [activeFieldName, setActiveFieldName] = useState<string | null>(null);
+  const [saveGuidance, setSaveGuidance] = useState<GuidedStatusContent | null>(null);
 
   // When types load and a preset is given, jump straight to the form step
   useEffect(() => {
@@ -95,10 +99,11 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
       onOpenChange(false);
       reset();
     } catch (err) {
-      // Error is surfaced inline via apiError prop on CredentialFormRenderer.
-      // Keep a toast as well so the user gets confirmation even if the form is scrolled.
       const msg = err instanceof Error ? err.message : 'Failed to save connection';
-      toast({ title: 'Save failed', description: msg, variant: 'destructive' });
+      getAIGuidance(
+        { code: 'SAVE_FAILED', message: msg, operation: 'save' } as any,
+        { provider: selectedType?.provider, operation: 'connect' }
+      ).then(setSaveGuidance);
     }
   }
 
@@ -159,6 +164,18 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
                 : `Authorize or configure ${selectedType?.displayName ?? 'this service'} for workflow use.`}
             </DialogDescription>
           </div>
+          {saveGuidance && (
+            <div className="mt-3">
+              <GuidedStatusCard
+                title={saveGuidance.title}
+                description={saveGuidance.description}
+                resolution={saveGuidance.resolution}
+                nextSteps={saveGuidance.nextSteps}
+                tone={saveGuidance.tone}
+                onDismiss={() => setSaveGuidance(null)}
+              />
+            </div>
+          )}
         </DialogHeader>
 
         {step === 'pick' && <ServicePickerGrid onSelect={handleSelect} connectedTypeIds={connectedTypeIds} />}

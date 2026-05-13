@@ -23,6 +23,9 @@ import { Hub } from 'aws-amplify/utils';
 import { resolveOAuthReturnTo } from '@/lib/oauth-return';
 import { supabase } from '@/integrations/aws/client';
 import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
+import { GuidedStatusCard } from '@/components/ui/guided-status-card';
+import { getAIGuidance } from '@/lib/ai-error-guidance';
+import type { GuidedStatusContent } from '@/lib/workflow-guidance';
 
 function safeReturnTo(params: URLSearchParams) {
   const raw = params.get('return_to');
@@ -45,6 +48,7 @@ export default function GoogleAuthCallback() {
   const params = new URLSearchParams(window.location.search);
   const returnTo = safeReturnTo(params);
   const [error, setError] = useState<string | null>(null);
+  const [guidance, setGuidance] = useState<GuidedStatusContent | null>(null);
 
   useEffect(() => {
     if (handled.current) return;
@@ -65,8 +69,8 @@ export default function GoogleAuthCallback() {
         return;
       }
       setError(oauthError);
-      toast({ title: 'Google connection failed', description: oauthError, variant: 'destructive' });
-      setTimeout(() => navigate(returnTo, { replace: true }), 3000);
+      getAIGuidance({ code: 'OAUTH_FAILED', message: oauthError }, { provider: 'google', operation: 'connect' }).then(setGuidance);
+      setTimeout(() => navigate(returnTo, { replace: true }), 5000);
       return;
     }
 
@@ -102,8 +106,8 @@ export default function GoogleAuthCallback() {
         } else {
           const msg = message || 'Sign-in did not complete. Please try again.';
           setError(msg);
-          toast({ title: 'Sign-in failed', description: msg, variant: 'destructive' });
-          setTimeout(() => navigate('/signin', { replace: true }), 3000);
+          getAIGuidance({ code: 'SIGN_IN_FAILED', message: msg }, { provider: 'google', operation: 'sign_in' }).then(setGuidance);
+          setTimeout(() => navigate('/signin', { replace: true }), 5000);
         }
       };
 
@@ -134,15 +138,30 @@ export default function GoogleAuthCallback() {
       return;
     }
     setError('Google connection did not complete.');
-    toast({ title: 'Connection failed', description: 'Google connection did not complete.', variant: 'destructive' });
-    setTimeout(() => navigate(returnTo, { replace: true }), 3000);
+    getAIGuidance({ code: 'OAUTH_INCOMPLETE', message: 'Google connection did not complete' }, { provider: 'google', operation: 'connect' }).then(setGuidance);
+    setTimeout(() => navigate(returnTo, { replace: true }), 5000);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-8 text-center">
-        <div className="font-semibold text-destructive">Connection Failed</div>
-        <p className="text-muted-foreground">{error}</p>
+        {guidance ? (
+          <div className="w-full max-w-md">
+            <GuidedStatusCard
+              title={guidance.title}
+              description={guidance.description}
+              resolution={guidance.resolution}
+              nextSteps={guidance.nextSteps}
+              tone={guidance.tone}
+              onDismiss={() => navigate('/signin', { replace: true })}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="font-semibold text-muted-foreground">Connection didn't complete</div>
+            <p className="text-muted-foreground">{error}</p>
+          </>
+        )}
         <Button onClick={() => navigate('/signin', { replace: true })} variant="outline">
           Back to Sign In
         </Button>

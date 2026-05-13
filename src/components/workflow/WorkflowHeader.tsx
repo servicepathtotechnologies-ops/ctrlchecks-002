@@ -4,6 +4,8 @@ import { ArrowLeft, Link2, Play, Save, Settings, Upload, Download, Square } from
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ProviderLogo } from '@/components/connections/ProviderLogo';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +29,8 @@ interface WorkflowHeaderProps {
   isRunning?: boolean;
   onImport?: (data: any) => void;
   onCancel?: () => void;
+  missingConnectionsCount?: number;
+  missingConnections?: Array<{ provider: string; displayName: string }>;
 }
 
 export default function WorkflowHeader({
@@ -36,6 +40,8 @@ export default function WorkflowHeader({
   isRunning,
   onImport,
   onCancel,
+  missingConnectionsCount = 0,
+  missingConnections = [],
 }: WorkflowHeaderProps) {
   const navigate = useNavigate();
   const { workflowId, workflowName, setWorkflowName, isDirty, nodes, edges } = useWorkflowStore();
@@ -240,15 +246,41 @@ export default function WorkflowHeader({
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleConnectionsClick}
-          className="flex items-center gap-2"
-        >
-          <Link2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Connections</span>
-        </Button>
+        <div className="relative inline-flex">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleConnectionsClick}
+            className="flex items-center gap-2"
+          >
+            <Link2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Connections</span>
+          </Button>
+          {missingConnectionsCount > 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-destructive animate-pulse cursor-pointer z-10" />
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-72 p-3 space-y-2">
+                <p className="text-sm font-semibold">Connections needed</p>
+                <p className="text-xs text-muted-foreground">
+                  This workflow needs these accounts connected before it can run:
+                </p>
+                <div className="space-y-1.5">
+                  {missingConnections.map((c) => (
+                    <div key={c.provider} className="flex items-center gap-2 text-sm">
+                      <ProviderLogo provider={c.provider} size={18} />
+                      <span>{c.displayName}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button size="sm" className="w-full mt-1" onClick={handleConnectionsClick}>
+                  Set Up Connections
+                </Button>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
         <ScheduleSettings workflowId={workflowId} onScheduleChange={setIsScheduleActive} />
         <WebhookSettings workflowId={workflowId} />
 
@@ -263,8 +295,12 @@ export default function WorkflowHeader({
             variant="outline"
             className="border-primary/50 text-primary hover:bg-primary/10"
             onClick={() => onRun(true)}
-            disabled={isRunning || isSaving || isScheduleActive}
-            tooltip={isScheduleActive ? 'Manual Run is disabled when schedule is active' : 'Save and run workflow'}
+            disabled={isRunning || isSaving || isScheduleActive || missingConnectionsCount > 0}
+            tooltip={
+              missingConnectionsCount > 0
+                ? 'Connect your accounts in Connections before running'
+                : isScheduleActive ? 'Manual Run is disabled when schedule is active' : 'Save and run workflow'
+            }
           >
             <Save className="mr-2 h-4 w-4" />
             <Play className="mr-2 h-4 w-4" />
@@ -287,8 +323,12 @@ export default function WorkflowHeader({
           size="sm"
           className="gradient-primary text-primary-foreground"
           onClick={() => onRun(false)}
-          disabled={isRunning || isScheduleActive}
-          tooltip={isScheduleActive ? 'Manual Run is disabled when schedule is active' : undefined}
+          disabled={isRunning || isScheduleActive || missingConnectionsCount > 0}
+          tooltip={
+            missingConnectionsCount > 0
+              ? 'Connect your accounts in Connections before running'
+              : isScheduleActive ? 'Manual Run is disabled when schedule is active' : undefined
+          }
         >
           <Play className="mr-2 h-4 w-4" />
           {isRunning ? 'Running...' : isScheduleActive ? 'Scheduled' : 'Run'}

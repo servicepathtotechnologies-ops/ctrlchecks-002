@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useOAuthFlow } from '@/hooks/useOAuthFlow';
 import { ProviderLogo } from './ProviderLogo';
 import type { CredentialTypeDefinition } from '@/lib/api/connections';
-import { useToast } from '@/hooks/use-toast';
+import { GuidedStatusCard } from '@/components/ui/guided-status-card';
+import { getAIGuidance } from '@/lib/ai-error-guidance';
+import type { GuidedStatusContent } from '@/lib/workflow-guidance';
 
 interface Props {
   credentialType: CredentialTypeDefinition;
@@ -12,35 +15,47 @@ interface Props {
 }
 
 export function OAuthConnectButton({ credentialType, onSuccess, className }: Props) {
-  const { toast } = useToast();
   const oauthFlow = useOAuthFlow();
+  const [guidance, setGuidance] = useState<GuidedStatusContent | null>(null);
 
   async function handleClick() {
+    setGuidance(null);
     try {
       await oauthFlow.connect(credentialType.id);
       onSuccess?.();
     } catch {
-      toast({
-        title: 'Connection failed',
-        description: oauthFlow.error ?? 'OAuth flow did not complete',
-        variant: 'destructive',
-      });
+      getAIGuidance(
+        { code: 'OAUTH_FAILED', message: oauthFlow.error ?? 'OAuth flow did not complete' },
+        { provider: credentialType.provider, operation: 'connect' }
+      ).then(setGuidance);
     }
   }
 
   return (
-    <Button
-      type="button"
-      className={className}
-      onClick={handleClick}
-      disabled={oauthFlow.isLoading}
-    >
-      {oauthFlow.isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-      ) : (
-        <ProviderLogo provider={credentialType.provider} size={18} className="mr-2 rounded" />
+    <div className="space-y-2">
+      {guidance && (
+        <GuidedStatusCard
+          title={guidance.title}
+          description={guidance.description}
+          resolution={guidance.resolution}
+          nextSteps={guidance.nextSteps}
+          tone={guidance.tone}
+          onDismiss={() => setGuidance(null)}
+        />
       )}
-      {credentialType.form.oauthButtonLabel ?? `Connect ${credentialType.provider}`}
-    </Button>
+      <Button
+        type="button"
+        className={className}
+        onClick={handleClick}
+        disabled={oauthFlow.isLoading}
+      >
+        {oauthFlow.isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        ) : (
+          <ProviderLogo provider={credentialType.provider} size={18} className="mr-2 rounded" />
+        )}
+        {credentialType.form.oauthButtonLabel ?? `Connect ${credentialType.provider}`}
+      </Button>
+    </div>
   );
 }

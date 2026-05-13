@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { resolveOAuthReturnTo } from '@/lib/oauth-return';
 import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
+import { GuidedStatusCard } from '@/components/ui/guided-status-card';
+import { getAIGuidance } from '@/lib/ai-error-guidance';
+import type { GuidedStatusContent } from '@/lib/workflow-guidance';
 
 function safeReturnTo(params: URLSearchParams) {
   const raw = params.get('return_to');
@@ -28,6 +31,7 @@ export default function LinkedInAuthCallback() {
   const params = new URLSearchParams(window.location.search);
   const returnTo = safeReturnTo(params);
   const [error, setError] = useState<string | null>(null);
+  const [guidance, setGuidance] = useState<GuidedStatusContent | null>(null);
 
   useEffect(() => {
     if (handled.current) return;
@@ -45,8 +49,8 @@ export default function LinkedInAuthCallback() {
         return;
       }
       setError(oauthError);
-      toast({ title: 'LinkedIn connection failed', description: oauthError, variant: 'destructive' });
-      setTimeout(() => navigate(returnTo, { replace: true }), 3000);
+      getAIGuidance({ code: 'OAUTH_FAILED', message: oauthError }, { provider: 'linkedin', operation: 'connect' }).then(setGuidance);
+      setTimeout(() => navigate(returnTo, { replace: true }), 5000);
       return;
     }
 
@@ -71,15 +75,27 @@ export default function LinkedInAuthCallback() {
       return;
     }
     setError('LinkedIn connection did not complete.');
-    toast({ title: 'Connection failed', description: 'LinkedIn connection did not complete.', variant: 'destructive' });
-    setTimeout(() => navigate(returnTo, { replace: true }), 3000);
+    getAIGuidance({ code: 'OAUTH_INCOMPLETE', message: 'LinkedIn connection did not complete' }, { provider: 'linkedin', operation: 'connect' }).then(setGuidance);
+    setTimeout(() => navigate(returnTo, { replace: true }), 5000);
   }, [navigate, params, returnTo, toast, qc]);
 
   if (error) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-8 text-center">
-        <div className="font-semibold text-destructive">Connection Failed</div>
-        <p className="text-muted-foreground">{error}</p>
+        {guidance ? (
+          <div className="w-full max-w-md">
+            <GuidedStatusCard
+              title={guidance.title}
+              description={guidance.description}
+              resolution={guidance.resolution}
+              nextSteps={guidance.nextSteps}
+              tone={guidance.tone}
+              onDismiss={() => navigate(returnTo, { replace: true })}
+            />
+          </div>
+        ) : (
+          <p className="text-muted-foreground">{error}</p>
+        )}
         <Button onClick={() => navigate(returnTo, { replace: true })} variant="outline">
           Return to Workflows
         </Button>

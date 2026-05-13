@@ -6,11 +6,12 @@ import { supabase } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { ToastAction } from '@/components/ui/toast';
 import { Copy, ExternalLink, ChevronRight, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NodeTypeDefinition } from '@/components/workflow/nodeTypes';
 import WorkflowHeader from '@/components/workflow/WorkflowHeader';
+import { useWorkflowConnectionStatus } from '@/hooks/useWorkflowConnectionStatus';
+import { WorkflowConnectionGate } from '@/components/workflow/WorkflowConnectionGate';
 import { useDebugStore } from '@/stores/debugStore';
 import { Edge } from '@xyflow/react';
 import { Json } from '@/integrations/aws/types';
@@ -24,6 +25,7 @@ import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { enforceFrontendRenderContract, normalizeBackendWorkflow, validateNodeTypesRegistered } from '@/lib/node-type-normalizer';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
 import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
+import { getAIGuidance } from '@/lib/ai-error-guidance';
 import { useExecutionNotifications } from '../hooks/useExecutionNotifications';
 import { ExecutionResultNotification } from '../components/workflow/ExecutionResultNotification';
 import type { ExecutionResult } from '../lib/executionNotifications';
@@ -48,90 +50,6 @@ type ReliabilityUiState = {
   lastErrorCode?: string;
 };
 
-const CREDENTIAL_PROVIDER_LABELS: Record<string, string> = {
-  google: 'Google',
-  google_sheets: 'Google (Sheets)',
-  googleSheets: 'Google (Sheets)',
-  gmail: 'Gmail',
-  slack: 'Slack',
-  github: 'GitHub',
-  linkedin: 'LinkedIn',
-  twitter: 'Twitter',
-  x: 'X',
-  facebook: 'Facebook',
-  notion: 'Notion',
-  whatsapp: 'WhatsApp',
-};
-
-function toTitleLabel(value: string): string {
-  const normalized = value
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/[_-]+/g, ' ')
-    .trim();
-
-  if (!normalized) return value;
-
-  return normalized
-    .split(/\s+/)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-function normalizeCredentialProviderName(raw: unknown): string | null {
-  if (!raw) return null;
-
-  if (typeof raw === 'string') {
-    return CREDENTIAL_PROVIDER_LABELS[raw] || toTitleLabel(raw);
-  }
-
-  if (typeof raw !== 'object') return null;
-
-  const detail = raw as Record<string, unknown>;
-  const directName = detail.displayName || detail.label || detail.name || detail.providerName;
-  if (typeof directName === 'string' && directName.trim()) {
-    return CREDENTIAL_PROVIDER_LABELS[directName] || toTitleLabel(directName);
-  }
-
-  const provider = typeof detail.provider === 'string' ? detail.provider : null;
-  const service =
-    typeof detail.service === 'string' ? detail.service :
-    typeof detail.credentialType === 'string' ? detail.credentialType :
-    typeof detail.credentialTypeId === 'string' ? detail.credentialTypeId :
-    typeof detail.type === 'string' ? detail.type :
-    null;
-
-  const combined = [provider, service].filter(Boolean).join('_');
-  if (combined && CREDENTIAL_PROVIDER_LABELS[combined]) return CREDENTIAL_PROVIDER_LABELS[combined];
-  if (provider && CREDENTIAL_PROVIDER_LABELS[provider]) {
-    return service && service !== provider
-      ? `${CREDENTIAL_PROVIDER_LABELS[provider]} (${toTitleLabel(service)})`
-      : CREDENTIAL_PROVIDER_LABELS[provider];
-  }
-  if (combined) return toTitleLabel(combined);
-
-  return null;
-}
-
-function formatList(items: string[]): string {
-  if (items.length <= 1) return items[0] || '';
-  if (items.length === 2) return `${items[0]} and ${items[1]}`;
-  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
-}
-
-function getMissingCredentialProviderNames(details: any): string[] {
-  const rawList = Array.isArray(details?.missingCredentials) ? details.missingCredentials : [];
-  const names = rawList
-    .map(normalizeCredentialProviderName)
-    .filter((name): name is string => Boolean(name));
-
-  return Array.from(new Set(names));
-}
-
-function buildMissingCredentialsToastTitle(details: any): string | null {
-  const providerNames = getMissingCredentialProviderNames(details);
-  if (providerNames.length === 0) return null;
-  return `Execution failed: ${formatList(providerNames)} ${providerNames.length === 1 ? 'is' : 'are'} not connected.`;
-}
 
 export default function WorkflowBuilder() {
   const { id } = useParams();
@@ -150,6 +68,12 @@ export default function WorkflowBuilder() {
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
   const [lastResolvedInputs, setLastResolvedInputs] = useState<LastResolvedInputsMap>({});
   const [reliabilityStatus, setReliabilityStatus] = useState<ReliabilityUiState | null>(null);
+  const [gateDismissed, setGateDismissed] = useState(false);
+
+  const { missingConnections, isLoading: isCheckingConnections } = useWorkflowConnectionStatus(
+    id && id !== 'new' ? id : null
+  );
+
   const { debugNodeId } = useDebugStore();
   const hasAutoRun = useRef(false); // Track if we've already auto-run for this workflow load
   const isSavingRef = useRef(false); // Ref-based lock to prevent concurrent handleSave calls
@@ -213,11 +137,6 @@ export default function WorkflowBuilder() {
 
       if (data) {
         if ((data as any).setup_completed === false) {
-          toast({
-            title: 'Workflow setup is still in progress',
-            description: 'Finish the AI setup flow before opening this workflow.',
-            variant: 'destructive',
-          });
           navigate('/workflows', { replace: true });
           return;
         }
@@ -332,11 +251,7 @@ export default function WorkflowBuilder() {
           : typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string'
             ? (error as { message: string }).message
             : 'Failed to load workflow';
-      toast({
-        title: 'Error loading workflow',
-        description: loadMsg,
-        variant: 'destructive',
-      });
+      getAIGuidance({ code: 'LOAD_FAILED', message: loadMsg }).then(setExecutionGuidance);
       // Reset on error to prevent corrupted state
       resetWorkflow();
       return false;
@@ -373,6 +288,7 @@ export default function WorkflowBuilder() {
     hasAutoRun.current = false;
     setReliabilityStatus(null);
     setExecutionGuidance(null);
+    setGateDismissed(false);
 
     if (id && id !== 'new') {
       // Check if we're already loading this workflow to prevent duplicate loads
@@ -386,6 +302,13 @@ export default function WorkflowBuilder() {
       setLastResolvedInputs({});
     }
   }, [id, user, loadWorkflow, resetWorkflow, loadLastResolvedInputs]);
+
+  // Sync missing connections count to global store so AppSidebar can show a badge
+  useEffect(() => {
+    useWorkflowStore.getState().setWorkflowConnectionAlertCount(missingConnections.length);
+    if (missingConnections.length > 0) setGateDismissed(false);
+    return () => { useWorkflowStore.getState().setWorkflowConnectionAlertCount(0); };
+  }, [missingConnections.length]);
 
   // Auto-run workflow if autoRun parameter is present (for AI-generated workflows)
   // Note: This useEffect is moved after handleRun definition to avoid initialization order issues
@@ -434,11 +357,7 @@ export default function WorkflowBuilder() {
       if (!validation.valid) {
         const errorMessages = validation.errors.map(e => e.message).join('; ');
         console.error('[WorkflowBuilder] Workflow validation failed:', validation.errors);
-        toast({
-          title: 'Validation Failed',
-          description: errorMessages,
-          variant: 'destructive',
-        });
+        getAIGuidance({ code: 'WORKFLOW_VALIDATION_FAILED', message: errorMessages }).then(setExecutionGuidance);
         throw new Error(`Workflow validation failed: ${errorMessages}`);
       }
       
@@ -556,11 +475,7 @@ export default function WorkflowBuilder() {
                 } else {
                   // Any other attach-inputs failure is surfaced to the user.
                   console.warn('[handleSave] Failed to auto-attach inputs:', attachError);
-                  toast({
-                    title: 'Warning: inputs could not be updated',
-                    description: 'Workflow inputs could not be updated. Please refresh and try again before running.',
-                    variant: 'destructive',
-                  });
+                  getAIGuidance({ code: 'ATTACH_INPUTS_FAILED', message: 'Workflow inputs could not be updated', operation: 'save' } as any).then(setExecutionGuidance);
                 }
               }
             }
@@ -605,11 +520,7 @@ export default function WorkflowBuilder() {
           : typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string'
             ? (error as { message: string }).message
             : 'Failed to save workflow';
-      toast({
-        title: 'Save failed',
-        description: saveMsg,
-        variant: 'destructive',
-      });
+      getAIGuidance({ code: 'SAVE_FAILED', message: saveMsg, operation: 'save' } as any).then(setExecutionGuidance);
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
@@ -654,11 +565,7 @@ export default function WorkflowBuilder() {
       });
     } catch (error) {
       console.error('Error importing workflow:', error);
-      toast({
-        title: 'Error',
-        description: `Failed to import workflow: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: 'destructive',
-      });
+      getAIGuidance({ code: 'IMPORT_FAILED', message: error instanceof Error ? error.message : 'Failed to import workflow' }).then(setExecutionGuidance);
       // Reset on error to prevent corrupted state
       resetWorkflow();
     }
@@ -765,11 +672,7 @@ export default function WorkflowBuilder() {
     const workflowId = useWorkflowStore.getState().workflowId;
 
     if (nodes.length === 0) {
-      toast({
-        title: 'No nodes',
-        description: 'Add some nodes to your workflow before running',
-        variant: 'destructive',
-      });
+      getAIGuidance({ code: 'EMPTY_WORKFLOW', message: 'No nodes in workflow' }).then(setExecutionGuidance);
       setIsRunning(false);
       return;
     }
@@ -826,11 +729,7 @@ export default function WorkflowBuilder() {
         console.log(`[handleRun] ✅ Auto-saved workflow via /api/save-workflow - ID: ${savedWorkflowId}`);
       } catch (error) {
         console.error('Error auto-saving workflow:', error);
-        toast({
-          title: 'Save failed — execution blocked',
-          description: 'Workflow could not be saved. Execution cancelled. Please try again.',
-          variant: 'destructive',
-        });
+        getAIGuidance({ code: 'SAVE_FAILED', message: 'Workflow could not be saved', operation: 'save' } as any).then(setExecutionGuidance);
         setIsSaving(false);
         setIsRunning(false);
         return;
@@ -841,11 +740,7 @@ export default function WorkflowBuilder() {
 
     const finalWorkflowId = useWorkflowStore.getState().workflowId;
     if (!finalWorkflowId) {
-      toast({
-        title: 'Save required',
-        description: 'Please save your workflow before running',
-        variant: 'destructive',
-      });
+      getAIGuidance({ code: 'SAVE_REQUIRED', message: 'Workflow must be saved before running', operation: 'save' } as any).then(setExecutionGuidance);
       setIsRunning(false);
       return;
     }
@@ -861,11 +756,7 @@ export default function WorkflowBuilder() {
 
       if (checkError || !workflowCheck) {
         console.error('[execute-workflow] Workflow not found in database:', checkError);
-        toast({
-          title: 'Workflow not found',
-          description: 'The workflow may not be saved yet. Please save your workflow and try again.',
-          variant: 'destructive',
-        });
+        getAIGuidance({ code: 'WORKFLOW_NOT_FOUND', message: 'The workflow may not be saved yet', operation: 'save' } as any).then(setExecutionGuidance);
         return;
       }
 
@@ -873,11 +764,7 @@ export default function WorkflowBuilder() {
       console.log('[execute-workflow] Workflow verified in database:', { id: workflowCheck.id, name: workflowCheck.name });
     } catch (verifyError) {
       console.error('[execute-workflow] Error verifying workflow:', verifyError);
-      toast({
-        title: 'Verification error',
-        description: 'Could not verify workflow. Please try saving again.',
-        variant: 'destructive',
-      });
+      getAIGuidance({ code: 'VERIFICATION_ERROR', message: 'Could not verify workflow', operation: 'save' } as any).then(setExecutionGuidance);
       return;
     }
 
@@ -901,32 +788,20 @@ export default function WorkflowBuilder() {
       
       const normalized = normalizeWorkflowGraph(nodes, edges);
       if (normalized.errors.length > 0) {
-        toast({
-          title: 'Validation Failed',
-          description: `Graph normalization errors: ${normalized.errors.join(', ')}`,
-          variant: 'destructive',
-        });
+        getAIGuidance({ code: 'GRAPH_VALIDATION_FAILED', message: normalized.errors.join(', ') }).then(setExecutionGuidance);
         return;
       }
 
       const validation = validateWorkflowGraph(normalized.nodes, normalized.edges);
       if (!validation.valid) {
         const errorMessages = validation.errors.map(e => e.message).join('; ');
-        toast({
-          title: 'Validation Failed',
-          description: `Workflow validation failed: ${errorMessages}`,
-          variant: 'destructive',
-        });
+        getAIGuidance({ code: 'WORKFLOW_VALIDATION_FAILED', message: errorMessages }).then(setExecutionGuidance);
         setIsRunning(false);
         return;
       }
     } catch (validationError: any) {
       console.error('[WorkflowBuilder] Validation error:', validationError);
-      toast({
-        title: 'Validation Error',
-        description: validationError?.message || 'Failed to validate workflow',
-        variant: 'destructive',
-      });
+      getAIGuidance({ code: 'VALIDATION_ERROR', message: validationError?.message || 'Failed to validate workflow' }).then(setExecutionGuidance);
       setIsRunning(false);
       return;
     }
@@ -946,21 +821,13 @@ export default function WorkflowBuilder() {
 
         if (workflowError) {
           console.error('Error checking workflow status:', workflowError);
-          toast({
-            title: 'Error',
-            description: 'Failed to check workflow status. Please try again.',
-            variant: 'destructive',
-          });
+          getAIGuidance({ code: 'STATUS_CHECK_ERROR', message: 'Failed to check workflow status' }).then(setExecutionGuidance);
           return;
         }
 
         if (!workflowData) {
           console.error('Workflow data not found');
-          toast({
-            title: 'Error',
-            description: 'Workflow not found',
-            variant: 'destructive',
-          });
+          getAIGuidance({ code: 'WORKFLOW_NOT_FOUND', message: 'Workflow not found', operation: 'save' } as any).then(setExecutionGuidance);
           return;
         }
 
@@ -1043,48 +910,10 @@ export default function WorkflowBuilder() {
                 fullError: errorData
               });
               
-              // Build detailed error message
-              let detailedMessage = errorMessage;
-              if (errorData.phase) {
-                detailedMessage += `\n\nCurrent Status: ${errorData.phase}`;
-              }
-              if (errorData.details) {
-                if (errorData.details.missingInputsCount > 0) {
-                  detailedMessage += `\n\nMissing Inputs: ${errorData.details.missingInputsCount}`;
-                }
-                if (errorData.details.missingCredentialsCount > 0) {
-                  const missingCredentialNames = getMissingCredentialProviderNames(errorData.details);
-                  detailedMessage += missingCredentialNames.length > 0
-                    ? `\n\nMissing Credentials: ${formatList(missingCredentialNames)}`
-                    : `\n\nMissing Credentials: ${errorData.details.missingCredentialsCount}`;
-                }
-              }
-              if (errorHint) {
-                detailedMessage += `\n\n💡 ${errorHint}`;
-              }
-
-              const guidance = mapWorkflowIssueToGuidance(errorData);
-              setExecutionGuidance(guidance);
-              const missingCredentialsTitle = buildMissingCredentialsToastTitle(errorData.details);
-              if (missingCredentialsTitle) {
-                toast({
-                  title: missingCredentialsTitle,
-                  description: 'Go to Connections to fix this.',
-                  variant: 'destructive',
-                  duration: 9000,
-                  action: (
-                    <ToastAction altText="Open Connections" onClick={() => navigate('/connections')}>
-                      Connections
-                    </ToastAction>
-                  ),
-                });
-              } else {
-                toast({
-                  title: guidance.title,
-                  description: guidance.description,
-                  duration: 9000,
-                });
-              }
+              getAIGuidance(
+                { code: errorCode, message: errorMessage, hint: errorHint, details: errorData.details },
+                { phase: errorData.phase }
+              ).then(setExecutionGuidance);
               return;
             }
 
@@ -1102,11 +931,7 @@ export default function WorkflowBuilder() {
             });
           } catch (error) {
             console.error('Error invoking execute-workflow:', error);
-            toast({
-              title: 'Error',
-              description: `Failed to start workflow: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              variant: 'destructive',
-            });
+            getAIGuidance({ code: 'EXECUTION_START_FAILED', message: error instanceof Error ? error.message : 'Failed to start workflow' }).then(setExecutionGuidance);
           } finally {
             setIsRunning(false);
           }
@@ -1115,11 +940,7 @@ export default function WorkflowBuilder() {
         }
       } catch (error) {
         console.error('Error checking workflow status:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to check workflow status',
-          variant: 'destructive',
-        });
+        getAIGuidance({ code: 'STATUS_CHECK_ERROR', message: 'Failed to check workflow status' }).then(setExecutionGuidance);
         return;
       }
     }
@@ -1291,52 +1112,10 @@ export default function WorkflowBuilder() {
           fullError: errorData
         });
         
-        // Build detailed error message
-        let detailedMessage = errorMessage;
-        if (errorData.phase) {
-          detailedMessage += `\n\nCurrent Status: ${errorData.phase}`;
-        }
-        if (errorData.details) {
-          if (errorData.details.missingInputsCount > 0) {
-            detailedMessage += `\n\nMissing Inputs: ${errorData.details.missingInputsCount}`;
-          }
-          if (errorData.details.missingCredentialsCount > 0) {
-            const missingCredentialNames = getMissingCredentialProviderNames(errorData.details);
-            detailedMessage += missingCredentialNames.length > 0
-              ? `\n\nMissing Credentials: ${formatList(missingCredentialNames)}`
-              : `\n\nMissing Credentials: ${errorData.details.missingCredentialsCount}`;
-          }
-          if (errorData.details.requiredCredentialsCount > 0) {
-            detailedMessage += `\n\nRequired Credentials: ${errorData.details.requiredCredentialsCount}`;
-          }
-        }
-        if (errorHint) {
-          detailedMessage += `\n\n💡 ${errorHint}`;
-        }
-
-        const guidance = mapWorkflowIssueToGuidance(errorData);
-        setExecutionGuidance(guidance);
-        const missingCredentialsTitle = buildMissingCredentialsToastTitle(errorData.details);
-        if (missingCredentialsTitle) {
-          toast({
-            title: missingCredentialsTitle,
-            description: 'Go to Connections to fix this.',
-            variant: 'destructive',
-            duration: 9000,
-            action: (
-              <ToastAction altText="Open Connections" onClick={() => navigate('/connections')}>
-                Connections
-              </ToastAction>
-            ),
-          });
-          setIsRunning(false);
-          return;
-        }
-        toast({
-          title: guidance.title,
-          description: guidance.description,
-          duration: 9000,
-        });
+        getAIGuidance(
+          { code: errorCode, message: errorMessage, hint: errorHint, details: errorData.details },
+          { phase: errorData.phase }
+        ).then(setExecutionGuidance);
         setIsRunning(false);
         return;
       }
@@ -1371,12 +1150,11 @@ export default function WorkflowBuilder() {
       });
 
       if (data.status && !['queued', 'success', 'waiting', 'started'].includes(data.status)) {
-        const guidance = mapWorkflowIssueToGuidance({
-          message: data.error || 'Execution could not be completed.',
+        getAIGuidance({
           code: data.code,
+          message: data.error || 'Execution could not be completed.',
           details: data.details,
-        });
-        setExecutionGuidance(guidance);
+        }).then(setExecutionGuidance);
       } else {
         setExecutionGuidance(null);
       }
@@ -1385,44 +1163,8 @@ export default function WorkflowBuilder() {
       // The ExecutionConsole component will auto-update via realtime subscription
     } catch (error) {
       console.error('Execution error:', error);
-      
-      // ✅ CRITICAL: Show actual error message from backend
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : typeof error === 'string' 
-        ? error 
-        : 'Failed to execute workflow';
-      
-      // Extract error details if available
-      let errorTitle = 'Error';
-      let errorDescription = errorMessage;
-      
-      // Try to parse structured error if it's a string
-      if (typeof errorMessage === 'string') {
-        // Check if it contains error code
-        if (errorMessage.includes('EXECUTION_NOT_READY')) {
-          errorTitle = 'Workflow Not Ready';
-          errorDescription = errorMessage.split('\n\n')[0]; // First line only for toast
-        } else if (errorMessage.includes('EXECUTION_MISSING_INPUTS')) {
-          errorTitle = 'Missing Inputs';
-          errorDescription = errorMessage.split('\n\n')[0];
-        } else if (errorMessage.includes('EXECUTION_MISSING_CREDENTIALS')) {
-          errorTitle = 'Missing Credentials';
-          errorDescription = errorMessage.split('\n\n')[0];
-        }
-      }
-
-      const guidance = mapWorkflowIssueToGuidance({
-        message: errorDescription || errorMessage,
-        code: errorTitle.replace(/\s+/g, '_').toUpperCase(),
-      });
-      setExecutionGuidance(guidance);
-      
-      toast({
-        title: guidance.title,
-        description: guidance.description,
-        duration: 10000, // Show longer for detailed errors
-      });
+      const errorMessage = error instanceof Error ? error.message : typeof error === 'string' ? error : 'Failed to execute workflow';
+      getAIGuidance({ code: 'EXECUTION_ERROR', message: errorMessage }).then(setExecutionGuidance);
     } finally {
       // Async execution stays "running" until ExecutionConsole emits a terminal event.
     }
@@ -1447,10 +1189,10 @@ export default function WorkflowBuilder() {
         toast({ title: 'Execution cancelled' });
       } else {
         const err = await res.json().catch(() => ({}));
-        toast({ title: 'Cancel failed', description: err.error || 'Unknown error', variant: 'destructive' });
+        getAIGuidance({ code: 'CANCEL_FAILED', message: err.error || 'Could not cancel the execution' }).then(setExecutionGuidance);
       }
     } catch {
-      toast({ title: 'Cancel failed', description: 'Network error', variant: 'destructive' });
+      getAIGuidance({ code: 'CANCEL_FAILED', message: 'Network error cancelling execution' }).then(setExecutionGuidance);
     }
   }, [activeExecutionId]);
 
@@ -1508,7 +1250,17 @@ export default function WorkflowBuilder() {
         isRunning={isRunning}
         onImport={handleImportWorkflow}
         onCancel={activeExecutionId ? handleCancel : undefined}
+        missingConnectionsCount={missingConnections.length}
+        missingConnections={missingConnections.map(c => ({ provider: c.provider, displayName: c.displayName }))}
       />
+      {!gateDismissed && id && id !== 'new' && (missingConnections.length > 0 || isCheckingConnections) && (
+        <WorkflowConnectionGate
+          missingConnections={missingConnections}
+          workflowId={id}
+          isLoading={isCheckingConnections && missingConnections.length === 0}
+          onDismiss={() => setGateDismissed(true)}
+        />
+      )}
       <Suspense
         fallback={
           <div className="flex-1 flex items-center justify-center">

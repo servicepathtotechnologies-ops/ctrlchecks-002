@@ -38,6 +38,10 @@ interface WorkflowState {
   /** Node ids to highlight after AI editor apply (short-lived UX cue) */
   aiEditedNodeIds: string[];
 
+  /** Number of missing connections for the currently open workflow (read by AppSidebar for badge) */
+  workflowConnectionAlertCount: number;
+  setWorkflowConnectionAlertCount: (count: number) => void;
+
   /**
    * User-initiated field ownership overrides.
    * nodeId → fieldName → mode ('user' | 'ai_built' | 'ai_runtime').
@@ -98,6 +102,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   isDirty: false,
   copiedNode: null,
   aiEditedNodeIds: [],
+  workflowConnectionAlertCount: 0,
   fieldOwnershipOverrides: {},
   undoStack: [],
   redoStack: [],
@@ -549,6 +554,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
   clearAiEditedNodeHighlight: () => set({ aiEditedNodeIds: [] }),
 
+  setWorkflowConnectionAlertCount: (count) => set({ workflowConnectionAlertCount: count }),
+
   resetWorkflow: () => {
     // CRITICAL: Completely reset all state to prevent stale data
     set({
@@ -564,6 +571,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       copiedNode: null,
       aiEditedNodeIds: [],
       fieldOwnershipOverrides: {},
+      workflowConnectionAlertCount: 0,
     });
   },
 }));

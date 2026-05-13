@@ -12,6 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { AppBrand } from "@/components/brand/AppBrand";
 import { GoogleLogo } from "@/components/icons/GoogleLogo";
 import { getPublicAuthRedirectPath } from "@/lib/auth-session";
+import { GuidedStatusCard } from "@/components/ui/guided-status-card";
+import { getAIGuidance } from "@/lib/ai-error-guidance";
+import type { GuidedStatusContent } from "@/lib/workflow-guidance";
 
 const GoogleIcon = () => <GoogleLogo size="md" />;
 const GitHubIcon = () => (
@@ -30,6 +33,7 @@ export default function SignIn() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
   const [facebookLoading, setFacebookLoading] = useState(false);
+  const [authGuidance, setAuthGuidance] = useState<GuidedStatusContent | null>(null);
 
   const {
     user,
@@ -47,15 +51,16 @@ export default function SignIn() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthGuidance(null);
     if (!email || !password) {
-      toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" });
+      getAIGuidance({ code: 'MISSING_FIELDS', message: 'Email and password are required', operation: 'sign_in' } as any).then(setAuthGuidance);
       return;
     }
     setLoading(true);
     const { error: authError } = await signIn(email, password);
     if (authError) {
       setLoading(false);
-      toast({ title: "Authentication Failed", description: authError.message, variant: "destructive" });
+      getAIGuidance({ code: 'AUTH_FAILED', message: authError.message, operation: 'sign_in' } as any).then(setAuthGuidance);
       return;
     }
     if (loginAsAdmin) {
@@ -65,7 +70,7 @@ export default function SignIn() {
         if (!userIsAdmin) {
           await signOut();
           setLoading(false);
-          toast({ title: "Unauthorized", description: "You do not have admin privileges.", variant: "destructive" });
+          getAIGuidance({ code: 'UNAUTHORIZED', message: 'You do not have admin privileges', operation: 'sign_in' } as any).then(setAuthGuidance);
           return;
         }
         setLoading(false);
@@ -74,7 +79,7 @@ export default function SignIn() {
       } catch {
         await signOut();
         setLoading(false);
-        toast({ title: "Error", description: "Failed to verify admin role.", variant: "destructive" });
+        getAIGuidance({ code: 'ADMIN_VERIFY_FAILED', message: 'Failed to verify admin role', operation: 'sign_in' } as any).then(setAuthGuidance);
         return;
       }
     }
@@ -84,26 +89,29 @@ export default function SignIn() {
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
+    setAuthGuidance(null);
     try {
       const { error } = await signInWithGoogle();
-      if (error) { setGoogleLoading(false); toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    } catch { setGoogleLoading(false); toast({ title: "Error", description: "Failed to sign in with Google.", variant: "destructive" }); }
+      if (error) { setGoogleLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: error.message, operation: 'sign_in' } as any, { provider: 'google' }).then(setAuthGuidance); }
+    } catch { setGoogleLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: 'Failed to sign in with Google', operation: 'sign_in' } as any, { provider: 'google' }).then(setAuthGuidance); }
   };
 
   const handleGitHubSignIn = async () => {
     setGithubLoading(true);
+    setAuthGuidance(null);
     try {
       const { error } = await signInWithGitHub();
-      if (error) { setGithubLoading(false); toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    } catch { setGithubLoading(false); toast({ title: "Error", description: "Failed to sign in with GitHub.", variant: "destructive" }); }
+      if (error) { setGithubLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: error.message, operation: 'sign_in' } as any, { provider: 'github' }).then(setAuthGuidance); }
+    } catch { setGithubLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: 'Failed to sign in with GitHub', operation: 'sign_in' } as any, { provider: 'github' }).then(setAuthGuidance); }
   };
 
   const handleFacebookSignIn = async () => {
     setFacebookLoading(true);
+    setAuthGuidance(null);
     try {
       const { error } = await signInWithFacebook();
-      if (error) { setFacebookLoading(false); toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    } catch { setFacebookLoading(false); toast({ title: "Error", description: "Failed to sign in with Facebook.", variant: "destructive" }); }
+      if (error) { setFacebookLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: error.message, operation: 'sign_in' } as any, { provider: 'facebook' }).then(setAuthGuidance); }
+    } catch { setFacebookLoading(false); getAIGuidance({ code: 'OAUTH_FAILED', message: 'Failed to sign in with Facebook', operation: 'sign_in' } as any, { provider: 'facebook' }).then(setAuthGuidance); }
   };
 
   if (authLoading) {
@@ -210,6 +218,17 @@ export default function SignIn() {
               <p className="text-center text-xs text-muted-foreground">Or sign in with Google, GitHub or Facebook</p>
             </div>
           </form>
+
+          {authGuidance && (
+            <GuidedStatusCard
+              title={authGuidance.title}
+              description={authGuidance.description}
+              resolution={authGuidance.resolution}
+              nextSteps={authGuidance.nextSteps}
+              tone={authGuidance.tone}
+              onDismiss={() => setAuthGuidance(null)}
+            />
+          )}
 
           <p className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
