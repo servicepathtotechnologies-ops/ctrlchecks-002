@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export default function NotificationsSettings() {
 
   const loadNotifications = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from("notifications")
         .select("*")
         .eq("user_id", user?.id)
@@ -49,7 +49,7 @@ export default function NotificationsSettings() {
 
   const markAsRead = async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await awsClient
         .from("notifications")
         .update({ read: true })
         .eq("id", id);
@@ -66,7 +66,7 @@ export default function NotificationsSettings() {
 
   const markAllAsRead = async () => {
     try {
-      const { error } = await supabase
+      const { error } = await awsClient
         .from("notifications")
         .update({ read: true })
         .eq("user_id", user?.id)

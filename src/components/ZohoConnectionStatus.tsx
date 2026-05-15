@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { CheckCircle, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
@@ -53,7 +53,7 @@ export default function ZohoConnectionStatus({
     }
 
     try {
-      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+      const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
       if (!authToken) {
         setIsAuthenticated(false);
         return;
@@ -135,7 +135,7 @@ export default function ZohoConnectionStatus({
     setIsConnecting(true);
 
     try {
-      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+      const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
       if (!authToken) {
         throw new Error('No authentication token');
       }
@@ -200,7 +200,7 @@ export default function ZohoConnectionStatus({
     if (!user) return;
 
     try {
-      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+      const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
       if (!authToken) {
         throw new Error('No authentication token');
       }

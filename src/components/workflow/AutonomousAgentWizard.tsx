@@ -18,7 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -827,10 +827,10 @@ export function AutonomousAgentWizard() {
             nodes: string[];
             displayName: string;
             satisfied?: boolean;
-            inputType?: 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'password' | 'json';
+            inputType?: 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'password' | 'date' | 'json';
             options?: Array<{ label: string; value: string }>;
             placeholder?: string;
-            uiWidget?: 'text' | 'textarea' | 'json' | 'multi_email';
+            uiWidget?: 'text' | 'textarea' | 'json' | 'multi_email' | 'date';
         }>;
         inputs: Array<{
             nodeId: string;
@@ -839,10 +839,10 @@ export function AutonomousAgentWizard() {
             fieldName: string;
             description: string;
             fieldType: string;
-            inputType?: 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'password' | 'json';
+            inputType?: 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'password' | 'date' | 'json';
             options?: Array<{ label: string; value: string }>;
             placeholder?: string;
-            uiWidget?: 'text' | 'textarea' | 'json' | 'multi_email';
+            uiWidget?: 'text' | 'textarea' | 'json' | 'multi_email' | 'date';
             required: boolean;
             examples?: any[];
         }>;
@@ -1020,7 +1020,7 @@ export function AutonomousAgentWizard() {
                     console.log(`[Configure] Fetching missing items for workflow ${generatedWorkflowId}`);
                     const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${generatedWorkflowId}/missing-items`, {
                         headers: {
-                            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
+                            'Authorization': `Bearer ${(await awsClient.auth.getSession()).data.session?.access_token || ''}`,
                         },
                     });
                     
@@ -1056,7 +1056,7 @@ export function AutonomousAgentWizard() {
         const loadLastResolvedInputs = async () => {
             if (!generatedWorkflowId) return;
             try {
-                const { data: sessionData } = await supabase.auth.getSession();
+                const { data: sessionData } = await awsClient.auth.getSession();
                 const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${generatedWorkflowId}/last-resolved-inputs`, {
                     headers: {
                         'Content-Type': 'application/json',
@@ -1088,7 +1088,7 @@ export function AutonomousAgentWizard() {
                     const state = JSON.parse(oauthState);
                     
                     // Check if Google OAuth is now connected
-                    const { data: { user } } = await supabase.auth.getUser();
+                    const { data: { user } } = await awsClient.auth.getUser();
                     if (user) {
                         const credentialStatus = await fetchRuntimeCredentialStatus('google');
 
@@ -1569,7 +1569,7 @@ export function AutonomousAgentWizard() {
             try {
                 const {
                     data: { user },
-                } = await supabase.auth.getUser();
+                } = await awsClient.auth.getUser();
                 if (!user || cancelled) {
                     if (!cancelled) setGoogleOAuthConnectedLive(false);
                     return;
@@ -2382,7 +2382,7 @@ export function AutonomousAgentWizard() {
             } as AnalysisResult);
             setHasWorkflowPlan(true);
 
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await awsClient.auth.getSession();
             const chain = planNodeHints.filter((x) => typeof x === 'string' && x.trim().length > 0);
             if (chain.length === 0) {
                 toast({
@@ -2676,7 +2676,7 @@ export function AutonomousAgentWizard() {
             // Get the current user's ID so the backend can check vault tables for connected accounts.
             // Without userId the backend defaults to 'anonymous' and all vault checks return false,
             // causing connected OAuth accounts (LinkedIn, Notion, etc.) to show "Action required".
-            const { data: { session: refineSession } } = await supabase.auth.getSession();
+            const { data: { session: refineSession } } = await awsClient.auth.getSession();
             const refineUserId = refineSession?.user?.id;
             const response = await fetch(`${ENDPOINTS.itemBackend}/api/generate-workflow`, {
                 method: 'POST',
@@ -2865,7 +2865,7 @@ export function AutonomousAgentWizard() {
                 if (workflowNodes.length > 0 && workflowEdges.length > 0) {
                     // Workflow is complete - save it directly
                     try {
-                        const { data: { user } } = await supabase.auth.getUser();
+                        const { data: { user } } = await awsClient.auth.getUser();
                         // Step 1: Normalize backend format to frontend format
                         const { normalizeBackendWorkflow } = await import('@/lib/node-type-normalizer');
                         const normalizedBackend = normalizeBackendWorkflow({ nodes: workflowNodes, edges: workflowEdges });
@@ -2890,7 +2890,7 @@ export function AutonomousAgentWizard() {
                             workflowData.graph = { nodes: normalized.nodes, edges: normalized.edges, metadata: { ...metaRefine1 } };
                         }
 
-                        const { data: savedWorkflow, error: saveError } = await supabase
+                        const { data: savedWorkflow, error: saveError } = await awsClient
                             .from('workflows')
                             .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                             .select()
@@ -2935,7 +2935,7 @@ export function AutonomousAgentWizard() {
 
                 if (workflowNodes.length > 0) {
                     try {
-                        const { data: { user } } = await supabase.auth.getUser();
+                        const { data: { user } } = await awsClient.auth.getUser();
                         const { normalizeBackendWorkflow } = await import('@/lib/node-type-normalizer');
                         const normalizedBackend = normalizeBackendWorkflow({ nodes: workflowNodes, edges: workflowEdges });
                         const normalized = revalidateWorkflowGraph(normalizedBackend.nodes, normalizedBackend.edges, 10);
@@ -2950,7 +2950,7 @@ export function AutonomousAgentWizard() {
                             updated_at: new Date().toISOString(),
                         };
 
-                        const { data: savedWorkflow, error: saveError } = await supabase
+                        const { data: savedWorkflow, error: saveError } = await awsClient
                             .from('workflows')
                             .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                             .select()
@@ -3088,7 +3088,7 @@ export function AutonomousAgentWizard() {
                     
                     if (workflowNodes.length > 0 && workflowEdges.length > 0) {
                         try {
-                            const { data: { user } } = await supabase.auth.getUser();
+                            const { data: { user } } = await awsClient.auth.getUser();
                             const normalized = revalidateWorkflowGraph(workflowNodes, workflowEdges, 10);
 
                             const metaRefine2: Record<string, unknown> = {};
@@ -3109,7 +3109,7 @@ export function AutonomousAgentWizard() {
                                 workflowData.graph = { nodes: normalized.nodes, edges: normalized.edges, metadata: { ...metaRefine2 } };
                             }
 
-                            const { data: savedWorkflow, error: saveError } = await supabase
+                            const { data: savedWorkflow, error: saveError } = await awsClient
                                 .from('workflows')
                                 .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                                 .select()
@@ -3271,7 +3271,7 @@ export function AutonomousAgentWizard() {
             setStep('executing');
 
             // Get auth token
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await awsClient.auth.getSession();
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json',
             };
@@ -3481,7 +3481,7 @@ export function AutonomousAgentWizard() {
     }, []);
 
     const commitSetupWorkflow = useCallback(async (workflowId: string) => {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await awsClient.auth.getSession();
         const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/commit-setup`, {
             method: 'POST',
             headers: {
@@ -3511,14 +3511,14 @@ export function AutonomousAgentWizard() {
         );
         if (!confirmed) return;
         // Best-effort delete — only removes uncommitted drafts (setup_completed = false)
-        await supabase
+        await awsClient
             .from('workflows')
             .delete()
             .eq('id', generatedWorkflowId)
             .eq('setup_completed', false)
             .catch(() => null);
         navigate('/workflows');
-    }, [generatedWorkflowId, navigate, supabase]);
+    }, [generatedWorkflowId, navigate, awsClient]);
 
     // Warn the user before closing the tab/browser while a workflow draft is in progress
     useEffect(() => {
@@ -3536,7 +3536,7 @@ export function AutonomousAgentWizard() {
             const {
                 data: { user },
                 error: userError,
-            } = await supabase.auth.getUser();
+            } = await awsClient.auth.getUser();
             if (userError || !user) {
                 toast({
                     title: 'Authentication required',
@@ -3555,7 +3555,7 @@ export function AutonomousAgentWizard() {
                     })
                 );
             }
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await awsClient.auth.getSession();
             const userId = session?.user?.id;
             if (!userId) throw new Error('Please sign in first to connect Google.');
             const returnTo = getCurrentPathWithQuery();
@@ -3579,7 +3579,7 @@ export function AutonomousAgentWizard() {
             console.log('? Submitting unified configuration (inputs + credentials)');
             let savedWorkflow: any = null; // Declare outside try block for catch access
             try {
-                const { data: { user } } = await supabase.auth.getUser();
+                const { data: { user } } = await awsClient.auth.getUser();
 
                 /** Canonical user text for intent authority (form field allowlist). Not the augmented planner blob. */
                 const canonicalUserIntentForMetadata =
@@ -3629,7 +3629,7 @@ export function AutonomousAgentWizard() {
                         : {}),
                 };
                 
-                const { data: workflowResult, error: saveError } = await supabase
+                const { data: workflowResult, error: saveError } = await awsClient
                     .from('workflows')
                     .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                     .select()
@@ -3643,7 +3643,7 @@ export function AutonomousAgentWizard() {
                 } // end else (no generatedWorkflowId)
 
                 if (savedWorkflow?.id) {
-                    const { data: { session } } = await supabase.auth.getSession();
+                    const { data: { session } } = await awsClient.auth.getSession();
                     
                     // ? STEP 1: Attach inputs first (if any)
                     let inputsResult: any = null;
@@ -3823,14 +3823,14 @@ export function AutonomousAgentWizard() {
                     // ? CRITICAL: Always redirect even when no inputs or credentials are required
                     // Backend will handle auto-run when workflow reaches ready_for_execution status
                     
-                    // ? STEP 4: Fetch final workflow from Supabase (not API endpoint)
+                    // ? STEP 4: Fetch final workflow from DB (not API endpoint)
                     // Get the latest workflow state (after inputs and credentials)
                     console.log('?? Fetching final workflow state...');
                     let finalWorkflow: any = null;
                     
                     try {
-                        // ? CRITICAL: Query Supabase directly since there's no GET /api/workflows/:id endpoint
-                        const { data: fetchedWorkflow, error: fetchError } = await supabase
+                        // ? CRITICAL: Query DB directly since there's no GET /api/workflows/:id endpoint
+                        const { data: fetchedWorkflow, error: fetchError } = await awsClient
                             .from('workflows')
                             .select('*')
                             .eq('id', savedWorkflow.id)
@@ -3838,9 +3838,9 @@ export function AutonomousAgentWizard() {
                         
                         if (!fetchError && fetchedWorkflow) {
                             finalWorkflow = fetchedWorkflow;
-                            console.log('? Final workflow fetched from Supabase:', finalWorkflow.id);
+                            console.log('? Final workflow fetched from DB:', finalWorkflow.id);
                         } else {
-                            console.warn('?? Could not fetch final workflow from Supabase:', fetchError?.message);
+                            console.warn('?? Could not fetch final workflow from DB:', fetchError?.message);
                             // Fallback to credentials result or inputs result
                             if (credentialsResult?.workflow) {
                                 finalWorkflow = credentialsResult.workflow;
@@ -4072,8 +4072,8 @@ export function AutonomousAgentWizard() {
                 platforms: (refinement?.requirements && !Array.isArray(refinement.requirements) && refinement.requirements.platforms) ? refinement.requirements.platforms : [],
             };
 
-            // Get Supabase URL and session token
-            const { data: { session } } = await supabase.auth.getSession();
+            // Get DB session token
+            const { data: { session } } = await awsClient.auth.getSession();
             
             // ? CRITICAL: Determine the prompt to use - prioritize explicit prompt, then refinement, then state prompt
             // explicitPrompt is passed directly from handleProceedWithSelectedPrompt to avoid async state issues
@@ -4667,9 +4667,9 @@ export function AutonomousAgentWizard() {
                                         const wNodes = update.nodes || update.workflow?.nodes || [];
                                         const wEdges = update.edges || update.workflow?.edges || [];
                                         if (wNodes.length > 0) {
-                                            const { data: { user: wUser } } = await supabase.auth.getUser();
+                                            const { data: { user: wUser } } = await awsClient.auth.getUser();
                                             const preSaveGraph = revalidateWorkflowGraph(wNodes, wEdges, 10);
-                                            const { data: preSaved, error: preSaveErr } = await supabase
+                                            const { data: preSaved, error: preSaveErr } = await awsClient
                                                 .from('workflows')
                                                 .insert(markWorkflowDataAsPendingSetup({
                                                     name: (analysis?.summary && typeof analysis.summary === 'string')
@@ -4719,7 +4719,7 @@ export function AutonomousAgentWizard() {
 
                                 // No credentials needed - save workflow immediately
                                 try {
-                                    const { data: { user } } = await supabase.auth.getUser();
+                                    const { data: { user } } = await awsClient.auth.getUser();
                                     const workflowNodes = nodes || [];
                                     const workflowEdges = edges || [];
                                     
@@ -4789,7 +4789,7 @@ export function AutonomousAgentWizard() {
                                         };
                                     }
 
-                                    const { data: savedWorkflow, error: saveError } = await supabase
+                                    const { data: savedWorkflow, error: saveError } = await awsClient
                                         .from('workflows')
                                         .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                                         .select()
@@ -4816,7 +4816,7 @@ export function AutonomousAgentWizard() {
                                         
                                         // ? ENHANCED: Check for missing items before redirecting
                                         try {
-                                            const { data: { session: currentSession } } = await supabase.auth.getSession();
+                                            const { data: { session: currentSession } } = await awsClient.auth.getSession();
                                             const missingItemsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflow.id}/missing-items`, {
                                                 headers: {
                                                     'Authorization': `Bearer ${currentSession?.access_token || ''}`,
@@ -4925,9 +4925,9 @@ export function AutonomousAgentWizard() {
                         const wNodes = finalData.nodes || finalData.workflow?.nodes || [];
                         const wEdges = finalData.edges || finalData.workflow?.edges || [];
                         if (wNodes.length > 0) {
-                            const { data: { user: wUser } } = await supabase.auth.getUser();
+                            const { data: { user: wUser } } = await awsClient.auth.getUser();
                             const preSaveGraph = revalidateWorkflowGraph(wNodes, wEdges, 10);
-                            const { data: preSaved, error: preSaveErr } = await supabase
+                            const { data: preSaved, error: preSaveErr } = await awsClient
                                 .from('workflows')
                                 .insert(markWorkflowDataAsPendingSetup({
                                     name: (analysis?.summary && typeof analysis.summary === 'string')
@@ -4988,7 +4988,7 @@ export function AutonomousAgentWizard() {
                 isPipelineContractReady(finalData)
             ) {
                 try {
-                    const { data: { user } } = await supabase.auth.getUser();
+                    const { data: { user } } = await awsClient.auth.getUser();
                     const normalized = revalidateWorkflowGraph(workflowNodes, workflowEdges, 10);
 
                     const metaFallback: Record<string, unknown> = {};
@@ -5011,7 +5011,7 @@ export function AutonomousAgentWizard() {
                         workflowData.graph = { nodes: normalized.nodes, edges: normalized.edges, metadata: { ...metaFallback } };
                     }
 
-                    const { data: savedWorkflow, error: saveError } = await supabase
+                    const { data: savedWorkflow, error: saveError } = await awsClient
                         .from('workflows')
                         .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                         .select()
@@ -5082,7 +5082,7 @@ export function AutonomousAgentWizard() {
                     isPipelineContractReady(finalData)
                 ) {
                     try {
-                        const { data: { user } } = await supabase.auth.getUser();
+                        const { data: { user } } = await awsClient.auth.getUser();
                         const normalized = revalidateWorkflowGraph(retryWorkflowNodes, retryWorkflowEdges, 10);
 
                         const metaRetry: Record<string, unknown> = {};
@@ -5105,7 +5105,7 @@ export function AutonomousAgentWizard() {
                             workflowData.graph = { nodes: normalized.nodes, edges: normalized.edges, metadata: { ...metaRetry } };
                         }
 
-                        const { data: savedWorkflow, error: saveError } = await supabase
+                        const { data: savedWorkflow, error: saveError } = await awsClient
                             .from('workflows')
                             .insert(markWorkflowDataAsPendingSetup(workflowData) as any)
                             .select()
@@ -5265,7 +5265,7 @@ export function AutonomousAgentWizard() {
             }
             setNodeDescriptions((prev) => ({ ...prev, [descKey]: { loading: true, text: null, open: false } }));
             try {
-                const session = (await supabase.auth.getSession()).data.session;
+                const session = (await awsClient.auth.getSession()).data.session;
                 const headers: Record<string, string> = { 'Content-Type': 'application/json' };
                 if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
 
@@ -5309,7 +5309,7 @@ export function AutonomousAgentWizard() {
                 [nodeId]: { loading: true, data: prev[nodeId]?.data || null },
             }));
             try {
-                const session = (await supabase.auth.getSession()).data.session;
+                const session = (await awsClient.auth.getSession()).data.session;
                 const headers: Record<string, string> = { 'Content-Type': 'application/json' };
                 if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
 
@@ -5401,7 +5401,7 @@ export function AutonomousAgentWizard() {
             globalWalkAbortRef.current = false;
             const total = allFields.length;
 
-            const session = (await supabase.auth.getSession()).data.session;
+            const session = (await awsClient.auth.getSession()).data.session;
             const headers: Record<string, string> = { 'Content-Type': 'application/json' };
             if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
 
@@ -5520,7 +5520,7 @@ export function AutonomousAgentWizard() {
     const handleCapabilityNodeSelectionAnalyze = async () => {
         if (!prompt.trim()) return;
 
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData } = await awsClient.auth.getSession();
         const userId = sessionData?.session?.user?.id ?? '';
 
         setStep('analyzing');
@@ -5572,7 +5572,7 @@ export function AutonomousAgentWizard() {
         setIsSummarizeLayerProcessing(true);
 
         try {
-            const { data: sessionData } = await supabase.auth.getSession();
+            const { data: sessionData } = await awsClient.auth.getSession();
             const response = await fetch(`${ENDPOINTS.itemBackend}/api/capability-selection/generate`, {
                 method: 'POST',
                 headers: {
@@ -5624,7 +5624,7 @@ export function AutonomousAgentWizard() {
         setBuildingLogs(['Starting backend generation...']);
 
         try {
-            const { data: sessionData } = await supabase.auth.getSession();
+            const { data: sessionData } = await awsClient.auth.getSession();
             const userId = sessionData?.session?.user?.id ?? '';
 
             const response = await fetch(`${ENDPOINTS.itemBackend}/api/capability-selection/confirm`, {
@@ -5652,7 +5652,7 @@ export function AutonomousAgentWizard() {
             const data = await response.json();
 
             // data.workflow contains the AI-populated, credential-discovered, field-ownership-mapped workflow.
-            // We must save it to Supabase, then wire it into the field-ownership wizard
+            // We must save it to DB, then wire it into the field-ownership wizard
             // (same path as the legacy handleRefine phase:'ready' handler).
             const workflowNodes = data.workflow?.nodes ?? capNodeWorkflow?.nodes ?? [];
             const workflowEdges = data.workflow?.edges ?? capNodeWorkflow?.edges ?? [];
@@ -5664,7 +5664,7 @@ export function AutonomousAgentWizard() {
             setProgress(80);
             setBuildingLogs((prev) => [...prev, 'Saving workflow...']);
 
-            // -- Save to Supabase ----------------------------------------------
+            // -- Save to DB ----------------------------------------------
             const { normalizeBackendWorkflow } = await import('@/lib/node-type-normalizer');
             const normalizedBackend = normalizeBackendWorkflow({ nodes: workflowNodes, edges: workflowEdges });
             // ? Use preserveTopology=true: the backend already built the correct branching graph.
@@ -5677,7 +5677,7 @@ export function AutonomousAgentWizard() {
                 { preserveTopology: true }
             );
 
-            const { data: savedWorkflow, error: saveError } = await supabase
+            const { data: savedWorkflow, error: saveError } = await awsClient
                 .from('workflows')
                 .insert(markWorkflowDataAsPendingSetup({
                     name: (prompt || originalPrompt || 'AI Generated Workflow').substring(0, 50),
@@ -8314,7 +8314,7 @@ export function AutonomousAgentWizard() {
                                 onConfirm={async () => {
                                     // Call backend confirmation API
                                     try {
-                                        const { data: { session } } = await supabase.auth.getSession();
+                                        const { data: { session } } = await awsClient.auth.getSession();
                                         const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflow/confirm`, {
                                             method: 'POST',
                                             headers: {
@@ -8347,7 +8347,7 @@ export function AutonomousAgentWizard() {
                                             setEdges(normalized.edges);
                                             
                                             // Save as hidden setup draft; commit only when readiness passes.
-                                            const { data: { user } } = await supabase.auth.getUser();
+                                            const { data: { user } } = await awsClient.auth.getUser();
                                             if (user && result.workflow) {
                                                 const saveResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/setup-draft`, {
                                                     method: 'POST',
@@ -8678,7 +8678,7 @@ export function AutonomousAgentWizard() {
                                                                     method: 'POST',
                                                                     headers: {
                                                                         'Content-Type': 'application/json',
-                                                                        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
+                                                                        'Authorization': `Bearer ${(await awsClient.auth.getSession()).data.session?.access_token || ''}`,
                                                                     },
                                                                     body: JSON.stringify({
                                                                         credentials: credentialPayload,
@@ -8870,4 +8870,3 @@ export function AutonomousAgentWizard() {
         </div>
     );
 }
-

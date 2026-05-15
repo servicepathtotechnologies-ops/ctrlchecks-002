@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { trackFieldOwnershipGuideEvent } from "@/lib/field-ownership-guide-telemetry";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 
 type GuideReply = {
   whatThisFieldDoes: string;
@@ -141,7 +141,7 @@ export default function FieldOwnershipGuidePanel({
         ]);
         return;
       }
-      const session = (await supabase.auth.getSession()).data.session;
+      const session = (await awsClient.auth.getSession()).data.session;
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
       const response = await fetch(endpoint, {

@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { useWorkflowStore } from "@/stores/workflowStore";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -32,7 +32,7 @@ export default function FormSettings({ workflowId }: FormSettingsProps) {
     if (!workflowId) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('workflows')
         .select('status')
         .eq('id', workflowId)
@@ -88,7 +88,7 @@ export default function FormSettings({ workflowId }: FormSettingsProps) {
 
     setSaving(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from("workflows")
         .update({
           status: enabled ? "active" : "draft"

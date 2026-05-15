@@ -7,7 +7,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useWorkflowStore, WorkflowNode } from '@/stores/workflowStore';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { NodeTypeDefinition } from '@/components/workflow/nodeTypes';
 import NodeLibrary from '@/components/workflow/NodeLibrary';
@@ -51,7 +51,7 @@ export default function TemplateEditor() {
   // Load template
   const loadTemplate = useCallback(async (templateId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('templates')
         .select('*')
         .eq('id', templateId)

@@ -36,9 +36,9 @@ vi.mock('@/lib/facebookSignInOptions', () => ({
   getFacebookOAuthOptions: () => ({}),
 }));
 
-// Mock supabase — all DB queries resolve to empty (not connected)
+// Mock AWS client — all DB queries resolve to empty (not connected)
 vi.mock('@/integrations/aws/client', () => ({
-  supabase: {
+  awsClient: {
     from: () => ({
       select: () => ({
         eq: () => ({

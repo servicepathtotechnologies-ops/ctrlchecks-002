@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,7 +69,7 @@ export default function TeamsSettings() {
 
   const loadTeams = useCallback(async () => {
     try {
-      const { data: memberData, error: memberError } = await supabase
+      const { data: memberData, error: memberError } = await awsClient
         .from("team_members")
         .select("team_id")
         .eq("user_id", user?.id);
@@ -78,7 +78,7 @@ export default function TeamsSettings() {
 
       if (memberData && memberData.length > 0) {
         const teamIds = memberData.map(m => m.team_id);
-        const { data: teamsData, error: teamsError } = await supabase
+        const { data: teamsData, error: teamsError } = await awsClient
           .from("teams")
           .select("*")
           .in("id", teamIds)
@@ -101,7 +101,7 @@ export default function TeamsSettings() {
   const loadMembers = useCallback(async (teamId: string) => {
     setLoadingMembers(true);
     try {
-      const { data: membersData, error: membersError } = await supabase
+      const { data: membersData, error: membersError } = await awsClient
         .from("team_members")
         .select("*")
         .eq("team_id", teamId);
@@ -110,7 +110,7 @@ export default function TeamsSettings() {
 
       // Load profiles separately
       const userIds = membersData?.map(m => m.user_id) || [];
-      const { data: profilesData } = await supabase
+      const { data: profilesData } = await awsClient
         .from("profiles")
         .select("user_id, email, full_name")
         .in("user_id", userIds);
@@ -148,7 +148,7 @@ export default function TeamsSettings() {
 
     setCreating(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from("teams")
         .insert({
           name: newTeamName,
@@ -182,7 +182,7 @@ export default function TeamsSettings() {
 
     setInviting(true);
     try {
-      const { error } = await supabase
+      const { error } = await awsClient
         .from("team_invitations")
         .insert({
           team_id: selectedTeam.id,

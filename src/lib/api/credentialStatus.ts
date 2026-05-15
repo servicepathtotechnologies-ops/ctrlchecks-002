@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { getBackendUrl } from './getBackendUrl';
 
 export type RuntimeCredentialStatus = {
@@ -12,7 +12,7 @@ export type RuntimeCredentialStatus = {
 };
 
 export async function fetchRuntimeCredentialStatus(provider: string): Promise<RuntimeCredentialStatus> {
-  const token = (await supabase.auth.getSession()).data.session?.access_token;
+  const token = (await awsClient.auth.getSession()).data.session?.access_token;
   if (!token) return { connected: false, provider, reason: 'Unauthorized' };
 
   let response: Response;

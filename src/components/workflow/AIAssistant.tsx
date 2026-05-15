@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useWorkflowStore } from '@/stores/workflowStore';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { toast } from '@/hooks/use-toast';
 import { validateAndFixWorkflow } from '@/lib/workflowValidation';
@@ -111,7 +111,7 @@ export default function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
             let hasExecutionHistory = false;
             try {
                 if (workflowId) {
-                    const { data: executions } = await supabase
+                    const { data: executions } = await awsClient
                         .from('executions')
                         .select('id, status, error, logs, output, started_at')
                         .eq('workflow_id', workflowId)
@@ -145,7 +145,7 @@ export default function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
                 executionHistoryCount: executionHistory.length,
             });
 
-            const { data: sessionData } = await supabase.auth.getSession();
+            const { data: sessionData } = await awsClient.auth.getSession();
             
             // Add timeout to prevent indefinite hanging (120 seconds for AI generation)
             const controller = new AbortController();

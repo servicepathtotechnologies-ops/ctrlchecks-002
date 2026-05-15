@@ -16,9 +16,9 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useFieldOwnership } from '../useFieldOwnership';
 import type { FieldFillMode } from '@/lib/fillMode';
 
-// Mock supabase
+// Mock awsClient
 vi.mock('@/integrations/aws/client', () => ({
-  supabase: {
+  awsClient: {
     auth: {
       getSession: vi.fn(),
     },
@@ -33,7 +33,7 @@ vi.mock('@/config/endpoints', () => ({
 }));
 
 // Import after mocks
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 
 describe('useFieldOwnership Hook', () => {
   const mockOnConfigUpdate = vi.fn();
@@ -45,7 +45,7 @@ describe('useFieldOwnership Hook', () => {
     global.fetch = mockFetch;
     
     // Mock successful auth by default
-    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+    vi.mocked(awsClient.auth.getSession).mockResolvedValue({
       data: {
         session: {
           access_token: 'mock-token',
@@ -629,7 +629,7 @@ describe('useFieldOwnership Hook', () => {
 
   describe('Error Handling', () => {
     it('should handle missing auth token', async () => {
-      vi.mocked(supabase.auth.getSession).mockResolvedValueOnce({
+      vi.mocked(awsClient.auth.getSession).mockResolvedValueOnce({
         data: { session: null },
       } as any);
 

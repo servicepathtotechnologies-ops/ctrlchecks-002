@@ -1,8 +1,8 @@
 ﻿import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/aws/client";
-import { Zap, Plus, Play, FolderOpen, LayoutTemplate, History, MoreHorizontal, Copy, Trash2, Clock, Bot, Workflow, MessageSquare, ArrowLeft, Activity, CreditCard } from "lucide-react";
+import { awsClient } from "@/integrations/aws/client";
+import { Zap, Plus, Play, FolderOpen, LayoutTemplate, History, MoreHorizontal, Copy, Trash2, Clock, Bot, Workflow, MessageSquare, ArrowLeft, Activity, CreditCard, AlertCircle, RefreshCw } from "lucide-react";
 import { AppChromeHeader } from "@/components/layout/AppChromeHeader";
 import GoogleConnectionStatus from "@/components/GoogleConnectionStatus";
 import { WorkflowAuthGate } from "@/components/WorkflowAuthGate";
@@ -36,6 +36,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [workflows, setWorkflows] = useState<WorkflowRecord[]>([]);
   const [workflowsLoading, setWorkflowsLoading] = useState(true);
+  const [workflowsError, setWorkflowsError] = useState<string | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     total: 0,
     executionsToday: 0,
@@ -104,9 +106,10 @@ export default function Dashboard() {
   const loadWorkflows = useCallback(async () => {
     const runId = ++loadWorkflowsRunRef.current;
     setWorkflowsLoading(true);
+    setWorkflowsError(null);
 
     try {
-      let query = supabase
+      let query = awsClient
         .from('workflows')
         .select('*')
         .eq('setup_completed', true);
@@ -116,11 +119,11 @@ export default function Dashboard() {
         query = query.eq('status', 'active');
       }
 
-      const { data: workflowsData, error: workflowsError } = await query
+      const { data: workflowsData, error: workflowLoadError } = await query
         .order('updated_at', { ascending: false })
         .limit(6); // Show latest 6 workflows on dashboard
 
-      if (workflowsError) throw workflowsError;
+      if (workflowLoadError) throw workflowLoadError;
 
       const baseWorkflows = (workflowsData || []).map((workflow) => ({
         ...workflow,
@@ -153,7 +156,7 @@ export default function Dashboard() {
               // 3. No rows match the query (workflow has no executions yet)
               // This is expected behavior - 406 means "no visible rows" not "permission denied"
               // We handle this gracefully by treating 406 as "no executions yet"
-              const { data, error: execError } = await supabase
+              const { data, error: execError } = await awsClient
                 .from('executions')
                 .select('started_at, status')
                 .eq('workflow_id', workflow.id)
@@ -203,7 +206,7 @@ export default function Dashboard() {
               // Count executions for this workflow
               // NOTE: 406 errors are expected when workflow has no executions
               // PostgREST returns 406 for empty result sets with RLS enabled
-              const { count: execCount, error: countError } = await supabase
+              const { count: execCount, error: countError } = await awsClient
                 .from('executions')
                 .select('id', { count: 'exact' })
                 .eq('workflow_id', workflow.id)
@@ -257,9 +260,13 @@ export default function Dashboard() {
 
       if (loadWorkflowsRunRef.current === runId) {
         setWorkflows(workflowsWithStats);
+        setWorkflowsError(null);
       }
     } catch (error) {
       console.error('Error loading workflows:', error);
+      if (loadWorkflowsRunRef.current === runId) {
+        setWorkflowsError('Unable to load workflows. Please retry in a moment.');
+      }
     } finally {
       if (loadWorkflowsRunRef.current === runId) {
         setWorkflowsLoading(false);
@@ -269,29 +276,33 @@ export default function Dashboard() {
 
   const loadStats = useCallback(async () => {
     try {
+      setStatsError(null);
       // Total workflows
-      const { count: totalCount } = await supabase
+      const { count: totalCount, error: totalError } = await awsClient
         .from('workflows')
         .select('id', { count: 'exact' })
         .eq('setup_completed', true)
         .limit(0);
+      if (totalError) throw totalError;
 
       // Executions today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const { count: todayCount } = await supabase
+      const { count: todayCount, error: todayError } = await awsClient
         .from('executions')
         .select('id', { count: 'exact' })
         .gte('started_at', today.toISOString())
         .limit(0);
+      if (todayError) throw todayError;
 
       // Active workflows
-      const { count: activeCount } = await supabase
+      const { count: activeCount, error: activeError } = await awsClient
         .from('workflows')
         .select('id', { count: 'exact' })
         .eq('setup_completed', true)
         .eq('status', 'active')
         .limit(0);
+      if (activeError) throw activeError;
 
       setStats({
         total: totalCount || 0,
@@ -300,6 +311,7 @@ export default function Dashboard() {
       });
     } catch (error) {
       console.error('Error loading stats:', error);
+      setStatsError('Unable to load workflow stats.');
     }
   }, []);
 
@@ -344,7 +356,7 @@ export default function Dashboard() {
   const duplicateWorkflow = async (workflow: WorkflowRecord) => {
     if (!user) return;
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('workflows')
         .insert({
           name: `${workflow.name} (Copy)`,
@@ -463,6 +475,25 @@ export default function Dashboard() {
           </div>
 
         {/* Stats */}
+        {statsError && (
+          <Card className="mb-4 border-destructive/40 bg-destructive/5">
+            <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4" />
+                <span>{statsError}</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadStats}
+                className="self-start sm:self-auto"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        )}
         <div className="grid gap-4 md:grid-cols-3 mb-8">
           <Card 
             className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
@@ -473,7 +504,7 @@ export default function Dashboard() {
               <Zap className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
+              <div className="text-2xl font-bold">{statsError ? '--' : stats.total}</div>
             </CardContent>
           </Card>
 
@@ -486,7 +517,7 @@ export default function Dashboard() {
               <Play className="h-4 w-4 text-secondary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.executionsToday}</div>
+              <div className="text-2xl font-bold">{statsError ? '--' : stats.executionsToday}</div>
             </CardContent>
           </Card>
 
@@ -502,7 +533,7 @@ export default function Dashboard() {
               <Activity className={`h-4 w-4 ${filterActive ? 'text-primary' : 'text-success'}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.active}</div>
+              <div className="text-2xl font-bold">{statsError ? '--' : stats.active}</div>
               {filterActive && (
                 <p className="text-xs text-muted-foreground mt-1">Click to show all</p>
               )}
@@ -527,6 +558,20 @@ export default function Dashboard() {
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
+          ) : workflowsError ? (
+            <Card className="border-destructive/40 bg-destructive/5">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="rounded-full bg-destructive/10 p-6 mb-4">
+                  <AlertCircle className="h-12 w-12 text-destructive" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Workflows could not load</h3>
+                <p className="text-muted-foreground max-w-md mb-6">{workflowsError}</p>
+                <Button variant="outline" onClick={loadWorkflows}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Retry
+                </Button>
+              </CardContent>
+            </Card>
           ) : workflows.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16">

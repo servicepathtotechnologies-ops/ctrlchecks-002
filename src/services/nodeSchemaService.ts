@@ -36,9 +36,9 @@ export interface InputFieldSchema {
   validation?: (value: any) => boolean | string;
   ui?: {
     options?: Array<{ label: string; value: string }>;
-    requiredIf?: { field: string; equals: any };
+    requiredIf?: { field: string; equals?: any; notEquals?: any };
     visibleIf?: { field: string; equals: unknown };
-    widget?: 'text' | 'textarea' | 'json' | 'multi_email';
+    widget?: 'text' | 'textarea' | 'json' | 'multi_email' | 'date';
     contextHints?: Array<{ whenValue: string; message: string }>;
   };
   /** From UnifiedNodeRegistry — drives "how to get it" guides in the properties panel */

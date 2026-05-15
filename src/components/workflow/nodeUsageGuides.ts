@@ -1107,14 +1107,14 @@ Output: [
   },
 
   google_tasks: {
-    overview: 'Create, list, update, or complete Google Tasks. Manage your task list programmatically.',
-    inputs: ['taskListId', 'taskId (for update/complete)', 'title', 'notes', 'dueDate'],
-    outputs: ['tasks array (list)', 'created task (create)', 'updated task (update)', 'completed task (complete)'],
+    overview: 'Create, read, update, or delete Google Tasks. Manage your task list programmatically.',
+    inputs: ['taskListId', 'taskId (for read/update/delete)', 'title', 'notes', 'due'],
+    outputs: ['tasks array or task (read)', 'created task (create)', 'updated task (update)', 'deleted status (delete)'],
     example: `Operation: Create Task
 Task List ID: @default
 Task Title: "Review proposal"
 Notes: "Check budget and timeline"
-Due Date: 2024-01-20T17:00:00Z
+Due Date: 2026-12-31
 
 Output: {
   id: "task_id",
@@ -1124,7 +1124,7 @@ Output: {
     tips: [
       'Use "@default" for default task list',
       'Task IDs returned when creating tasks',
-      'Due dates must be ISO 8601 format',
+      'Due dates are selected as local calendar dates; Google Tasks stores the day, not a time of day',
       'Completed tasks hidden from list by default',
     ],
   },

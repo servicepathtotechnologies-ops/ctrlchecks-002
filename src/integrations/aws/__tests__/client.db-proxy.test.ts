@@ -51,9 +51,9 @@ describe('aws db-proxy client mutation chains', () => {
   });
 
   it('keeps insert(...).select().single() as POST', async () => {
-    const { supabase } = await import('../client');
+    const { awsDb } = await import('../client');
 
-    const { data, error } = await supabase
+    const { data, error } = await awsDb
       .from('workflows')
       .insert({ name: 'Workflow' })
       .select()
@@ -68,9 +68,9 @@ describe('aws db-proxy client mutation chains', () => {
   });
 
   it('keeps update(...).eq(...).select().single() as PUT', async () => {
-    const { supabase } = await import('../client');
+    const { awsDb } = await import('../client');
 
-    await supabase
+    await awsDb
       .from('workflows')
       .update({ name: 'Updated' })
       .eq('id', 'wf-1')
@@ -84,9 +84,9 @@ describe('aws db-proxy client mutation chains', () => {
   });
 
   it('sends filtered update(...).eq(non-id) as a query-filtered PUT instead of /undefined', async () => {
-    const { supabase } = await import('../client');
+    const { awsDb } = await import('../client');
 
-    await supabase
+    await awsDb
       .from('profiles')
       .update({ email: 'user@example.com' })
       .eq('user_id', 'user-1');
@@ -99,9 +99,9 @@ describe('aws db-proxy client mutation chains', () => {
   });
 
   it('sends filtered delete().eq(non-id) as a query-filtered DELETE instead of /undefined', async () => {
-    const { supabase } = await import('../client');
+    const { awsDb } = await import('../client');
 
-    await supabase
+    await awsDb
       .from('social_tokens')
       .delete()
       .eq('provider', 'github');
@@ -114,9 +114,9 @@ describe('aws db-proxy client mutation chains', () => {
   });
 
   it('keeps upsert(...).select().single() as POST to the upsert route', async () => {
-    const { supabase } = await import('../client');
+    const { awsDb } = await import('../client');
 
-    await supabase
+    await awsDb
       .from('profiles')
       .upsert({ user_id: 'user-1', full_name: 'Test User' }, { onConflict: 'user_id' })
       .select()
@@ -129,9 +129,9 @@ describe('aws db-proxy client mutation chains', () => {
   });
 
   it('supports select().in() through the db proxy query contract', async () => {
-    const { supabase } = await import('../client');
+    const { awsDb } = await import('../client');
 
-    await supabase
+    await awsDb
       .from('executions')
       .select('workflow_id, started_at, status')
       .in('workflow_id', ['wf-1', 'wf-2'])
@@ -144,9 +144,9 @@ describe('aws db-proxy client mutation chains', () => {
   });
 
   it('supports not(column, is, null) through the db proxy query contract', async () => {
-    const { supabase } = await import('../client');
+    const { awsDb } = await import('../client');
 
-    await supabase
+    await awsDb
       .from('workflows')
       .select('*')
       .not('cron_expression', 'is', null);
@@ -162,9 +162,9 @@ describe('aws db-proxy client mutation chains', () => {
       status: 200,
       json: async () => ({ data: [], count: 42, error: null }),
     } as any);
-    const { supabase } = await import('../client');
+    const { awsDb } = await import('../client');
 
-    const { count, data, error } = await supabase
+    const { count, data, error } = await awsDb
       .from('executions')
       .select('id', { count: 'exact' })
       .limit(0) as any;

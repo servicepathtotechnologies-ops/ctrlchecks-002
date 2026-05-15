@@ -67,6 +67,55 @@ function generateFriendlyLabel(value: string, fieldKey: string): string {
 }
 
 /**
+ * Detect the right widget for 'object' typed fields.
+ * Defaults to 'keyValue' for all plain objects — much friendlier than a raw JSON textarea.
+ */
+function detectObjectWidget(fieldKey: string, _fieldSchema: InputFieldSchema): ConfigField['type'] {
+  // Everything that's a plain object becomes a key-value editor
+  return 'keyValue';
+}
+
+/**
+ * Detect the right widget for 'array' typed fields based on naming conventions.
+ */
+function detectArrayWidget(
+  fieldKey: string,
+  fieldSchema: InputFieldSchema,
+  nodeType?: string
+): ConfigField['type'] {
+  const k = fieldKey.toLowerCase();
+  const desc = (fieldSchema.description || '').toLowerCase();
+
+  // Condition arrays → ConditionBuilder
+  if (k.includes('condition') || k.includes('rule') || k.includes('filter')) {
+    return 'conditionList';
+  }
+
+  // Switch/routing case arrays → CaseListEditor
+  if (k.includes('case') || k.includes('route') || k.includes('branch')) {
+    return 'caseList';
+  }
+
+  // Variable/field-assignment arrays → VariableListEditor
+  if (
+    k.includes('variable') ||
+    k === 'values' ||
+    k === 'fields' ||
+    k === 'assignments' ||
+    k === 'mappings' ||
+    desc.includes('key-value') ||
+    desc.includes('name') && desc.includes('value')
+  ) {
+    // Form node's 'fields' array stays as formFieldList
+    if (k === 'fields' && nodeType === 'form') return 'formFieldList';
+    return 'variableList';
+  }
+
+  // Generic arrays stay as raw JSON (edge cases like items, tags, etc.)
+  return 'json';
+}
+
+/**
  * Convert backend InputFieldSchema to frontend ConfigField
  */
 export function convertSchemaToConfigField(
@@ -95,8 +144,12 @@ export function convertSchemaToConfigField(
     case 'boolean':
       frontendType = 'boolean';
       break;
-    case 'array':
     case 'object':
+      frontendType = detectObjectWidget(fieldKey, fieldSchema);
+      break;
+    case 'array':
+      frontendType = detectArrayWidget(fieldKey, fieldSchema, nodeType);
+      break;
     case 'json':
       frontendType = 'json';
       break;
@@ -196,8 +249,15 @@ export function convertSchemaToConfigField(
     frontendType = 'textarea';
   }
 
+  if (fieldSchema.ui?.widget === 'date') {
+    frontendType = 'date';
+  }
+
   let friendlyLabel =
     fieldKey.charAt(0).toUpperCase() + fieldKey.slice(1).replace(/([A-Z])/g, ' $1').trim();
+  if (nodeType === 'google_tasks' && fieldKey === 'due') {
+    friendlyLabel = 'Due Date';
+  }
   if (nodeType === 'google_gmail') {
     const gmailLabels: Record<string, string> = {
       spreadsheetId: 'Spreadsheet ID (fallback)',
@@ -221,6 +281,7 @@ export function convertSchemaToConfigField(
     query: 'e.g. from:example@gmail.com',
     messageId: 'e.g. abc123def456',
     from: 'e.g. your-email@gmail.com (optional)',
+    due: 'YYYY-MM-DD',
   };
   const firstExample =
     fieldSchema.examples && Array.isArray(fieldSchema.examples) && fieldSchema.examples.length > 0
@@ -229,7 +290,23 @@ export function convertSchemaToConfigField(
   const placeholderText =
     frontendType === 'select'
       ? `Select ${friendlyLabel}`
+      : frontendType === 'date'
+      ? shortPlaceholderMap[fieldKey] || 'YYYY-MM-DD'
       : shortPlaceholderMap[fieldKey] || (firstExample ? `e.g. ${firstExample}` : undefined);
+
+  // Determine add-button label for list widgets
+  const addButtonLabel: string | undefined = (() => {
+    if (frontendType === 'keyValue') {
+      const k = fieldKey.toLowerCase();
+      if (k.includes('header')) return 'Add Header';
+      if (k.includes('param') || k.includes('qs') || k.includes('query')) return 'Add Param';
+      if (k.includes('body') || k.includes('payload')) return 'Add Field';
+      return 'Add Entry';
+    }
+    if (frontendType === 'variableList') return 'Add Variable';
+    if (frontendType === 'caseList') return 'Add Case';
+    return undefined;
+  })();
 
   const configField: ConfigField = {
     key: fieldKey,
@@ -245,6 +322,7 @@ export function convertSchemaToConfigField(
     exampleValue: fieldSchema.exampleValue,
     contextHints: fieldSchema.ui?.contextHints,
     visibleIf: fieldSchema.ui?.visibleIf,
+    addButtonLabel,
   };
 
   return configField;

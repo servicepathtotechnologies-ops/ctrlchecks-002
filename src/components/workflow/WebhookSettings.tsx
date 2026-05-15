@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { useWorkflowStore } from "@/stores/workflowStore";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +33,7 @@ export default function WebhookSettings({ workflowId }: WebhookSettingsProps) {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from("workflows")
         .select("webhook_url, status")
         .eq("id", workflowId)
@@ -70,7 +70,7 @@ export default function WebhookSettings({ workflowId }: WebhookSettingsProps) {
     try {
       const newWebhookUrl = enabled ? generateWebhookUrl() : null;
 
-      const { error } = await supabase
+      const { error } = await awsClient
         .from("workflows")
         .update({
           webhook_url: newWebhookUrl,

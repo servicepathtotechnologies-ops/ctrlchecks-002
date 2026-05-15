@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState, ReactNode } from "react";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 import { useCallback } from "react";
 import { AuthContext, AuthUser, AuthSession } from "@/lib/auth-context";
 import { isAlreadySignedInAuthError, normalizeAuthState } from "@/lib/auth-session";
@@ -40,14 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshSession = useCallback(async () => {
-    const { data } = await supabase.auth.getSession();
+    const { data } = await awsClient.auth.getSession();
     return applySession(data.session as AuthSession | null);
   }, [applySession]);
 
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession()
+    awsClient.auth.getSession()
       .then(({ data }) => {
         if (mounted) applySession(data.session as AuthSession | null);
       })
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) applySession(null);
       });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = awsClient.auth.onAuthStateChange(
       (_event: string, nextSession: AuthSession | null) => {
         if (mounted) applySession(nextSession);
       }
@@ -67,10 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [applySession]);
 
   const syncUserRole = async (role: "user" | "admin") => {
-    const { data } = await supabase.auth.getUser();
+    const { data } = await awsClient.auth.getUser();
     if (!data.user) return;
 
-    const { error } = await supabase
+    const { error } = await awsClient
       .from('user_roles')
       .upsert({ user_id: data.user.id, role }, { onConflict: 'user_id,role' });
 
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName?: string, role: "user" | "admin" = "user") => {
-    const { error } = await supabase.auth.signUp({
+    const { error } = await awsClient.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName, role } },
@@ -91,19 +91,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const confirmSignUp = async (email: string, code: string) => {
-    const { error } = await (supabase.auth as any).confirmSignUp({ email, code });
+    const { error } = await (awsClient.auth as any).confirmSignUp({ email, code });
     if (error) return { error: new Error(error.message) };
     return { error: null };
   };
 
   const resendSignUpCode = async (email: string) => {
-    const { error } = await (supabase.auth as any).resendSignUpCode({ email });
+    const { error } = await (awsClient.auth as any).resendSignUpCode({ email });
     if (error) return { error: new Error(error.message) };
     return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await awsClient.auth.signInWithPassword({ email, password });
     if (error) {
       if (isAlreadySignedInAuthError(error.message)) {
         const existingSession = await refreshSession();
@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await awsClient.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/google/callback` },
     });
@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithFacebook = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await awsClient.auth.signInWithOAuth({
       provider: "facebook",
       options: { redirectTo: `${window.location.origin}/auth/facebook/callback` },
     });
@@ -158,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await awsClient.auth.signOut();
     setUser(null);
     setSession(null);
   };

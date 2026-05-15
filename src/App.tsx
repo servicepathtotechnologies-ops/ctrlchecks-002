@@ -50,6 +50,7 @@ const FormTrigger = lazy(() => import("./pages/FormTrigger"));
 const ChatTrigger = lazy(() => import("./pages/ChatTrigger"));
 const ModelTestingDashboard = lazy(() => import("./pages/ModelTestingDashboard"));
 const ModelTestPage = lazy(() => import("./pages/ModelTestPage"));
+const NodeTestPage = lazy(() => import("./pages/NodeTestPage"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -194,6 +195,14 @@ const App = () => (
                     element={
                       <AdminRoute>
                         <AdminPlaceholder />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/node-tests"
+                    element={
+                      <AdminRoute>
+                        <NodeTestPage />
                       </AdminRoute>
                     }
                   />

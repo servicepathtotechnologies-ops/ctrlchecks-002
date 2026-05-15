@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Loader2 } from 'lucide-react';
@@ -49,7 +49,7 @@ export default function SalesforceAuthCallback() {
           throw new Error('No authorization code received from Salesforce');
         }
 
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await awsClient.auth.getSession();
         if (sessionError || !session) {
           throw new Error('Not authenticated. Please sign in first.');
         }

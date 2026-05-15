@@ -1,5 +1,5 @@
 ﻿import { getBackendUrl } from '@/lib/api/getBackendUrl';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 
 export type CatalogAuthType =
   | 'oauth'
@@ -65,7 +65,7 @@ export async function fetchConnectionCatalog(): Promise<ConnectionCatalogEntry[]
 }
 
 export async function fetchConnectionStatuses(): Promise<Record<string, ConnectionStatus>> {
-  const token = (await supabase.auth.getSession()).data.session?.access_token;
+  const token = (await awsClient.auth.getSession()).data.session?.access_token;
   if (!token) return {};
 
   const response = await fetch(`${getBackendUrl()}/api/connections/status`, {

@@ -3,7 +3,7 @@
  * Provides functions to check user roles and permissions
  */
 
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import type { Database } from '@/integrations/aws/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -43,7 +43,7 @@ function cachedAsync<T>(key: string, fn: () => Promise<T>): Promise<T> {
 }
 
 async function _fetchHasRole(userId: string, role: AppRole): Promise<boolean> {
-  const { data, error } = await supabase.rpc('has_role', { _user_id: userId, _role: role });
+  const { data, error } = await awsClient.rpc('has_role', { _user_id: userId, _role: role });
   if (error) {
     if (error.code !== '42883') console.error('Error checking role:', error);
     return false;
@@ -56,7 +56,7 @@ async function _fetchHasRole(userId: string, role: AppRole): Promise<boolean> {
  */
 export async function hasRole(role: AppRole): Promise<boolean> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await awsClient.auth.getUser();
     if (userError || !user) return false;
     return cachedAsync(`hasRole:${user.id}:${role}`, () => _fetchHasRole(user.id, role));
   } catch (error) {
@@ -80,7 +80,7 @@ export async function isModerator(): Promise<boolean> {
 }
 
 async function _fetchUserRole(userId: string): Promise<AppRole | null> {
-  const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', userId);
+  const { data, error } = await awsClient.from('user_roles').select('role').eq('user_id', userId);
 
   if (error) {
     const is406Error = error.code === 'PGRST116' || error.message?.includes('406') || (error as any).status === 406;
@@ -106,7 +106,7 @@ async function _fetchUserRole(userId: string): Promise<AppRole | null> {
  */
 export async function getUserRole(): Promise<AppRole | null> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await awsClient.auth.getUser();
     if (!user) return null;
     return cachedAsync(`getUserRole:${user.id}`, () => _fetchUserRole(user.id));
   } catch (error) {

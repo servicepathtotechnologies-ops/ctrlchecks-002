@@ -58,8 +58,8 @@ export const googleTasksDoc: NodeDoc = {
               "internalKey": "due",
               "type": "string",
               "required": false,
-              "description": "Due date/time in RFC3339 format",
-              "example": "{{ $json.due }}"
+              "description": "Due date for the task as a calendar day. Google Tasks stores the day, not a time of day.",
+              "example": "2026-12-31"
             },
             {
               "name": "Status",
@@ -135,8 +135,8 @@ export const googleTasksDoc: NodeDoc = {
               "internalKey": "due",
               "type": "string",
               "required": false,
-              "description": "Due date/time in RFC3339 format",
-              "example": "{{ $json.due }}"
+              "description": "Due date for the task as a calendar day. Google Tasks stores the day, not a time of day.",
+              "example": "2026-12-31"
             },
             {
               "name": "Status",
@@ -212,8 +212,8 @@ export const googleTasksDoc: NodeDoc = {
               "internalKey": "due",
               "type": "string",
               "required": false,
-              "description": "Due date/time in RFC3339 format",
-              "example": "{{ $json.due }}"
+              "description": "Due date for the task as a calendar day. Google Tasks stores the day, not a time of day.",
+              "example": "2026-12-31"
             },
             {
               "name": "Status",
@@ -289,8 +289,8 @@ export const googleTasksDoc: NodeDoc = {
               "internalKey": "due",
               "type": "string",
               "required": false,
-              "description": "Due date/time in RFC3339 format",
-              "example": "{{ $json.due }}"
+              "description": "Due date for the task as a calendar day. Google Tasks stores the day, not a time of day.",
+              "example": "2026-12-31"
             },
             {
               "name": "Status",

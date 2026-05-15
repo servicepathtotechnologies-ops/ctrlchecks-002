@@ -22,7 +22,26 @@ export interface NodeTypeDefinition {
 export interface ConfigField {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'json' | 'cron' | 'time';
+  type:
+    | 'text'
+    | 'textarea'
+    | 'number'
+    | 'select'
+    | 'boolean'
+    | 'json'
+    | 'date'
+    | 'cron'
+    | 'time'
+    /** Rows of [key] [value] with "+ Add" — serializes to Record<string,string> */
+    | 'keyValue'
+    /** Rows of [name] [value] with "+ Add Variable" — serializes to Array<{name,value}> */
+    | 'variableList'
+    /** Rows of [case value] [label] with "+ Add Case" — serializes to Array<{value,label}> */
+    | 'caseList'
+    /** Array of {field,operator,value} conditions — rendered by ConditionBuilder */
+    | 'conditionList'
+    /** Array of form field definitions — rendered by FormNodeSettings */
+    | 'formFieldList';
   placeholder?: string;
   options?: { label: string; value: string }[];
   required?: boolean;
@@ -35,6 +54,8 @@ export interface ConfigField {
   contextHints?: Array<{ whenValue: string; message: string }>;
   /** Show only when condition matches (optional fields; does not imply required). */
   visibleIf?: { field: string; equals: unknown };
+  /** Label for the "Add" button on keyValue / variableList / caseList widgets */
+  addButtonLabel?: string;
 }
 
 export const NODE_CATEGORIES: { id: NodeCategory; label: string; color: string }[] = [
@@ -938,41 +959,67 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     defaultConfig: {
       operation: 'read',
       documentId: '',
+      documentUrl: '',
+      title: '',
       content: '',
+      format: 'text',
     },
     configFields: [
-      { 
-        key: 'operation', 
-        label: 'Operation', 
-        type: 'select', 
+      {
+        key: 'operation',
+        label: 'Operation',
+        type: 'select',
         options: [
           { label: 'Read', value: 'read' },
-          { label: 'Create', value: 'create' },
-          { label: 'Update', value: 'update' },
+          { label: 'Write (overwrite)', value: 'write' },
+          { label: 'Create new document', value: 'create' },
+          { label: 'Append', value: 'append' },
         ],
         defaultValue: 'read',
         required: true,
+        helpText: 'Read: retrieve document content. Write: overwrite all content. Create: make a new document. Append: add content to the end.',
       },
-      { 
-        key: 'documentId', 
-        label: 'Document ID or URL', 
-        type: 'text', 
-        placeholder: 'Doc URL or ID',
-        helpText: 'Paste the full Google Docs URL (https://docs.google.com/document/d/DOCUMENT_ID/edit) or just the Document ID. Get it from the document URL. Leave empty for create operation.',
+      {
+        key: 'documentId',
+        label: 'Document Id',
+        type: 'text',
+        placeholder: 'e.g. 1a2b3c4d5e6f7g8h9i0j',
+        helpText: 'Google Docs document ID (extract from URL: /d/DOCUMENT_ID/edit)',
+        visibleIf: { field: 'operation', equals: 'read' },
       },
-      { 
-        key: 'title', 
-        label: 'Document Title', 
-        type: 'text', 
-        placeholder: 'My Document',
-        helpText: 'Required for create operation',
+      {
+        key: 'documentUrl',
+        label: 'Document Url',
+        type: 'text',
+        placeholder: 'https://docs.google.com/document/d/DOCUMENT_ID/edit',
+        helpText: 'Full Google Docs URL — paste the URL from your browser (alternative to Document ID)',
       },
-      { 
-        key: 'content', 
-        label: 'Content', 
-        type: 'textarea', 
+      {
+        key: 'title',
+        label: 'Document Title',
+        type: 'text',
+        placeholder: 'e.g. My New Document',
+        helpText: 'Title for the new document',
+        visibleIf: { field: 'operation', equals: 'create' },
+      },
+      {
+        key: 'content',
+        label: 'Content',
+        type: 'textarea',
         placeholder: 'Document content...',
-        helpText: 'Required for create/update operations',
+        helpText: 'Content to write into the document (for write, create, append)',
+      },
+      {
+        key: 'format',
+        label: 'Output Format',
+        type: 'select',
+        options: [
+          { label: 'Plain text', value: 'text' },
+          { label: 'Markdown', value: 'markdown' },
+        ],
+        defaultValue: 'text',
+        helpText: 'Output format for read operations',
+        visibleIf: { field: 'operation', equals: 'read' },
       },
     ],
   },
@@ -1229,10 +1276,11 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     icon: 'CheckCircle',
     description: 'Manage tasks',
     defaultConfig: {
-      operation: 'list',
+      operation: 'read',
       taskListId: '',
       title: '',
       notes: '',
+      due: '',
     },
     configFields: [
       { 
@@ -1240,14 +1288,14 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         label: 'Operation', 
         type: 'select', 
         options: [
-          { label: 'List Tasks', value: 'list' },
-          { label: 'Create Task', value: 'create' },
-          { label: 'Update Task', value: 'update' },
-          { label: 'Complete Task', value: 'complete' },
+          { label: 'Create', value: 'create' },
+          { label: 'Read', value: 'read' },
+          { label: 'Update', value: 'update' },
+          { label: 'Delete', value: 'delete' },
         ],
-        defaultValue: 'list',
+        defaultValue: 'read',
         required: true,
-        helpText: 'List: Retrieve tasks from a task list. Create: Add a new task. Update: Modify existing task (requires Task ID). Complete: Mark task as done (requires Task ID)',
+        helpText: 'Create: Add a new task. Read: Retrieve tasks or a specific task. Update: Modify an existing task. Delete: Remove a task.',
       },
       { 
         key: 'taskListId', 
@@ -1262,14 +1310,14 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         label: 'Task ID', 
         type: 'text', 
         placeholder: 'abc123def456',
-        helpText: 'Required for update/complete operations',
+        helpText: 'Required for update/delete operations',
       },
       { 
         key: 'title', 
         label: 'Task Title', 
         type: 'text', 
         placeholder: 'Complete project report',
-        helpText: 'Required for create/update operations',
+        helpText: 'Required for create; optional for update',
       },
       { 
         key: 'notes', 
@@ -1279,11 +1327,11 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         helpText: 'Optional detailed notes for the task. Can include instructions, context, or any additional information. Leave empty if not needed',
       },
       { 
-        key: 'dueDate', 
-        label: 'Due Date (ISO 8601)', 
-        type: 'text', 
-        placeholder: '2024-01-15T23:59:59Z',
-        helpText: 'Due date in ISO 8601 format',
+        key: 'due',
+        label: 'Due Date',
+        type: 'date',
+        placeholder: '2026-12-31',
+        helpText: 'Pick the local calendar date this task should be due. Google Tasks records due dates at day level; time of day is not saved by the Google Tasks API.',
       },
     ],
   },

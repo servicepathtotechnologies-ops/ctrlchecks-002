@@ -19,7 +19,7 @@ import WebhookSettings from './WebhookSettings';
 import ScheduleSettings from './ScheduleSettings';
 import { WorkflowActionButton } from '@/components/WorkflowActionButton';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { workflowScheduler } from '@/lib/workflowScheduler';
 
 interface WorkflowHeaderProps {
@@ -140,7 +140,7 @@ export default function WorkflowHeader({
       // If workflow is saved, fetch additional metadata from database
       if (workflowId) {
         try {
-          const { data, error } = await supabase
+          const { data, error } = await awsClient
             .from('workflows')
             .select('description, viewport, cron_expression, workflow_type, agent_config, memory_config')
             .eq('id', workflowId)

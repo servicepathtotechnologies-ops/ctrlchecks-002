@@ -1,11 +1,11 @@
-﻿import { supabase } from '@/integrations/aws/client';
+﻿import { awsClient } from '@/integrations/aws/client';
 import { LinkedInCredentials } from './credentials';
 
 /**
  * Update all LinkedIn nodes in all workflows with new credentials
  */
 export async function updateLinkedInNodes(credentials: LinkedInCredentials): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await awsClient.auth.getUser();
   
   if (!user) {
     throw new Error('User not authenticated');
@@ -13,7 +13,7 @@ export async function updateLinkedInNodes(credentials: LinkedInCredentials): Pro
 
   try {
     // Get all workflows for the user
-    const { data: workflows, error: workflowsError } = await supabase
+    const { data: workflows, error: workflowsError } = await awsClient
       .from('workflows')
       .select('id, nodes')
       .eq('user_id', user.id);
@@ -64,7 +64,7 @@ export async function updateLinkedInNodes(credentials: LinkedInCredentials): Pro
 
       // Save updated workflow if any LinkedIn nodes were found
       if (workflowUpdated) {
-        const { error: updateError } = await supabase
+        const { error: updateError } = await awsClient
           .from('workflows')
           .update({ nodes: updatedNodes })
           .eq('id', workflow.id);

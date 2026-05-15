@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { ConnectionCatalogEntry, credentialVaultType, fetchConnectionCatalog } from '@/lib/connections-catalog';
 import { InputGuideLink } from './workflow/InputGuideLink';
@@ -66,7 +66,7 @@ export default function ManualCredentialManager() {
   );
 
   const authToken = useCallback(async () => {
-    const token = (await supabase.auth.getSession()).data.session?.access_token;
+    const token = (await awsClient.auth.getSession()).data.session?.access_token;
     if (!token) throw new Error('No authentication token');
     return token;
   }, []);

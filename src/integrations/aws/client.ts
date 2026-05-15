@@ -1,6 +1,6 @@
 /**
  * AWS Cognito auth client — backed by AWS Amplify + Cognito.
- * Exports `awsClient`; a deprecated `supabase` alias remains only for older imports.
+ * Exports `awsClient` (preferred) and `awsDb` (short alias for call-sites still migrating).
  *
  * Auth: AWS Amplify + Cognito.
  * DB `from()` calls: forwarded to the worker /api/db proxy.
@@ -418,5 +418,5 @@ export const awsClient = {
   rpc:           async (_fn: string, _params?: any) => ({ data: null, error: null }),
 };
 
-/** @deprecated Use awsClient. This alias remains only for old imports during migration. */
-export const supabase = awsClient;
+/** @deprecated Alias kept briefly while all call-sites migrate. Use awsClient instead. */
+export const awsDb = awsClient;

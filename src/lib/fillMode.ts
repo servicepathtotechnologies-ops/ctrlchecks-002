@@ -76,7 +76,19 @@ export function resolveWizardEffectiveFieldFillMode(
   coerced: boolean;
   reason?: 'runtime_not_supported' | 'buildtime_not_supported';
 } {
+  const hasExplicitUserChoice =
+    wizardExplicit === 'manual_static' ||
+    wizardExplicit === 'runtime_ai' ||
+    wizardExplicit === 'buildtime_ai_once';
+
   let mode = resolveWizardFieldFillMode(wizardExplicit, questionDefault);
+
+  // When the user has explicitly chosen a mode in the wizard, honor it unconditionally.
+  // supportsRuntimeAI/supportsBuildtimeAI are advisory defaults, not user restrictions.
+  if (hasExplicitUserChoice) {
+    return { mode, coerced: false };
+  }
+
   let coerced = false;
   let reason: 'runtime_not_supported' | 'buildtime_not_supported' | undefined;
 

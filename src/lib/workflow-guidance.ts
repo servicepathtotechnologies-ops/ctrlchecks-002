@@ -83,6 +83,25 @@ function formatCredential(value: unknown): string | null {
   return nodeLabel ? `${humanizeKey(direct)} for ${nodeLabel}` : humanizeKey(direct);
 }
 
+function formatValidationIssue(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value !== 'object') return null;
+
+  const item = value as Record<string, unknown>;
+  const issue = getString(item.issue) || getString(item.message) || getString(item.description) || 'Check this node';
+  const nodeLabel = getString(item.nodeLabel) || getString(item.nodeName) || getString(item.nodeType) || getString(item.nodeId);
+  const previousNodeLabel =
+    getString(item.previousNodeLabel) ||
+    getString(item.previousNodeName) ||
+    getString(item.previousNodeType) ||
+    getString(item.previousNodeId);
+
+  if (previousNodeLabel && nodeLabel) return `${previousNodeLabel} -> ${nodeLabel}: ${issue}`;
+  if (nodeLabel) return `${nodeLabel}: ${issue}`;
+  return issue;
+}
+
 function extractMissingInputs(details: Record<string, unknown>): string[] {
   const raw = Array.isArray(details.missingInputs) ? details.missingInputs : [];
   const items = raw.map(formatMissingInput).filter((item): item is string => Boolean(item));
@@ -104,15 +123,28 @@ function extractMissingCredentials(details: Record<string, unknown>): string[] {
   return count > 0 ? [`${count} required connection${count === 1 ? '' : 's'} must be connected.`] : [];
 }
 
+function extractExecutionValidationIssues(details: Record<string, unknown>): string[] {
+  const structured = Array.isArray(details.executionValidationIssues) ? details.executionValidationIssues : [];
+  const structuredItems = structured
+    .map(formatValidationIssue)
+    .filter((item): item is string => Boolean(item));
+  if (structuredItems.length > 0) return unique(structuredItems);
+
+  const errors = Array.isArray(details.executionValidationErrors) ? details.executionValidationErrors : [];
+  return unique(errors.map(formatValidationIssue).filter((item): item is string => Boolean(item)));
+}
+
 function buildReadinessGuidance(payload: Record<string, unknown>, message: string): GuidedStatusContent {
   const details = toRecord(payload.details);
   const currentPhase = getString(payload.currentPhase) || getString(payload.phase) || getString(details.phase);
   const currentStatus = getString(payload.status) || getString(details.status);
   const missingInputs = extractMissingInputs(details);
   const missingCredentials = extractMissingCredentials(details);
+  const validationIssues = extractExecutionValidationIssues(details);
   const missingItems = [
     ...missingInputs.map((item) => `Input: ${item}`),
     ...missingCredentials.map((item) => `Connection: ${item}`),
+    ...validationIssues.map((item) => `Workflow: ${item}`),
   ];
 
   const nextSteps: string[] = [];
@@ -121,6 +153,9 @@ function buildReadinessGuidance(payload: Record<string, unknown>, message: strin
   }
   if (missingCredentials.length > 0) {
     nextSteps.push('Open Connections and connect or reconnect each listed account.');
+  }
+  if (validationIssues.length > 0) {
+    nextSteps.push('Review the listed workflow node or connection.');
   }
   nextSteps.push('Save the workflow, then run it again.');
 
@@ -176,6 +211,8 @@ export function mapWorkflowIssueToGuidance(input: WorkflowIssueInput): GuidedSta
   const hasMissingData =
     (Array.isArray(safetyDetails.missingCredentials) && (safetyDetails.missingCredentials as unknown[]).length > 0) ||
     (Array.isArray(safetyDetails.missingInputs) && (safetyDetails.missingInputs as unknown[]).length > 0) ||
+    (Array.isArray(safetyDetails.executionValidationIssues) && (safetyDetails.executionValidationIssues as unknown[]).length > 0) ||
+    (Array.isArray(safetyDetails.executionValidationErrors) && (safetyDetails.executionValidationErrors as unknown[]).length > 0) ||
     Number(safetyDetails.missingCredentialsCount || 0) > 0 ||
     Number(safetyDetails.missingInputsCount || 0) > 0;
   if (hasMissingData) {
@@ -224,4 +261,3 @@ export function mapWorkflowIssueToGuidance(input: WorkflowIssueInput): GuidedSta
     tone: 'attention',
   };
 }
-

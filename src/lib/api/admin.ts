@@ -3,7 +3,7 @@
  * Admin-only template operations
  */
 
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import type { Database } from '@/integrations/aws/types';
 import { ENDPOINTS } from '@/config/endpoints';
 
@@ -58,11 +58,11 @@ function normalizeAdminUser(raw: Partial<AdminUser> & { id: string }): AdminUser
 }
 
 /**
- * Get Supabase session token
+ * Get auth session token
  */
 async function getAuthToken(): Promise<string> {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { session }, error } = await awsClient.auth.getSession();
   
     if (error || !session) {
       throw new Error('Not authenticated');

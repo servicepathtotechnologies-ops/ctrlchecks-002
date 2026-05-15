@@ -1,8 +1,8 @@
 ﻿import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/aws/client';
-import { Plus, Search, Zap, MoreHorizontal, Play, Trash2, Copy, Clock, History, Bot, Cpu, Workflow, MessageSquare, ChevronRight, Edit, ArrowLeft } from 'lucide-react';
+import { awsClient } from '@/integrations/aws/client';
+import { Plus, Search, Zap, MoreHorizontal, Play, Trash2, Copy, Clock, History, Bot, Cpu, Workflow, MessageSquare, ChevronRight, Edit, ArrowLeft, AlertCircle, RefreshCw } from 'lucide-react';
 import { AppChromeHeader } from '@/components/layout/AppChromeHeader';
 import GoogleConnectionStatus from '@/components/GoogleConnectionStatus';
 import { WorkflowAuthGate } from '@/components/WorkflowAuthGate';
@@ -63,6 +63,7 @@ export default function Workflows() {
   const [workflows, setWorkflows] = useState<WorkflowRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowRecord | null>(null);
   const [workflowExecutions, setWorkflowExecutions] = useState<Execution[]>([]);
@@ -87,8 +88,9 @@ export default function Workflows() {
     try {
       setLoading(true);
       setStatsLoading(true);
+      setLoadError(null);
       // Phase 1: Load workflows fast and render immediately
-      const { data: workflowsData, error: workflowsError } = await supabase
+      const { data: workflowsData, error: workflowsError } = await awsClient
         .from('workflows')
         .select('*')
         .eq('setup_completed', true)
@@ -103,6 +105,7 @@ export default function Workflows() {
       }));
       if (mountedRef.current) {
         setWorkflows(baseWorkflows);
+        setLoadError(null);
         setLoading(false);
       }
 
@@ -117,7 +120,7 @@ export default function Workflows() {
       const executionRows: any[] = [];
       for (let i = 0; i < workflowIds.length; i += CHUNK_SIZE) {
         const idChunk = workflowIds.slice(i, i + CHUNK_SIZE);
-        const { data: executionsData, error: executionsError } = await supabase
+        const { data: executionsData, error: executionsError } = await awsClient
           .from('executions')
           .select('workflow_id, started_at, status')
           .in('workflow_id', idChunk)
@@ -169,6 +172,9 @@ export default function Workflows() {
       }
     } catch (error) {
       console.error('Error loading workflows:', error);
+      if (mountedRef.current) {
+        setLoadError('Unable to load workflows. Please retry in a moment.');
+      }
       toast({
         title: 'Error',
         description: 'Failed to load workflows',
@@ -189,7 +195,7 @@ export default function Workflows() {
   const loadWorkflowExecutions = async (workflowId: string) => {
     setLoadingExecutions(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('executions')
         .select('*')
         .eq('workflow_id', workflowId)
@@ -246,7 +252,7 @@ export default function Workflows() {
 
   const duplicateWorkflow = async (workflow: Workflow) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('workflows')
         .insert({
           name: `${workflow.name} (Copy)`,
@@ -359,7 +365,21 @@ export default function Workflows() {
         </div>
 
         {/* Workflows Grid */}
-        {filteredWorkflows.length === 0 ? (
+        {loadError ? (
+          <Card className="border-destructive/40 bg-destructive/5">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="rounded-full bg-destructive/10 p-6 mb-4">
+                <AlertCircle className="h-12 w-12 text-destructive" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Workflows could not load</h3>
+              <p className="text-muted-foreground text-center max-w-md mb-6">{loadError}</p>
+              <Button variant="outline" onClick={loadWorkflows}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        ) : filteredWorkflows.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16">
               <div className="rounded-full bg-muted p-6 mb-4">

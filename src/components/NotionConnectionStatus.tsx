@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
@@ -95,7 +95,7 @@ export default function NotionConnectionStatus({
     if (!user) return;
 
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const { data: session } = await awsClient.auth.getSession();
       const token = session?.session?.access_token;
       const response = await fetch(`${getBackendUrl()}/api/connections/notion`, {
         method: 'DELETE',

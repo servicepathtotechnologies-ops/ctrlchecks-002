@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown } from 'lucide-react';
 import { InputGuideLink } from './InputGuideLink';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 
 interface ScheduleWiseNodeParams {
@@ -152,7 +152,7 @@ export default function ScheduleWiseSettings({
 
     setLoadingCredentials(true);
     try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const token = (await awsClient.auth.getSession()).data.session?.access_token;
       if (!token) throw new Error('No authentication token');
 
       const response = await fetch(

@@ -1,4 +1,4 @@
-﻿import { supabase } from '@/integrations/aws/client';
+﻿import { awsClient } from '@/integrations/aws/client';
 
 export interface LinkedInCredentials {
   accessToken: string;
@@ -15,20 +15,20 @@ export interface GoogleCredentials {
 }
 
 /**
- * Save credentials to Supabase user_credentials table
+ * Save credentials to database user_credentials table
  * Supports: 'linkedin', 'google', and any other service (e.g., 'slack', 'smtp', etc.)
  */
 export async function saveCredentials(
   service: 'linkedin' | 'google' | string,
   credentials: LinkedInCredentials | GoogleCredentials | Record<string, any>
 ): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await awsClient.auth.getUser();
   
   if (!user) {
     throw new Error('User not authenticated');
   }
 
-  const { error } = await supabase
+  const { error } = await awsClient
     .from('user_credentials')
     .upsert({
       user_id: user.id,
@@ -46,18 +46,18 @@ export async function saveCredentials(
 }
 
 /**
- * Get credentials from Supabase
+ * Get credentials from database
  */
 export async function getCredentials(
   service: 'linkedin' | 'google'
 ): Promise<LinkedInCredentials | GoogleCredentials | null> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await awsClient.auth.getUser();
   
   if (!user) {
     return null;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await awsClient
     .from('user_credentials')
     .select('credentials')
     .eq('user_id', user.id)
@@ -77,16 +77,16 @@ export async function getCredentials(
 }
 
 /**
- * Remove credentials from Supabase
+ * Remove credentials from database
  */
 export async function removeCredentials(service: 'linkedin' | 'google'): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await awsClient.auth.getUser();
   
   if (!user) {
     throw new Error('User not authenticated');
   }
 
-  const { error } = await supabase
+  const { error } = await awsClient
     .from('user_credentials')
     .delete()
     .eq('user_id', user.id)
@@ -106,7 +106,7 @@ export async function saveWorkflowCredential(
   credentialName: string,
   credentialValue: string
 ): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await awsClient.auth.getUser();
   
   if (!user) {
     throw new Error('User not authenticated');
@@ -122,7 +122,7 @@ export async function saveWorkflowCredential(
     .split('_')[0]; // Get first part (e.g., 'slack' from 'slack_webhook_url')
 
   // Get existing credentials for this service
-  const { data: existing } = await supabase
+  const { data: existing } = await awsClient
     .from('user_credentials')
     .select('credentials')
     .eq('user_id', user.id)
@@ -136,7 +136,7 @@ export async function saveWorkflowCredential(
     [credentialName.toLowerCase()]: credentialValue,
   };
 
-  const { error } = await supabase
+  const { error } = await awsClient
     .from('user_credentials')
     .upsert({
       user_id: user.id,

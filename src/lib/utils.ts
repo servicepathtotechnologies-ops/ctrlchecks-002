@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Check if a Supabase/PostgREST error is a 406 (Not Acceptable) error.
+ * Check if a PostgREST-style error is a 406 (Not Acceptable) error.
  * 
  * Why 406 happens:
  * - PostgREST returns 406 when a query is syntactically valid but returns no visible rows
@@ -27,7 +27,7 @@ export function cn(...inputs: ClassValue[]) {
 export function is406Error(error: any): boolean {
   if (!error) return false;
   
-  // Check various error formats that Supabase/PostgREST might use
+  // Check various error formats that the DB proxy might use
   return (
     error.code === 'PGRST116' ||
     error.status === 406 ||

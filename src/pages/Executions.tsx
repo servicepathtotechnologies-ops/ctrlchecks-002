@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { 
   Search, Clock, CheckCircle, XCircle, Loader2, 
@@ -43,7 +43,7 @@ export default function Executions() {
 
   const loadExecutions = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('executions')
         .select('*, workflows(name)')
         .order('started_at', { ascending: false });
@@ -66,7 +66,7 @@ export default function Executions() {
     if (retryingId) return;
     setRetryingId(execution.id);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const response = await fetch(`${ENDPOINTS.itemBackend}/api/execute-workflow`, {
         method: 'POST',
         headers: {

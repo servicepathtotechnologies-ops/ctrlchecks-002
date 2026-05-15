@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, ArrowRight, CreditCard, Hammer, Loader2, Sparkles } from 'lucide-react';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ export function useSubscriptionUsage() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const token = (await awsClient.auth.getSession()).data.session?.access_token;
       if (!token) {
         setUsage(null);
         return;

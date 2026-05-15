@@ -13,7 +13,7 @@ const REQUIRED_IDENTITY_SCOPES = ['openid', 'profile', 'email'];
 
 /**
  * Mirrors the options object that handleGoogleAuth() passes to
- * supabase.auth.signInWithOAuth after task 4.1.
+ * awsClient.auth.signInWithOAuth after task 4.1.
  */
 function buildConnectorOAuthOptions(origin: string) {
   return {

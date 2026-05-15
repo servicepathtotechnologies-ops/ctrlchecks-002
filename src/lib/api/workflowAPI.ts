@@ -4,7 +4,7 @@
  */
 
 import { api, testConnection } from './client';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 
 export const workflowAPI = {
   async executeWorkflow(workflowId: string, triggerData: any = {}) {
@@ -24,7 +24,7 @@ export const workflowAPI = {
       console.log(`🚀 Executing workflow ${workflowId}...`);
       
       // Get auth token if available
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const headers: Record<string, string> = {};
       
       if (sessionData?.session?.access_token) {
@@ -77,7 +77,7 @@ export const workflowAPI = {
   },
   
   async deleteWorkflow(id: string) {
-    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: sessionData } = await awsClient.auth.getSession();
     const authHeader = sessionData?.session?.access_token
       ? { 'Authorization': `Bearer ${sessionData.session.access_token}` }
       : {};

@@ -17,6 +17,16 @@ export interface AIGuidanceWorkflowContext {
   operation?: string;
   missingInputs?: Array<{ fieldName: string; nodeLabel: string; description?: string }>;
   missingCredentials?: Array<{ provider: string; displayName: string }>;
+  executionValidationErrors?: string[];
+  executionValidationIssues?: Array<{
+    type?: string;
+    severity?: string;
+    issue?: string;
+    nodeLabel?: string;
+    nodeType?: string;
+    previousNodeLabel?: string;
+    previousNodeType?: string;
+  }>;
 }
 
 /**
@@ -54,6 +64,16 @@ export async function getAIGuidance(
             workflowContext?.missingCredentials ||
             (Array.isArray((errorData.details as any)?.missingCredentials)
               ? (errorData.details as any).missingCredentials
+              : undefined),
+          executionValidationErrors:
+            workflowContext?.executionValidationErrors ||
+            (Array.isArray((errorData.details as any)?.executionValidationErrors)
+              ? (errorData.details as any).executionValidationErrors
+              : undefined),
+          executionValidationIssues:
+            workflowContext?.executionValidationIssues ||
+            (Array.isArray((errorData.details as any)?.executionValidationIssues)
+              ? (errorData.details as any).executionValidationIssues
               : undefined),
         },
       }),

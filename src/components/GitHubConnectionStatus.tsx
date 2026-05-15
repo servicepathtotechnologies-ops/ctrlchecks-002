@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function GitHubConnectionStatus({
 
       // Fetch additional metadata via backend status endpoint (non-fatal)
       try {
-        const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+        const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
         if (authToken) {
           const backendUrl = getBackendUrl();
           const resp = await fetch(`${backendUrl}/api/connections/github/status`, {
@@ -127,7 +127,7 @@ export default function GitHubConnectionStatus({
     if (!user) return;
 
     try {
-      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+      const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
       if (!authToken) {
         throw new Error('No authentication token');
       }

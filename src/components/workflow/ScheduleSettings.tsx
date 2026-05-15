@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { workflowScheduler } from '@/lib/workflowScheduler';
 
 interface ScheduleSettingsProps {
@@ -90,7 +90,7 @@ export default function ScheduleSettings({ workflowId, onScheduleChange }: Sched
   const loadSchedule = useCallback(async () => {
     if (!workflowId || workflowId === 'new') return;
 
-    const { data, error } = await supabase
+    const { data, error } = await awsClient
       .from('workflows')
       .select('cron_expression')
       .eq('id', workflowId)
@@ -160,7 +160,7 @@ export default function ScheduleSettings({ workflowId, onScheduleChange }: Sched
       cronExpression,
     });
 
-    const { error } = await supabase
+    const { error } = await awsClient
       .from('workflows')
       .update({
         cron_expression: cronExpression,
@@ -180,7 +180,7 @@ export default function ScheduleSettings({ workflowId, onScheduleChange }: Sched
     }
 
     // Verify the save by reading back
-    const { data: verifyData } = await supabase
+    const { data: verifyData } = await awsClient
       .from('workflows')
       .select('cron_expression')
       .eq('id', workflowId)

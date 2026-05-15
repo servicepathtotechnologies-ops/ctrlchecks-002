@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { getBackendUrl } from '@/lib/api/getBackendUrl';
 import { rememberOAuthReturnTo } from '@/lib/oauth-return';
 import { startConnectorOAuth } from '@/lib/google-connector-oauth';
@@ -62,7 +62,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from("profiles")
         .select("*")
         .eq("user_id", user.id)
@@ -81,7 +81,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
         });
 
         if (email && isGeneratedCognitoEmail(data.email)) {
-          await supabase
+          await awsClient
             .from("profiles")
             .update({ email })
             .eq("user_id", user.id);
@@ -113,7 +113,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
     }
 
     try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const token = (await awsClient.auth.getSession()).data.session?.access_token;
       if (!token) throw new Error('No auth token available');
 
       const response = await fetch(`${getBackendUrl()}/api/connections/status`, {
@@ -160,7 +160,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
     
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await awsClient
         .from("profiles")
         .upsert({
           user_id: user.id,
@@ -240,7 +240,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
     setLoading(true);
     try {
       if (service === 'google' || service === 'linkedin' || service === 'notion') {
-        const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+        const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
         if (!authToken) {
           throw new Error('No authentication token');
         }
@@ -257,7 +257,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
           throw new Error(errorData.error?.message || errorData.error || 'Failed to disconnect');
         }
       } else if (service === 'github' || service === 'facebook') {
-        const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+        const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
         if (!authToken) {
           throw new Error('No authentication token');
         }

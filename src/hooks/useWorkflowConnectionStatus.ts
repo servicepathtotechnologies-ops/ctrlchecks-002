@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { ENDPOINTS } from '@/config/endpoints';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 
 export interface WorkflowMissingConnection {
   provider: string;
@@ -11,7 +11,7 @@ export interface WorkflowMissingConnection {
 }
 
 async function fetchWorkflowMissingConnections(workflowId: string): Promise<WorkflowMissingConnection[]> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await awsClient.auth.getSession();
   const token = session?.access_token;
 
   const res = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/missing-items`, {

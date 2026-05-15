@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 import { getBackendUrl } from "@/lib/api/getBackendUrl";
 import { rememberOAuthReturnTo } from "@/lib/oauth-return";
 import { startConnectorOAuth } from "@/lib/google-connector-oauth";
@@ -71,7 +71,7 @@ export default function Profile() {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from("profiles")
         .select("*")
         .eq("user_id", user.id)
@@ -88,7 +88,7 @@ export default function Profile() {
         });
 
         if (email && isGeneratedCognitoEmail(data.email)) {
-          await supabase
+          await awsClient
             .from("profiles")
             .upsert({
               user_id: user.id,
@@ -124,7 +124,7 @@ export default function Profile() {
     }
 
     try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const token = (await awsClient.auth.getSession()).data.session?.access_token;
       if (!token) throw new Error('No auth token available');
 
       const response = await fetch(`${getBackendUrl()}/api/connections/status`, {
@@ -173,7 +173,7 @@ export default function Profile() {
     if (!user) return;
     setLoadingSubscription(true);
     try {
-      const session = await supabase.auth.getSession();
+      const session = await awsClient.auth.getSession();
       const token = session.data.session?.access_token;
       if (!token) return;
       const backendUrl = getBackendUrl();
@@ -205,7 +205,7 @@ export default function Profile() {
     
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await awsClient
         .from("profiles")
         .upsert({
           user_id: user.id,
@@ -281,7 +281,7 @@ export default function Profile() {
 
     try {
       if (service === 'google' || service === 'linkedin' || service === 'notion') {
-        const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+        const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
         if (!authToken) {
           throw new Error('No authentication token');
         }
@@ -298,7 +298,7 @@ export default function Profile() {
           throw new Error(errorData.error?.message || errorData.error || 'Failed to disconnect');
         }
       } else if (service === 'github' || service === 'facebook') {
-        const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+        const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
         if (!authToken) {
           throw new Error('No authentication token');
         }
@@ -355,7 +355,7 @@ export default function Profile() {
   };
 
   const handleDeleteAccount = async () => {
-    const session = await supabase.auth.getSession();
+    const session = await awsClient.auth.getSession();
     const token = session.data.session?.access_token;
     if (!token) {
       toast({

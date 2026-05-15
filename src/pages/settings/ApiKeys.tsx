@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,7 +48,7 @@ export default function ApiKeysSettings() {
 
   const loadApiKeys = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from("api_keys")
         .select("*")
         .eq("user_id", user?.id)
@@ -99,7 +99,7 @@ export default function ApiKeysSettings() {
       const keyHash = await hashKey(key);
       const keyPrefix = key.slice(0, 12);
 
-      const { error } = await supabase.from("api_keys").insert({
+      const { error } = await awsClient.from("api_keys").insert({
         user_id: user?.id,
         name: newKeyName,
         key_prefix: keyPrefix,
@@ -121,7 +121,7 @@ export default function ApiKeysSettings() {
 
   const handleDeleteKey = async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await awsClient
         .from("api_keys")
         .delete()
         .eq("id", id);

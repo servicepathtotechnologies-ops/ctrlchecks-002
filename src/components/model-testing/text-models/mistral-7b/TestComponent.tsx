@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Loader2, AlertTriangle, Play } from 'lucide-react';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { toast } from '@/hooks/use-toast';
 import testConfig from './test-config.json';
@@ -56,7 +56,7 @@ export default function Mistral7BTestComponent() {
 
       // Multimodal functionality has been removed
       // Using AI chat endpoint instead for text generation
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const response = await fetch(`${ENDPOINTS.itemBackend}/api/ai/chat`, {
         method: 'POST',
         headers: {
@@ -114,7 +114,7 @@ export default function Mistral7BTestComponent() {
           isFallback,
           keywordsMatched,
           rawResponse: data,
-          error: isFallback ? `Model returned fallback response. Output: "${output.substring(0, 100)}${output.length > 100 ? '...' : ''}". Check API key configuration and Supabase function logs.` : 
+          error: isFallback ? `Model returned fallback response. Output: "${output.substring(0, 100)}${output.length > 100 ? '...' : ''}". Check API key configuration and server function logs.` : 
                  duration >= testCase.maxDuration ? 'Test exceeded maximum duration' :
                  keywordsMatched === 0 ? 'Output does not match expected keywords' : undefined
         };
@@ -382,7 +382,7 @@ export default function Mistral7BTestComponent() {
                           <div className="text-yellow-700 dark:text-yellow-300 space-y-1">
                             <div>Possible causes:</div>
                             <ul className="list-disc list-inside ml-2 space-y-1">
-                              <li>HUGGINGFACE_API_KEY not set in Supabase secrets</li>
+                              <li>HUGGINGFACE_API_KEY not set in server environment secrets</li>
                               <li>API key has insufficient quota</li>
                               <li>Model endpoint is not accessible</li>
                               <li>Network/connectivity issues</li>
@@ -392,7 +392,7 @@ export default function Mistral7BTestComponent() {
                               <ol className="list-decimal list-inside ml-2 space-y-1 mt-1">
                                 <li>Check backend environment variables</li>
                                 <li>Verify HUGGINGFACE_API_KEY is set correctly</li>
-                                <li>Check Supabase function logs for detailed errors</li>
+                                <li>Check server function logs for detailed errors</li>
                                 <li>Verify API key has sufficient quota at huggingface.co</li>
                               </ol>
                             </div>

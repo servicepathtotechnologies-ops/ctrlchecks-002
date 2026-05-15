@@ -2,7 +2,7 @@
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useWorkflowStore } from '@/stores/workflowStore';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -127,7 +127,7 @@ export default function WorkflowBuilder() {
       // Reset auto-run flag when loading a new workflow
       hasAutoRun.current = false;
       
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('workflows')
         .select('*')
         .eq('id', workflowId)
@@ -262,7 +262,7 @@ export default function WorkflowBuilder() {
 
   const loadLastResolvedInputs = useCallback(async (workflowId: string) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/last-resolved-inputs`, {
         headers: {
           'Content-Type': 'application/json',
@@ -394,14 +394,14 @@ export default function WorkflowBuilder() {
       }
       
       if (savedWorkflowId) {
-        const { error } = await supabase
+        const { error } = await awsClient
           .from('workflows')
           .update(workflowData)
           .eq('id', savedWorkflowId);
 
         if (error) throw error;
       } else {
-        const { data, error } = await supabase
+        const { data, error } = await awsClient
           .from('workflows')
           .insert(workflowData)
           .select()
@@ -422,7 +422,7 @@ export default function WorkflowBuilder() {
           // Yield so React/Zustand can flush saved graph state before attach-inputs (avoids racing a thin snapshot).
           await new Promise((r) => setTimeout(r, 80));
 
-          const { data: currentSessionData } = await supabase.auth.getSession();
+          const { data: currentSessionData } = await awsClient.auth.getSession();
           
           // Extract inputs from current nodes
           const inputsToAttach: Record<string, Record<string, any>> = {};
@@ -484,7 +484,7 @@ export default function WorkflowBuilder() {
             console.log('[handleSave] No inputs to attach, checking if workflow can be set to ready');
             
             // Try to set status directly to ready_for_execution
-            const { data: currentSessionDataForCheck } = await supabase.auth.getSession();
+            const { data: currentSessionDataForCheck } = await awsClient.auth.getSession();
             const checkCredsResponse = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${savedWorkflowId}`, {
               method: 'GET',
               headers: {
@@ -684,12 +684,12 @@ export default function WorkflowBuilder() {
       try {
         setIsSaving(true);
         
-        // ✅ CRITICAL: Use /api/save-workflow endpoint instead of direct Supabase update
+        // ✅ CRITICAL: Use /api/save-workflow endpoint instead of a direct DB update
         // This ensures cache invalidation and graph hash logging happen
         const { normalizeWorkflowGraph } = await import('@/lib/graphNormalizer');
         const normalized = normalizeWorkflowGraph(nodes, edges);
         
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData } = await awsClient.auth.getSession();
         const saveResponse = await fetch(`${ENDPOINTS.itemBackend}/api/save-workflow`, {
           method: 'POST',
           headers: {
@@ -748,7 +748,7 @@ export default function WorkflowBuilder() {
     let workflowCheckForRun: { id: string; name?: string | null; status?: string | null; phase?: string | null } | null = null;
     // Verify workflow exists in database before execution
     try {
-      const { data: workflowCheck, error: checkError } = await supabase
+      const { data: workflowCheck, error: checkError } = await awsClient
         .from('workflows')
         .select('id, name, status, phase')
         .eq('id', finalWorkflowId)
@@ -813,7 +813,7 @@ export default function WorkflowBuilder() {
     if (formNode) {
       // For Form Trigger nodes, check if workflow is active
       try {
-        const { data: workflowData, error: workflowError } = await supabase
+        const { data: workflowData, error: workflowError } = await awsClient
           .from('workflows')
           .select('status')
           .eq('id', finalWorkflowId)
@@ -869,7 +869,7 @@ export default function WorkflowBuilder() {
           // The execute-workflow function detects form triggers and sets status to 'waiting'
           setIsRunning(true);
           try {
-            const { data: sessionData } = await supabase.auth.getSession();
+            const { data: sessionData } = await awsClient.auth.getSession();
             const response = await fetch(`${ENDPOINTS.itemBackend}/api/execute-workflow`, {
               method: 'POST',
               headers: {
@@ -950,7 +950,7 @@ export default function WorkflowBuilder() {
     // NOTE: This operates on a CLONE of the graph - does not mutate React state
     // ✅ RUNTIME SAFETY: Auto-attach never mutates the original graph
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       
       // ✅ CRITICAL: Deep clone graph before any operations
       // This ensures auto-attach never mutates the original React state
@@ -1064,7 +1064,7 @@ export default function WorkflowBuilder() {
     });
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const response = await fetch(`${ENDPOINTS.itemBackend}/api/distributed-execute-workflow`, {
         method: 'POST',
         headers: {
@@ -1173,7 +1173,7 @@ export default function WorkflowBuilder() {
   const handleCancel = useCallback(async () => {
     if (!activeExecutionId) return;
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const res = await fetch(`${ENDPOINTS.itemBackend}/api/executions/${activeExecutionId}/cancel`, {
         method: 'POST',
         headers: {

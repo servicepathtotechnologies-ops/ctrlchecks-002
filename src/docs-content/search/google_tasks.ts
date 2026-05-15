@@ -55,7 +55,7 @@ export const googleTasksSearchIndex = [
     "slug": "google_tasks",
     "category": "Data",
     "href": "/docs/nodes/google_tasks#operation-create",
-    "text": "Google Tasks Operations Create Due due Due date/time in RFC3339 format"
+    "text": "Google Tasks Operations Create Due due Due date for the task as a calendar day"
   },
   {
     "type": "field",
@@ -111,7 +111,7 @@ export const googleTasksSearchIndex = [
     "slug": "google_tasks",
     "category": "Data",
     "href": "/docs/nodes/google_tasks#operation-read",
-    "text": "Google Tasks Operations Read Due due Due date/time in RFC3339 format"
+    "text": "Google Tasks Operations Read Due due Due date for the task as a calendar day"
   },
   {
     "type": "field",
@@ -167,7 +167,7 @@ export const googleTasksSearchIndex = [
     "slug": "google_tasks",
     "category": "Data",
     "href": "/docs/nodes/google_tasks#operation-update",
-    "text": "Google Tasks Operations Update Due due Due date/time in RFC3339 format"
+    "text": "Google Tasks Operations Update Due due Due date for the task as a calendar day"
   },
   {
     "type": "field",
@@ -223,7 +223,7 @@ export const googleTasksSearchIndex = [
     "slug": "google_tasks",
     "category": "Data",
     "href": "/docs/nodes/google_tasks#operation-delete",
-    "text": "Google Tasks Operations Delete Due due Due date/time in RFC3339 format"
+    "text": "Google Tasks Operations Delete Due due Due date for the task as a calendar day"
   },
   {
     "type": "field",

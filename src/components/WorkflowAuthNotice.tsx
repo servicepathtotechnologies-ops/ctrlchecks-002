@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, ExternalLink } from 'lucide-react';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { useWorkflowAuth } from '@/contexts/WorkflowAuthContext';
 import { cn } from '@/lib/utils';
@@ -27,7 +27,7 @@ export function WorkflowAuthNotice({ className }: WorkflowAuthNoticeProps) {
   const handleGoogleConnect = async () => {
     setIsConnecting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await awsClient.auth.getSession();
       const userId = session?.user?.id;
       if (!userId) throw new Error('Please sign in first');
 
@@ -53,7 +53,7 @@ export function WorkflowAuthNotice({ className }: WorkflowAuthNoticeProps) {
     try {
       const redirectUrl = buildConnectorCallbackUrl('/auth/linkedin/callback');
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await awsClient.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
           redirectTo: redirectUrl,

@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import {
   CheckCircle, XCircle, Loader2, Clock, ChevronDown, ChevronUp,
@@ -190,7 +190,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
   }, [liveExecutionId, updateNodeStatus]);
 
   const loadExecutionSteps = useCallback(async (executionId: string): Promise<ExecutionStep[]> => {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (awsClient as any)
       .from('execution_steps')
       .select('id, node_id, node_name, node_type, input_json, output_json, status, error, sequence, completed_at, started_at')
       .eq('execution_id', executionId)
@@ -224,7 +224,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
     if (!workflowId) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('executions')
         .select('id, status, started_at, finished_at, duration_ms, error, logs, output, input')
         .eq('id', executionId)
@@ -248,7 +248,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('executions')
         .select('id, status, started_at, finished_at, duration_ms, error')
         .eq('workflow_id', workflowId)
@@ -459,7 +459,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
   useEffect(() => {
     if (!workflowId) return;
 
-    const channel = supabase
+    const channel = awsClient
       .channel(`executions-${workflowId}`)
       .on(
         'postgres_changes',
@@ -522,7 +522,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
                 // Ensure we continue even if dispatch throws
               }
               // Unsubscribe from realtime updates for this execution
-              supabase.removeChannel(channel);
+              awsClient.removeChannel(channel);
             }
             // Always update selected execution if it's the one being updated
             if (selectedExecutionRef.current?.id === updatedExecution.id) {
@@ -541,7 +541,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      awsClient.removeChannel(channel);
     };
   }, [workflowId, resetAllNodeStatuses]);
 

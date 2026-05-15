@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { getBackendUrl } from "@/lib/api/getBackendUrl";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
@@ -110,7 +110,7 @@ export default function Subscriptions() {
 
   const loadCurrentSub = async () => {
     try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const token = (await awsClient.auth.getSession()).data.session?.access_token;
       if (!token) return;
       const res = await fetch(`${getBackendUrl()}/api/subscriptions/current`, {
         cache: "no-store",
@@ -132,7 +132,7 @@ export default function Subscriptions() {
         throw new Error("Payment checkout is still loading. Please try again in a moment.");
       }
 
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const token = (await awsClient.auth.getSession()).data.session?.access_token;
       if (!token) throw new Error("Not authenticated");
 
       const orderRes = await fetch(`${getBackendUrl()}/api/payments/razorpay/create-order`, {

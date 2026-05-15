@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { startGoogleConnectorOAuth } from '@/lib/google-connector-oauth';
@@ -88,7 +88,7 @@ export default function GoogleConnectionStatus() {
     if (!user) return;
 
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const { data: session } = await awsClient.auth.getSession();
       const token = session?.session?.access_token;
       const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       const resp = await fetch(`${apiUrl}/api/connections/google`, {

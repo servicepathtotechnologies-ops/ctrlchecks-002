@@ -4,7 +4,7 @@
  */
 
 import { ENDPOINTS } from '@/config/endpoints';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 
 // Template type - using any to avoid complex type inference issues
 type Template = any;
@@ -55,7 +55,7 @@ export async function getTemplateById(templateId: string): Promise<Template | nu
  */
 export async function copyTemplate(templateId: string, workflowName?: string): Promise<{ workflow: any; message: string }> {
   try {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await awsClient.auth.getSession();
 
     if (sessionError || !session) {
       throw new Error('Not authenticated');

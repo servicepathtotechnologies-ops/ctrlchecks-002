@@ -2,7 +2,7 @@
 import { Send, Bot, User, Loader2, X, Minimize2, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { cn } from '@/lib/utils';
 
@@ -73,7 +73,7 @@ export default function ChatWidget({
     setLoading(true);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const response = await fetch(`${ENDPOINTS.itemBackend}/chat-api`, {
         method: 'POST',
         headers: {

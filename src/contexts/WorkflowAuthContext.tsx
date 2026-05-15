@@ -1,5 +1,5 @@
 ﻿import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { useAuth } from '@/lib/auth';
 import { ENDPOINTS } from '@/config/endpoints';
 
@@ -46,7 +46,7 @@ export function WorkflowAuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await awsClient.auth.getSession();
         if (sessionError || !session?.access_token) {
           setAuthStatus({ googleConnected: true, linkedinConnected: false });
           setIsLoading(false);

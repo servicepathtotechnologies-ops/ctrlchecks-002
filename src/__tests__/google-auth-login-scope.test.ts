@@ -18,13 +18,13 @@ const INTEGRATION_SCOPE_KEYWORDS = [
 ];
 
 /**
- * Mirrors the options object that signInWithGoogle() passes to supabase.auth.signInWithOAuth.
+ * Mirrors the options object that signInWithGoogle() passes to awsClient.auth.signInWithOAuth.
  * After task 2.1, queryParams is removed — only redirectTo remains.
  */
 function buildLoginOAuthOptions(origin: string) {
   return {
     redirectTo: `${origin}/dashboard`,
-    // No queryParams — Supabase defaults to openid profile email
+    // No queryParams — provider defaults to openid profile email
   };
 }
 

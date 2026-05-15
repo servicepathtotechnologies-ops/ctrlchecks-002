@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminChromeHeader } from "@/components/layout/AdminChromeHeader";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 import { getBackendUrl } from "@/lib/api/getBackendUrl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,7 +67,7 @@ export default function AdminSubscriptions() {
   const fetchUsers = useCallback(async (page = 1, searchTerm = "") => {
     setLoading(true);
     try {
-      const session = await supabase.auth.getSession();
+      const session = await awsClient.auth.getSession();
       const token = session.data.session?.access_token;
       if (!token) { navigate("/signin"); return; }
 
@@ -111,7 +111,7 @@ export default function AdminSubscriptions() {
   const handleUpgrade = async (userId: string, planName: string) => {
     setUpgradingUser(userId);
     try {
-      const session = await supabase.auth.getSession();
+      const session = await awsClient.auth.getSession();
       const token = session.data.session?.access_token;
       if (!token) return;
 

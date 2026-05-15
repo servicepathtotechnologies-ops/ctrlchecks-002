@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { Hub } from 'aws-amplify/utils';
 import { resolveOAuthReturnTo } from '@/lib/oauth-return';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
 import { getAIGuidance } from '@/lib/ai-error-guidance';
@@ -121,7 +121,7 @@ export default function FacebookAuthCallback() {
         }
       });
 
-      supabase.auth.getSession().then(({ data }) => {
+      awsClient.auth.getSession().then(({ data }) => {
         if (data?.session) finish(true);
       }).catch(() => {});
 

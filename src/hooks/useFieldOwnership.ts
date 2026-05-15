@@ -14,7 +14,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import type { FieldFillMode } from '@/lib/fillMode';
 
@@ -176,7 +176,7 @@ export function useFieldOwnership({
 
       try {
         // Get auth token
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData } = await awsClient.auth.getSession();
         const token = sessionData?.session?.access_token;
 
         if (!token) {
@@ -261,7 +261,7 @@ export function useFieldOwnership({
 
     try {
       // Get auth token
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const token = sessionData?.session?.access_token;
 
       if (!token) {

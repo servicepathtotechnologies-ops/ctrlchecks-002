@@ -15,6 +15,16 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
   const { isAdmin } = useRole();
 
   const updateConfig = (key: string, value: unknown) => {
+    if (key === 'data') {
+      const rest = { ...config };
+      delete rest.values;
+      onConfigChange({
+        ...rest,
+        data: value,
+      });
+      return;
+    }
+
     onConfigChange({
       ...config,
       [key]: value,

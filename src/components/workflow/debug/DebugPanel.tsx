@@ -9,7 +9,7 @@ import PropertiesPanel from '../PropertiesPanel';
 import { X, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { generateExpression } from '@/lib/expressionResolver';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { useToast } from '@/hooks/use-toast';
 
@@ -167,7 +167,7 @@ export default function DebugPanel({ onClose }: DebugPanelProps) {
       const runId = crypto.randomUUID();
       
       // Execute single node
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const response = await fetch(`${ENDPOINTS.itemBackend}/execute-node`, {
         method: 'POST',
         headers: {

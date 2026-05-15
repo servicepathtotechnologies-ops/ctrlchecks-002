@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import { Loader2, CheckCircle2, XCircle, Twitter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -21,7 +21,7 @@ export default function TwitterConnectionStatus({ onStatusChange }: TwitterConne
   const checkConnection = async () => {
     try {
       setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await awsClient.auth.getSession();
       
       if (!session) {
         setIsConnected(false);
@@ -49,7 +49,7 @@ export default function TwitterConnectionStatus({ onStatusChange }: TwitterConne
     try {
       setIsConnecting(true);
       
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await awsClient.auth.getSession();
       if (!session) {
         toast({
           title: 'Authentication Required',
@@ -95,7 +95,7 @@ export default function TwitterConnectionStatus({ onStatusChange }: TwitterConne
 
   const handleDisconnect = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await awsClient.auth.getSession();
       if (!session) return;
 
       const response = await fetch(`${ENDPOINTS.itemBackend}/api/connections/twitter`, {

@@ -1,4 +1,4 @@
-﻿import { supabase } from '@/integrations/aws/client';
+﻿import { awsClient } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 
 interface ScheduledWorkflow {
@@ -142,7 +142,7 @@ class WorkflowScheduler {
     try {
       console.log(`[Scheduler] 🚀 Executing workflow ${workflowId} (trigger: schedule)`);
       
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const response = await fetch(`${ENDPOINTS.itemBackend}/api/execute-workflow`, {
         method: 'POST',
         headers: {
@@ -212,7 +212,7 @@ class WorkflowScheduler {
 
   /**
    * Simple health accessor so UI can decide to degrade scheduling-only features
-   * without blocking core workflow building when backend/Supabase are unavailable.
+   * without blocking core workflow building when the backend DB is unavailable.
    */
   isHealthy(): boolean {
     return this.schedulerHealthy;
@@ -382,7 +382,7 @@ class WorkflowScheduler {
       // Stop all existing schedulers first to prevent duplicates
       this.stopAll();
 
-      const { data: workflows, error } = await supabase
+      const { data: workflows, error } = await awsClient
         .from('workflows')
         .select('id, cron_expression')
         .eq('setup_completed', true)
@@ -426,7 +426,7 @@ class WorkflowScheduler {
   // Refresh scheduler for a specific workflow (reload from database)
   async refreshWorkflow(workflowId: string): Promise<void> {
     try {
-      const { data: workflow, error } = await supabase
+      const { data: workflow, error } = await awsClient
         .from('workflows')
         .select('id, cron_expression')
         .eq('setup_completed', true)

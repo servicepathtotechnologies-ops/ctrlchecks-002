@@ -9,7 +9,7 @@
  *
  * Four sub-properties are tested:
  *   1.1 — Credential stripping: keys containing "credential"/"oauth" are NO LONGER stripped from inputsToAttach
- *   1.2 — Graph field present: workflowData written to Supabase includes the `graph` field
+ *   1.2 — Graph field present: workflowData written to the database includes the `graph` field
  *   1.3 — isDirty cleared: setIsDirty(false) in finally block overwrites any intermediate isDirty=true
  *   1.4 — Position round-trip: graph.nodes[0].position is preserved because graph field is present
  */
@@ -125,7 +125,7 @@ describe('Sub-property 1.1 — Credential stripping (FIXED: keys are preserved)'
 // ---------------------------------------------------------------------------
 describe('Sub-property 1.2 — Graph field present (FIXED: graph is included in payload)', () => {
   /**
-   * The payload written to Supabase must include a `graph` field.
+   * The payload written to the database must include a `graph` field.
    * On fixed code `graph` is present → test PASSES.
    */
   it('workflowData payload includes a graph field', () => {
@@ -215,7 +215,7 @@ describe('Sub-property 1.3 — isDirty cleared (FIXED: finally block overwrites 
 describe('Sub-property 1.4 — Position round-trip (FIXED: positions preserved in graph field)', () => {
   /**
    * A node with a custom position should have its position preserved in
-   * payload.graph.nodes[0].position after handleSave writes to Supabase.
+   * payload.graph.nodes[0].position after handleSave writes to the database.
    * On fixed code `graph` is present → position is persisted → PASSES.
    */
   it('payload.graph.nodes[0].position equals the original node position', () => {

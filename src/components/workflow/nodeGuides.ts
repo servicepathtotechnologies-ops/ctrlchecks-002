@@ -9364,17 +9364,17 @@ export const NODE_GUIDES: Record<NodeType, Record<FieldKey, NodeGuide>> = {
     operation: {
       title: 'How to get Operation?',
       steps: [
-        'You don’t get this from anywhere—you choose it from the dropdown in this node.',
+        'You choose the operation from the dropdown in this node.',
         '',
-        '• List Tasks – Use when you want to retrieve tasks from a task list. Set Task List ID (or @default). The node returns a list of tasks.',
+        'Read - Retrieve tasks from a task list, or one task when Task ID is provided. Set Task List ID or @default.',
         '',
-        '• Create Task – Use when you want to add a new task. You need Task Title; optionally Notes and Due Date. Set Task List ID (or @default).',
+        'Create - Add a new task. You need Task Title; Notes and Due Date are optional.',
         '',
-        '• Update Task – Use when you want to change an existing task (title, notes, due date). You need Task ID and Task List ID, then set the new Task Title and/or Notes and/or Due Date.',
+        'Update - Change an existing task. Provide Task ID and any fields you want to update: title, notes, due date, or status.',
         '',
-        '• Complete Task – Use when you want to mark a task as done. You need Task ID and Task List ID only.'
+        'Delete - Remove a task. Provide Task ID and Task List ID.'
       ],
-      example: 'List Tasks'
+      example: 'Read'
     },
     taskListId: {
       title: 'Google Tasks Task List ID – Step-by-Step',
@@ -9431,7 +9431,7 @@ export const NODE_GUIDES: Record<NodeType, Record<FieldKey, NodeGuide>> = {
         '',
         'Keep it short; use the Notes field for longer details.',
         '',
-        'This field is only used when Operation = Create or Update. It is ignored for List Tasks and Complete Task.'
+        'This field is only used when Operation = Create or Update. It is ignored for Read and Delete.'
       ],
       example: 'Complete project report'
     },
@@ -9446,26 +9446,35 @@ export const NODE_GUIDES: Record<NodeType, Record<FieldKey, NodeGuide>> = {
         '',
         'Leave empty if you don’t need notes.',
         '',
-        'This field is only used when Operation = Create or Update. It is ignored for List Tasks and Complete Task.'
+        'This field is only used when Operation = Create or Update. It is ignored for Read and Delete.'
       ],
       example: 'Task notes...'
     },
-    dueDate: {
-      title: 'How to get Due Date (ISO 8601)?',
+    due: {
+      title: 'How to choose Due Date?',
       steps: [
-        'Due date must be in ISO 8601 format so Google Tasks and Calendar can use it.',
+        'Choose the calendar day when the task should be due.',
         '',
-        '• Format: YYYY-MM-DD for date only, or YYYY-MM-DDTHH:mm:ssZ for date and time in UTC. The "T" separates date and time; "Z" means UTC.',
+        'Use the date picker or type a date as YYYY-MM-DD, for example 2026-12-31.',
         '',
-        '• Static value: Type it directly, e.g. 2024-01-20T17:00:00Z',
+        'Google Tasks stores task due dates at day level. Time of day is not saved by the Google Tasks API.',
         '',
-        '• Dynamic value: If your platform has a "format date" or "to ISO" function, use it. Or build the string from previous step data.',
+        'If an older workflow already has an RFC3339 value like 2026-12-31T23:59:59Z, CtrlChecks keeps the same calendar day and sends the Google-compatible value automatically.',
         '',
-        'With time zone: You can use an offset, e.g. 2024-01-15T12:00:00-05:00',
+        'Dynamic value: use data from an earlier step only if it resolves to a date, for example {{input.dueDate}}.',
         '',
-        'This field is only used when Operation = Create or Update. It is ignored for List Tasks and Complete Task.'
+        'This field is only used when Operation = Create or Update. It is ignored for Read and Delete.'
       ],
-      example: '2024-01-15T23:59:59Z'
+      example: '2026-12-31'
+    },
+    dueDate: {
+      title: 'How to choose Due Date?',
+      steps: [
+        'Use the Due Date field as a calendar date, for example 2026-12-31.',
+        '',
+        'Google Tasks stores task due dates at day level. Time of day is not saved by the Google Tasks API.'
+      ],
+      example: '2026-12-31'
     }
   },
   fraud_detection_node: {
@@ -9922,4 +9931,3 @@ export function getNodeGuide(nodeType: NodeType, fieldKey: FieldKey): NodeGuide 
 export function hasNodeGuide(nodeType: NodeType, fieldKey: FieldKey): boolean {
   return !!getNodeGuide(nodeType, fieldKey);
 }
-

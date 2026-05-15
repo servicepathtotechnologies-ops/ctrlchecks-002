@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/aws/client";
+import { awsClient } from "@/integrations/aws/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +23,7 @@ export default function ProfileSettings() {
   const loadProfile = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from("profiles")
         .select("*")
         .eq("user_id", user?.id)
@@ -38,7 +38,7 @@ export default function ProfileSettings() {
           avatar_url: data.avatar_url || "",
         });
         if (email && isGeneratedCognitoEmail(data.email)) {
-          await supabase
+          await awsClient
             .from("profiles")
             .update({ email })
             .eq("user_id", user?.id);
@@ -66,7 +66,7 @@ export default function ProfileSettings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await awsClient
         .from("profiles")
         .update({
           email: resolveProfileEmail(profile.email, user),

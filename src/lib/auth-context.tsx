@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-/** Minimal user shape — compatible with Supabase User fields used in this codebase */
+/** Minimal user shape — compatible with AWS Cognito User fields used in this codebase */
 export interface AuthUser {
   id: string;
   email?: string;

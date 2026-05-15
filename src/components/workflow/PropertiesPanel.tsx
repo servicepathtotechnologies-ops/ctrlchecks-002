@@ -19,7 +19,7 @@ import ScheduleWiseSettings from './ScheduleWiseSettings';
 import FormNodeSettings from './FormNodeSettings';
 import ScheduleTrigger from './ScheduleTrigger';
 import FacebookConnectionStatus from '@/components/FacebookConnectionStatus';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { ENDPOINTS } from '@/config/endpoints';
 import {
   Copy, ExternalLink, Bot, Send, Loader2, Sparkles,
@@ -63,6 +63,9 @@ import { useExpressionDropStore } from '@/stores/expressionDropStore';
 import { resolveExpression, detectExpressionType } from '@/lib/expressionResolver';
 import { InputGuideLink } from './InputGuideLink';
 import ConditionBuilder, { ConditionRule } from './ConditionBuilder';
+import KeyValueEditor from './editors/KeyValueEditor';
+import VariableListEditor from './editors/VariableListEditor';
+import CaseListEditor from './editors/CaseListEditor';
 import { workflowScheduler } from '@/lib/workflowScheduler';
 import { resolveEffectiveFieldFillMode, supportsRuntimeAI, type FieldFillMode } from '@/lib/fillMode';
 import { collectUpstreamFieldHints } from '@/lib/upstreamFieldHints';
@@ -158,12 +161,12 @@ export default function PropertiesPanel({
 
   useEffect(() => {
     let cancelled = false;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let channel: ReturnType<typeof awsClient.channel> | null = null;
 
-    supabase.auth.getUser().then(({ data }) => {
+    awsClient.auth.getUser().then(({ data }) => {
       if (cancelled || !data.user?.id) return;
 
-      channel = supabase
+      channel = awsClient
         .channel(`properties-connections-${data.user.id}`)
         .on(
           'postgres_changes',
@@ -183,7 +186,7 @@ export default function PropertiesPanel({
 
     return () => {
       cancelled = true;
-      if (channel) supabase.removeChannel(channel);
+      if (channel) awsClient.removeChannel(channel);
     };
   }, [queryClient]);
 
@@ -206,6 +209,11 @@ export default function PropertiesPanel({
 
   // View mode state - default to properties
   const [viewMode, setViewMode] = useState<ViewMode>('properties');
+
+  // Test Node state (Type 1 nodes only)
+  const [testNodeState, setTestNodeState] = useState<'idle' | 'running' | 'passed' | 'failed'>('idle');
+  const [testNodeError, setTestNodeError] = useState<string>('');
+  const [testNodeTimeMs, setTestNodeTimeMs] = useState<number>(0);
 
   // Resizable sidebar state
   const [width, setWidth] = useState(400); // Increased default width from 320px (w-80) to 400px
@@ -274,7 +282,7 @@ export default function PropertiesPanel({
     if (!workflowId) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('workflows')
         .select('status')
         .eq('id', workflowId)
@@ -366,7 +374,7 @@ export default function PropertiesPanel({
     let cancelled = false;
     (async () => {
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData } = await awsClient.auth.getSession();
         const token = sessionData?.session?.access_token;
         if (!token) {
           if (!cancelled) setAiCapabilities(null);
@@ -490,7 +498,7 @@ export default function PropertiesPanel({
 
     setIsAiApplyLoading(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const token = sessionData?.session?.access_token;
       if (!token) {
         throw new Error('Sign in required to apply AI edits.');
@@ -603,7 +611,7 @@ export default function PropertiesPanel({
         throw new Error('Current workflow has no nodes. Please add at least one node before using the AI editor.');
       }
 
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await awsClient.auth.getSession();
       const token = sessionData?.session?.access_token;
       if (!token) {
         throw new Error('Sign in is required for the AI editor.');
@@ -735,7 +743,7 @@ export default function PropertiesPanel({
 
     setIsSavingActivation(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from("workflows")
         .update({
           status: enabled ? "active" : "draft"
@@ -1066,39 +1074,42 @@ export default function PropertiesPanel({
   // Per-field fill mode — writes to config._fillMode[fieldName] and persists via attach-inputs
   const handleFillModeChange = useCallback(
     async (fieldKey: string, mode: 'manual_static' | 'buildtime_ai_once' | 'runtime_ai', restoredValue?: unknown) => {
-      if (!selectedNodeId || !selectedNode || !workflowId) return;
-      
-      // Store previous mode for rollback on error
+      if (!selectedNodeId || !selectedNode) return;
+
+      // Store previous mode for rollback on API error
       const previousFillMode = (selectedNode.data.config?._fillMode as Record<string, string> | undefined) ?? {};
       const previousMode = previousFillMode[fieldKey];
-      
-      // Optimistic UI update
+
+      // Optimistic UI update — always happens the moment the user clicks, regardless of workflowId
       const current = { ...previousFillMode };
       updateNodeConfig(selectedNodeId, {
         _fillMode: { ...current, [fieldKey]: mode },
       });
-      
+
+      // Persist to backend only when the workflow has been saved
+      if (!workflowId) return;
+
       try {
         // Call attach-inputs endpoint with mode_<nodeId>_<fieldName> key
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData } = await awsClient.auth.getSession();
         const token = sessionData?.session?.access_token;
-        
+
         if (!token) {
           throw new Error('Authentication required');
         }
-        
+
         const modeKey = `mode_${selectedNodeId}_${fieldKey}`;
         const inputs: Record<string, unknown> = {
           [modeKey]: mode,
         };
-        
+
         // If restoring a value (switching back to AI-built), include the restored value
         if (restoredValue !== undefined && mode === 'buildtime_ai_once') {
           const inputKey = `input_${selectedNodeId}_${fieldKey}`;
           inputs[inputKey] = restoredValue;
           console.log(`[PropertiesPanel] Restoring AI-built value for ${fieldKey}:`, restoredValue);
         }
-        
+
         const response = await fetch(`${ENDPOINTS.itemBackend}/api/workflows/${workflowId}/attach-inputs`, {
           method: 'POST',
           headers: {
@@ -1109,21 +1120,21 @@ export default function PropertiesPanel({
             inputs,
           }),
         });
-        
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.error || errorData.message || `Failed to update mode: ${response.status}`);
         }
-        
+
         // Success - mode persisted to backend
         console.log(`[PropertiesPanel] Mode updated for ${fieldKey}: ${mode}`);
       } catch (error: any) {
-        // Revert optimistic update on failure
+        // Revert optimistic update on API failure
         console.error('[PropertiesPanel] Failed to update fill mode:', error);
         updateNodeConfig(selectedNodeId, {
           _fillMode: { ...previousFillMode, [fieldKey]: previousMode },
         });
-        
+
         toast({
           title: 'Failed to update mode',
           description: error?.message || 'Could not persist mode change to server',
@@ -1151,7 +1162,7 @@ export default function PropertiesPanel({
       
       try {
         // Call attach-inputs endpoint with unlock_<nodeId>_<fieldName> key
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData } = await awsClient.auth.getSession();
         const token = sessionData?.session?.access_token;
         
         if (!token) {
@@ -1254,8 +1265,8 @@ export default function PropertiesPanel({
         if (Date.now() < suppressAutoPersistUntilRef.current) return;
         if (executionActiveRef.current) return;
 
-        const { supabase } = await import('@/integrations/aws/client');
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { awsClient } = await import('@/integrations/aws/client');
+        const { data: sessionData } = await awsClient.auth.getSession();
         if (!sessionData?.session?.access_token) return;
 
         const nodeConfig = selectedNode.data?.config || {};
@@ -1424,6 +1435,37 @@ export default function PropertiesPanel({
   const handleInputMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
+
+  // Test Node handler — calls backend /api/test-type1-node with a pre-defined fixture
+  const handleTestNode = useCallback(async () => {
+    if (!selectedNode) return;
+    setTestNodeState('running');
+    setTestNodeError('');
+    const startMs = Date.now();
+    try {
+      const { data: sessionData } = await awsClient.auth.getSession();
+      const token = sessionData?.session?.access_token ?? '';
+      const res = await fetch(`${ENDPOINTS.itemBackend}/api/test-type1-node`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ nodeType: selectedNode.data.type }),
+      });
+      const data = await res.json();
+      setTestNodeTimeMs(Date.now() - startMs);
+      if (data.success) {
+        setTestNodeState('passed');
+      } else {
+        setTestNodeState('failed');
+        setTestNodeError(data.error?.message || data.message || 'Node test failed');
+      }
+    } catch (err) {
+      setTestNodeTimeMs(Date.now() - startMs);
+      setTestNodeState('failed');
+      setTestNodeError(err instanceof Error ? err.message : 'Network error');
+    }
+    // Auto-clear result after 12 seconds
+    setTimeout(() => setTestNodeState('idle'), 12_000);
+  }, [selectedNode]);
 
   // Render empty state (no node selected) - show toggle buttons and appropriate view
   if (!selectedNode) {
@@ -1746,6 +1788,42 @@ export default function PropertiesPanel({
           </DroppableFieldWrapper>
         );
 
+      case 'date': {
+        if (typeof value === 'string' && value.includes('{{')) {
+          return (
+            <DroppableFieldWrapper fieldKey={field.key} debugMode={debugMode}>
+              <Input
+                id={field.key}
+                value={value}
+                onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                placeholder={field.placeholder || 'YYYY-MM-DD'}
+                className="h-8 text-xs border-border/60 focus-visible:ring-1 focus-visible:ring-ring/50"
+                onMouseDown={handleInputMouseDown}
+                onFocus={(e) => e.stopPropagation()}
+              />
+            </DroppableFieldWrapper>
+          );
+        }
+        const dateValue =
+          typeof value === 'string'
+            ? (value.match(/^\d{4}-\d{2}-\d{2}/)?.[0] ?? '')
+            : '';
+        return (
+          <DroppableFieldWrapper fieldKey={field.key} debugMode={debugMode}>
+            <Input
+              id={field.key}
+              type="date"
+              value={dateValue}
+              onChange={(e) => handleConfigChange(field.key, e.target.value)}
+              placeholder={field.placeholder || 'YYYY-MM-DD'}
+              className="h-8 text-xs border-border/60 focus-visible:ring-1 focus-visible:ring-ring/50"
+              onMouseDown={handleInputMouseDown}
+              onFocus={(e) => e.stopPropagation()}
+            />
+          </DroppableFieldWrapper>
+        );
+      }
+
       case 'textarea':
       case 'json':
         return (
@@ -1900,6 +1978,51 @@ export default function PropertiesPanel({
           />
         );
 
+      case 'keyValue':
+        return (
+          <KeyValueEditor
+            value={typeof value === 'object' && !Array.isArray(value) && value !== null
+              ? value as Record<string, string>
+              : {}}
+            onChange={(v) => handleConfigChange(field.key, v)}
+            addButtonLabel={field.addButtonLabel ?? 'Add Entry'}
+          />
+        );
+
+      case 'variableList':
+        return (
+          <VariableListEditor
+            value={Array.isArray(value) ? value as Array<{ name: string; value: string }> : []}
+            onChange={(v) => handleConfigChange(field.key, v)}
+            addButtonLabel={field.addButtonLabel ?? 'Add Variable'}
+          />
+        );
+
+      case 'caseList':
+        return (
+          <CaseListEditor
+            value={Array.isArray(value) ? value as Array<{ value: string; label: string }> : []}
+            onChange={(v) => handleConfigChange(field.key, v)}
+            addButtonLabel={field.addButtonLabel ?? 'Add Case'}
+          />
+        );
+
+      case 'conditionList':
+        return (
+          <ConditionBuilder
+            value={Array.isArray(value) ? value as ConditionRule[] : []}
+            onChange={(v) => handleConfigChange(field.key, v)}
+          />
+        );
+
+      case 'formFieldList':
+        return (
+          <FormNodeSettings
+            config={value ?? { formTitle: '', formDescription: '', fields: [], submitButtonText: 'Submit', successMessage: '', redirectUrl: '' }}
+            onConfigChange={(v) => handleConfigChange(field.key, v)}
+          />
+        );
+
       default:
         return null;
     }
@@ -1955,6 +2078,27 @@ export default function PropertiesPanel({
           </ToggleGroupItem>
         </ToggleGroup>
         <div className="flex items-center gap-2">
+          {/* Test Node button — visible only for Type 1 nodes that have fixtures */}
+          {viewMode === 'properties' && !(backendSchema?.credentialSchema && Object.keys(backendSchema.credentialSchema).length > 0) && (
+            <button
+              onClick={handleTestNode}
+              disabled={testNodeState === 'running'}
+              title="Test this node with a synthetic fixture (no credentials needed)"
+              aria-label="Test node"
+              className={cn(
+                'h-6 px-2 flex items-center gap-1 rounded-sm text-[10px] font-medium transition-colors duration-150',
+                testNodeState === 'idle' && 'text-muted-foreground/70 hover:text-foreground hover:bg-muted/40',
+                testNodeState === 'running' && 'text-muted-foreground/50 cursor-not-allowed',
+                testNodeState === 'passed' && 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40',
+                testNodeState === 'failed' && 'text-destructive bg-destructive/10',
+              )}
+            >
+              {testNodeState === 'idle' && <><Play className="h-3 w-3" />Test</>}
+              {testNodeState === 'running' && <><Loader2 className="h-3 w-3 animate-spin" />Running</>}
+              {testNodeState === 'passed' && <>✅ {testNodeTimeMs}ms</>}
+              {testNodeState === 'failed' && <>❌ Failed</>}
+            </button>
+          )}
           {/* Facebook Connection Button - Show in header when Facebook node is selected */}
           {viewMode === 'properties' && selectedNode?.data.type === 'facebook' && (
             <FacebookConnectionStatus compact={false} />
@@ -2007,6 +2151,13 @@ export default function PropertiesPanel({
                   tone={guidedStatus.tone}
                   onDismiss={() => setGuidedStatus(null)}
                 />
+              )}
+              {/* Test Node error banner */}
+              {testNodeState === 'failed' && testNodeError && (
+                <div className="px-3 py-2 rounded-md bg-destructive/10 border border-destructive/30 text-xs text-destructive flex items-start gap-2">
+                  <XCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span className="break-words">{testNodeError}</span>
+                </div>
               )}
               {/* Usage Guide Card - For All Nodes */}
               {NODE_USAGE_GUIDES[selectedNode.data.type] && (
@@ -2306,7 +2457,7 @@ export default function PropertiesPanel({
                               if (workflowId && workflowId !== 'new') {
                                 try {
                                   // Save cron_expression to workflows table (required by scheduler)
-                                  const { error: updateError } = await supabase
+                                  const { error: updateError } = await awsClient
                                     .from('workflows')
                                     .update({
                                       cron_expression: schedule.cronExpression,
@@ -2675,7 +2826,7 @@ export default function PropertiesPanel({
                                         ) : (
                                           renderField(field)
                                         )}
-                                        {(['text', 'textarea', 'json', 'number', 'select', 'time', 'cron'].includes(field.type)) && (
+                                        {(['text', 'textarea', 'json', 'number', 'select', 'time', 'date', 'cron'].includes(field.type)) && (
                                           <div className="flex justify-end">
                                             {hasHelpLink ? (
                                               <button

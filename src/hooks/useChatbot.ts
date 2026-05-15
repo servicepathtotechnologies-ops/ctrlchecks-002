@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/integrations/aws/client";
+﻿import { awsClient } from "@/integrations/aws/client";
 import { ENDPOINTS } from "@/config/endpoints";
 
 export interface ChatbotResponse {

@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { supabase } from '@/integrations/aws/client';
+import { awsClient } from '@/integrations/aws/client';
 import { toast } from '@/hooks/use-toast';
 import { useWorkflowStore } from '@/stores/workflowStore';
 
@@ -38,7 +38,7 @@ export default function AgentSettings({ workflowId }: AgentSettingsProps) {
     if (!workflowId) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await awsClient
         .from('workflows')
         .select('workflow_type, agent_config')
         .eq('id', workflowId)
@@ -83,7 +83,7 @@ export default function AgentSettings({ workflowId }: AgentSettingsProps) {
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await awsClient
         .from('workflows')
         .update({
           workflow_type: workflowType,
