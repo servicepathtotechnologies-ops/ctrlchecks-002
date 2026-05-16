@@ -11,6 +11,8 @@
 export type ExecutionClassification =
   | 'full_success'
   | 'partial_success'
+  | 'acknowledgement_warning'
+  | 'status_sync_issue'
   | 'auth_failure'
   | 'node_error'
   | 'stuck';
@@ -46,6 +48,12 @@ export interface ExecutionNodeLog {
   nodeType?: string;
   status: 'success' | 'failed' | 'skipped' | 'running' | 'pending';
   error?: string | null;
+  metadata?: {
+    operationStatus?: 'succeeded' | 'failed' | 'unknown';
+    acknowledgementStatus?: 'parsed' | 'empty_success' | 'parse_failed' | 'not_required';
+    persistenceStatus?: 'saved' | 'delayed' | 'failed';
+    [key: string]: unknown;
+  };
 }
 
 export interface ExecutionResult {
@@ -79,6 +87,28 @@ export function isAuthError(errorString: string | null | undefined): boolean {
   return AUTH_ERROR_PATTERNS.some((pattern) => lower.includes(pattern));
 }
 
+export function isAcknowledgementIssue(log: ExecutionNodeLog): boolean {
+  const lower = String(log.error || '').toLowerCase();
+  return (
+    log.metadata?.acknowledgementStatus === 'parse_failed' ||
+    lower.includes('acknowledgement') ||
+    lower.includes('could not be read') ||
+    lower.includes('unexpected end of json input')
+  );
+}
+
+export function isStatusSyncIssue(errorString: string | null | undefined): boolean {
+  if (!errorString) return false;
+  const lower = errorString.toLowerCase();
+  return (
+    lower.includes('db circuit') ||
+    lower.includes('database unreachable') ||
+    lower.includes('failed to get execution status') ||
+    lower.includes('status sync') ||
+    lower.includes('execution status')
+  );
+}
+
 // ---------------------------------------------------------------------------
 // classifyExecutionResult
 // ---------------------------------------------------------------------------
@@ -104,15 +134,23 @@ export function classifyExecutionResult(result: ExecutionResult): ExecutionClass
 
     const safeLogs = logs ?? [];
 
+    if (isStatusSyncIssue(result.error)) {
+      return 'status_sync_issue';
+    }
+
     // 2. Auth failure — any failed node whose error matches an auth pattern
     const hasAuthFailure = safeLogs.some(
       (log) => log.status === 'failed' && isAuthError(log.error),
     );
     if (hasAuthFailure) return 'auth_failure';
 
+    const failedLogs = safeLogs.filter((log) => log.status === 'failed');
+    if (failedLogs.length > 0 && failedLogs.every(isAcknowledgementIssue)) {
+      return 'acknowledgement_warning';
+    }
+
     // 3. Node error — any failed node (no auth error matched)
-    const hasNodeError = safeLogs.some((log) => log.status === 'failed');
-    if (hasNodeError) return 'node_error';
+    if (failedLogs.length > 0) return 'node_error';
 
     // If logs were null/empty but backend status indicates failure, treat as node_error
     if (!logs && TERMINAL_STATUSES.has(status) && status !== 'success') {
@@ -165,6 +203,18 @@ export function friendlyErrorMessage(rawError: string | null | undefined): strin
     lower.includes('forbidden')
   ) {
     return "The connected account doesn't have permission for this action.";
+  }
+
+  if (
+    lower.includes('acknowledgement') ||
+    lower.includes('could not be read') ||
+    lower.includes('unexpected end of json input')
+  ) {
+    return 'The action may have completed, but the response could not be read.';
+  }
+
+  if (isStatusSyncIssue(rawError)) {
+    return 'The action may have completed; status sync failed.';
   }
 
   if (

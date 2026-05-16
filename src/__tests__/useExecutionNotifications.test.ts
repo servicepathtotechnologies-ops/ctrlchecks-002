@@ -77,6 +77,43 @@ function deriveNotifications(
     }];
   }
 
+  if (classification === 'acknowledgement_warning') {
+    const id = stableId(`${result.id}-acknowledgement_warning-0`);
+    const failedLogs = safeLogs.filter((l) => l.status === 'failed');
+    const firstFailedNodeId = failedLogs[0]?.nodeId;
+    const nodeName = failedLogs[0]?.nodeName || (firstFailedNodeId ? firstFailedNodeId.slice(0, 8) : 'This step');
+    return [{
+      id,
+      classification,
+      severity: 'warning',
+      renderMode: 'banner',
+      title: 'Action may have completed',
+      message: `${nodeName}: The action may have completed, but the response could not be read.`,
+      resolution: 'View logs before retrying, especially for create, update, or delete actions.',
+      actions: [{
+        label: 'View Logs',
+        onClick: () => { callbacks.onViewLogs(firstFailedNodeId); callbacks.onDismiss(id); },
+      }],
+    }];
+  }
+
+  if (classification === 'status_sync_issue') {
+    const id = stableId(`${result.id}-status_sync_issue-0`);
+    return [{
+      id,
+      classification,
+      severity: 'warning',
+      renderMode: 'banner',
+      title: 'Status sync needs attention',
+      message: 'The action may have completed; status sync failed.',
+      resolution: 'Refresh the execution details before running the workflow again.',
+      actions: [{
+        label: 'Refresh',
+        onClick: () => { callbacks.onRefresh(); callbacks.onDismiss(id); },
+      }],
+    }];
+  }
+
   if (classification === 'auth_failure') {
     const failedAuthLogs = safeLogs.filter(
       (l) => l.status === 'failed' && l.error &&
@@ -261,6 +298,45 @@ describe('deriveNotifications — partial_success', () => {
   it('has a View Logs action', () => {
     const [c] = deriveNotifications(result, makeCallbacks());
     expect(c.actions.some((a) => a.label === 'View Logs')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// acknowledgement_warning
+// ---------------------------------------------------------------------------
+describe('deriveNotifications - acknowledgement_warning', () => {
+  const result: ExecutionResult = {
+    id: 'exec-ack',
+    status: 'failed',
+    logs: [
+      { nodeId: 'n1', nodeName: 'Delete Task', status: 'failed', error: 'Unexpected end of JSON input' },
+    ],
+  };
+
+  it('uses warning severity and acknowledgement copy', () => {
+    const [c] = deriveNotifications(result, makeCallbacks());
+    expect(c.severity).toBe('warning');
+    expect(c.title).toContain('Action may have completed');
+    expect(c.message).toContain('response could not be read');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// status_sync_issue
+// ---------------------------------------------------------------------------
+describe('deriveNotifications - status_sync_issue', () => {
+  const result: ExecutionResult = {
+    id: 'exec-sync',
+    status: 'failed',
+    error: 'Failed to get execution status',
+    logs: [],
+  };
+
+  it('offers refresh instead of showing a normal step failure', () => {
+    const [c] = deriveNotifications(result, makeCallbacks());
+    expect(c.severity).toBe('warning');
+    expect(c.title).toContain('Status sync');
+    expect(c.actions.some((a) => a.label === 'Refresh')).toBe(true);
   });
 });
 

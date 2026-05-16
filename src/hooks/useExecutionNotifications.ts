@@ -138,6 +138,58 @@ export function useExecutionNotifications(
     // ------------------------------------------------------------------
     // auth_failure — one config per unique service
     // ------------------------------------------------------------------
+    if (classification === 'acknowledgement_warning') {
+      const id = stableId(`${result.id}-acknowledgement_warning-0`);
+      const failedLogs = safeLogs.filter((l) => l.status === 'failed');
+      const firstFailedNodeId = failedLogs[0]?.nodeId;
+      const nodeName =
+        failedLogs[0]?.nodeName ||
+        (firstFailedNodeId ? firstFailedNodeId.slice(0, 8) : 'This step');
+
+      const config: NotificationConfig = {
+        id,
+        classification,
+        severity: 'warning',
+        renderMode: 'banner',
+        title: 'Action may have completed',
+        message: `${nodeName}: The action may have completed, but the response could not be read.`,
+        resolution: 'View logs before retrying, especially for create, update, or delete actions.',
+        actions: [
+          {
+            label: 'View Logs',
+            onClick: () => {
+              callbacks.onViewLogs(firstFailedNodeId);
+              callbacks.onDismiss(id);
+            },
+          },
+        ],
+      };
+      return [config];
+    }
+
+    if (classification === 'status_sync_issue') {
+      const id = stableId(`${result.id}-status_sync_issue-0`);
+      const config: NotificationConfig = {
+        id,
+        classification,
+        severity: 'warning',
+        renderMode: 'banner',
+        title: 'Status sync needs attention',
+        message: 'The action may have completed; status sync failed.',
+        resolution: 'Refresh the execution details before running the workflow again.',
+        actions: [
+          {
+            label: 'Refresh',
+            onClick: () => {
+              callbacks.onRefresh();
+              callbacks.onDismiss(id);
+            },
+          },
+        ],
+      };
+      return [config];
+    }
+
     if (classification === 'auth_failure') {
       const failedAuthLogs = safeLogs.filter(
         (l) =>

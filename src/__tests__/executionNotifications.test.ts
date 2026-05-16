@@ -116,6 +116,25 @@ describe('classifyExecutionResult', () => {
     expect(classifyExecutionResult(result)).toBe('node_error');
   });
 
+  it('returns acknowledgement_warning when a failed node only has response acknowledgement failure', () => {
+    const result = makeResult({
+      status: 'failed',
+      logs: [
+        { nodeId: 'n1', nodeName: 'Delete Task', status: 'failed', error: 'Unexpected end of JSON input' },
+      ],
+    });
+    expect(classifyExecutionResult(result)).toBe('acknowledgement_warning');
+  });
+
+  it('returns status_sync_issue when execution status persistence is unavailable', () => {
+    const result = makeResult({
+      status: 'failed',
+      error: 'DB circuit open - database unreachable, retrying in 30s',
+      logs: [],
+    });
+    expect(classifyExecutionResult(result)).toBe('status_sync_issue');
+  });
+
   it('returns node_error when logs is null and status is failed', () => {
     const result = makeResult({ logs: null, status: 'failed' });
     expect(classifyExecutionResult(result)).toBe('node_error');
@@ -195,6 +214,14 @@ describe('friendlyErrorMessage', () => {
 
   it('handles invalid data errors', () => {
     expect(friendlyErrorMessage('Invalid input data')).toContain('unexpected data');
+  });
+
+  it('handles acknowledgement parse failures', () => {
+    expect(friendlyErrorMessage('Unexpected end of JSON input')).toContain('response could not be read');
+  });
+
+  it('handles status sync failures', () => {
+    expect(friendlyErrorMessage('Failed to get execution status')).toContain('status sync failed');
   });
 
   it('never exposes stack traces', () => {
