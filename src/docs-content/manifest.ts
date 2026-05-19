@@ -382,7 +382,7 @@ export const nodeDocManifest = [
     "slug": "youtube",
     "displayName": "YouTube",
     "category": "Communication",
-    "description": "Publish videos or posts to YouTube channels Use this node when a workflow needs youtube behavior with schema-driven inputs from the CtrlChecks node registry.",
+    "description": "Read, upload, update, and delete YouTube videos with the connected user's YouTube OAuth account.",
     "logoUrl": "/icons/nodes/youtube.svg"
   },
   {

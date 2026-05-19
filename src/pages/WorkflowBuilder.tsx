@@ -1271,7 +1271,7 @@ export default function WorkflowBuilder() {
           </div>
         }
       >
-        <div className="flex-1 flex flex-col overflow-hidden relative">
+        <div className="flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden relative">
           {!debugNodeId && shouldShowReliabilityStatus && reliabilityStatus && (
             <div className="absolute left-1/2 top-4 z-[70] w-[min(520px,calc(100%-2rem))] -translate-x-1/2">
               <div className="rounded-md border border-border bg-background/95 p-3 text-xs text-muted-foreground shadow-sm backdrop-blur">
@@ -1302,10 +1302,10 @@ export default function WorkflowBuilder() {
               <ExecutionResultNotification configs={notificationConfigs} onDismiss={handleDismiss} />
             </div>
           )}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 min-h-0 min-w-0 flex overflow-hidden">
             {/* Left Panel - Node Library */}
             {nodeLibraryOpen ? (
-              <div className="relative w-72 overflow-hidden border-r border-border/60">
+              <div className="relative w-[clamp(14rem,18vw,18rem)] min-w-0 shrink-0 overflow-hidden border-r border-border/60">
                 <NodeLibrary
                   onDragStart={onDragStart}
                   onClose={() => setNodeLibraryOpen(false)}
@@ -1327,13 +1327,13 @@ export default function WorkflowBuilder() {
             )}
 
             {/* Central Canvas Area */}
-            <div className="flex-1 relative w-full h-full" style={{ minWidth: 0, minHeight: 0 }}>
+            <div className="relative h-full min-h-0 min-w-0 flex-[1_1_0%] overflow-hidden">
               <WorkflowCanvas />
             </div>
 
             {/* Right Panel - Properties */}
             {propertiesPanelOpen ? (
-              <div className="relative overflow-hidden border-l border-border/60">
+              <div className="relative min-w-0 shrink-0 overflow-hidden border-l border-border/60 max-w-[min(35rem,calc(100vw-4rem))]">
                 <PropertiesPanel
                   onClose={() => setPropertiesPanelOpen(false)}
                   lastResolvedInputs={lastResolvedInputs}

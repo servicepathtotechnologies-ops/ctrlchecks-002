@@ -581,7 +581,7 @@ function WorkflowCanvasInner() {
   return (
     <div
       ref={reactFlowWrapper}
-      className="w-full h-full min-h-[400px] overflow-hidden"
+      className="h-full min-h-0 w-full overflow-hidden"
       style={{ width: '100%', height: '100%' }}
     >
       <ReactFlow

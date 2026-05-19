@@ -23,11 +23,22 @@ export function OAuthConnectButton({ credentialType, onSuccess, className }: Pro
     try {
       await oauthFlow.connect(credentialType.id);
       onSuccess?.();
-    } catch {
-      getAIGuidance(
-        { code: 'OAUTH_FAILED', message: oauthFlow.error ?? 'OAuth flow did not complete' },
-        { provider: credentialType.provider, operation: 'connect' }
-      ).then(setGuidance);
+    } catch (err) {
+      const statusCode = (err as any)?.statusCode as number | undefined;
+      if (statusCode === 503) {
+        setGuidance({
+          title: 'Service temporarily unavailable',
+          description: 'The server is temporarily unavailable. This usually resolves within 30 seconds.',
+          resolution: 'Click the connect button again to retry.',
+          nextSteps: ['Wait a moment', 'Click the connect button again'],
+          tone: 'attention',
+        });
+      } else {
+        getAIGuidance(
+          { code: 'OAUTH_FAILED', message: oauthFlow.error ?? 'OAuth flow did not complete' },
+          { provider: credentialType.provider, operation: 'connect' }
+        ).then(setGuidance);
+      }
     }
   }
 

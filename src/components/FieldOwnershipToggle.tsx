@@ -144,10 +144,10 @@ export function FieldOwnershipToggle({
   const effectivelyLocked = isLocked && !(isUnlockable && isUnlocked);
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div className={cn('flex min-w-0 max-w-full flex-wrap items-center gap-2', className)}>
       {/* Lock indicator for credential-owned fields */}
       {effectivelyLocked && (
-        <div className="flex items-center gap-1 text-muted-foreground">
+        <div className="flex shrink-0 items-center gap-1 text-muted-foreground">
           <Lock className="h-3 w-3" />
           <span className="text-[10px]">Locked</span>
         </div>
@@ -168,7 +168,7 @@ export function FieldOwnershipToggle({
       )}
 
       {/* Three-state toggle buttons */}
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1">
         <Button
           type="button"
           size="sm"
@@ -207,15 +207,15 @@ export function FieldOwnershipToggle({
       </div>
 
       {/* Mode hint text */}
-      <div className="text-[10px] text-muted-foreground">
+      <div className="min-w-0 flex-1 text-[10px] text-muted-foreground">
         {currentMode === 'manual_static' && (
-          <span>You provide the value</span>
+          <span className="block truncate">You provide the value</span>
         )}
         {currentMode === 'buildtime_ai_once' && (
-          <span className="text-sky-500/80">AI filled once when workflow was built</span>
+          <span className="block truncate text-sky-500/80">AI filled once when workflow was built</span>
         )}
         {currentMode === 'runtime_ai' && (
-          <span className="text-amber-500/80">AI resolves from previous node output at runtime</span>
+          <span className="block truncate text-amber-500/80">AI resolves from previous node output at runtime</span>
         )}
       </div>
     </div>

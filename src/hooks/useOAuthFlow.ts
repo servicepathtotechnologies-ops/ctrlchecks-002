@@ -20,11 +20,13 @@ export function useOAuthFlow() {
       }
 
       let settled = false;
+      let bc: BroadcastChannel | null = null;
 
       const cleanup = () => {
         window.removeEventListener('message', onMessage);
         clearTimeout(timeout);
         clearInterval(closedInterval);
+        try { bc?.close(); } catch { /* ignore */ }
       };
 
       const finish = (callback: () => void) => {
@@ -38,12 +40,25 @@ export function useOAuthFlow() {
         finish(() => reject(new Error('OAuth window timed out. Please try connecting again.')));
       }, 5 * 60_000);
 
+      // BroadcastChannel: works even when COOP severs window.opener.
+      // The relay page at /auth/oauth-relay broadcasts on this channel (same origin).
+      try {
+        bc = new BroadcastChannel('oauth_callback');
+        bc.addEventListener('message', (e: MessageEvent) => {
+          if (e.data?.type === 'oauth-success') {
+            finish(resolve);
+          } else if (e.data?.type === 'oauth-error') {
+            finish(() => reject(new Error(e.data.message || 'OAuth failed')));
+          }
+        });
+      } catch { /* BroadcastChannel not supported in this browser */ }
+
       const allowedOrigins = new Set([
         window.location.origin,
         new URL(getBackendUrl()).origin,
       ]);
 
-      // Listen for postMessage from callback page
+      // postMessage fallback (works for providers without COOP)
       const onMessage = (event: MessageEvent) => {
         if (!allowedOrigins.has(event.origin)) return;
         if (event.data?.type === 'oauth-success') {
@@ -63,7 +78,7 @@ export function useOAuthFlow() {
           }
         } catch {
           // Cross-Origin-Opener-Policy can block popup.closed while OAuth is on
-          // the provider domain. Keep waiting for the callback postMessage.
+          // the provider domain. Keep waiting for the callback message.
         }
       }, 500);
     });
@@ -83,7 +98,10 @@ export function useOAuthFlow() {
         setStatus('success');
         invalidateAfterConnectionChange(qc);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'OAuth connection failed';
+        const statusCode = (err as any)?.statusCode as number | undefined;
+        const msg = statusCode === 503
+          ? 'Service temporarily unavailable — please try again in a moment.'
+          : (err instanceof Error ? err.message : 'OAuth connection failed');
         setError(msg);
         setStatus('error');
         throw err;
@@ -105,7 +123,10 @@ export function useOAuthFlow() {
         setStatus('success');
         invalidateAfterConnectionChange(qc);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Reconnect failed';
+        const statusCode = (err as any)?.statusCode as number | undefined;
+        const msg = statusCode === 503
+          ? 'Service temporarily unavailable — please try again in a moment.'
+          : (err instanceof Error ? err.message : 'Reconnect failed');
         setError(msg);
         setStatus('error');
         throw err;

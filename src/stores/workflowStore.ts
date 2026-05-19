@@ -502,12 +502,20 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     } while (existingIds.has(nodeId));
 
     // Create new node with unique ID and offset position
+    const copiedConfig = { ...(copiedNode.data?.config || {}) };
+    delete (copiedConfig as Record<string, unknown>).connectionRefs;
+
     const newNode: WorkflowNode = {
       ...copiedNode,
       id: nodeId,
       position: {
         x: copiedNode.position.x + 50,
         y: copiedNode.position.y + 50,
+      },
+      data: {
+        ...copiedNode.data,
+        config: copiedConfig,
+        connectionRefs: undefined,
       },
       selected: true,
     };

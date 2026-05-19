@@ -181,6 +181,7 @@ export default function DebugPanel({ onClose }: DebugPanelProps) {
           nodeId: debugNodeId,
           nodeType: latestNode.data.type,
           config: nodeConfig,
+          connectionRefs: (latestNode.data as any).connectionRefs || {},
           input: currentInputData,
           workflowId,
         }),
@@ -231,9 +232,9 @@ export default function DebugPanel({ onClose }: DebugPanelProps) {
       <div className="w-full h-full max-w-[95vw] max-h-[95vh] bg-background border border-border rounded-lg shadow-xl flex flex-col">
         {/* Header */}
         <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-muted/30">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold">Debug Node</h2>
-            <span className="text-sm text-muted-foreground font-mono">
+          <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+            <h2 className="text-lg font-semibold shrink-0">Debug Node</h2>
+            <span className="text-sm text-muted-foreground font-mono truncate min-w-0">
               {debugNode.data.label} ({debugNode.data.type})
             </span>
           </div>

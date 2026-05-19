@@ -18,7 +18,9 @@ import type { ConnectionRecord } from '@/lib/api/connections';
 
 interface Props {
   /** Credential type IDs this node accepts (e.g. ['google_oauth2']) */
-  credentialTypeIds: string[];
+  credentialTypeIds?: string[];
+  /** Providers this node accepts when the backend contract exposes provider-level requirements */
+  providers?: string[];
   /** Currently selected connection ID */
   value?: string;
   onChange: (connectionId: string) => void;
@@ -41,13 +43,19 @@ function SelectedItem({ connection }: { connection: ConnectionRecord }) {
   );
 }
 
-export function NodeCredentialSelector({ credentialTypeIds, value, onChange, label = 'Connection' }: Props) {
+export function NodeCredentialSelector({ credentialTypeIds = [], providers = [], value, onChange, label = 'Connection' }: Props) {
   const { data: allConnections = [] } = useConnections();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTypeId, setModalTypeId] = useState<string | undefined>();
 
-  const compatible = allConnections.filter((c) => credentialTypeIds.includes(c.credentialTypeId));
+  const acceptedTypeIds = new Set(credentialTypeIds);
+  const acceptedProviders = new Set(providers);
+  const compatible = allConnections.filter((c) => {
+    if (acceptedTypeIds.size > 0) return acceptedTypeIds.has(c.credentialTypeId);
+    return acceptedProviders.has(c.provider) || acceptedProviders.has(c.credentialTypeId);
+  });
   const selected = compatible.find((c) => c.id === value);
+  const preferredTypeId = credentialTypeIds[0] || compatible[0]?.credentialTypeId;
 
   function openAddModal(typeId?: string) {
     setModalTypeId(typeId);
@@ -63,7 +71,7 @@ export function NodeCredentialSelector({ credentialTypeIds, value, onChange, lab
       {compatible.length === 0 ? (
         <div className="rounded-lg border border-dashed border-muted-foreground/30 p-3 flex items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">No connections yet</p>
-          <Button size="sm" variant="outline" onClick={() => openAddModal(credentialTypeIds[0])}>
+          <Button size="sm" variant="outline" onClick={() => openAddModal(preferredTypeId)}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             Add
           </Button>
@@ -99,7 +107,7 @@ export function NodeCredentialSelector({ credentialTypeIds, value, onChange, lab
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onSelect={() => openAddModal(credentialTypeIds[0])}
+              onSelect={() => openAddModal(preferredTypeId)}
               className="flex items-center gap-2 cursor-pointer text-primary"
             >
               <Plus className="h-4 w-4" />

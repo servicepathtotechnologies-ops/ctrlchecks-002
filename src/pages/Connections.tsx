@@ -15,7 +15,6 @@ import { ProviderLogo } from '@/components/connections/ProviderLogo';
 import { isComingSoonProvider } from '@/components/connections/connectionAvailability';
 import { useConnections } from '@/hooks/useConnections';
 import { useCredentialTypes } from '@/hooks/useCredentialTypes';
-import { useToast } from '@/hooks/use-toast';
 import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
 import type { ConnectionRecord, CredentialTypeDefinition } from '@/lib/api/connections';
 
@@ -173,7 +172,6 @@ function ServiceCatalog({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Connections() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const qc = useQueryClient();
   const { data: connections = [], isLoading, refetch, isFetching } = useConnections();
   const { data: credentialTypes = [], isLoading: credentialTypesLoading } = useCredentialTypes();
@@ -210,15 +208,6 @@ export default function Connections() {
   }, [qc, user?.id]);
 
   function openModalForType(t: CredentialTypeDefinition) {
-    const existing = connections.find((connection) => connection.credentialTypeId === t.id);
-    if (existing) {
-      toast({
-        title: 'Already connected',
-        description: 'Disconnect the existing connection before connecting another account.',
-      });
-      setConnSearch(t.provider);
-      return;
-    }
     setModalPreset(t.id);
     setModalOpen(true);
   }
@@ -252,9 +241,7 @@ export default function Connections() {
     setSearchParams(nextParams, { replace: true });
   }, [credentialTypes, credentialTypesLoading, requestedService, searchParams, setSearchParams]);
 
-  const visibleConnections = connections.filter((connection, index, all) => (
-    all.findIndex((candidate) => candidate.credentialTypeId === connection.credentialTypeId) === index
-  ));
+  const visibleConnections = connections;
   const connectedTypeIds = new Set(visibleConnections.map((connection) => connection.credentialTypeId));
 
   const filteredConns = connSearch.trim()

@@ -12,7 +12,7 @@ const CATEGORIES: Record<string, string[]> = {
   'Social Media':        ['twitter', 'facebook', 'instagram', 'linkedin'],
   'Project Management':  ['notion', 'asana', 'jira', 'clickup', 'monday', 'linear', 'trello'],
   'CRM & Sales':         ['hubspot', 'salesforce', 'pipedrive', 'zoho', 'airtable', 'freshdesk', 'intercom', 'zendesk', 'activecampaign'],
-  'Communication':       ['slack', 'discord', 'telegram', 'whatsapp', 'twilio', 'sendgrid', 'mailchimp', 'mailgun', 'calendly'],
+  'Communication':       ['slack', 'discord', 'telegram', 'whatsapp', 'twilio', 'sendgrid', 'mailchimp', 'mailgun', 'calendly', 'zoom'],
   'Cloud & DevOps':      ['aws', 'github', 'gitlab', 'bitbucket', 'cloudflare', 'dropbox', 'supabase', 'mongodb'],
   'Databases':           ['postgresql', 'mysql', 'firebase', 'redis'],
   'File Transfer':       ['ftp', 'sftp'],
@@ -95,19 +95,19 @@ export function ServicePickerGrid({ onSelect, connectedTypeIds = new Set() }: Pr
                   <button
                     key={t.id}
                     type="button"
-                    disabled={comingSoon || alreadyConnected}
+                    disabled={comingSoon}
                     title={
                       comingSoon
                         ? `${providerName} is coming soon`
                         : alreadyConnected
-                          ? `${providerName} is already connected`
+                          ? `Add another ${providerName} connection`
                           : `Connect ${providerName}`
                     }
                     onClick={() => {
-                      if (!comingSoon && !alreadyConnected) onSelect(t);
+                      if (!comingSoon) onSelect(t);
                     }}
                     className={`relative flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors group ${
-                      comingSoon || alreadyConnected
+                      comingSoon
                         ? 'cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground opacity-75'
                         : 'border-transparent hover:border-border hover:bg-muted/50'
                     }`}

@@ -143,13 +143,13 @@ export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, clas
           setIsGuideOpen(true);
         }}
         className={cn(
-          "text-xs text-muted-foreground/70 hover:text-primary transition-colors flex items-center gap-1 mt-1 ml-auto",
+          "mt-1 ml-auto flex max-w-full min-w-0 items-center justify-end gap-1 overflow-hidden text-right text-xs text-muted-foreground/70 transition-colors hover:text-primary",
           className
         )}
         style={{ marginLeft: 'auto' }}
       >
-        <HelpCircle className="h-3 w-3" />
-        <span>{guideQuestion}</span>
+        <HelpCircle className="h-3 w-3 shrink-0" />
+        <span className="min-w-0 truncate">{guideQuestion}</span>
       </button>
       
       <UserGuide

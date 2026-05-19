@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus } from 'lucide-react';
@@ -20,13 +20,23 @@ export default function KeyValueEditor({
   addButtonLabel = 'Add Entry',
   disabled = false,
 }: KeyValueEditorProps) {
-  // Convert object to array of rows for rendering
-  const rows: Array<{ k: string; v: string }> = Object.entries(
+  const rowsFromValue = useMemo(() => Object.entries(
     typeof value === 'object' && value !== null ? value : {}
-  ).map(([k, v]) => ({ k, v: String(v ?? '') }));
+  ).map(([k, v]) => ({ k, v: String(v ?? '') })), [value]);
+  const [rows, setRows] = useState<Array<{ k: string; v: string }>>(rowsFromValue);
+
+  useEffect(() => {
+    const meaningfulRows = rows.filter((row) => row.k.trim() !== '');
+    const current = JSON.stringify(meaningfulRows);
+    const incoming = JSON.stringify(rowsFromValue);
+    if (current !== incoming) {
+      setRows(rowsFromValue);
+    }
+  }, [rows, rowsFromValue]);
 
   const pushChange = useCallback(
     (updated: Array<{ k: string; v: string }>) => {
+      setRows(updated);
       const obj: Record<string, string> = {};
       for (const { k, v } of updated) {
         if (k.trim() !== '') obj[k.trim()] = v;
@@ -37,7 +47,7 @@ export default function KeyValueEditor({
   );
 
   const handleAdd = () => {
-    pushChange([...rows, { k: '', v: '' }]);
+    setRows([...rows, { k: '', v: '' }]);
   };
 
   const handleKeyChange = (index: number, newKey: string) => {

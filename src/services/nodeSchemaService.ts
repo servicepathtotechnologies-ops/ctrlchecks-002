@@ -19,6 +19,33 @@ export interface NodeDefinition {
   icon?: string;
   inputSchema: Record<string, InputFieldSchema>;
   outputSchema: Record<string, OutputFieldSchema>;
+  credentialSchema?: {
+    requirements?: Array<{
+      provider: string;
+      category: string;
+      required: boolean;
+      description?: string;
+      scopes?: string[];
+      requiredScopes?: string[];
+      credentialTypeId?: string;
+      credentialTypeIds?: string[];
+      authType?: string;
+      label?: string;
+      testable?: boolean;
+    }>;
+    credentialFields?: string[];
+  };
+  operationContracts?: Array<{
+    resource?: string;
+    operation: string;
+    label: string;
+    requiredFields: string[];
+    optionalFields: string[];
+    credentialProviders: string[];
+    outputFields: string[];
+    legacyAliases?: string[];
+    status: 'implemented' | 'unsupported' | 'deprecated';
+  }>;
   requiredInputs: string[];
   outgoingPorts: string[];
   incomingPorts: string[];

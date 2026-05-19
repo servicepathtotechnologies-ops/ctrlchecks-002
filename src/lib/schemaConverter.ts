@@ -70,7 +70,15 @@ function generateFriendlyLabel(value: string, fieldKey: string): string {
  * Detect the right widget for 'object' typed fields.
  * Defaults to 'keyValue' for all plain objects — much friendlier than a raw JSON textarea.
  */
-function detectObjectWidget(fieldKey: string, _fieldSchema: InputFieldSchema): ConfigField['type'] {
+function detectObjectWidget(
+  fieldKey: string,
+  _fieldSchema: InputFieldSchema,
+  nodeType?: string
+): ConfigField['type'] {
+  if (nodeType === 'hubspot' && fieldKey === 'properties') {
+    return 'hubspotProperties';
+  }
+
   // Everything that's a plain object becomes a key-value editor
   return 'keyValue';
 }
@@ -85,6 +93,10 @@ function detectArrayWidget(
 ): ConfigField['type'] {
   const k = fieldKey.toLowerCase();
   const desc = (fieldSchema.description || '').toLowerCase();
+
+  if (nodeType === 'hubspot' && k === 'records') {
+    return 'hubspotRecords';
+  }
 
   // Condition arrays → ConditionBuilder
   if (k.includes('condition') || k.includes('rule') || k.includes('filter')) {
@@ -145,7 +157,7 @@ export function convertSchemaToConfigField(
       frontendType = 'boolean';
       break;
     case 'object':
-      frontendType = detectObjectWidget(fieldKey, fieldSchema);
+      frontendType = detectObjectWidget(fieldKey, fieldSchema, nodeType);
       break;
     case 'array':
       frontendType = detectArrayWidget(fieldKey, fieldSchema, nodeType);
@@ -249,6 +261,10 @@ export function convertSchemaToConfigField(
     frontendType = 'textarea';
   }
 
+  if (fieldSchema.ui?.widget === 'textarea') {
+    frontendType = 'textarea';
+  }
+
   if (fieldSchema.ui?.widget === 'date') {
     frontendType = 'date';
   }
@@ -302,6 +318,9 @@ export function convertSchemaToConfigField(
       if (k.includes('param') || k.includes('qs') || k.includes('query')) return 'Add Param';
       if (k.includes('body') || k.includes('payload')) return 'Add Field';
       return 'Add Entry';
+    }
+    if (frontendType === 'hubspotRecords') {
+      return 'Add Another';
     }
     if (frontendType === 'variableList') return 'Add Variable';
     if (frontendType === 'caseList') return 'Add Case';
@@ -361,6 +380,13 @@ export function validateNodeInputsAgainstSchema(
 ): { valid: boolean; errors: Array<{ field: string; message: string }> } {
   const errors: Array<{ field: string; message: string }> = [];
 
+  const conditionMatches = (actual: unknown, expected: unknown) => {
+    if (Array.isArray(expected)) {
+      return expected.some((candidate) => actual === candidate);
+    }
+    return actual === expected;
+  };
+
   for (const requiredField of nodeDefinition.requiredInputs) {
     if (
       !(requiredField in inputs) ||
@@ -379,7 +405,7 @@ export function validateNodeInputsAgainstSchema(
       | undefined;
     if (!requiredIf) continue;
     const depValue = (inputs as any)?.[requiredIf.field];
-    if (depValue !== requiredIf.equals) continue;
+    if (!conditionMatches(depValue, requiredIf.equals)) continue;
 
     const value = (inputs as any)?.[fieldKey];
     const missing =

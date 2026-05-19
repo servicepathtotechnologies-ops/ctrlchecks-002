@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Search, X, ChevronDown,
   Play, Webhook, Clock, Globe, Brain, Sparkles, Gem, Link, GitBranch, 
   GitMerge, Repeat, Timer, ShieldAlert, Code, Braces, Table, Type, 
@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NODE_CATEGORIES, NODE_TYPES, NodeTypeDefinition } from './nodeTypes';
 import { cn } from '@/lib/utils';
+import { nodeSchemaService, type NodeDefinition } from '@/services/nodeSchemaService';
+import { BACKEND_SUPPORTED_NODE_TYPES } from './backendSupportedNodeTypes';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Play, Webhook, Clock, Globe, Brain, Sparkles, Gem, Link, GitBranch,
@@ -30,9 +32,70 @@ interface NodeLibraryProps {
   onClose?: () => void;
 }
 
+const categoryColors = [
+  'hsl(var(--primary))',
+  'hsl(217 91% 60%)',
+  'hsl(142 71% 45%)',
+  'hsl(25 95% 53%)',
+  'hsl(280 77% 52%)',
+  'hsl(200 75% 50%)',
+];
+
+function humanizeCategory(category: string): string {
+  return category.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function normalizeBackendCategory(category: string): NodeTypeDefinition['category'] {
+  const aliases: Record<string, NodeTypeDefinition['category']> = {
+    trigger: 'triggers',
+    triggers: 'triggers',
+    communication: 'output',
+    integrations: 'http_api',
+    integration: 'http_api',
+    transformation: 'data',
+    file: 'storage',
+    social: 'social_media',
+    auth: 'authentication',
+    flow: 'logic',
+    workflow: 'logic',
+    actions: 'utility',
+    microsoft: 'output',
+  };
+  return aliases[category] || (category as NodeTypeDefinition['category']);
+}
+
+function backendSchemaToNodeType(definition: NodeDefinition): NodeTypeDefinition {
+  return {
+    type: definition.type,
+    label: definition.label,
+    category: normalizeBackendCategory(definition.category || 'utility'),
+    icon: definition.icon || 'Box',
+    description: definition.description || definition.label,
+    defaultConfig: definition.defaultInputs || {},
+    configFields: [],
+  };
+}
+
 export default function NodeLibrary({ onDragStart, onClose }: NodeLibraryProps) {
   const [search, setSearch] = useState('');
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
+  const [schemaNodes, setSchemaNodes] = useState<NodeTypeDefinition[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    nodeSchemaService.fetchAllSchemas()
+      .then((schemas) => {
+        if (cancelled) return;
+        setSchemaNodes(schemas.map(backendSchemaToNodeType));
+      })
+      .catch((error) => {
+        console.error('[NodeLibrary] Falling back to static backend-supported node list:', error);
+        if (!cancelled) setSchemaNodes(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const toggleCategory = (id: string) => {
     setOpenCategories(prev => {
@@ -43,22 +106,40 @@ export default function NodeLibrary({ onDragStart, onClose }: NodeLibraryProps) 
     });
   };
 
+  const sourceNodes = useMemo(
+    () => schemaNodes || NODE_TYPES.filter((node) => BACKEND_SUPPORTED_NODE_TYPES.has(node.type)),
+    [schemaNodes],
+  );
+
   const filteredNodes = useMemo(() => 
     search
-      ? NODE_TYPES.filter(
+      ? sourceNodes.filter(
           (node) =>
             node.label.toLowerCase().includes(search.toLowerCase()) ||
             node.description.toLowerCase().includes(search.toLowerCase())
         )
-      : NODE_TYPES,
-    [search]
+      : sourceNodes,
+    [search, sourceNodes]
   );
 
   // Sort categories alphabetically
-  const sortedCategories = useMemo(() => 
-    [...NODE_CATEGORIES].sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' })),
-    []
-  );
+  const sortedCategories = useMemo(() => {
+    const existing = new Map<string, { id: string; label: string; color: string }>(
+      NODE_CATEGORIES.map((category) => [category.id, category]),
+    );
+    Array.from(new Set(sourceNodes.map((node) => node.category))).forEach((category, index) => {
+      if (!existing.has(category)) {
+        existing.set(category, {
+          id: category,
+          label: humanizeCategory(category),
+          color: categoryColors[index % categoryColors.length],
+        });
+      }
+    });
+    return Array.from(existing.values())
+      .filter((category) => sourceNodes.some((node) => node.category === category.id))
+      .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+  }, [sourceNodes]);
 
   const getNodesByCategory = (categoryId: string) =>
     filteredNodes
@@ -66,7 +147,7 @@ export default function NodeLibrary({ onDragStart, onClose }: NodeLibraryProps) 
       .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
 
   return (
-    <div className="relative w-72 h-full flex flex-col bg-background border-r border-border/60">
+    <div className="relative w-full h-full flex flex-col bg-background">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border/40">
         <div className="mb-3 relative flex items-center justify-center">
@@ -161,7 +242,7 @@ export default function NodeLibrary({ onDragStart, onClose }: NodeLibraryProps) 
                               <div className="text-xs font-medium text-foreground/90 truncate leading-tight">
                                 {node.label}
                               </div>
-                              <div className="text-xs text-muted-foreground/70 truncate leading-tight mt-0.5">
+                              <div className="line-clamp-2 text-xs leading-tight text-muted-foreground/70 mt-0.5">
                                 {node.description}
                               </div>
                             </div>

@@ -14,11 +14,9 @@ import { ServicePickerGrid } from './ServicePickerGrid';
 import { CredentialFormRenderer } from './CredentialFormRenderer';
 import { CredentialGuidePanel } from './CredentialGuidePanel';
 import { OAuthConnectButton } from './OAuthConnectButton';
-import { ConnectionCard } from './ConnectionCard';
 import { ProviderLogo } from './ProviderLogo';
 import { isComingSoonProvider } from './connectionAvailability';
-import { useCreateConnection } from '@/hooks/useConnections';
-import { useConnections } from '@/hooks/useConnections';
+import { useConnections, useCreateConnection } from '@/hooks/useConnections';
 import { useCredentialTypes } from '@/hooks/useCredentialTypes';
 import { useToast } from '@/hooks/use-toast';
 import type { CredentialTypeDefinition } from '@/lib/api/connections';
@@ -140,9 +138,6 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
   const isOAuth = selectedType?.authType === 'oauth2';
   const hasFields = (selectedType?.inputFields?.length ?? 0) > 0;
   const connectedTypeIds = new Set(connections.map((connection) => connection.credentialTypeId));
-  const existingConnection = selectedType
-    ? connections.find((connection) => connection.credentialTypeId === selectedType.id)
-    : null;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -183,20 +178,7 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
         {step === 'form' && selectedType && (
           <div className="grid gap-5 pt-1 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-5">
-              {existingConnection ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    This service is already connected. Disconnect it before connecting another account.
-                  </p>
-                  <ConnectionCard connection={existingConnection} />
-                  {!preselectedCredentialTypeId && (
-                    <Button variant="outline" onClick={handleBack}>
-                      Choose another service
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <>
+              <>
                   <CredentialGuidePanel
                     credentialType={selectedType}
                     activeFieldName={activeFieldName}
@@ -256,17 +238,14 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
                     </p>
                   )}
                 </>
-              )}
             </div>
 
-            {!existingConnection && (
-              <CredentialGuidePanel
-                credentialType={selectedType}
-                activeFieldName={activeFieldName}
-                onFieldSelect={handleGuideFieldSelect}
-                className="hidden max-h-[70vh] overflow-y-auto lg:block"
-              />
-            )}
+            <CredentialGuidePanel
+              credentialType={selectedType}
+              activeFieldName={activeFieldName}
+              onFieldSelect={handleGuideFieldSelect}
+              className="hidden max-h-[70vh] overflow-y-auto lg:block"
+            />
           </div>
         )}
       </DialogContent>

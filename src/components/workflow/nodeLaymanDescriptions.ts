@@ -71,6 +71,8 @@ export const NODE_LAYMAN_DESCRIPTIONS: Record<string, string> = {
   azure_openai:                "Uses Microsoft Azure's hosted version of OpenAI's GPT models — enterprise-ready AI",
   hugging_face:                "Runs any AI model from the Hugging Face library — text, classification, translation, and more",
   cohere:                      "Uses Cohere's AI to generate text, classify content, or understand natural language",
+  mistral:                     "Sends your message to Mistral AI and gets back a fast, high-quality response — great for chat, summarisation, and code",
+  huggingface:                 "Runs open-source AI models from Hugging Face — summarise text, translate between languages, and more",
   ollama:                      "Runs open-source AI models locally on your own server — no cloud keys needed",
   openai_gpt:                  "Sends your prompt to OpenAI's ChatGPT and gets back an AI-written response",
   embeddings:                  "Converts text into numbers that represent its meaning — used for finding similar content",

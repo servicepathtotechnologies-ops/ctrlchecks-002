@@ -219,7 +219,7 @@ export default function WorkflowHeader({
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <AppBrand context="app" size="sm" className="hidden sm:flex" />
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           {isEditing ? (
             <Input
               value={workflowName}
@@ -232,20 +232,21 @@ export default function WorkflowHeader({
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="text-lg font-semibold hover:text-primary transition-colors"
+              className="min-w-0 truncate text-left text-lg font-semibold hover:text-primary transition-colors"
+              title={workflowName}
             >
               {workflowName}
             </button>
           )}
           {isDirty && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="shrink-0 text-xs">
               Unsaved
             </Badge>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <div className="relative inline-flex">
           <Button
             variant="ghost"

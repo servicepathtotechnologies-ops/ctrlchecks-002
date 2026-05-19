@@ -1,4 +1,6 @@
 import { NodeCategory } from '@/stores/workflowStore';
+import { BACKEND_SUPPORTED_NODE_OPERATIONS } from './backendSupportedNodeOperations';
+import { BACKEND_SUPPORTED_NODE_TYPES } from './backendSupportedNodeTypes';
 
 export interface NodeUsageGuide {
   overview: string;
@@ -34,6 +36,10 @@ export interface ConfigField {
     | 'time'
     /** Rows of [key] [value] with "+ Add" — serializes to Record<string,string> */
     | 'keyValue'
+    /** HubSpot contact/company property form - serializes to Record<string,string> */
+    | 'hubspotProperties'
+    /** HubSpot repeated contact/company forms - serializes to Array<{properties: Record<string,string>}> */
+    | 'hubspotRecords'
     /** Rows of [name] [value] with "+ Add Variable" — serializes to Array<{name,value}> */
     | 'variableList'
     /** Rows of [case value] [label] with "+ Add Case" — serializes to Array<{value,label}> */
@@ -54,6 +60,8 @@ export interface ConfigField {
   contextHints?: Array<{ whenValue: string; message: string }>;
   /** Show only when condition matches (optional fields; does not imply required). */
   visibleIf?: { field: string; equals: unknown };
+  /** Require only when condition matches. */
+  requiredIf?: { field: string; equals: unknown };
   /** Label for the "Add" button on keyValue / variableList / caseList widgets */
   addButtonLabel?: string;
 }
@@ -584,8 +592,14 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     category: 'data',
     icon: 'Table',
     description: 'CSV processor',
-    defaultConfig: { delimiter: ',' },
+    defaultConfig: { operation: 'parse', delimiter: ',', hasHeader: true, csv: '' },
     configFields: [
+      { key: 'operation', label: 'Operation', type: 'select', options: [
+        { label: 'Parse', value: 'parse' },
+        { label: 'Generate', value: 'generate' },
+      ], defaultValue: 'parse', required: true, helpText: 'Parse converts CSV text to rows/items. Generate converts input items to CSV.' },
+      { key: 'csv', label: 'CSV Content', type: 'textarea', placeholder: 'name,email\\nAda,ada@example.com', helpText: 'CSV text to parse. Supports template expressions like {{csv}} or {{$json.csv}}.' },
+      { key: 'data', label: 'Data to Generate (JSON)', type: 'json', placeholder: '[{"name":"Ada","email":"ada@example.com"}]', helpText: 'Optional array of objects for generate operation. If empty, input.items is used.' },
       { key: 'delimiter', label: 'Delimiter', type: 'text', defaultValue: ',', helpText: 'Character used to separate values in CSV. Common delimiters: comma (,), semicolon (;), tab (\\t), pipe (|). Default is comma. Use semicolon for European locale CSVs' },
       { key: 'hasHeader', label: 'Has Header Row', type: 'boolean', defaultValue: true, helpText: 'Whether the first row contains column names. If true, headers are used as object keys; if false, columns are named by index (0, 1, 2, etc.)' },
     ],
@@ -665,8 +679,9 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     category: 'data',
     icon: 'Braces',
     description: 'JSON parser',
-    defaultConfig: { expression: '' },
+    defaultConfig: { json: '', expression: '' },
     configFields: [
+      { key: 'json', label: 'JSON Content', type: 'textarea', placeholder: '{"data":{"items":[1,2,3]}}', helpText: 'JSON string or template expression to parse. Supports {{$json.someField}}.' },
       { key: 'expression', label: 'JSONPath Expression', type: 'text', placeholder: '$.data.items[*]', helpText: 'JSONPath expression to extract data from JSON. Examples: $.data.items[*] (all items), $.users[0].name (first user name), $..price (all prices recursively). Use JSONPath syntax to navigate nested JSON structures' },
     ],
   },
@@ -1877,17 +1892,60 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     category: 'ai',
     icon: 'MessageSquare',
     description: 'Cohere AI',
-    defaultConfig: { model: 'command', temperature: 0.7 },
+    defaultConfig: { model: 'command-r-08-2024', temperature: 0.7 },
     configFields: [
       { key: 'apiKey', label: 'API Key', type: 'text', placeholder: 'Your Cohere API key (required)', required: true, helpText: 'How to get Cohere API Key: 1) Go to dashboard.cohere.com 2) Sign in or create an account 3) Navigate to API Keys section 4) Click "Create API Key" 5) Give it a name (e.g., "Workflow Integration") 6) Copy the key immediately - you won\'t see it again! 7) Paste it here securely' },
       { key: 'model', label: 'Model', type: 'select', options: [
-        { label: 'Command', value: 'command' },
-        { label: 'Command Light', value: 'command-light' },
-        { label: 'Command R', value: 'command-r' },
-        { label: 'Command R+', value: 'command-r-plus' },
-      ], defaultValue: 'command', helpText: 'Cohere model: Command = best for general tasks, Command Light = faster and cheaper, Command R/R+ = larger models for complex tasks. Choose based on task complexity and cost considerations' },
+        { label: 'Command R7B (fast)',    value: 'command-r7b-12-2024' },
+        { label: 'Command R (balanced)',  value: 'command-r-08-2024' },
+        { label: 'Command R+ (powerful)', value: 'command-r-plus-08-2024' },
+        { label: 'Command Nightly (dev)', value: 'command-nightly' },
+      ], defaultValue: 'command-r-08-2024', helpText: 'Cohere model: R7B = fastest/cheapest, Command R = balanced production model, Command R+ = most powerful for complex tasks, Nightly = latest experimental build' },
       { key: 'prompt', label: 'Prompt', type: 'textarea', placeholder: 'Enter your prompt...', required: true, helpText: 'Prompt to send to the AI model. Describe the task, provide context, and specify the desired output format. Examples: "Summarize the following text:", "Translate to French:", "Classify this sentiment:"' },
       { key: 'temperature', label: 'Temperature', type: 'number', defaultValue: 0.7, helpText: 'Controls randomness in AI responses. Range: 0.0 (deterministic/focused) to 2.0 (creative/random). Default: 0.7. Use lower values (0.0-0.5) for factual tasks, higher values (0.7-1.2) for creative tasks' },
+    ],
+  },
+  {
+    type: 'mistral',
+    label: 'Mistral AI',
+    category: 'ai',
+    icon: 'Zap',
+    description: 'Mistral AI',
+    defaultConfig: { model: 'mistral-small-latest', temperature: 0.7, maxTokens: 1024 },
+    configFields: [
+      { key: 'model', label: 'Model', type: 'select', options: [
+        { label: 'Mistral Small (fast)',     value: 'mistral-small-latest' },
+        { label: 'Mistral Medium',           value: 'mistral-medium-latest' },
+        { label: 'Mistral Large (powerful)', value: 'mistral-large-latest' },
+        { label: 'Codestral (code)',         value: 'codestral-latest' },
+      ], defaultValue: 'mistral-small-latest', required: true, helpText: 'Small = fastest/cheapest for everyday tasks; Medium = balanced; Large = most capable for complex reasoning; Codestral = specialised for code generation.' },
+      { key: 'systemPrompt', label: 'System Prompt', type: 'textarea', placeholder: 'You are a helpful assistant...', helpText: 'Optional system instruction that sets the AI persona and behavior. Example: "You are a concise assistant that always replies in JSON."' },
+      { key: 'prompt', label: 'User Message', type: 'textarea', placeholder: 'Enter your message...', required: true, helpText: 'The user message sent to Mistral. Supports template expressions from upstream nodes, e.g. {{$json.text}}.' },
+      { key: 'temperature', label: 'Temperature', type: 'number', defaultValue: 0.7, helpText: 'Controls randomness: 0.0 = deterministic, 1.0 = creative. Use 0.1–0.3 for factual/code tasks, 0.7 for general chat.' },
+      { key: 'maxTokens', label: 'Max Tokens', type: 'number', defaultValue: 1024, helpText: 'Maximum number of tokens in the response. 1 token ≈ 4 characters. Default 1024 is fine for most tasks.' },
+    ],
+  },
+  {
+    type: 'ai_chat_model',
+    label: 'AI Chat Model',
+    category: 'ai',
+    icon: 'MessageCircle',
+    description: 'Direct AI chat completion',
+    defaultConfig: { model: 'gemini-1.5-flash', temperature: 0.7, responseFormat: 'text' },
+    configFields: [
+      { key: 'prompt', label: 'Prompt', type: 'textarea', placeholder: 'Ask the model...', required: true, helpText: 'Prompt sent to the chat model. Supports template expressions from upstream nodes.' },
+      { key: 'systemPrompt', label: 'System Prompt', type: 'textarea', placeholder: 'You are a helpful assistant.', helpText: 'Optional system instruction that controls model behavior.' },
+      { key: 'model', label: 'Model', type: 'select', options: [
+        { label: 'Gemini 1.5 Flash', value: 'gemini-1.5-flash' },
+        { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
+        { label: 'GPT-4o Mini', value: 'gpt-4o-mini' },
+        { label: 'GPT-4o', value: 'gpt-4o' },
+      ], defaultValue: 'gemini-1.5-flash', helpText: 'Model identifier used by the backend AI chat executor.' },
+      { key: 'responseFormat', label: 'Response Format', type: 'select', options: [
+        { label: 'Text', value: 'text' },
+        { label: 'JSON', value: 'json' },
+      ], defaultValue: 'text', helpText: 'Expected response format.' },
+      { key: 'temperature', label: 'Temperature', type: 'number', defaultValue: 0.7, helpText: 'Controls response randomness.' },
     ],
   },
   {
@@ -2649,12 +2707,12 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     label: 'Discord',
     category: 'output',
     icon: 'MessageCircle',
-    description: 'Send messages to Discord channels or users via Discord Bot API',
+    description: 'Send messages to Discord channels via Bot API or Webhook URL',
     defaultConfig: {},
     configFields: [
-      { key: 'channelId', label: 'Channel ID', type: 'text', placeholder: '123456789012345678', required: true, helpText: 'Discord channel ID where the message will be sent. To get channel ID: 1) Enable Developer Mode in Discord 2) Right-click on the channel 3) Click "Copy ID"' },
-      { key: 'message', label: 'Message', type: 'textarea', placeholder: 'Hello from CtrlChecks!', required: true, helpText: 'Message content to send to Discord. Supports Discord markdown formatting (**bold**, *italic*, `code`, ||spoiler||). Can include template variables like {{input}}' },
-      { key: 'botToken', label: 'Bot Token', type: 'password', placeholder: 'Bot token (stored as credential)', required: false, helpText: 'Discord bot token for authentication. This is stored securely as a credential. To get bot token: 1) Go to Discord Developer Portal 2) Select your application 3) Go to Bot section 4) Click "Reset Token" or "Copy" to get token' },
+      { key: 'channelId', label: 'Channel ID', type: 'text', placeholder: '123456789012345678', required: false, helpText: 'Required for Bot Token mode. Enable Developer Mode in Discord → right-click the channel → Copy Channel ID. Leave empty if using Webhook URL below.' },
+      { key: 'message', label: 'Message', type: 'textarea', placeholder: 'Hello from CtrlChecks!', required: true, helpText: 'Message content to send. Supports Discord markdown (**bold**, *italic*, `code`). Can include template variables like {{input}}.' },
+      { key: 'webhookUrl', label: 'Webhook URL (alternative)', type: 'text', placeholder: 'https://discord.com/api/webhooks/...', required: false, helpText: 'Paste your Discord webhook URL here to use Webhook mode instead of Bot Token. Server Settings → Integrations → Webhooks → Copy Webhook URL. No Channel ID needed when using a webhook.' },
     ],
   },
   {
@@ -3908,6 +3966,7 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         { label: 'Custom', value: 'custom' },
       ], defaultValue: 'ISO', helpText: 'Output format: ISO = ISO 8601 string (2024-01-15T10:30:00Z), Timestamp = Unix timestamp in milliseconds, Locale Date = formatted according to locale (e.g., "1/15/2024, 10:30:00 AM"), Custom = use Custom Format field. Choose based on your needs' },
       { key: 'locale', label: 'Locale', type: 'text', placeholder: 'en-US', defaultValue: 'en-US', helpText: 'Locale for formatting (only used with Locale Date format). Format: language-REGION. Common locales: en-US (English US), en-GB (English UK), fr-FR (French), de-DE (German), ja-JP (Japanese), zh-CN (Chinese). Examples: en-US, fr-FR, ja-JP. Uses browser/system locale formatting rules' },
+      { key: 'endDate', label: 'End Date (ISO)', type: 'text', placeholder: '2024-02-15T10:30:00Z', helpText: 'Required for Difference operation. The end date to compare against the base Date field. Format: ISO 8601. Examples: 2024-02-15T10:30:00Z, 2024-12-31. Supports template variables like {{input.endDate}}' },
       { key: 'value', label: 'Value', type: 'number', placeholder: '1', helpText: 'For add/subtract operations. Number to add or subtract. Combined with Unit to specify duration. Examples: 1 = one unit, 30 = thirty units, -5 = subtract five units. Can be positive (add) or negative (subtract)' },
       { key: 'unit', label: 'Unit', type: 'select', options: [
         { label: 'Seconds', value: 'seconds' },
@@ -3957,7 +4016,7 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     category: 'utility',
     icon: 'Lock',
     description: 'Crypto operations',
-    defaultConfig: { operation: 'hash', algorithm: 'SHA-256' },
+    defaultConfig: { operation: 'hash', algorithm: 'SHA-256', input: '' },
     configFields: [
       { key: 'operation', label: 'Operation', type: 'select', options: [
         { label: 'Hash', value: 'hash' },
@@ -3967,6 +4026,7 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         { label: 'Random String', value: 'random_string' },
         { label: 'HMAC', value: 'hmac' },
       ], defaultValue: 'hash', required: true, helpText: 'Crypto operation: Hash = create hash digest (SHA algorithms), Encode Base64 = encode text to base64, Decode Base64 = decode base64 to text, Generate UUID v4 = create unique identifier, Random String = generate random string, HMAC = create HMAC signature with secret key. Choose based on your security needs' },
+      { key: 'input', label: 'Input', type: 'textarea', placeholder: 'Text to hash/encode/decode or {{$json.value}}', helpText: 'Required for hash, base64 encode/decode, and HMAC operations. Supports template expressions from upstream nodes.' },
       { key: 'algorithm', label: 'Algorithm', type: 'select', options: [
         { label: 'SHA-256', value: 'SHA-256' },
         { label: 'SHA-512', value: 'SHA-512' },
@@ -3979,13 +4039,18 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     ],
   },
   {
-    type: 'html_extract',
-    label: 'HTML Extract',
+    type: 'html',
+    label: 'HTML',
     category: 'utility',
     icon: 'Code',
     description: 'HTML extract',
-    defaultConfig: { sanitize: true, stripScripts: true },
+    defaultConfig: { operation: 'extract', sanitize: true, stripScripts: true },
     configFields: [
+      { key: 'operation', label: 'Operation', type: 'select', options: [
+        { label: 'Parse', value: 'parse' },
+        { label: 'Extract', value: 'extract' },
+        { label: 'To Text', value: 'toText' },
+      ], defaultValue: 'extract', required: true, helpText: 'Parse reads title/meta/body, Extract reads matching selector text, To Text returns body text.' },
       { key: 'html', label: 'HTML Content', type: 'textarea', placeholder: '<html>...</html>', helpText: 'Leave empty to use input from previous node. HTML content to extract from. Can be full HTML document or HTML fragment. Supports template variables like {{input.html}}. Examples: Full HTML document, HTML snippet, {{input.body}}' },
       { key: 'selector', label: 'CSS Selector/Tag', type: 'text', placeholder: 'div, p, h1', helpText: 'CSS selector or HTML tag name to extract. Supports tag names (div, p, h1), class selectors (.class-name), ID selectors (#id-name), attribute selectors ([attr=value]), and combinations (div.class, #id.class). Examples: div, .content, #main, p.text, a[href], div.container > p' },
       { key: 'sanitize', label: 'Sanitize HTML', type: 'boolean', defaultValue: true, helpText: 'Remove potentially dangerous content like event handlers, javascript: URLs, and other XSS vectors. Enable for untrusted HTML sources. Default: true. Disable only if you trust the HTML source completely' },
@@ -4058,8 +4123,10 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         { label: 'Read Metadata', value: 'readMetadata' },
       ], defaultValue: 'resize', required: true, helpText: 'Image operation: Resize = change image dimensions (requires Width/Height), Crop = crop image to specific size (requires Width/Height), Convert Format = change image format (JPEG, PNG, WebP), Read Metadata = extract image metadata (EXIF, dimensions, format). Choose based on what you need to do with the image' },
       { key: 'imageUrl', label: 'Image URL/Base64', type: 'text', placeholder: 'https://example.com/image.jpg or data:image/png;base64,...', helpText: 'URL to image file or base64-encoded image data. Can be HTTP/HTTPS URL pointing to image (JPEG, PNG, WebP, GIF, etc.), or data URI with base64-encoded image. Examples: https://example.com/photo.jpg, data:image/png;base64,iVBORw0KGgoAAAANS... (base64 string). Supports template variables like {{input.url}}' },
-      { key: 'width', label: 'Width', type: 'number', placeholder: '800', helpText: 'Target width for resize/crop operations in pixels. Required for resize and crop operations. Original aspect ratio may be maintained depending on operation. Examples: 800 (standard), 1920 (HD), 3840 (4K). Use with Height to specify dimensions' },
-      { key: 'height', label: 'Height', type: 'number', placeholder: '600', helpText: 'Target height for resize/crop operations in pixels. Required for resize and crop operations. Original aspect ratio may be maintained depending on operation. Examples: 600 (standard), 1080 (HD), 2160 (4K). Use with Width to specify dimensions' },
+      { key: 'width', label: 'Width (px)', type: 'number', placeholder: '800', helpText: 'Target width for resize/crop operations in pixels. Required for resize and crop operations. Original aspect ratio may be maintained depending on operation. Examples: 800 (standard), 1920 (HD), 3840 (4K). Use with Height to specify dimensions' },
+      { key: 'height', label: 'Height (px)', type: 'number', placeholder: '600', helpText: 'Target height for resize/crop operations in pixels. Required for resize and crop operations. Original aspect ratio may be maintained depending on operation. Examples: 600 (standard), 1080 (HD), 2160 (4K). Use with Width to specify dimensions' },
+      { key: 'left', label: 'Left Offset (px)', type: 'number', placeholder: '0', defaultValue: 0, helpText: 'For crop operation. Horizontal offset (X position) from the left edge of the image in pixels. Combined with Top Offset to define the crop starting position. Default: 0 (left edge). Examples: 0 (start from left), 100 (100px from left)' },
+      { key: 'top', label: 'Top Offset (px)', type: 'number', placeholder: '0', defaultValue: 0, helpText: 'For crop operation. Vertical offset (Y position) from the top edge of the image in pixels. Combined with Left Offset to define the crop starting position. Default: 0 (top edge). Examples: 0 (start from top), 50 (50px from top)' },
       { key: 'format', label: 'Output Format', type: 'select', options: [
         { label: 'JPEG', value: 'jpeg' },
         { label: 'PNG', value: 'png' },
@@ -4082,36 +4149,9 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     description: 'HubSpot',
     defaultConfig: {
       resource: 'contact',
-      operation: 'get',
-      apiKey: '',
-      accessToken: '',
+      operation: 'getMany',
     },
     configFields: [
-      {
-        key: 'authType',
-        label: 'Authentication Type',
-        type: 'select',
-        options: [
-          { label: 'API Key', value: 'apikey' },
-          { label: 'OAuth2 Access Token', value: 'oauth' },
-        ],
-        defaultValue: 'apikey',
-        required: true,
-      },
-      {
-        key: 'apiKey',
-        label: 'API Key',
-        type: 'text',
-        placeholder: 'your-hubspot-api-key',
-        helpText: 'Required if using API Key authentication',
-      },
-      {
-        key: 'accessToken',
-        label: 'OAuth2 Access Token',
-        type: 'text',
-        placeholder: 'your-oauth-access-token',
-        helpText: 'Required if using OAuth2 authentication',
-      },
       {
         key: 'resource',
         label: 'Resource',
@@ -4121,16 +4161,6 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
           { label: 'Company', value: 'company' },
           { label: 'Deal', value: 'deal' },
           { label: 'Ticket', value: 'ticket' },
-          { label: 'Product', value: 'product' },
-          { label: 'Line Item', value: 'line_item' },
-          { label: 'Quote', value: 'quote' },
-          { label: 'Call', value: 'call' },
-          { label: 'Email', value: 'email' },
-          { label: 'Meeting', value: 'meeting' },
-          { label: 'Note', value: 'note' },
-          { label: 'Task', value: 'task' },
-          { label: 'Owner', value: 'owner' },
-          { label: 'Pipeline', value: 'pipeline' },
         ],
         defaultValue: 'contact',
         required: true,
@@ -4147,11 +4177,9 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
           { label: 'Update', value: 'update' },
           { label: 'Delete', value: 'delete' },
           { label: 'Search', value: 'search' },
-          { label: 'Batch Create', value: 'batchCreate' },
-          { label: 'Batch Update', value: 'batchUpdate' },
-          { label: 'Batch Delete', value: 'batchDelete' },
+          { label: 'Create Multiple', value: 'batchCreate' },
         ],
-        defaultValue: 'get',
+        defaultValue: 'getMany',
         required: true,
         helpText: 'HubSpot operation: Get = retrieve single record (requires ID), Get Many = retrieve multiple records, Create = add new record (requires Properties), Update = modify record (requires ID and Properties), Delete = remove record (requires ID), Search = find records (requires Search Query), Batch operations = process multiple records at once',
       },
@@ -4161,13 +4189,21 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         type: 'text',
         placeholder: '12345',
         helpText: 'Required for get, update, delete operations',
+        visibleIf: { field: 'operation', equals: ['get', 'update', 'delete'] },
       },
       {
         key: 'properties',
-        label: 'Properties (JSON)',
-        type: 'json',
-        placeholder: '{"email": "test@example.com", "firstname": "John"}',
-        helpText: 'Required for create/update operations',
+        label: 'Properties',
+        type: 'hubspotProperties',
+        helpText: 'HubSpot contact/company fields for create and update operations',
+        visibleIf: { field: 'operation', equals: ['create', 'update'] },
+      },
+      {
+        key: 'records',
+        label: 'Records',
+        type: 'hubspotRecords',
+        helpText: 'Create multiple HubSpot contacts or companies',
+        visibleIf: { field: 'operation', equals: 'batchCreate' },
       },
       {
         key: 'searchQuery',
@@ -4175,6 +4211,7 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         type: 'text',
         placeholder: 'email:test@example.com',
         helpText: 'Required for search operation',
+        visibleIf: { field: 'operation', equals: 'search' },
       },
       {
         key: 'limit',
@@ -4182,6 +4219,7 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         type: 'number',
         defaultValue: 100,
         helpText: 'Maximum number of records to return',
+        visibleIf: { field: 'operation', equals: ['getMany', 'search'] },
       },
       {
         key: 'after',
@@ -4189,6 +4227,7 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         type: 'text',
         placeholder: 'paging_token',
         helpText: 'Pagination token for next page',
+        visibleIf: { field: 'operation', equals: 'getMany' },
       },
     ],
   },
@@ -7054,7 +7093,6 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
           { label: 'Get', value: 'get' },
           { label: 'List', value: 'list' },
           { label: 'Search', value: 'search' },
-          { label: 'Get Participants', value: 'getParticipants' },
         ],
         defaultValue: 'create',
         required: true,
@@ -7103,11 +7141,25 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         helpText: 'Twitter User ID (for user operations, timeline, etc.)',
       },
       {
+        key: 'userIds',
+        label: 'User IDs (JSON Array)',
+        type: 'json',
+        placeholder: '["1234567890", "0987654321"]',
+        helpText: 'Array of Twitter user IDs for lookup or space list operations.',
+      },
+      {
         key: 'username',
         label: 'Username',
         type: 'text',
         placeholder: 'twitter_username',
         helpText: 'Username without @ (alternative to userId)',
+      },
+      {
+        key: 'usernames',
+        label: 'Usernames (JSON Array)',
+        type: 'json',
+        placeholder: '["jack", "x"]',
+        helpText: 'Array of usernames without @ for user lookup operations.',
       },
       {
         key: 'targetUserId',
@@ -7152,11 +7204,25 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         helpText: 'Media ID (for get media, metadata operations)',
       },
       {
+        key: 'altText',
+        label: 'Alt Text',
+        type: 'textarea',
+        placeholder: 'Accessible description of the uploaded media',
+        helpText: 'Required for media metadata operation.',
+      },
+      {
         key: 'recipientId',
         label: 'Recipient User ID',
         type: 'text',
         placeholder: '1234567890',
         helpText: 'Recipient User ID (required for send DM operation)',
+      },
+      {
+        key: 'dmEventId',
+        label: 'DM Event ID',
+        type: 'text',
+        placeholder: 'dm-event-id',
+        helpText: 'Required for deleting a direct message event.',
       },
       {
         key: 'spaceId',
@@ -7471,18 +7537,17 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         label: 'Operation',
         type: 'select',
         options: [
+          { label: 'Get My Profile', value: 'get_profile' },
           { label: 'Create Post (Text)', value: 'create_post' },
-          { label: 'Create Post (Article)', value: 'create_article' },
+          { label: 'Create Post (Article Link)', value: 'create_article' },
           { label: 'Create Post (Media)', value: 'create_post_media' },
           { label: 'Create Company Page Post', value: 'create_company_post' },
-          { label: 'Get Posts', value: 'get_posts' },
-          { label: 'Get Organization Updates', value: 'get_org_updates' },
+          { label: 'Get My Posts', value: 'get_posts' },
           { label: 'Delete Post', value: 'delete_post' },
-          { label: 'Get Engagement Metrics', value: 'get_engagement' },
         ],
         defaultValue: 'create_post',
         required: true,
-        helpText: 'How to get Operation:\n1) Select the action you want to perform on LinkedIn\n2) CREATE POST (TEXT): Publish a text-only post to personal profile or company page\n3) CREATE POST (ARTICLE): Share an article link with preview (requires Article URL)\n4) CREATE POST (MEDIA): Share an image or video (requires Media URL)\n5) CREATE COMPANY PAGE POST: Publish content specifically to a company page (requires Organization ID)\n6) GET POSTS: Retrieve list of posts from your profile or page\n7) GET ORGANIZATION UPDATES: Get updates/posts from a company page\n8) DELETE POST: Remove a post using its Post ID (URN)\n9) GET ENGAGEMENT METRICS: Retrieve analytics data for a specific post (requires Post ID)',
+        helpText: 'How to get Operation:\n1) GET MY PROFILE: Fetch your LinkedIn profile (name, email, personUrn) — no other fields needed\n2) CREATE POST (TEXT): Publish a text-only post to your personal profile\n3) CREATE POST (ARTICLE LINK): Share an article URL with a preview card (requires Article URL + Post Text)\n4) CREATE POST (MEDIA): Share an image or video (requires Media URL)\n5) CREATE COMPANY PAGE POST: Publish to a company page (requires Organization ID + Post Text)\n6) GET MY POSTS: Retrieve recent posts from your profile\n7) DELETE POST: Remove a post by its Post ID (URN)',
       },
       {
         key: 'text',
@@ -7506,18 +7571,43 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         helpText: 'How to get Media URL:\n1) This field is required when Operation is set to "Create Post (Media)"\n2) Upload your image or video to a public cloud hosting service (AWS S3, Google Cloud Storage, Cloudinary, etc.)\n3) Ensure the file is publicly accessible without authentication\n4) Copy the direct URL to the media file (not a page containing the file)\n5) Must be HTTPS URL (not HTTP) for security\n6) Supported formats: Images (JPG, PNG, GIF), Videos (MP4, MOV)\n7) Use template variables: {{input.mediaUrl}} to use URL from previous workflow node\n8) Example: "https://cdn.example.com/images/product-launch.jpg"',
       },
       {
+        key: 'visibility',
+        label: 'Visibility',
+        type: 'select',
+        options: [
+          { label: 'Public', value: 'PUBLIC' },
+          { label: 'Connections Only', value: 'CONNECTIONS' },
+        ],
+        defaultValue: 'PUBLIC',
+        helpText: 'Who can see this post. PUBLIC = visible to everyone. CONNECTIONS = visible only to your LinkedIn connections.',
+      },
+      {
+        key: 'personUrn',
+        label: 'Person URN (optional)',
+        type: 'text',
+        placeholder: 'abc123def456',
+        helpText: 'Your LinkedIn member ID (the part after urn:li:person:). Leave blank to auto-detect from your connected account. You can get this from the Get My Profile operation output.',
+      },
+      {
+        key: 'organizationId',
+        label: 'Organization ID',
+        type: 'text',
+        placeholder: '123456789',
+        helpText: 'How to get Organization ID:\n1) Required for "Create Company Page Post"\n2) Go to your LinkedIn Company Page\n3) Click Admin tools → Page info, or look at the URL: linkedin.com/company/123456789\n4) Copy the numeric ID from the URL\n5) You must be a page admin with posting permission\n6) Example: "123456789"',
+      },
+      {
         key: 'postId',
         label: 'Post ID (URN)',
         type: 'text',
         placeholder: 'urn:li:activity:123456789',
-        helpText: 'How to get Post ID:\n1) This field is required when Operation is set to "Delete Post" or "Get Engagement Metrics"\n2) Method 1: Get from API response when creating a post - copy the "id" field from the response\n3) Method 2: Use "Get Posts" operation to list all posts and copy the "id" field from the post object\n4) Method 3: Find in LinkedIn post URL: Go to the post on LinkedIn and extract ID from URL\n5) Format: Must be in URN format like "urn:li:activity:123456789" or "urn:li:share:123456789"\n6) The Post ID uniquely identifies the post for deletion or analytics retrieval\n7) Use template variables: {{input.postId}} to use ID from previous workflow node\n8) Example: "urn:li:activity:6789012345"',
+        helpText: 'Required for Delete Post. Get this from the output of a Create Post node (the postId field), or from Get My Posts (the id field of each post). Format: urn:li:activity:123456789',
       },
       {
         key: 'limit',
         label: 'Limit',
         type: 'number',
         defaultValue: 10,
-        helpText: 'How to get Limit:\n1) Enter the maximum number of items you want to retrieve from the LinkedIn API\n2) This field is used for operations like "Get Posts" and "Get Organization Updates"\n3) Default value is 10 items\n4) Minimum value: 1, Maximum value: 100 (LinkedIn API limit)\n5) For "Get Posts": Returns up to this many posts from your profile or page\n6) For "Get Organization Updates": Returns up to this many updates from the company page\n7) Lower values (10-25) are faster and use less API quota\n8) Higher values (50-100) retrieve more items but may take longer and consume more quota',
+        helpText: 'Maximum number of posts to retrieve (used by Get My Posts). Default 10, max 100.',
       },
     ],
   },
@@ -7528,76 +7618,112 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     icon: 'Play',
     description: 'YouTube',
     defaultConfig: {
-      operation: 'upload_video',
-      apiKey: '',
-      accessToken: '',
+      operation: 'list_my_channels',
     },
     configFields: [
-      {
-        key: 'apiKey',
-        label: 'API Key',
-        type: 'text',
-        placeholder: 'Your YouTube Data API Key',
-        required: true,
-        helpText: 'How to get YouTube API Key:\n1) Go to console.cloud.google.com\n2) Create a project or select existing\n3) Enable "YouTube Data API v3"\n4) Go to "Credentials" → "Create Credentials" → "API Key"\n5) Copy the API key\n6) (Optional) Restrict key to YouTube Data API for security',
-      },
-      {
-        key: 'accessToken',
-        label: 'OAuth Access Token',
-        type: 'text',
-        placeholder: 'Your OAuth Access Token',
-        helpText: 'How to get OAuth Access Token:\n1) Use OAuth 2.0 flow\n2) Request scopes: https://www.googleapis.com/auth/youtube.upload, https://www.googleapis.com/auth/youtube\n3) Get token from OAuth response\nRequired for upload/update/delete operations. For read-only operations, API key is sufficient.',
-      },
       {
         key: 'operation',
         label: 'Operation',
         type: 'select',
         options: [
-          { label: 'Upload Video', value: 'upload_video' },
-          { label: 'Update Video Metadata', value: 'update_video' },
-          { label: 'Delete Video', value: 'delete_video' },
-          { label: 'Get Channel Details', value: 'get_channel' },
-          { label: 'Get Video Statistics', value: 'get_video_stats' },
+          { label: 'List My Channels', value: 'list_my_channels' },
+          { label: 'Get Channel', value: 'get_channel' },
           { label: 'Search Videos', value: 'search_videos' },
-          { label: 'Get Comments', value: 'get_comments' },
-          { label: 'Reply to Comment', value: 'reply_comment' },
+          { label: 'Get Video Statistics', value: 'get_video_stats' },
+          { label: 'Upload Video', value: 'upload_video' },
+          { label: 'Update Video Metadata', value: 'update_video_metadata' },
+          { label: 'Delete Video', value: 'delete_video' },
         ],
-        defaultValue: 'upload_video',
+        defaultValue: 'list_my_channels',
         required: true,
-      },
-      {
-        key: 'videoUrl',
-        label: 'Video URL',
-        type: 'text',
-        placeholder: 'https://example.com/video.mp4',
-        helpText: 'How to get Video URL:\n1) Upload video to public hosting service\n2) Copy the direct URL to the video file\n3) Supported formats: MP4, MOV, AVI\n4) Maximum 128GB file size, maximum 12 hours duration',
       },
       {
         key: 'title',
         label: 'Video Title',
         type: 'text',
         placeholder: 'My Video Title',
-        helpText: 'Required for upload_video and update_video. Video title (max 100 characters).',
+        requiredIf: { field: 'operation', equals: 'upload_video' },
+        visibleIf: { field: 'operation', equals: ['upload_video', 'update_video_metadata'] },
+        helpText: 'Required for upload_video. Optional for update_video_metadata. Video title (max 100 characters).',
       },
       {
         key: 'description',
         label: 'Video Description',
         type: 'textarea',
         placeholder: 'Video description with keywords',
-        helpText: 'Video description for upload_video and update_video. Use {{input.content}} to use data from previous node.',
+        visibleIf: { field: 'operation', equals: ['upload_video', 'update_video_metadata'] },
+        helpText: 'Optional for upload_video and update_video_metadata. Use {{input.content}} to use data from previous node.',
       },
       {
         key: 'tags',
         label: 'Tags (comma-separated)',
         type: 'text',
         placeholder: 'tutorial, automation, workflow',
-        helpText: 'Tags for video (comma-separated, max 500 characters total).',
+        visibleIf: { field: 'operation', equals: ['upload_video', 'update_video_metadata'] },
+        helpText: 'Optional for upload_video and update_video_metadata. Tags for video (comma-separated, max 500 characters total).',
+      },
+      {
+        key: 'videoUrl',
+        label: 'Video URL',
+        type: 'text',
+        placeholder: 'https://example.com/video.mp4',
+        visibleIf: { field: 'operation', equals: 'upload_video' },
+        helpText: 'Required for upload_video unless Video Data Base64 is provided. Use a direct HTTP/HTTPS URL to the video file.',
+      },
+      {
+        key: 'videoDataBase64',
+        label: 'Video Data Base64',
+        type: 'textarea',
+        placeholder: 'AAAAIGZ0eXBtcDQy...',
+        visibleIf: { field: 'operation', equals: 'upload_video' },
+        helpText: 'Alternative to Video URL. Use base64 video bytes from an upstream file/binary node.',
+      },
+      {
+        key: 'mimeType',
+        label: 'MIME Type',
+        type: 'text',
+        defaultValue: 'video/mp4',
+        placeholder: 'video/mp4',
+        visibleIf: { field: 'operation', equals: 'upload_video' },
+        helpText: 'Video MIME type. Default: video/mp4.',
+      },
+      {
+        key: 'privacyStatus',
+        label: 'Privacy Status',
+        type: 'select',
+        options: [
+          { label: 'Private', value: 'private' },
+          { label: 'Unlisted', value: 'unlisted' },
+          { label: 'Public', value: 'public' },
+        ],
+        defaultValue: 'private',
+        visibleIf: { field: 'operation', equals: 'upload_video' },
+        helpText: 'Privacy for the uploaded video. Use Private/Unlisted for testing.',
+      },
+      {
+        key: 'madeForKids',
+        label: 'Made For Kids',
+        type: 'boolean',
+        defaultValue: false,
+        visibleIf: { field: 'operation', equals: 'upload_video' },
+        helpText: 'Whether the uploaded video is made for kids.',
+      },
+      {
+        key: 'categoryId',
+        label: 'Category ID',
+        type: 'text',
+        defaultValue: '22',
+        placeholder: '22',
+        visibleIf: { field: 'operation', equals: 'upload_video' },
+        helpText: 'Optional YouTube category ID. Default 22 = People & Blogs.',
       },
       {
         key: 'videoId',
         label: 'Video ID',
         type: 'text',
         placeholder: 'dQw4w9WgXcQ',
+        requiredIf: { field: 'operation', equals: ['get_video_stats', 'update_video_metadata', 'delete_video'] },
+        visibleIf: { field: 'operation', equals: ['get_video_stats', 'update_video_metadata', 'delete_video'] },
         helpText: 'How to get Video ID:\n1) Go to video URL: youtube.com/watch?v=VIDEO_ID\n2) Copy the value after v=\n3) Or get from API response when uploading/searching videos\n4) Example: dQw4w9WgXcQ',
       },
       {
@@ -7605,47 +7731,25 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         label: 'Channel ID',
         type: 'text',
         placeholder: 'UCxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        helpText: 'How to get Channel ID:\n1) Go to channel URL: youtube.com/channel/CHANNEL_ID\n2) Copy the ID after /channel/\n3) Or use "mine" for authenticated user\'s channel\n4) Format: UCxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        visibleIf: { field: 'operation', equals: ['get_channel', 'search_videos'] },
+        helpText: 'Optional for get_channel and search_videos. Leave empty to use the authenticated channel where supported.',
       },
       {
         key: 'query',
         label: 'Search Query',
         type: 'text',
         placeholder: 'workflow automation tutorial',
+        requiredIf: { field: 'operation', equals: 'search_videos' },
+        visibleIf: { field: 'operation', equals: 'search_videos' },
         helpText: 'Search query string. Enter keywords to search for videos.',
-      },
-      {
-        key: 'commentText',
-        label: 'Comment Text',
-        type: 'textarea',
-        placeholder: 'Your reply',
-        helpText: 'Required for reply_comment operation.',
-      },
-      {
-        key: 'commentId',
-        label: 'Comment ID',
-        type: 'text',
-        placeholder: 'Ugxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        helpText: 'How to get Comment ID:\n1) Use get_comments operation to list comments\n2) Copy the "id" field from the comment object\n3) Format: Ugxxxxxxxxxxxxxxxxxxxxxxxxxx\n4) Or get from API response when creating comments',
       },
       {
         key: 'maxResults',
         label: 'Max Results',
         type: 'number',
         defaultValue: 10,
+        visibleIf: { field: 'operation', equals: ['list_my_channels', 'search_videos'] },
         helpText: 'Max results to return (max 50).',
-      },
-      {
-        key: 'privacyStatus',
-        label: 'Privacy Status',
-        type: 'select',
-        options: [
-          { label: 'Public', value: 'public' },
-          { label: 'Unlisted', value: 'unlisted' },
-          { label: 'Private', value: 'private' },
-        ],
-        defaultValue: 'public',
-        helpText: 'Privacy setting for upload_video operation.',
       },
     ],
   },
@@ -7845,6 +7949,7 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
           { label: 'List Children', value: 'listChildren' },
           { label: 'Delete', value: 'delete' },
           { label: 'Get Me', value: 'getMe' },
+          { label: 'Search', value: 'search' },
         ],
         defaultValue: 'get',
         required: true,
@@ -7865,6 +7970,20 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         helpText: 'How to get Database ID: 1) Open database in Notion 2) Click "..." menu → "Copy link" 3) Extract ID from URL: notion.so/workspace/DATABASE_ID',
       },
       {
+        key: 'blockId',
+        label: 'Block ID',
+        type: 'text',
+        placeholder: 'block-id-from-url',
+        helpText: 'Required for block get/listChildren/appendChildren/update/delete and comment list by block.',
+      },
+      {
+        key: 'userId',
+        label: 'User ID',
+        type: 'text',
+        placeholder: 'notion-user-id',
+        helpText: 'Required for user get operation.',
+      },
+      {
         key: 'parentPageId',
         label: 'Parent Page ID (for create)',
         type: 'text',
@@ -7880,10 +7999,17 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
       },
       {
         key: 'content',
-        label: 'Page Content (JSON)',
+        label: 'Content',
+        type: 'textarea',
+        placeholder: 'Page or block text',
+        helpText: 'Plain text content. Backend converts simple text into Notion rich text blocks where supported.',
+      },
+      {
+        key: 'children',
+        label: 'Children Blocks (JSON)',
         type: 'json',
         placeholder: '[{"type":"paragraph","paragraph":{"rich_text":[{"text":{"content":"Hello"}}]}}]',
-        helpText: 'Rich text content blocks. Use Notion API format. For simple text, use paragraph blocks.',
+        helpText: 'Notion API block array for page child creation or appendChildren.',
       },
       {
         key: 'properties',
@@ -7891,6 +8017,41 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         type: 'json',
         placeholder: '{"Name":{"title":[{"text":{"content":"Task Name"}}]},"Status":{"select":{"name":"In Progress"}}}',
         helpText: 'Database entry properties. Required for create_database_entry and update_database_entry.',
+      },
+      {
+        key: 'query',
+        label: 'Query Body (JSON)',
+        type: 'json',
+        placeholder: '{"filter":{"property":"Status","select":{"equals":"Done"}}}',
+        helpText: 'Raw Notion database query body. Use when you need advanced filters/sorts.',
+      },
+      {
+        key: 'schema',
+        label: 'Database Schema (JSON)',
+        type: 'json',
+        placeholder: '{"Name":{"title":{}},"Status":{"select":{"options":[{"name":"Done"}]}}}',
+        helpText: 'Database property schema for database create/update.',
+      },
+      {
+        key: 'richText',
+        label: 'Rich Text (JSON)',
+        type: 'json',
+        placeholder: '[{"type":"text","text":{"content":"Comment text"}}]',
+        helpText: 'Notion rich_text array for comment creation.',
+      },
+      {
+        key: 'parentDiscussionId',
+        label: 'Parent Discussion ID',
+        type: 'text',
+        placeholder: 'discussion-id',
+        helpText: 'Alternative parent for Notion comment creation.',
+      },
+      {
+        key: 'searchQuery',
+        label: 'Search Query',
+        type: 'text',
+        placeholder: 'project notes',
+        helpText: 'Search query for Notion search resource.',
       },
       {
         key: 'filter',
@@ -8068,20 +8229,11 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     description: 'ClickUp',
     defaultConfig: {
       operation: 'create_task',
-      apiKey: '',
       workspaceId: '',
       spaceId: '',
       listId: '',
     },
     configFields: [
-      {
-        key: 'apiKey',
-        label: 'ClickUp API Key',
-        type: 'text',
-        placeholder: 'pk_...',
-        required: true,
-        helpText: 'How to get ClickUp API Key: 1) Go to app.clickup.com/settings/apps 2) Click "Apps" → "API" 3) Copy your API token (starts with pk_)',
-      },
       {
         key: 'operation',
         label: 'Operation',
@@ -8441,35 +8593,17 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     description: 'Jira',
     defaultConfig: {
       operation: 'create_issue',
-      apiToken: '',
-      email: '',
       domain: '',
       projectKey: '',
     },
     configFields: [
       {
-        key: 'apiToken',
-        label: 'Jira API Token',
-        type: 'text',
-        placeholder: 'your-api-token',
-        required: true,
-        helpText: 'How to get Jira API Token: 1) Go to id.atlassian.com/manage-profile/security/api-tokens 2) Click "Create API token" 3) Give it a name and copy the token',
-      },
-      {
-        key: 'email',
-        label: 'Jira Email',
-        type: 'text',
-        placeholder: 'user@example.com',
-        required: true,
-        helpText: 'Your Jira account email address (used with API token for authentication).',
-      },
-      {
         key: 'domain',
         label: 'Jira Domain',
         type: 'text',
-        placeholder: 'your-domain.atlassian.net',
+        placeholder: 'yourcompany.atlassian.net',
         required: true,
-        helpText: 'Your Jira domain. Example: yourcompany.atlassian.net (without https://)',
+        helpText: 'Your Atlassian domain — the part before .atlassian.net. Example: if your Jira URL is "acme.atlassian.net", enter "acme.atlassian.net". Create your API token at https://id.atlassian.com/manage-profile/security/api-tokens',
       },
       {
         key: 'operation',
@@ -9579,6 +9713,48 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         helpText: 'Payment Intent ID for get operations',
       },
       {
+        key: 'chargeId',
+        label: 'Charge ID',
+        type: 'text',
+        placeholder: 'ch_...',
+        helpText: 'Charge ID for legacy refund operations',
+      },
+      {
+        key: 'source',
+        label: 'Source Token',
+        type: 'text',
+        placeholder: 'tok_visa',
+        helpText: 'Optional legacy source token for Charges API. Payment Method ID is preferred.',
+      },
+      {
+        key: 'email',
+        label: 'Customer Email',
+        type: 'text',
+        placeholder: 'customer@example.com',
+        helpText: 'Used when creating a customer',
+      },
+      {
+        key: 'name',
+        label: 'Customer Name',
+        type: 'text',
+        placeholder: 'Ada Lovelace',
+        helpText: 'Used when creating a customer',
+      },
+      {
+        key: 'description',
+        label: 'Description',
+        type: 'textarea',
+        placeholder: 'Order #12345',
+        helpText: 'Optional description for payment/customer/invoice operations',
+      },
+      {
+        key: 'priceId',
+        label: 'Price ID',
+        type: 'text',
+        placeholder: 'price_...',
+        helpText: 'Required for create_subscription',
+      },
+      {
         key: 'metadata',
         label: 'Metadata (JSON)',
         type: 'json',
@@ -9977,6 +10153,13 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         placeholder: '250',
         defaultValue: 250,
         helpText: 'Maximum number of results to return',
+      },
+      {
+        key: 'data',
+        label: 'Payload (JSON)',
+        type: 'json',
+        placeholder: '{"title":"New product"}',
+        helpText: 'Object payload for create/update operations. For products, include title/body_html/vendor/product_type/variants as needed. For orders/customers, use Shopify Admin API fields.',
       },
     ],
   },
@@ -12673,8 +12856,60 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
     },
   },];
 
+function sanitizeBackendFallbackNode(node: NodeTypeDefinition): NodeTypeDefinition {
+  const allowedOperations = BACKEND_SUPPORTED_NODE_OPERATIONS[node.type];
+  const existingOperationField = node.configFields.find((field) => field.key === 'operation');
+  const existingLabels = new Map(
+    (existingOperationField?.options || []).map((option) => [option.value, option.label])
+  );
+  const generatedOperationField: ConfigField | null = allowedOperations
+    ? {
+        ...(existingOperationField || {
+          key: 'operation',
+          label: 'Operation',
+          type: 'select',
+          required: true,
+        } as ConfigField),
+        type: 'select',
+        options: allowedOperations.map((value) => ({
+          label: existingLabels.get(value) || value.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase()),
+          value,
+        })),
+        defaultValue: allowedOperations.includes(String(existingOperationField?.defaultValue || ''))
+          ? existingOperationField?.defaultValue
+          : allowedOperations[0],
+      }
+    : null;
+
+  const configFields = node.configFields
+    .map((field) => {
+      if (field.key !== 'operation') return field;
+      return generatedOperationField;
+    })
+    .filter((field): field is ConfigField => Boolean(field));
+
+  if (generatedOperationField && !existingOperationField) {
+    configFields.unshift(generatedOperationField);
+  }
+
+  const defaultConfig = { ...node.defaultConfig };
+  if (allowedOperations && typeof defaultConfig.operation === 'string' && !allowedOperations.includes(defaultConfig.operation)) {
+    defaultConfig.operation = allowedOperations[0];
+  }
+
+  return { ...node, defaultConfig, configFields };
+}
+
 export const getNodesByCategory = (category: NodeCategory) => 
-  NODE_TYPES.filter((node) => node.category === category);
+  NODE_TYPES
+    .filter((node) => BACKEND_SUPPORTED_NODE_TYPES.has(node.type))
+    .filter((node) => node.category === category)
+    .map(sanitizeBackendFallbackNode);
 
 export const getNodeDefinition = (type: string) => 
-  NODE_TYPES.find((node) => node.type === type);
+  BACKEND_SUPPORTED_NODE_TYPES.has(type)
+    ? (() => {
+        const node = NODE_TYPES.find((candidate) => candidate.type === type);
+        return node ? sanitizeBackendFallbackNode(node) : undefined;
+      })()
+    : undefined;

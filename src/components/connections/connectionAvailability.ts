@@ -1,6 +1,5 @@
 const COMING_SOON_PROVIDERS = new Set([
   'microsoft',
-  'twitter',
   'instagram',
   'dropbox',
   'stripe',

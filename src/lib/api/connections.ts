@@ -22,7 +22,9 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // Body was not JSON; use the raw response text below.
     }
-    throw new Error(parsedMessage || body || `Request failed: ${res.status}`);
+    const err = new Error(parsedMessage || body || `Request failed: ${res.status}`) as Error & { statusCode?: number };
+    err.statusCode = res.status;
+    throw err;
   }
   if (res.status === 204 || res.headers.get('content-length') === '0') {
     return undefined as T;

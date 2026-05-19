@@ -46,6 +46,7 @@ const TwitterAuthCallback = lazy(() => import("./pages/auth/twitter/Callback"));
 const SalesforceAuthCallback = lazy(() => import("./pages/auth/salesforce/Callback"));
 const InstagramAuthCallback = lazy(() => import("./pages/auth/instagram/Callback"));
 const WhatsAppAuthCallback = lazy(() => import("./pages/auth/whatsapp/Callback"));
+const OAuthRelayPage = lazy(() => import("./pages/auth/OAuthRelayPage"));
 const FormTrigger = lazy(() => import("./pages/FormTrigger"));
 const ChatTrigger = lazy(() => import("./pages/ChatTrigger"));
 const ModelTestingDashboard = lazy(() => import("./pages/ModelTestingDashboard"));
@@ -215,6 +216,7 @@ const App = () => (
                   <Route path="/auth/salesforce/callback" element={<SalesforceAuthCallback />} />
                   <Route path="/auth/instagram/callback" element={<InstagramAuthCallback />} />
                   <Route path="/auth/whatsapp/callback" element={<WhatsAppAuthCallback />} />
+                  <Route path="/auth/oauth-relay" element={<OAuthRelayPage />} />
                   <Route path="/form/:workflowId/:nodeId" element={<FormTrigger />} />
                   <Route path="/chat/:workflowId/:nodeId" element={<ChatTrigger />} />
                   <Route path="/model-testing" element={<ModelTestingDashboard />} />

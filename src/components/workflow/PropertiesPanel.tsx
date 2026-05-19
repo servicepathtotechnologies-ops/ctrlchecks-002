@@ -64,6 +64,7 @@ import { resolveExpression, detectExpressionType } from '@/lib/expressionResolve
 import { InputGuideLink } from './InputGuideLink';
 import ConditionBuilder, { ConditionRule } from './ConditionBuilder';
 import KeyValueEditor from './editors/KeyValueEditor';
+import HubSpotRecordEditor from './editors/HubSpotRecordEditor';
 import VariableListEditor from './editors/VariableListEditor';
 import CaseListEditor from './editors/CaseListEditor';
 import { workflowScheduler } from '@/lib/workflowScheduler';
@@ -72,6 +73,7 @@ import { collectUpstreamFieldHints } from '@/lib/upstreamFieldHints';
 import { normalizeIfElseConfig, normalizeIfElseConditions } from '@/lib/ifElseConditions';
 import { FieldOwnershipToggle } from '@/components/FieldOwnershipToggle';
 import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
+import { NodeCredentialSelector } from '@/components/nodes/NodeCredentialSelector';
 
 // Droppable field wrapper component - MUST be outside PropertiesPanel to avoid hook violations
 interface DroppableFieldWrapperProps {
@@ -132,6 +134,24 @@ interface Message {
 }
 
 type ViewMode = 'properties' | 'ai-editor';
+
+const PROPERTIES_PANEL_DEFAULT_WIDTH = 400;
+const PROPERTIES_PANEL_MIN_WIDTH = 320;
+const PROPERTIES_PANEL_MAX_WIDTH = 560;
+const EDITOR_CHROME_RESERVED_WIDTH = 720;
+
+function getConstrainedPanelWidth(nextWidth: number): number {
+  if (typeof window === 'undefined') {
+    return Math.max(PROPERTIES_PANEL_MIN_WIDTH, Math.min(nextWidth, PROPERTIES_PANEL_DEFAULT_WIDTH));
+  }
+
+  const viewportAwareMax = Math.max(
+    PROPERTIES_PANEL_MIN_WIDTH,
+    Math.min(PROPERTIES_PANEL_MAX_WIDTH, window.innerWidth - EDITOR_CHROME_RESERVED_WIDTH),
+  );
+
+  return Math.max(PROPERTIES_PANEL_MIN_WIDTH, Math.min(nextWidth, viewportAwareMax));
+}
 
 export default function PropertiesPanel({
   onClose,
@@ -216,7 +236,7 @@ export default function PropertiesPanel({
   const [testNodeTimeMs, setTestNodeTimeMs] = useState<number>(0);
 
   // Resizable sidebar state
-  const [width, setWidth] = useState(400); // Increased default width from 320px (w-80) to 400px
+  const [width, setWidth] = useState(PROPERTIES_PANEL_DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
 
   // Help sidebar state
@@ -800,15 +820,22 @@ export default function PropertiesPanel({
   const resize = useCallback(
     (mouseMoveEvent: MouseEvent) => {
       if (isResizing) {
-        // Calculate new width relative to window right edge
         const newWidth = window.innerWidth - mouseMoveEvent.clientX;
-        // Constraints: Min 300px, Max 800px (or window width - 100px)
-        const constrainedWidth = Math.max(300, Math.min(newWidth, 800));
-        setWidth(constrainedWidth);
+        setWidth(getConstrainedPanelWidth(newWidth));
       }
     },
     [isResizing]
   );
+
+  useEffect(() => {
+    const constrainToViewport = () => {
+      setWidth((currentWidth) => getConstrainedPanelWidth(currentWidth));
+    };
+
+    constrainToViewport();
+    window.addEventListener('resize', constrainToViewport);
+    return () => window.removeEventListener('resize', constrainToViewport);
+  }, []);
 
   useEffect(() => {
     window.addEventListener("mousemove", resize);
@@ -1050,13 +1077,84 @@ export default function PropertiesPanel({
   // Selected node ID (may be undefined when no node is selected)
   const selectedNodeId = selectedNode?.id;
 
+  const getOperationOptionsForResource = useCallback(
+    (resourceValue: unknown) => {
+      if (!backendSchema?.operationContracts?.length) return [];
+      const implementedContracts = backendSchema.operationContracts.filter(
+        (contract) => contract.status === 'implemented' && contract.operation
+      );
+      const resourceSpecificContracts =
+        resourceValue !== undefined && resourceValue !== null && String(resourceValue).trim()
+          ? implementedContracts.filter((contract) => contract.resource === String(resourceValue))
+          : [];
+      const contracts = resourceSpecificContracts.length > 0 ? resourceSpecificContracts : implementedContracts;
+      return Array.from(
+        new Map(
+          contracts.map((contract) => [
+            contract.operation,
+            {
+              label: contract.label || contract.operation.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase()),
+              value: contract.operation,
+            },
+          ])
+        ).values()
+      );
+    },
+    [backendSchema]
+  );
+
+  const conditionMatches = useCallback((actual: unknown, expected: unknown) => {
+    if (Array.isArray(expected)) {
+      return expected.some((candidate) => actual === candidate);
+    }
+    return actual === expected;
+  }, []);
+
   // Config change handler – safe when no node is selected
   const handleConfigChange = useCallback(
     (key: string, value: unknown) => {
       if (!selectedNodeId) return;
-      updateNodeConfig(selectedNodeId, { [key]: value });
+      const patch: Record<string, unknown> = { [key]: value };
+
+      if (key === 'resource' && selectedNode) {
+        const allowedOperations = getOperationOptionsForResource(value);
+        const currentOperation = selectedNode.data.config?.operation;
+        if (
+          allowedOperations.length > 0 &&
+          !allowedOperations.some((option) => option.value === currentOperation)
+        ) {
+          patch.operation = allowedOperations[0].value;
+        }
+      }
+
+      updateNodeConfig(selectedNodeId, patch);
     },
-    [selectedNodeId, updateNodeConfig]
+    [getOperationOptionsForResource, selectedNode, selectedNodeId, updateNodeConfig]
+  );
+
+  const handleConnectionRefChange = useCallback(
+    (credentialKey: string, connectionId: string) => {
+      if (!selectedNodeId || !selectedNode) return;
+      const currentRefs = (
+        (selectedNode.data.connectionRefs as Record<string, string> | undefined) ||
+        ((selectedNode.data.config || {}) as Record<string, any>).connectionRefs ||
+        {}
+      ) as Record<string, string>;
+      const updatedNode = {
+        ...selectedNode,
+        data: {
+          ...selectedNode.data,
+          connectionRefs: {
+            ...currentRefs,
+            [credentialKey]: connectionId,
+          },
+        },
+      };
+      setNodes(nodes.map((node) => (node.id === selectedNodeId ? updatedNode : node)));
+      selectNode(updatedNode);
+      setIsDirty(true);
+    },
+    [nodes, selectedNode, selectedNodeId, selectNode, setIsDirty, setNodes]
   );
 
   // Per-field enabled toggle — writes to config._fieldEnabled[fieldName]
@@ -1471,14 +1569,16 @@ export default function PropertiesPanel({
   if (!selectedNode) {
     return (
       <div
-        className="relative bg-background h-full flex flex-col transition-all duration-150 relative border-l border-border/60"
-        style={{ width: width, flexShrink: 0 }}
+        className={cn("relative bg-background h-full min-w-0 max-w-full overflow-hidden flex flex-col transition-all duration-150", !debugMode && "border-l border-border/60")}
+        style={{ width: debugMode ? '100%' : width, flexShrink: debugMode ? 1 : 0, boxSizing: 'border-box' }}
       >
-        {/* Resize Handle */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-border transition-colors duration-150 z-40"
-          onMouseDown={startResizing}
-        />
+        {/* Resize Handle — hidden in debugMode */}
+        {!debugMode && (
+          <div
+            className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-border transition-colors duration-150 z-40"
+            onMouseDown={startResizing}
+          />
+        )}
 
         {/* Header with Professional Segmented Toggle */}
         <div className="px-4 py-3 border-b border-border/40">
@@ -1909,11 +2009,19 @@ export default function PropertiesPanel({
         };
         
         // Filter out JSON/template options
-        const nonJsonOptions = (field.options || []).filter((opt: any) => !isJsonOption(opt));
+        const resourceFilteredOperationOptions =
+          field.key === 'operation'
+            ? getOperationOptionsForResource((selectedNode.data.config || {}).resource)
+            : [];
+        const sourceOptions =
+          resourceFilteredOperationOptions.length > 0
+            ? resourceFilteredOperationOptions
+            : field.options || [];
+        const nonJsonOptions = sourceOptions.filter((opt: any) => !isJsonOption(opt));
         const hasNonJsonOptions = nonJsonOptions.length > 0;
         
         // If this is an AI-managed field OR only JSON options exist, show AI message
-        if (isAIManagedField || (!hasNonJsonOptions && (field.options || []).length > 0)) {
+        if (isAIManagedField || (!hasNonJsonOptions && sourceOptions.length > 0)) {
           return (
             <div className="text-xs text-muted-foreground border border-dashed border-border/60 rounded px-3 py-2 bg-muted/40">
               <p className="font-medium text-foreground/80">
@@ -1989,6 +2097,28 @@ export default function PropertiesPanel({
           />
         );
 
+      case 'hubspotProperties':
+        return (
+          <HubSpotRecordEditor
+            mode="single"
+            resource={(selectedNode.data.config || {}).resource}
+            value={typeof value === 'object' && !Array.isArray(value) && value !== null
+              ? value as Record<string, unknown>
+              : {}}
+            onChange={(v) => handleConfigChange(field.key, v)}
+          />
+        );
+
+      case 'hubspotRecords':
+        return (
+          <HubSpotRecordEditor
+            mode="multiple"
+            resource={(selectedNode.data.config || {}).resource}
+            value={Array.isArray(value) ? value as Array<{ properties?: Record<string, unknown> }> : []}
+            onChange={(v) => handleConfigChange(field.key, v)}
+          />
+        );
+
       case 'variableList':
         return (
           <VariableListEditor
@@ -2030,25 +2160,27 @@ export default function PropertiesPanel({
 
   return (
     <div
-      className="relative bg-background h-full flex flex-col transition-all duration-150 border-l border-border/60"
-      style={{ width: width, flexShrink: 0 }}
+      className={cn("relative bg-background h-full min-w-0 max-w-full overflow-hidden flex flex-col transition-all duration-150", !debugMode && "border-l border-border/60")}
+      style={{ width: debugMode ? '100%' : width, flexShrink: debugMode ? 1 : 0, boxSizing: 'border-box' }}
     >
-      {/* Resize Handle */}
-      <div
-        className={cn(
-          "absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize transition-colors duration-150 z-40",
-          isResizing ? 'bg-border' : 'hover:bg-border'
-        )}
-        onMouseDown={startResizing}
-      />
+      {/* Resize Handle — hidden in debugMode since the panel fills its container */}
+      {!debugMode && (
+        <div
+          className={cn(
+            "absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize transition-colors duration-150 z-40",
+            isResizing ? 'bg-border' : 'hover:bg-border'
+          )}
+          onMouseDown={startResizing}
+        />
+      )}
 
       {/* Header with Professional Segmented Toggle */}
-      <div className="px-4 py-3 border-b border-border/40 flex items-center justify-between gap-3">
+      <div className="px-4 py-3 border-b border-border/40 flex min-w-0 items-center justify-between gap-3">
         <ToggleGroup
           type="single"
           value={viewMode}
           onValueChange={(value) => value && setViewMode(value as ViewMode)}
-          className="justify-start flex-1"
+          className="justify-start flex-shrink-0"
         >
           <ToggleGroupItem
             value="properties"
@@ -2077,7 +2209,7 @@ export default function PropertiesPanel({
             AI Editor
           </ToggleGroupItem>
         </ToggleGroup>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {/* Test Node button — visible only for Type 1 nodes that have fixtures */}
           {viewMode === 'properties' && !(backendSchema?.credentialSchema && Object.keys(backendSchema.credentialSchema).length > 0) && (
             <button
@@ -2138,8 +2270,8 @@ export default function PropertiesPanel({
 
       {viewMode === 'properties' ? (
         <>
-          <ScrollArea className="flex-1">
-            <div className="px-4 py-4 space-y-4">
+          <ScrollArea className="flex-1 min-w-0 overflow-x-hidden">
+            <div className="min-w-0 max-w-full overflow-x-hidden px-4 py-4 space-y-4">
               {guidedStatus && (
                 <GuidedStatusCard
                   title={guidedStatus.title}
@@ -2527,8 +2659,60 @@ export default function PropertiesPanel({
                           <h3 className="text-xs font-medium uppercase text-muted-foreground/70 tracking-wide">
                             Configuration
                           </h3>
+                          {backendSchema && (() => {
+                            const requirements = (backendSchema.credentialSchema?.requirements || [])
+                              .filter((requirement) => requirement?.provider || requirement?.credentialTypeId || requirement?.credentialTypeIds?.length)
+                              // Dedup by credentialTypeId first, then by provider — prevents double picker when backend sends duplicate requirements
+                              .filter((req, idx, arr) => {
+                                const typeId = req.credentialTypeId || (req.credentialTypeIds || [])[0];
+                                if (typeId) return arr.findIndex((r) => (r.credentialTypeId || (r.credentialTypeIds || [])[0]) === typeId) === idx;
+                                return arr.findIndex((r) => r.provider === req.provider) === idx;
+                              });
+                            if (requirements.length === 0) return null;
+                            const connectionRefs = (
+                              (selectedNode.data.connectionRefs as Record<string, string> | undefined) ||
+                              ((selectedNode.data.config || {}) as Record<string, any>).connectionRefs ||
+                              {}
+                            ) as Record<string, string>;
+                            return (
+                              <div className="space-y-3">
+                                {requirements.map((requirement) => {
+                                  const credentialTypeIds = Array.from(new Set([
+                                    ...(requirement.credentialTypeIds || []),
+                                    ...(requirement.credentialTypeId ? [requirement.credentialTypeId] : []),
+                                  ].filter(Boolean)));
+                                  const refKey = requirement.credentialTypeId || credentialTypeIds[0] || requirement.provider;
+                                  const providers = credentialTypeIds.length > 0 ? [] : [requirement.provider].filter(Boolean);
+                                  const value =
+                                    connectionRefs[refKey] ||
+                                    credentialTypeIds.map((typeId) => connectionRefs[typeId]).find(Boolean) ||
+                                    connectionRefs[requirement.provider] ||
+                                    connectionRefs[`${requirement.provider}_oauth2`] ||
+                                    connectionRefs[`${requirement.provider}_api_key`];
+                                  return (
+                                    <NodeCredentialSelector
+                                      key={`${refKey}-${requirement.category || 'credential'}`}
+                                      credentialTypeIds={credentialTypeIds}
+                                      providers={providers}
+                                      value={value}
+                                      onChange={(connectionId) => handleConnectionRefChange(refKey, connectionId)}
+                                      label={requirement.label || `${String(requirement.provider || refKey).replace(/_/g, ' ')} connection`}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
                           {/* Connected Account badge — shown for nodes with credential-owned fields */}
                           {backendSchema && (() => {
+                            const providerRequirements = Array.from(new Set(
+                              [
+                                ...(backendSchema.credentialSchema?.requirements || []).map((requirement) => requirement.provider),
+                                ...(backendSchema.operationContracts || [])
+                                  .flatMap((contract) => contract.credentialProviders || []),
+                              ].filter(Boolean)
+                            ));
+                            if (providerRequirements.length > 0) return null;
                             const credFields = Object.entries(backendSchema.inputSchema || {}).filter(
                               ([, f]) => (f as any).ownership === 'credential'
                             );
@@ -2563,6 +2747,10 @@ export default function PropertiesPanel({
                             </div>
                           )}
                           {nodeDefinition.configFields.map((field) => {
+                            // Skip credential-ownership fields — managed via the connection picker, not raw inputs
+                            const backendFieldDef = (backendSchema?.inputSchema as any)?.[field.key];
+                            if (backendFieldDef?.ownership === 'credential') return null;
+
                             // ✅ Systematic UI: visibleIf (optional), then requiredIf (hide + required when true)
                             let effectiveRequired = field.required;
                             // fieldConditionActive: true = condition met (field is active/required),
@@ -2575,13 +2763,15 @@ export default function PropertiesPanel({
                                 (ui?.visibleIf as { field: string; equals: unknown } | undefined) ||
                                 (field.visibleIf as { field: string; equals: unknown } | undefined);
                               if (visibleIf) {
-                                const visOk = (currentConfig as any)?.[visibleIf.field] === visibleIf.equals;
-                                // Always show the field — just dim it when condition not met
+                                const visOk = conditionMatches((currentConfig as any)?.[visibleIf.field], visibleIf.equals);
+                                if (!visOk) return null;
                                 fieldConditionActive = visOk;
                               }
-                              const requiredIf = ui?.requiredIf as { field: string; equals: any } | undefined;
+                              const requiredIf =
+                                (ui?.requiredIf as { field: string; equals: any } | undefined) ||
+                                (field.requiredIf as { field: string; equals: any } | undefined);
                               if (requiredIf) {
-                                const conditionMet = (currentConfig as any)?.[requiredIf.field] === requiredIf.equals;
+                                const conditionMet = conditionMatches((currentConfig as any)?.[requiredIf.field], requiredIf.equals);
                                 // Always show — required only when condition met, optional otherwise
                                 fieldConditionActive = conditionMet;
                                 effectiveRequired = conditionMet;
@@ -2616,8 +2806,11 @@ export default function PropertiesPanel({
                               !(typeof rawFieldValue === 'object' && !Array.isArray(rawFieldValue) && Object.keys(rawFieldValue as object).length === 0);
 
                             const currentFillMode: 'manual_static' | 'buildtime_ai_once' | 'runtime_ai' =
-                              (fillModeMap[field.key] as 'manual_static' | 'buildtime_ai_once' | 'runtime_ai' | undefined) ??
-                              (hasAiValue ? 'buildtime_ai_once' : 'manual_static');
+                              resolveEffectiveFieldFillMode(
+                                field.key,
+                                (backendSchema?.inputSchema || {}) as Record<string, any>,
+                                nodeConfig,
+                              );
 
                             // Explicit user toggle takes precedence; fall back to auto-enable when AI filled.
                             // Force-open when runtime_ai so the ownership toggle is always reachable.
@@ -2629,10 +2822,10 @@ export default function PropertiesPanel({
                                   : hasAiValue;
 
                             return (
-                              <div key={field.key} className={`rounded-md border border-border/40 bg-muted/10 transition-opacity ${fieldConditionActive ? 'opacity-100' : 'opacity-45'}`}>
+                              <div key={field.key} className={`min-w-0 max-w-full overflow-hidden rounded-md border border-border/40 bg-muted/10 transition-opacity ${fieldConditionActive ? 'opacity-100' : 'opacity-45'}`}>
                                 {/* ── Field header row: label + toggle ── */}
-                                <div className="flex items-center justify-between gap-2 px-3 py-2 min-h-[36px]">
-                                  <div className="flex items-center gap-1.5 min-w-0">
+                                <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2 min-h-[36px]">
+                                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
                                     {selectedNode.data.type === 'if_else' && field.key === 'conditions' ? (
                                       <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1 min-w-0">
                                         <span className="truncate">{field.label}</span>
@@ -2658,7 +2851,7 @@ export default function PropertiesPanel({
                                   <Switch
                                     checked={fieldEnabled}
                                     onCheckedChange={(checked) => handleFieldEnabledChange(field.key, checked)}
-                                    className="shrink-0"
+                                    className="ml-auto shrink-0"
                                     aria-label={`Enable ${field.label}`}
                                   />
                                 </div>
@@ -2680,7 +2873,7 @@ export default function PropertiesPanel({
 
                                 {/* ── When ON: mode selector + input ── */}
                                 {fieldEnabled && (
-                                  <div className="px-3 pb-3 space-y-2 border-t border-border/30 pt-2">
+                                  <div className="min-w-0 max-w-full overflow-hidden px-3 pb-3 space-y-2 border-t border-border/30 pt-2">
                                     {/* Field Ownership Toggle Component */}
                                     {(() => {
                                       // Get credential ownership information from backend schema
@@ -2762,7 +2955,7 @@ export default function PropertiesPanel({
                                         )}
                                       </div>
                                     ) : (
-                                      <div className="space-y-1">
+                                      <div className="min-w-0 max-w-full space-y-1 overflow-hidden">
                                         {selectedNode.data.type === 'if_else' && field.key === 'conditions' ? (
                                           <div className="space-y-2">
                                             <ToggleGroup
@@ -2827,15 +3020,15 @@ export default function PropertiesPanel({
                                           renderField(field)
                                         )}
                                         {(['text', 'textarea', 'json', 'number', 'select', 'time', 'date', 'cron'].includes(field.type)) && (
-                                          <div className="flex justify-end">
+                                          <div className="flex min-w-0 justify-end overflow-hidden">
                                             {hasHelpLink ? (
                                               <button
                                                 type="button"
                                                 onClick={() => setSelectedHelp(helpInfo)}
-                                                className="text-xs text-muted-foreground/70 hover:text-foreground/80 cursor-pointer flex items-center gap-1 transition-colors duration-150"
+                                                className="flex min-w-0 max-w-full cursor-pointer items-center gap-1 overflow-hidden text-right text-xs text-muted-foreground/70 transition-colors duration-150 hover:text-foreground/80"
                                               >
-                                                <HelpCircle className="h-3 w-3" />
-                                                How to get {field.label}?
+                                                <HelpCircle className="h-3 w-3 shrink-0" />
+                                                <span className="truncate">How to get {field.label}?</span>
                                               </button>
                                             ) : (
                                               <InputGuideLink

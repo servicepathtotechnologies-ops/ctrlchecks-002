@@ -6,6 +6,7 @@ const PROVIDER_COLORS: Record<string, string> = {
   google:      'bg-red-100 text-red-600',
   microsoft:   'bg-blue-100 text-blue-600',
   slack:       'bg-purple-100 text-purple-600',
+  zoom:        'bg-blue-100 text-blue-600',
   github:      'bg-gray-100 text-gray-800',
   gitlab:      'bg-orange-100 text-orange-600',
   notion:      'bg-gray-100 text-gray-800',
@@ -64,6 +65,10 @@ const PROVIDER_COLORS: Record<string, string> = {
   bitbucket:      'bg-blue-100 text-blue-700',
   ftp:            'bg-gray-100 text-gray-600',
   sftp:           'bg-gray-100 text-gray-700',
+  gemini:         'bg-blue-100 text-blue-600',
+  vercel:         'bg-gray-100 text-gray-900',
+  jenkins:        'bg-red-100 text-red-600',
+  odoo:           'bg-purple-100 text-purple-600',
 };
 
 const PROVIDER_INITIALS: Record<string, string> = {
@@ -76,10 +81,11 @@ const PROVIDER_INITIALS: Record<string, string> = {
   openai: 'AI', anthropic: 'An', pinecone: 'Pc', qdrant: 'Qd', cohere: 'Co',
   huggingface: 'HF', mistral: 'Mi', stripe: 'St', paypal: 'PP', quickbooks: 'QB',
   xero: 'Xe', shopify: 'Sh', woocommerce: 'WC', typeform: 'Tf', generic: '?',
-  twitter: 'Tw', facebook: 'Fb', instagram: 'Ig', linkedin: 'Li', youtube: 'YT',
+  twitter: 'Tw', facebook: 'Fb', instagram: 'Ig', linkedin: 'Li', youtube: 'YT', zoom: 'Zm',
   postgresql: 'PG', mysql: 'My', firebase: 'Fb', redis: 'Rd',
   activecampaign: 'AC', zendesk: 'Zd', calendly: 'Ca', mailgun: 'Mg',
   bitbucket: 'Bb', ftp: 'FTP', sftp: 'SFTP',
+  gemini: 'Gm', vercel: 'Vc', jenkins: 'Jk', odoo: 'Od',
 };
 
 const PROVIDER_LOGO_ALIASES: Record<string, string> = {
@@ -91,6 +97,8 @@ const PROVIDER_LOGO_ALIASES: Record<string, string> = {
   mongodb: 'mongodb',
   zoho: 'zoho',
   activecampaign: 'activecampaign',
+  gemini: 'google_gemini',
+  jenkins: 'jenkins',
 };
 
 const SIMPLE_ICON_SLUGS: Record<string, string> = {
@@ -109,6 +117,8 @@ const SIMPLE_ICON_SLUGS: Record<string, string> = {
   qdrant: 'qdrant',
   huggingface: 'huggingface',
   mistral: 'mistralai',
+  vercel: 'vercel',
+  odoo: 'odoo',
 };
 
 interface Props {
