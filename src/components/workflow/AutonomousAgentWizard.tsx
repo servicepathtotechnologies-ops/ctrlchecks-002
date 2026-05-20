@@ -5201,38 +5201,6 @@ export function AutonomousAgentWizard() {
         }
     };
 
-    const applyOwnershipToAll = (mode: 'manual_static' | 'runtime_ai') => {
-        const updates: Record<string, string> = {};
-        ownershipQuestions.forEach((q: any) => {
-            const rowLocked =
-                q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
-            if (rowLocked) return;
-            if (mode === 'runtime_ai') {
-                const target = wizardBulkAIModeForQuestion(q.supportsRuntimeAI, q.supportsBuildtimeAI);
-                updates[`mode_${q.nodeId}_${q.fieldName}`] = target;
-            } else {
-                updates[`mode_${q.nodeId}_${q.fieldName}`] = mode;
-            }
-        });
-        setFillModeValues((prev) => ({ ...prev, ...updates }));
-    };
-    const resetOwnershipToAIRecommendations = () => {
-        const updates: Record<string, string> = {};
-        ownershipQuestions.forEach((q: any) => {
-            const rowLocked =
-                q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
-            if (rowLocked) return;
-            const { mode } = resolveWizardEffectiveFieldFillMode(
-                undefined,
-                q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined,
-                q.supportsRuntimeAI,
-                q.supportsBuildtimeAI
-            );
-            updates[`mode_${q.nodeId}_${q.fieldName}`] = mode;
-        });
-        setFillModeValues((prev) => ({ ...prev, ...updates }));
-    };
-
     /** Per-node bulk fill mode (secrets section): same rules as Convert All, scoped to one node. */
     const applyOwnershipForNode = (nodeId: string, mode: 'manual_static' | 'runtime_ai') => {
         const updates: Record<string, string> = {};
@@ -6761,54 +6729,6 @@ export function AutonomousAgentWizard() {
                                                             ))}
                                                         </div>
                                                     ) : null}
-                                                </div>
-                                            );
-                                        })()}
-                                        {(() => {
-                                            const hasConvertibleToYou = ownershipQuestions.some((q: any) => {
-                                                const rowLocked = q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
-                                                if (rowLocked) return false;
-                                                const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
-                                                const current = ownershipEffectiveModes.byModeKey[modeKey] ?? q.fillModeDefault;
-                                                return current !== 'manual_static';
-                                            });
-                                            const hasConvertibleToAI = ownershipQuestions.some((q: any) => {
-                                                const rowLocked = q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
-                                                if (rowLocked) return false;
-                                                return q.supportsRuntimeAI !== false || q.supportsBuildtimeAI !== false;
-                                            });
-                                            const differsFromRecommendations = ownershipQuestions.some((q: any) => {
-                                                const rowLocked = q.ownershipUiMode === 'locked' && !(q.isUnlockableCredential && isCredentialUnlocked(q));
-                                                if (rowLocked) return false;
-                                                const modeKey = `mode_${q.nodeId}_${q.fieldName}`;
-                                                const current = ownershipEffectiveModes.byModeKey[modeKey];
-                                                if (current === undefined) return false;
-                                                const { mode: recommended } = resolveWizardEffectiveFieldFillMode(
-                                                    undefined,
-                                                    q.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined,
-                                                    q.supportsRuntimeAI,
-                                                    q.supportsBuildtimeAI
-                                                );
-                                                return current !== recommended;
-                                            });
-                                            if (!hasConvertibleToYou && !hasConvertibleToAI && !differsFromRecommendations) return null;
-                                            return (
-                                                <div className="flex flex-wrap gap-2">
-                                                    {hasConvertibleToYou && (
-                                                        <Button type="button" variant="outline" onClick={() => applyOwnershipToAll('manual_static')}>
-                                                            Convert All To You
-                                                        </Button>
-                                                    )}
-                                                    {hasConvertibleToAI && (
-                                                        <Button type="button" variant="outline" onClick={() => applyOwnershipToAll('runtime_ai')}>
-                                                            Convert All Eligible To AI (runtime or build)
-                                                        </Button>
-                                                    )}
-                                                    {differsFromRecommendations && (
-                                                        <Button type="button" variant="outline" onClick={resetOwnershipToAIRecommendations}>
-                                                            Reset To AI Recommendations
-                                                        </Button>
-                                                    )}
                                                 </div>
                                             );
                                         })()}

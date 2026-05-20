@@ -29,10 +29,8 @@ export default function ConnectionsPanel() {
   const [notionConnected, setNotionConnected] = useState(false);
   const [twitterConnected, setTwitterConnected] = useState(false);
   const [instagramConnected, setInstagramConnected] = useState(false);
-  const [instagramNeedsReconnect, setInstagramNeedsReconnect] = useState(false);
   const [instagramUsername, setInstagramUsername] = useState<string | null>(null);
   const [whatsappConnected, setWhatsappConnected] = useState(false);
-  const [whatsappNeedsReconnect, setWhatsappNeedsReconnect] = useState(false);
   const [whatsappPhone, setWhatsappPhone] = useState<string | null>(null);
   const [zohoConnected, setZohoConnected] = useState(false);
   const [salesforceConnected, setSalesforceConnected] = useState(false);
@@ -82,10 +80,8 @@ export default function ConnectionsPanel() {
       setNotionConnected(Boolean(statuses.notion?.connected));
       setTwitterConnected(Boolean(statuses.twitter?.connected));
       setInstagramConnected(Boolean(statuses.instagram?.connected));
-      setInstagramNeedsReconnect(Boolean(statuses.instagram?.expiresAt && !statuses.instagram.connected));
       setInstagramUsername(null);
       setWhatsappConnected(Boolean(statuses.whatsapp?.connected));
-      setWhatsappNeedsReconnect(Boolean(statuses.whatsapp?.expiresAt && !statuses.whatsapp.connected));
       setWhatsappPhone(null);
       setZohoConnected(Boolean(statuses.zoho?.connected));
       setSalesforceConnected(Boolean(statuses.salesforce?.connected));
@@ -568,9 +564,9 @@ export default function ConnectionsPanel() {
                 <img src="/integrations-logos/Instagram.svg" alt="Instagram" className="h-5 w-5 object-contain" />
               </div>
               <span className="text-xs font-medium leading-tight">Instagram</span>
-              <span className={`flex items-center gap-1 text-[10px] ${instagramConnected ? 'text-green-600 dark:text-green-400' : instagramNeedsReconnect ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${instagramConnected ? 'bg-green-500' : instagramNeedsReconnect ? 'bg-amber-400' : 'bg-red-400'}`} />
-                {isChecking ? '...' : instagramConnected ? 'Connected' : instagramNeedsReconnect ? 'Reconnect' : 'Connect'}
+              <span className={`flex items-center gap-1 text-[10px] ${instagramConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${instagramConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                {isChecking ? '...' : instagramConnected ? 'Connected' : 'Connect'}
               </span>
             </button>
 
@@ -585,9 +581,9 @@ export default function ConnectionsPanel() {
                 <img src="/integrations-logos/Whatsapp-Cloude.svg" alt="WhatsApp" className="h-5 w-5 object-contain" />
               </div>
               <span className="text-xs font-medium leading-tight">WhatsApp</span>
-              <span className={`flex items-center gap-1 text-[10px] ${whatsappConnected ? 'text-green-600 dark:text-green-400' : whatsappNeedsReconnect ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${whatsappConnected ? 'bg-green-500' : whatsappNeedsReconnect ? 'bg-amber-400' : 'bg-red-400'}`} />
-                {isChecking ? '...' : whatsappConnected ? 'Connected' : whatsappNeedsReconnect ? 'Reconnect' : 'Connect'}
+              <span className={`flex items-center gap-1 text-[10px] ${whatsappConnected ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${whatsappConnected ? 'bg-green-500' : 'bg-red-400'}`} />
+                {isChecking ? '...' : whatsappConnected ? 'Connected' : 'Connect'}
               </span>
             </button>
 
@@ -661,7 +657,7 @@ export default function ConnectionsPanel() {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
         <div className="w-full max-w-md rounded-xl border bg-background p-6 shadow-xl">
           <WhatsAppOnboardingGuide
-            isReconnect={whatsappNeedsReconnect}
+            isReconnect={false}
             onConnected={() => { setShowWhatsappGuide(false); checkConnections(); }}
             onCancel={() => setShowWhatsappGuide(false)}
           />

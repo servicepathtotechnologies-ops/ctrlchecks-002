@@ -57,9 +57,6 @@ function humaniseReconnectError(msg: string): string {
 /** Maps a test-connection result/error to a specific human-readable message. */
 function humaniseTestError(msg: string): string {
   const lower = msg.toLowerCase();
-  if (lower.includes('expired') || lower.includes('401') || lower.includes('unauthorized')) {
-    return 'Token has expired. Use "Reconnect" to get a fresh token.';
-  }
   if (lower.includes('scope') || lower.includes('permission') || lower.includes('403')) {
     return 'Missing required permissions. Reconnect and grant the necessary scopes.';
   }
@@ -165,12 +162,6 @@ export function ConnectionCard({ connection, onEdit }: Props) {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {connection.status === 'expired' && isOAuth && (
-              <Button size="sm" variant="outline" onClick={handleReconnect} disabled={isReconnectBusy}>
-                {isReconnectBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-                <span className="ml-1.5">Reconnect</span>
-              </Button>
-            )}
             {connection.status === 'error' && (
               <Button size="sm" variant="outline" onClick={handleTest} disabled={isTestBusy}>
                 {isTestBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}

@@ -8,7 +8,6 @@ interface Props {
 
 const config: Record<ConnectionStatus, { dot: string; label: string; text: string }> = {
   active:  { dot: 'bg-green-500',  label: 'Active',   text: 'text-green-700 dark:text-green-400' },
-  expired: { dot: 'bg-yellow-500', label: 'Expired',  text: 'text-yellow-700 dark:text-yellow-400' },
   error:   { dot: 'bg-red-500',    label: 'Error',    text: 'text-red-700 dark:text-red-400' },
   revoked: { dot: 'bg-gray-400',   label: 'Revoked',  text: 'text-gray-600 dark:text-gray-400' },
 };

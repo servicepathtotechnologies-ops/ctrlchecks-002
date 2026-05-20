@@ -33,7 +33,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 // ─── Types (mirrors backend ConnectionRecord) ─────────────────────────────────
-export type ConnectionStatus = 'active' | 'expired' | 'error' | 'revoked';
+export type ConnectionStatus = 'active' | 'error' | 'revoked';
 export type AuthType = 'oauth2' | 'api_key' | 'bearer_token' | 'basic_auth' | 'custom_header' | 'query_auth';
 
 export interface ConnectionRecord {
