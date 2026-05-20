@@ -5,19 +5,25 @@ export const slackMessageDoc: NodeDoc = {
   "displayName": "Slack",
   "category": "Communication",
   "logoUrl": "/icons/nodes/slack_message.svg",
-  "description": "Send messages to Slack channels or users Use this node when a workflow needs slack behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "Send messages to Slack channels or users",
+  "credentialType": "Slack Credential",
+  "credentialSetupSteps": [
+    "Go to https://api.slack.com/apps → click \"Create New App\" → \"From scratch\".",
+    "Under \"OAuth & Permissions\", add the Bot Token Scopes you need (e.g. chat:write, channels:read).",
+    "Click \"Install to Workspace\" and allow the permissions.",
+    "Copy the Bot User OAuth Token (starts with xoxb-).",
+    "In CtrlChecks, open Connections → Add Connection → Slack → paste the Bot Token → Save."
+  ],
+  "credentialDocsUrl": "https://api.slack.com/authentication/basics",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Slack is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Slack is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Slack node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Send a message to a Slack channel or direct message.",
           "fields": [
             {
               "name": "Webhook Url",
@@ -32,7 +38,6 @@ export const slackMessageDoc: NodeDoc = {
               "name": "Channel",
               "internalKey": "channel",
               "type": "string",
-              "required": false,
               "description": "Slack channel or user ID",
               "example": "#general",
               "placeholder": "#general"
@@ -40,16 +45,13 @@ export const slackMessageDoc: NodeDoc = {
             {
               "name": "Message",
               "internalKey": "message",
-              "type": "string",
-              "required": false,
-              "description": "Message text to send to Slack",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text to send to Slack"
             },
             {
               "name": "Blocks",
               "internalKey": "blocks",
               "type": "string",
-              "required": false,
               "description": "Slack blocks JSON (optional)",
               "example": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]",
               "placeholder": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]"
@@ -57,46 +59,39 @@ export const slackMessageDoc: NodeDoc = {
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Message text (alias for message)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text (alias for message)"
             },
             {
               "name": "Username",
               "internalKey": "username",
               "type": "string",
-              "required": false,
-              "description": "Bot username",
-              "example": "{{ $json.username }}"
+              "description": "Bot username"
             },
             {
               "name": "Icon Emoji",
               "internalKey": "iconEmoji",
               "type": "string",
-              "required": false,
-              "description": "Icon emoji",
-              "example": "{{ $json.iconEmoji }}"
+              "description": "Icon emoji"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "ok": true,
+            "ts": "1704067200.123456",
+            "channel": "C01234ABCDE",
+            "message": {
+              "text": "Deployment complete ✅",
+              "user": "U01234"
+            }
           },
-          "outputDescription": "type: Value returned by the Slack node.\nconvertible: Value returned by the Slack node.\ndefaultValue: Value returned by the Slack node.",
+          "outputDescription": "ok: true if the message was sent successfully. ts: Message timestamp (Slack message ID). channel: The channel ID where the message was sent. message.text: The message text that was posted.",
           "usageExample": {
-            "scenario": "Use Slack in a workflow and pass upstream data into configure.",
+            "scenario": "Alert the #deployments channel when a workflow completes or fails",
             "inputValues": {
-              "Webhook Url": "https://hooks.slack.com/services/...",
-              "Channel": "#general",
-              "Message": "Created from workflow data: {{ $json.summary }}",
-              "Blocks": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]",
-              "Text": "Created from workflow data: {{ $json.summary }}",
-              "Username": "{{ $json.username }}",
-              "Icon Emoji": "{{ $json.iconEmoji }}"
+              "channel": "#deployments",
+              "text": "✅ Deploy complete for `{{$json.version}}` at {{$now}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The message appears in the specified channel. Use `{{$json.ts}}` to reference or thread the message later."
           },
           "externalDocsUrl": "https://api.slack.com/messaging/webhooks"
         }
@@ -105,21 +100,20 @@ export const slackMessageDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Slack node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "google_gmail",
-    "outlook",
-    "email",
-    "log_output",
-    "telegram"
-  ]
+  "relatedNodes": []
 };

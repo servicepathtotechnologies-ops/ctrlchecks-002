@@ -5,25 +5,24 @@ export const wordpressDoc: NodeDoc = {
   "displayName": "WordPress",
   "category": "Transformation",
   "logoUrl": "/icons/nodes/wordpress.svg",
-  "description": "Create, read, update, and delete posts on a WordPress site via the WordPress REST API. Use this node when a workflow needs wordpress behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Password Credential",
+  "description": "Create, read, update, and delete posts on a WordPress site via the WordPress REST API.",
+  "credentialType": "WordPress Credential",
   "credentialSetupSteps": [
-    "Open the WordPress developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Password Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "In your WordPress admin, go to Users → Profile → Application Passwords.",
+    "Enter a name for the application and click \"Add New Application Password\".",
+    "Copy the generated password (spaces are part of the password — include them or remove them consistently).",
+    "In CtrlChecks, open Connections → Add Connection → WordPress → enter your site URL, username, and application password → Save."
   ],
-  "credentialDocsUrl": "https://developer.wordpress.org/rest-api/reference/",
+  "credentialDocsUrl": "https://make.wordpress.org/core/2020/11/05/application-passwords-integration-guide/",
   "resources": [
     {
       "name": "Operations",
       "description": "WordPress exposes operation choices directly.",
       "operations": [
         {
-          "name": "Create Post",
+          "name": "Create post",
           "value": "create_post",
-          "description": "Create Post with the WordPress node using the configured input fields.",
+          "description": "Create post using the WordPress node.",
           "fields": [
             {
               "name": "Site Url",
@@ -31,17 +30,15 @@ export const wordpressDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "WordPress site base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Username",
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "WordPress username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
+              "description": "WordPress username"
             },
             {
               "name": "Password",
@@ -49,44 +46,35 @@ export const wordpressDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "WordPress Application Password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Post Id",
               "internalKey": "postId",
               "type": "string",
-              "required": false,
               "description": "Post ID for update/delete",
-              "example": "{{ $json.postId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Post title",
-              "example": "{{ $json.title }}",
-              "defaultValue": ""
+              "description": "Post title"
             },
             {
               "name": "Content",
               "internalKey": "content",
-              "type": "string",
-              "required": false,
-              "description": "Post body",
-              "example": "{{ $json.content }}",
-              "defaultValue": ""
+              "type": "textarea",
+              "description": "Post body"
             },
             {
               "name": "Status",
               "internalKey": "status",
               "type": "select",
-              "required": false,
               "description": "Post status",
               "example": "publish",
+              "placeholder": "publish",
               "defaultValue": "publish",
               "options": [
                 "Publish",
@@ -98,38 +86,34 @@ export const wordpressDoc: NodeDoc = {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max posts to return",
               "example": "10",
+              "placeholder": "10",
               "defaultValue": "10"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "wordpress"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the WordPress node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WordPress in a workflow and pass upstream data into create post.",
+            "scenario": "Use WordPress to create post in a workflow.",
             "inputValues": {
-              "Site Url": "https://api.example.com/resource",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Post Id": "{{ $json.postId }}",
-              "Title": "{{ $json.title }}",
-              "Content": "{{ $json.content }}",
-              "Status": "publish",
-              "Limit": "10"
+              "Site Url": "https://api.example.com",
+              "Username": "",
+              "Password": "",
+              "Post Id": "abc123",
+              "Title": ""
             },
-            "expectedOutput": "The node runs create post and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes create post and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.wordpress.org/rest-api/reference/"
         },
         {
-          "name": "Get Posts",
+          "name": "Get posts",
           "value": "get_posts",
-          "description": "Get Posts with the WordPress node using the configured input fields.",
+          "description": "Get posts using the WordPress node.",
           "fields": [
             {
               "name": "Site Url",
@@ -137,17 +121,15 @@ export const wordpressDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "WordPress site base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Username",
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "WordPress username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
+              "description": "WordPress username"
             },
             {
               "name": "Password",
@@ -155,44 +137,35 @@ export const wordpressDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "WordPress Application Password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Post Id",
               "internalKey": "postId",
               "type": "string",
-              "required": false,
               "description": "Post ID for update/delete",
-              "example": "{{ $json.postId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Post title",
-              "example": "{{ $json.title }}",
-              "defaultValue": ""
+              "description": "Post title"
             },
             {
               "name": "Content",
               "internalKey": "content",
-              "type": "string",
-              "required": false,
-              "description": "Post body",
-              "example": "{{ $json.content }}",
-              "defaultValue": ""
+              "type": "textarea",
+              "description": "Post body"
             },
             {
               "name": "Status",
               "internalKey": "status",
               "type": "select",
-              "required": false,
               "description": "Post status",
               "example": "publish",
+              "placeholder": "publish",
               "defaultValue": "publish",
               "options": [
                 "Publish",
@@ -204,38 +177,34 @@ export const wordpressDoc: NodeDoc = {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max posts to return",
               "example": "10",
+              "placeholder": "10",
               "defaultValue": "10"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "wordpress"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the WordPress node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WordPress in a workflow and pass upstream data into get posts.",
+            "scenario": "Use WordPress to get posts in a workflow.",
             "inputValues": {
-              "Site Url": "https://api.example.com/resource",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Post Id": "{{ $json.postId }}",
-              "Title": "{{ $json.title }}",
-              "Content": "{{ $json.content }}",
-              "Status": "publish",
-              "Limit": "10"
+              "Site Url": "https://api.example.com",
+              "Username": "",
+              "Password": "",
+              "Post Id": "abc123",
+              "Title": ""
             },
-            "expectedOutput": "The node runs get posts and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get posts and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.wordpress.org/rest-api/reference/"
         },
         {
-          "name": "Update Post",
+          "name": "Update post",
           "value": "update_post",
-          "description": "Update Post with the WordPress node using the configured input fields.",
+          "description": "Update post using the WordPress node.",
           "fields": [
             {
               "name": "Site Url",
@@ -243,17 +212,15 @@ export const wordpressDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "WordPress site base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Username",
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "WordPress username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
+              "description": "WordPress username"
             },
             {
               "name": "Password",
@@ -261,44 +228,35 @@ export const wordpressDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "WordPress Application Password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Post Id",
               "internalKey": "postId",
               "type": "string",
-              "required": false,
               "description": "Post ID for update/delete",
-              "example": "{{ $json.postId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Post title",
-              "example": "{{ $json.title }}",
-              "defaultValue": ""
+              "description": "Post title"
             },
             {
               "name": "Content",
               "internalKey": "content",
-              "type": "string",
-              "required": false,
-              "description": "Post body",
-              "example": "{{ $json.content }}",
-              "defaultValue": ""
+              "type": "textarea",
+              "description": "Post body"
             },
             {
               "name": "Status",
               "internalKey": "status",
               "type": "select",
-              "required": false,
               "description": "Post status",
               "example": "publish",
+              "placeholder": "publish",
               "defaultValue": "publish",
               "options": [
                 "Publish",
@@ -310,38 +268,34 @@ export const wordpressDoc: NodeDoc = {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max posts to return",
               "example": "10",
+              "placeholder": "10",
               "defaultValue": "10"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "wordpress"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the WordPress node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WordPress in a workflow and pass upstream data into update post.",
+            "scenario": "Use WordPress to update post in a workflow.",
             "inputValues": {
-              "Site Url": "https://api.example.com/resource",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Post Id": "{{ $json.postId }}",
-              "Title": "{{ $json.title }}",
-              "Content": "{{ $json.content }}",
-              "Status": "publish",
-              "Limit": "10"
+              "Site Url": "https://api.example.com",
+              "Username": "",
+              "Password": "",
+              "Post Id": "abc123",
+              "Title": ""
             },
-            "expectedOutput": "The node runs update post and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes update post and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.wordpress.org/rest-api/reference/"
         },
         {
-          "name": "Delete Post",
+          "name": "Delete post",
           "value": "delete_post",
-          "description": "Delete Post with the WordPress node using the configured input fields.",
+          "description": "Delete post using the WordPress node.",
           "fields": [
             {
               "name": "Site Url",
@@ -349,17 +303,15 @@ export const wordpressDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "WordPress site base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Username",
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "WordPress username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
+              "description": "WordPress username"
             },
             {
               "name": "Password",
@@ -367,44 +319,35 @@ export const wordpressDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "WordPress Application Password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Post Id",
               "internalKey": "postId",
               "type": "string",
-              "required": false,
               "description": "Post ID for update/delete",
-              "example": "{{ $json.postId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Post title",
-              "example": "{{ $json.title }}",
-              "defaultValue": ""
+              "description": "Post title"
             },
             {
               "name": "Content",
               "internalKey": "content",
-              "type": "string",
-              "required": false,
-              "description": "Post body",
-              "example": "{{ $json.content }}",
-              "defaultValue": ""
+              "type": "textarea",
+              "description": "Post body"
             },
             {
               "name": "Status",
               "internalKey": "status",
               "type": "select",
-              "required": false,
               "description": "Post status",
               "example": "publish",
+              "placeholder": "publish",
               "defaultValue": "publish",
               "options": [
                 "Publish",
@@ -416,31 +359,27 @@ export const wordpressDoc: NodeDoc = {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max posts to return",
               "example": "10",
+              "placeholder": "10",
               "defaultValue": "10"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "wordpress"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the WordPress node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WordPress in a workflow and pass upstream data into delete post.",
+            "scenario": "Use WordPress to delete post in a workflow.",
             "inputValues": {
-              "Site Url": "https://api.example.com/resource",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Post Id": "{{ $json.postId }}",
-              "Title": "{{ $json.title }}",
-              "Content": "{{ $json.content }}",
-              "Status": "publish",
-              "Limit": "10"
+              "Site Url": "https://api.example.com",
+              "Username": "",
+              "Password": "",
+              "Post Id": "abc123",
+              "Title": ""
             },
-            "expectedOutput": "The node runs delete post and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete post and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.wordpress.org/rest-api/reference/"
         }
@@ -450,18 +389,18 @@ export const wordpressDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the WordPress node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
   "relatedNodes": []

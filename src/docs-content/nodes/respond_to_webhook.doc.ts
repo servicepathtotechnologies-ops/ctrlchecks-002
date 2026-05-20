@@ -5,25 +5,26 @@ export const respondToWebhookDoc: NodeDoc = {
   "displayName": "Respond to Webhook",
   "category": "Utility",
   "logoUrl": "/icons/nodes/respond_to_webhook.svg",
-  "description": "Sends HTTP response back to webhook caller Use this node when a workflow needs respond to webhook behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Sends HTTP response back to webhook caller",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Respond to Webhook is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Respond to Webhook is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Respond to Webhook node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Send an HTTP response back to the caller of a Webhook Trigger node.",
           "fields": [
             {
               "name": "Response Code",
               "internalKey": "responseCode",
               "type": "number",
-              "required": false,
               "description": "HTTP status code",
               "example": "200",
               "placeholder": "200",
@@ -33,32 +34,37 @@ export const respondToWebhookDoc: NodeDoc = {
               "name": "Headers",
               "internalKey": "headers",
               "type": "json",
-              "required": false,
               "description": "Response headers",
               "example": "{\"Content-Type\":\"application/json\"}",
+              "placeholder": "{\"Content-Type\":\"application/json\"}",
               "defaultValue": "{\"Content-Type\":\"application/json\"}"
             },
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Response body data",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "type": "type"
+            "sent": true,
+            "statusCode": 200,
+            "body": {
+              "success": true,
+              "message": "Processed"
+            }
           },
-          "outputDescription": "type: Value returned by the Respond to Webhook node.",
+          "outputDescription": "sent: true if the response was dispatched. statusCode: The HTTP status code returned. body: The response body sent.",
           "usageExample": {
-            "scenario": "Use Respond to Webhook in a workflow and pass upstream data into configure.",
+            "scenario": "Respond to a Stripe webhook with a 200 OK to acknowledge receipt",
             "inputValues": {
-              "Response Code": "200",
-              "Headers": "{\"Content-Type\":\"application/json\"}",
-              "Body": "Created from workflow data: {{ $json.summary }}"
+              "statusCode": "200",
+              "body": "{\"received\": true}",
+              "headers": "{\"Content-Type\": \"application/json\"}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Stripe receives the 200 response and stops retrying."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -68,20 +74,14 @@ export const respondToWebhookDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "http_request",
-    "clickup",
-    "delay",
-    "queue_push",
-    "queue_consume"
-  ]
+  "relatedNodes": []
 };

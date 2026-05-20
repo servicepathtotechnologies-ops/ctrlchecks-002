@@ -5,10 +5,12 @@ export const xmlDoc: NodeDoc = {
   "displayName": "XML",
   "category": "Data",
   "logoUrl": "/icons/nodes/xml.svg",
-  "description": "Parse and manipulate XML content Use this node when a workflow needs xml behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Parse and manipulate XML content",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Operations",
@@ -17,78 +19,68 @@ export const xmlDoc: NodeDoc = {
         {
           "name": "Parse",
           "value": "parse",
-          "description": "Parse with the XML node using the configured input fields.",
+          "description": "Parse an XML string into a JavaScript object.",
           "fields": [
             {
               "name": "Xml",
               "internalKey": "xml",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "XML content",
               "example": "{{$json.xml}}",
               "placeholder": "{{$json.xml}}"
-            },
-            {
-              "name": "Path",
-              "internalKey": "path",
-              "type": "string",
-              "required": false,
-              "description": "Dot path used by extract after XML is parsed, e.g. root.item.0.name.",
-              "example": "{{ $json.path }}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "root": {
+              "order": {
+                "id": "123",
+                "customer": "Alice",
+                "items": [
+                  {
+                    "sku": "PROD001",
+                    "qty": "2"
+                  }
+                ]
+              }
+            }
           },
-          "outputDescription": "type: Value returned by the XML node.\nconvertible: Value returned by the XML node.\ndefaultValue: Value returned by the XML node.",
+          "outputDescription": "Parsed JavaScript object. Attributes and text nodes are available as nested properties.",
           "usageExample": {
-            "scenario": "Use XML in a workflow and pass upstream data into parse.",
+            "scenario": "Parse an XML response from a legacy SOAP API",
             "inputValues": {
-              "Xml": "{{$json.xml}}",
-              "Path": "{{ $json.path }}"
+              "xml": "{{$json.responseBody}}"
             },
-            "expectedOutput": "The node runs parse and exposes its result in the output panel for the next node."
+            "expectedOutput": "Access parsed fields via `{{$json.root.order.id}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Extract",
           "value": "extract",
-          "description": "Extract with the XML node using the configured input fields.",
+          "description": "Extract using the XML node.",
           "fields": [
             {
               "name": "Xml",
               "internalKey": "xml",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "XML content",
               "example": "{{$json.xml}}",
               "placeholder": "{{$json.xml}}"
-            },
-            {
-              "name": "Path",
-              "internalKey": "path",
-              "type": "string",
-              "required": false,
-              "description": "Dot path used by extract after XML is parsed, e.g. root.item.0.name.",
-              "example": "{{ $json.path }}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": "Operation completed successfully.",
+            "text": ""
           },
-          "outputDescription": "type: Value returned by the XML node.\nconvertible: Value returned by the XML node.\ndefaultValue: Value returned by the XML node.",
+          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use XML in a workflow and pass upstream data into extract.",
+            "scenario": "Use XML to extract in a workflow.",
             "inputValues": {
-              "Xml": "{{$json.xml}}",
-              "Path": "{{ $json.path }}"
+              "Xml": "{{$json.xml}}"
             },
-            "expectedOutput": "The node runs extract and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes extract and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -98,20 +90,14 @@ export const xmlDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

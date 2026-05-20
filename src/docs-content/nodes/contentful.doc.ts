@@ -5,25 +5,23 @@ export const contentfulDoc: NodeDoc = {
   "displayName": "Contentful",
   "category": "Data",
   "logoUrl": "/icons/nodes/contentful.svg",
-  "description": "Create, read, update, and delete content entries on any Contentful space. Use this node when a workflow needs contentful behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Access Token Credential",
+  "description": "Create, read, update, and delete content entries on any Contentful space.",
+  "credentialType": "Contentful API Key",
   "credentialSetupSteps": [
-    "Open the Contentful developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Access Token Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "In Contentful, go to Settings → API keys → Add API key.",
+    "Give it a name and note the Space ID and Content Delivery API (or Content Management API) access token.",
+    "In CtrlChecks, open Connections → Add Connection → Contentful → paste the Space ID and token → Save."
   ],
-  "credentialDocsUrl": "https://www.contentful.com/developers/docs/references/content-management-api/",
+  "credentialDocsUrl": "https://www.contentful.com/developers/docs/references/authentication/",
   "resources": [
     {
       "name": "Operations",
       "description": "Contentful exposes operation choices directly.",
       "operations": [
         {
-          "name": "Get Entries",
+          "name": "Get entries",
           "value": "get_entries",
-          "description": "Get Entries with the Contentful node using the configured input fields.",
+          "description": "Get entries using the Contentful node.",
           "fields": [
             {
               "name": "Space Id",
@@ -31,80 +29,68 @@ export const contentfulDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Contentful space ID",
-              "example": "{{ $json.spaceId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Contentful CMA personal access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Contentful CMA personal access token"
             },
             {
               "name": "Environment",
               "internalKey": "environment",
               "type": "string",
-              "required": false,
               "description": "Contentful environment",
               "example": "master",
+              "placeholder": "master",
               "defaultValue": "master"
             },
             {
               "name": "Content Type",
               "internalKey": "contentType",
-              "type": "string",
-              "required": false,
-              "description": "Content type ID",
-              "example": "{{ $json.contentType }}",
-              "defaultValue": ""
+              "type": "textarea",
+              "description": "Content type ID"
             },
             {
               "name": "Entry Id",
               "internalKey": "entryId",
               "type": "string",
-              "required": false,
               "description": "Entry ID",
-              "example": "{{ $json.entryId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Fields",
               "internalKey": "fields",
               "type": "string",
-              "required": false,
-              "description": "JSON string of entry fields",
-              "example": "{{ $json.fields }}",
-              "defaultValue": ""
+              "description": "JSON string of entry fields"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "contentful"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Contentful node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Contentful in a workflow and pass upstream data into get entries.",
+            "scenario": "Use Contentful to get entries in a workflow.",
             "inputValues": {
-              "Space Id": "{{ $json.spaceId }}",
-              "Access Token": "{{ $json.accessToken }}",
+              "Space Id": "abc123",
+              "Access Token": "",
               "Environment": "master",
-              "Content Type": "{{ $json.contentType }}",
-              "Entry Id": "{{ $json.entryId }}",
-              "Fields": "{{ $json.fields }}"
+              "Content Type": "",
+              "Entry Id": "abc123"
             },
-            "expectedOutput": "The node runs get entries and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get entries and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.contentful.com/developers/docs/references/content-management-api/"
         },
         {
-          "name": "Get Entry",
+          "name": "Get entry",
           "value": "get_entry",
-          "description": "Get Entry with the Contentful node using the configured input fields.",
+          "description": "Get entry using the Contentful node.",
           "fields": [
             {
               "name": "Space Id",
@@ -112,80 +98,68 @@ export const contentfulDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Contentful space ID",
-              "example": "{{ $json.spaceId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Contentful CMA personal access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Contentful CMA personal access token"
             },
             {
               "name": "Environment",
               "internalKey": "environment",
               "type": "string",
-              "required": false,
               "description": "Contentful environment",
               "example": "master",
+              "placeholder": "master",
               "defaultValue": "master"
             },
             {
               "name": "Content Type",
               "internalKey": "contentType",
-              "type": "string",
-              "required": false,
-              "description": "Content type ID",
-              "example": "{{ $json.contentType }}",
-              "defaultValue": ""
+              "type": "textarea",
+              "description": "Content type ID"
             },
             {
               "name": "Entry Id",
               "internalKey": "entryId",
               "type": "string",
-              "required": false,
               "description": "Entry ID",
-              "example": "{{ $json.entryId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Fields",
               "internalKey": "fields",
               "type": "string",
-              "required": false,
-              "description": "JSON string of entry fields",
-              "example": "{{ $json.fields }}",
-              "defaultValue": ""
+              "description": "JSON string of entry fields"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "contentful"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Contentful node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Contentful in a workflow and pass upstream data into get entry.",
+            "scenario": "Use Contentful to get entry in a workflow.",
             "inputValues": {
-              "Space Id": "{{ $json.spaceId }}",
-              "Access Token": "{{ $json.accessToken }}",
+              "Space Id": "abc123",
+              "Access Token": "",
               "Environment": "master",
-              "Content Type": "{{ $json.contentType }}",
-              "Entry Id": "{{ $json.entryId }}",
-              "Fields": "{{ $json.fields }}"
+              "Content Type": "",
+              "Entry Id": "abc123"
             },
-            "expectedOutput": "The node runs get entry and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get entry and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.contentful.com/developers/docs/references/content-management-api/"
         },
         {
-          "name": "Create Entry",
+          "name": "Create entry",
           "value": "create_entry",
-          "description": "Create Entry with the Contentful node using the configured input fields.",
+          "description": "Create entry using the Contentful node.",
           "fields": [
             {
               "name": "Space Id",
@@ -193,80 +167,68 @@ export const contentfulDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Contentful space ID",
-              "example": "{{ $json.spaceId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Contentful CMA personal access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Contentful CMA personal access token"
             },
             {
               "name": "Environment",
               "internalKey": "environment",
               "type": "string",
-              "required": false,
               "description": "Contentful environment",
               "example": "master",
+              "placeholder": "master",
               "defaultValue": "master"
             },
             {
               "name": "Content Type",
               "internalKey": "contentType",
-              "type": "string",
-              "required": false,
-              "description": "Content type ID",
-              "example": "{{ $json.contentType }}",
-              "defaultValue": ""
+              "type": "textarea",
+              "description": "Content type ID"
             },
             {
               "name": "Entry Id",
               "internalKey": "entryId",
               "type": "string",
-              "required": false,
               "description": "Entry ID",
-              "example": "{{ $json.entryId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Fields",
               "internalKey": "fields",
               "type": "string",
-              "required": false,
-              "description": "JSON string of entry fields",
-              "example": "{{ $json.fields }}",
-              "defaultValue": ""
+              "description": "JSON string of entry fields"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "contentful"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Contentful node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Contentful in a workflow and pass upstream data into create entry.",
+            "scenario": "Use Contentful to create entry in a workflow.",
             "inputValues": {
-              "Space Id": "{{ $json.spaceId }}",
-              "Access Token": "{{ $json.accessToken }}",
+              "Space Id": "abc123",
+              "Access Token": "",
               "Environment": "master",
-              "Content Type": "{{ $json.contentType }}",
-              "Entry Id": "{{ $json.entryId }}",
-              "Fields": "{{ $json.fields }}"
+              "Content Type": "",
+              "Entry Id": "abc123"
             },
-            "expectedOutput": "The node runs create entry and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes create entry and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.contentful.com/developers/docs/references/content-management-api/"
         },
         {
-          "name": "Update Entry",
+          "name": "Update entry",
           "value": "update_entry",
-          "description": "Update Entry with the Contentful node using the configured input fields.",
+          "description": "Update entry using the Contentful node.",
           "fields": [
             {
               "name": "Space Id",
@@ -274,80 +236,68 @@ export const contentfulDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Contentful space ID",
-              "example": "{{ $json.spaceId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Contentful CMA personal access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Contentful CMA personal access token"
             },
             {
               "name": "Environment",
               "internalKey": "environment",
               "type": "string",
-              "required": false,
               "description": "Contentful environment",
               "example": "master",
+              "placeholder": "master",
               "defaultValue": "master"
             },
             {
               "name": "Content Type",
               "internalKey": "contentType",
-              "type": "string",
-              "required": false,
-              "description": "Content type ID",
-              "example": "{{ $json.contentType }}",
-              "defaultValue": ""
+              "type": "textarea",
+              "description": "Content type ID"
             },
             {
               "name": "Entry Id",
               "internalKey": "entryId",
               "type": "string",
-              "required": false,
               "description": "Entry ID",
-              "example": "{{ $json.entryId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Fields",
               "internalKey": "fields",
               "type": "string",
-              "required": false,
-              "description": "JSON string of entry fields",
-              "example": "{{ $json.fields }}",
-              "defaultValue": ""
+              "description": "JSON string of entry fields"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "contentful"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Contentful node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Contentful in a workflow and pass upstream data into update entry.",
+            "scenario": "Use Contentful to update entry in a workflow.",
             "inputValues": {
-              "Space Id": "{{ $json.spaceId }}",
-              "Access Token": "{{ $json.accessToken }}",
+              "Space Id": "abc123",
+              "Access Token": "",
               "Environment": "master",
-              "Content Type": "{{ $json.contentType }}",
-              "Entry Id": "{{ $json.entryId }}",
-              "Fields": "{{ $json.fields }}"
+              "Content Type": "",
+              "Entry Id": "abc123"
             },
-            "expectedOutput": "The node runs update entry and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes update entry and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.contentful.com/developers/docs/references/content-management-api/"
         },
         {
-          "name": "Delete Entry",
+          "name": "Delete entry",
           "value": "delete_entry",
-          "description": "Delete Entry with the Contentful node using the configured input fields.",
+          "description": "Delete entry using the Contentful node.",
           "fields": [
             {
               "name": "Space Id",
@@ -355,73 +305,61 @@ export const contentfulDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Contentful space ID",
-              "example": "{{ $json.spaceId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Contentful CMA personal access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Contentful CMA personal access token"
             },
             {
               "name": "Environment",
               "internalKey": "environment",
               "type": "string",
-              "required": false,
               "description": "Contentful environment",
               "example": "master",
+              "placeholder": "master",
               "defaultValue": "master"
             },
             {
               "name": "Content Type",
               "internalKey": "contentType",
-              "type": "string",
-              "required": false,
-              "description": "Content type ID",
-              "example": "{{ $json.contentType }}",
-              "defaultValue": ""
+              "type": "textarea",
+              "description": "Content type ID"
             },
             {
               "name": "Entry Id",
               "internalKey": "entryId",
               "type": "string",
-              "required": false,
               "description": "Entry ID",
-              "example": "{{ $json.entryId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Fields",
               "internalKey": "fields",
               "type": "string",
-              "required": false,
-              "description": "JSON string of entry fields",
-              "example": "{{ $json.fields }}",
-              "defaultValue": ""
+              "description": "JSON string of entry fields"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "contentful"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Contentful node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Contentful in a workflow and pass upstream data into delete entry.",
+            "scenario": "Use Contentful to delete entry in a workflow.",
             "inputValues": {
-              "Space Id": "{{ $json.spaceId }}",
-              "Access Token": "{{ $json.accessToken }}",
+              "Space Id": "abc123",
+              "Access Token": "",
               "Environment": "master",
-              "Content Type": "{{ $json.contentType }}",
-              "Entry Id": "{{ $json.entryId }}",
-              "Fields": "{{ $json.fields }}"
+              "Content Type": "",
+              "Entry Id": "abc123"
             },
-            "expectedOutput": "The node runs delete entry and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete entry and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.contentful.com/developers/docs/references/content-management-api/"
         }
@@ -431,25 +369,19 @@ export const contentfulDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Contentful node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

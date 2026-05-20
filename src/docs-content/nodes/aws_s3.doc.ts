@@ -5,14 +5,10 @@ export const awsS3Doc: NodeDoc = {
   "displayName": "AWS S3",
   "category": "Data",
   "logoUrl": "/icons/nodes/aws_s3.svg",
-  "description": "AWS S3 storage operations Use this node when a workflow needs aws s3 behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Aws Credential, Aws Token",
+  "description": "AWS S3 storage operations",
+  "credentialType": "AWS Credential",
   "credentialSetupSteps": [
-    "Open the AWS S3 developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Aws Credential, Aws Token value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html",
   "resources": [
@@ -23,8 +19,38 @@ export const awsS3Doc: NodeDoc = {
         {
           "name": "Upload",
           "value": "upload",
-          "description": "Upload with the AWS S3 node using the configured input fields.",
+          "description": "Upload using the AWS S3 node.",
           "fields": [
+            {
+              "name": "Region",
+              "internalKey": "region",
+              "type": "string",
+              "description": "AWS region (default: us-east-1)",
+              "example": "us-east-1",
+              "placeholder": "us-east-1",
+              "defaultValue": "us-east-1"
+            },
+            {
+              "name": "Access Key Id",
+              "internalKey": "accessKeyId",
+              "type": "string",
+              "description": "AWS access key id (optional if using env/IAM role)",
+              "example": "AKIA...",
+              "placeholder": "AKIA..."
+            },
+            {
+              "name": "Secret Access Key",
+              "internalKey": "secretAccessKey",
+              "type": "password",
+              "description": "AWS secret access key (optional if using env/IAM role)",
+              "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Session Token",
+              "internalKey": "sessionToken",
+              "type": "string",
+              "description": "AWS session token (optional)"
+            },
             {
               "name": "Bucket",
               "internalKey": "bucket",
@@ -35,47 +61,9 @@ export const awsS3Doc: NodeDoc = {
               "placeholder": "my-bucket"
             },
             {
-              "name": "Region",
-              "internalKey": "region",
-              "type": "string",
-              "required": false,
-              "description": "AWS region (default: us-east-1)",
-              "example": "us-east-1",
-              "placeholder": "us-east-1",
-              "defaultValue": "us-east-1"
-            },
-            {
-              "name": "Access Key Id",
-              "internalKey": "accessKeyId",
-              "type": "string",
-              "required": false,
-              "description": "AWS access key id (optional if using env/IAM role)",
-              "example": "AKIA...",
-              "placeholder": "AKIA..."
-            },
-            {
-              "name": "Secret Access Key",
-              "internalKey": "secretAccessKey",
-              "type": "password",
-              "required": false,
-              "description": "AWS secret access key (optional if using env/IAM role)",
-              "example": "{{ $json.secretAccessKey }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Session Token",
-              "internalKey": "sessionToken",
-              "type": "password",
-              "required": false,
-              "description": "AWS session token (optional)",
-              "example": "{{ $json.sessionToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
               "name": "Key",
               "internalKey": "key",
               "type": "string",
-              "required": false,
               "description": "Object key",
               "example": "path/to/file.pdf",
               "placeholder": "path/to/file.pdf"
@@ -84,7 +72,6 @@ export const awsS3Doc: NodeDoc = {
               "name": "Prefix",
               "internalKey": "prefix",
               "type": "string",
-              "required": false,
               "description": "Prefix for list operation",
               "example": "folder/",
               "placeholder": "folder/"
@@ -93,7 +80,6 @@ export const awsS3Doc: NodeDoc = {
               "name": "Data Base64",
               "internalKey": "dataBase64",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload (alternative to data)",
               "example": "{{$json.dataBase64}}",
               "placeholder": "{{$json.dataBase64}}"
@@ -102,41 +88,70 @@ export const awsS3Doc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload",
               "example": "{{$json.data}}",
               "placeholder": "{{$json.data}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the AWS S3 node.\nstructure: Value returned by the AWS S3 node.\nconvertible: Value returned by the AWS S3 node.\ndefaultValue: Value returned by the AWS S3 node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use AWS S3 in a workflow and pass upstream data into upload.",
+            "scenario": "Use AWS S3 to upload in a workflow.",
             "inputValues": {
-              "Bucket": "my-bucket",
               "Region": "us-east-1",
               "Access Key Id": "AKIA...",
-              "Secret Access Key": "{{ $json.secretAccessKey }}",
-              "Session Token": "{{ $json.sessionToken }}",
-              "Key": "path/to/file.pdf",
-              "Prefix": "folder/",
-              "Data Base64": "{{$json.dataBase64}}",
-              "Data": "{{$json.data}}"
+              "Secret Access Key": "",
+              "Session Token": "",
+              "Bucket": "my-bucket"
             },
-            "expectedOutput": "The node runs upload and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes upload and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html"
         },
         {
           "name": "Download",
           "value": "download",
-          "description": "Download with the AWS S3 node using the configured input fields.",
+          "description": "Download using the AWS S3 node.",
           "fields": [
+            {
+              "name": "Region",
+              "internalKey": "region",
+              "type": "string",
+              "description": "AWS region (default: us-east-1)",
+              "example": "us-east-1",
+              "placeholder": "us-east-1",
+              "defaultValue": "us-east-1"
+            },
+            {
+              "name": "Access Key Id",
+              "internalKey": "accessKeyId",
+              "type": "string",
+              "description": "AWS access key id (optional if using env/IAM role)",
+              "example": "AKIA...",
+              "placeholder": "AKIA..."
+            },
+            {
+              "name": "Secret Access Key",
+              "internalKey": "secretAccessKey",
+              "type": "password",
+              "description": "AWS secret access key (optional if using env/IAM role)",
+              "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Session Token",
+              "internalKey": "sessionToken",
+              "type": "string",
+              "description": "AWS session token (optional)"
+            },
             {
               "name": "Bucket",
               "internalKey": "bucket",
@@ -147,47 +162,9 @@ export const awsS3Doc: NodeDoc = {
               "placeholder": "my-bucket"
             },
             {
-              "name": "Region",
-              "internalKey": "region",
-              "type": "string",
-              "required": false,
-              "description": "AWS region (default: us-east-1)",
-              "example": "us-east-1",
-              "placeholder": "us-east-1",
-              "defaultValue": "us-east-1"
-            },
-            {
-              "name": "Access Key Id",
-              "internalKey": "accessKeyId",
-              "type": "string",
-              "required": false,
-              "description": "AWS access key id (optional if using env/IAM role)",
-              "example": "AKIA...",
-              "placeholder": "AKIA..."
-            },
-            {
-              "name": "Secret Access Key",
-              "internalKey": "secretAccessKey",
-              "type": "password",
-              "required": false,
-              "description": "AWS secret access key (optional if using env/IAM role)",
-              "example": "{{ $json.secretAccessKey }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Session Token",
-              "internalKey": "sessionToken",
-              "type": "password",
-              "required": false,
-              "description": "AWS session token (optional)",
-              "example": "{{ $json.sessionToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
               "name": "Key",
               "internalKey": "key",
               "type": "string",
-              "required": false,
               "description": "Object key",
               "example": "path/to/file.pdf",
               "placeholder": "path/to/file.pdf"
@@ -196,7 +173,6 @@ export const awsS3Doc: NodeDoc = {
               "name": "Prefix",
               "internalKey": "prefix",
               "type": "string",
-              "required": false,
               "description": "Prefix for list operation",
               "example": "folder/",
               "placeholder": "folder/"
@@ -205,7 +181,6 @@ export const awsS3Doc: NodeDoc = {
               "name": "Data Base64",
               "internalKey": "dataBase64",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload (alternative to data)",
               "example": "{{$json.dataBase64}}",
               "placeholder": "{{$json.dataBase64}}"
@@ -214,41 +189,70 @@ export const awsS3Doc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload",
               "example": "{{$json.data}}",
               "placeholder": "{{$json.data}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the AWS S3 node.\nstructure: Value returned by the AWS S3 node.\nconvertible: Value returned by the AWS S3 node.\ndefaultValue: Value returned by the AWS S3 node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use AWS S3 in a workflow and pass upstream data into download.",
+            "scenario": "Use AWS S3 to download in a workflow.",
             "inputValues": {
-              "Bucket": "my-bucket",
               "Region": "us-east-1",
               "Access Key Id": "AKIA...",
-              "Secret Access Key": "{{ $json.secretAccessKey }}",
-              "Session Token": "{{ $json.sessionToken }}",
-              "Key": "path/to/file.pdf",
-              "Prefix": "folder/",
-              "Data Base64": "{{$json.dataBase64}}",
-              "Data": "{{$json.data}}"
+              "Secret Access Key": "",
+              "Session Token": "",
+              "Bucket": "my-bucket"
             },
-            "expectedOutput": "The node runs download and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes download and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html"
         },
         {
           "name": "List",
           "value": "list",
-          "description": "List with the AWS S3 node using the configured input fields.",
+          "description": "List using the AWS S3 node.",
           "fields": [
+            {
+              "name": "Region",
+              "internalKey": "region",
+              "type": "string",
+              "description": "AWS region (default: us-east-1)",
+              "example": "us-east-1",
+              "placeholder": "us-east-1",
+              "defaultValue": "us-east-1"
+            },
+            {
+              "name": "Access Key Id",
+              "internalKey": "accessKeyId",
+              "type": "string",
+              "description": "AWS access key id (optional if using env/IAM role)",
+              "example": "AKIA...",
+              "placeholder": "AKIA..."
+            },
+            {
+              "name": "Secret Access Key",
+              "internalKey": "secretAccessKey",
+              "type": "password",
+              "description": "AWS secret access key (optional if using env/IAM role)",
+              "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Session Token",
+              "internalKey": "sessionToken",
+              "type": "string",
+              "description": "AWS session token (optional)"
+            },
             {
               "name": "Bucket",
               "internalKey": "bucket",
@@ -259,47 +263,9 @@ export const awsS3Doc: NodeDoc = {
               "placeholder": "my-bucket"
             },
             {
-              "name": "Region",
-              "internalKey": "region",
-              "type": "string",
-              "required": false,
-              "description": "AWS region (default: us-east-1)",
-              "example": "us-east-1",
-              "placeholder": "us-east-1",
-              "defaultValue": "us-east-1"
-            },
-            {
-              "name": "Access Key Id",
-              "internalKey": "accessKeyId",
-              "type": "string",
-              "required": false,
-              "description": "AWS access key id (optional if using env/IAM role)",
-              "example": "AKIA...",
-              "placeholder": "AKIA..."
-            },
-            {
-              "name": "Secret Access Key",
-              "internalKey": "secretAccessKey",
-              "type": "password",
-              "required": false,
-              "description": "AWS secret access key (optional if using env/IAM role)",
-              "example": "{{ $json.secretAccessKey }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Session Token",
-              "internalKey": "sessionToken",
-              "type": "password",
-              "required": false,
-              "description": "AWS session token (optional)",
-              "example": "{{ $json.sessionToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
               "name": "Key",
               "internalKey": "key",
               "type": "string",
-              "required": false,
               "description": "Object key",
               "example": "path/to/file.pdf",
               "placeholder": "path/to/file.pdf"
@@ -308,7 +274,6 @@ export const awsS3Doc: NodeDoc = {
               "name": "Prefix",
               "internalKey": "prefix",
               "type": "string",
-              "required": false,
               "description": "Prefix for list operation",
               "example": "folder/",
               "placeholder": "folder/"
@@ -317,7 +282,6 @@ export const awsS3Doc: NodeDoc = {
               "name": "Data Base64",
               "internalKey": "dataBase64",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload (alternative to data)",
               "example": "{{$json.dataBase64}}",
               "placeholder": "{{$json.dataBase64}}"
@@ -326,33 +290,32 @@ export const awsS3Doc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload",
               "example": "{{$json.data}}",
               "placeholder": "{{$json.data}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the AWS S3 node.\nstructure: Value returned by the AWS S3 node.\nconvertible: Value returned by the AWS S3 node.\ndefaultValue: Value returned by the AWS S3 node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use AWS S3 in a workflow and pass upstream data into list.",
+            "scenario": "Use AWS S3 to list in a workflow.",
             "inputValues": {
-              "Bucket": "my-bucket",
               "Region": "us-east-1",
               "Access Key Id": "AKIA...",
-              "Secret Access Key": "{{ $json.secretAccessKey }}",
-              "Session Token": "{{ $json.sessionToken }}",
-              "Key": "path/to/file.pdf",
-              "Prefix": "folder/",
-              "Data Base64": "{{$json.dataBase64}}",
-              "Data": "{{$json.data}}"
+              "Secret Access Key": "",
+              "Session Token": "",
+              "Bucket": "my-bucket"
             },
-            "expectedOutput": "The node runs list and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes list and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html"
         }
@@ -362,25 +325,19 @@ export const awsS3Doc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the AWS S3 node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

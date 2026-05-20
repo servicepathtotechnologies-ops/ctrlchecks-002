@@ -5,19 +5,21 @@ export const setVariableDoc: NodeDoc = {
   "displayName": "Set Variable",
   "category": "Data",
   "logoUrl": "/icons/nodes/set_variable.svg",
-  "description": "Set a variable with a name and value Use this node when a workflow needs set variable behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Set a variable with a name and value",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Set Variable is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Set Variable is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Set Variable node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Store a value in a named variable that can be referenced later in the workflow.",
           "fields": [
             {
               "name": "Name",
@@ -32,45 +34,41 @@ export const setVariableDoc: NodeDoc = {
               "name": "Value",
               "internalKey": "value",
               "type": "string",
-              "required": false,
               "description": "Variable value (supports template expressions like {{input.field}})",
               "example": "Hello World",
-              "placeholder": "Hello World",
-              "defaultValue": ""
+              "placeholder": "Hello World"
             },
             {
               "name": "Values",
               "internalKey": "values",
               "type": "json",
-              "required": false,
               "description": "Array of field assignments (legacy format)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "[{\"name\":\"fullName\",\"value\":\"{{$json.firstName}} {{$json.lastName}}\"}]",
+              "placeholder": "[{\"name\":\"fullName\",\"value\":\"{{$json.firstName}} {{$json.lastName}}\"}]"
             },
             {
               "name": "Keep Source",
               "internalKey": "keepSource",
               "type": "boolean",
-              "required": false,
               "description": "Keep original fields",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible"
+            "variableName": "userEmail",
+            "variableValue": "alice@example.com",
+            "set": true
           },
-          "outputDescription": "type: Value returned by the Set Variable node.\nconvertible: Value returned by the Set Variable node.",
+          "outputDescription": "variableName: The name of the variable that was set. variableValue: The value stored. set: true on success.",
           "usageExample": {
-            "scenario": "Use Set Variable in a workflow and pass upstream data into configure.",
+            "scenario": "Store the current user's email early in the workflow to use in multiple later nodes",
             "inputValues": {
-              "Name": "myVariable",
-              "Value": "Hello World",
-              "Values": "[object Object]",
-              "Keep Source": "false"
+              "name": "userEmail",
+              "value": "{{$json.email}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Reference this variable later as `{{$variables.userEmail}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -80,20 +78,14 @@ export const setVariableDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

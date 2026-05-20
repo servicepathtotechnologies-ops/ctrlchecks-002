@@ -5,16 +5,15 @@ export const stripeDoc: NodeDoc = {
   "displayName": "Stripe",
   "category": "Data",
   "logoUrl": "/icons/nodes/stripe.svg",
-  "description": "Stripe payment processing Use this node when a workflow needs stripe behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Stripe Credential",
+  "description": "Stripe payment processing",
+  "credentialType": "Stripe API Key",
   "credentialSetupSteps": [
-    "Open the Stripe developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Stripe Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Log in to https://dashboard.stripe.com → Developers → API keys.",
+    "Use the \"Secret key\" (starts with sk_live_ or sk_test_ for test mode).",
+    "In CtrlChecks, open Connections → Add Connection → Stripe → paste the Secret Key → Save.",
+    "Tip: use sk_test_ during development and sk_live_ in production."
   ],
-  "credentialDocsUrl": "https://docs.stripe.com/api",
+  "credentialDocsUrl": "https://stripe.com/docs/keys",
   "resources": [
     {
       "name": "Operations",
@@ -23,13 +22,12 @@ export const stripeDoc: NodeDoc = {
         {
           "name": "Charge",
           "value": "charge",
-          "description": "Charge with the Stripe node using the configured input fields.",
+          "description": "Charge using the Stripe node.",
           "fields": [
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Stripe secret key (optional if stored in vault under key \"stripe\")",
               "example": "sk_live_...",
               "placeholder": "sk_live_...",
@@ -39,7 +37,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Amount",
               "internalKey": "amount",
               "type": "number",
-              "required": false,
               "description": "Payment amount (in cents)",
               "example": "1000",
               "placeholder": "1000"
@@ -48,7 +45,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Currency",
               "internalKey": "currency",
               "type": "string",
-              "required": false,
               "description": "Currency (default: usd)",
               "example": "usd",
               "placeholder": "usd",
@@ -57,16 +53,13 @@ export const stripeDoc: NodeDoc = {
             {
               "name": "Description",
               "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Description for the charge/payment",
-              "example": "{{ $json.description }}"
+              "type": "textarea",
+              "description": "Description for the charge/payment"
             },
             {
               "name": "Source",
               "internalKey": "source",
               "type": "string",
-              "required": false,
               "description": "Legacy charge source token (for /v1/charges)",
               "example": "tok_visa",
               "placeholder": "tok_visa"
@@ -75,7 +68,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Payment Method Id",
               "internalKey": "paymentMethodId",
               "type": "string",
-              "required": false,
               "description": "Payment method ID (for PaymentIntents)",
               "example": "pm_...",
               "placeholder": "pm_..."
@@ -84,7 +76,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Customer Id",
               "internalKey": "customerId",
               "type": "string",
-              "required": false,
               "description": "Stripe customer ID",
               "example": "cus_...",
               "placeholder": "cus_..."
@@ -93,23 +84,20 @@ export const stripeDoc: NodeDoc = {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
-              "required": false,
               "description": "Customer email (for createCustomer)",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Name",
               "internalKey": "name",
               "type": "string",
-              "required": false,
-              "description": "Customer name (for createCustomer)",
-              "example": "{{ $json.name }}"
+              "description": "Customer name (for createCustomer)"
             },
             {
               "name": "Charge Id",
               "internalKey": "chargeId",
               "type": "string",
-              "required": false,
               "description": "Charge ID (for refund)",
               "example": "ch_...",
               "placeholder": "ch_..."
@@ -118,47 +106,44 @@ export const stripeDoc: NodeDoc = {
               "name": "Payment Intent Id",
               "internalKey": "paymentIntentId",
               "type": "string",
-              "required": false,
               "description": "PaymentIntent ID (for refund)",
               "example": "pi_...",
               "placeholder": "pi_..."
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Stripe node.\nstructure: Value returned by the Stripe node.\nconvertible: Value returned by the Stripe node.\ndefaultValue: Value returned by the Stripe node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Stripe in a workflow and pass upstream data into charge.",
+            "scenario": "Use Stripe to charge in a workflow.",
             "inputValues": {
               "Api Key": "sk_live_...",
               "Amount": "1000",
               "Currency": "usd",
-              "Description": "{{ $json.description }}",
-              "Source": "tok_visa",
-              "Payment Method Id": "pm_...",
-              "Customer Id": "cus_...",
-              "Email": "{{ $json.email }}",
-              "Name": "{{ $json.name }}",
-              "Charge Id": "ch_..."
+              "Description": "",
+              "Source": "tok_visa"
             },
-            "expectedOutput": "The node runs charge and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes charge and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.stripe.com/api"
         },
         {
           "name": "Refund",
           "value": "refund",
-          "description": "Refund with the Stripe node using the configured input fields.",
+          "description": "Refund using the Stripe node.",
           "fields": [
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Stripe secret key (optional if stored in vault under key \"stripe\")",
               "example": "sk_live_...",
               "placeholder": "sk_live_...",
@@ -168,7 +153,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Amount",
               "internalKey": "amount",
               "type": "number",
-              "required": false,
               "description": "Payment amount (in cents)",
               "example": "1000",
               "placeholder": "1000"
@@ -177,7 +161,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Currency",
               "internalKey": "currency",
               "type": "string",
-              "required": false,
               "description": "Currency (default: usd)",
               "example": "usd",
               "placeholder": "usd",
@@ -186,16 +169,13 @@ export const stripeDoc: NodeDoc = {
             {
               "name": "Description",
               "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Description for the charge/payment",
-              "example": "{{ $json.description }}"
+              "type": "textarea",
+              "description": "Description for the charge/payment"
             },
             {
               "name": "Source",
               "internalKey": "source",
               "type": "string",
-              "required": false,
               "description": "Legacy charge source token (for /v1/charges)",
               "example": "tok_visa",
               "placeholder": "tok_visa"
@@ -204,7 +184,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Payment Method Id",
               "internalKey": "paymentMethodId",
               "type": "string",
-              "required": false,
               "description": "Payment method ID (for PaymentIntents)",
               "example": "pm_...",
               "placeholder": "pm_..."
@@ -213,7 +192,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Customer Id",
               "internalKey": "customerId",
               "type": "string",
-              "required": false,
               "description": "Stripe customer ID",
               "example": "cus_...",
               "placeholder": "cus_..."
@@ -222,23 +200,20 @@ export const stripeDoc: NodeDoc = {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
-              "required": false,
               "description": "Customer email (for createCustomer)",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Name",
               "internalKey": "name",
               "type": "string",
-              "required": false,
-              "description": "Customer name (for createCustomer)",
-              "example": "{{ $json.name }}"
+              "description": "Customer name (for createCustomer)"
             },
             {
               "name": "Charge Id",
               "internalKey": "chargeId",
               "type": "string",
-              "required": false,
               "description": "Charge ID (for refund)",
               "example": "ch_...",
               "placeholder": "ch_..."
@@ -247,47 +222,44 @@ export const stripeDoc: NodeDoc = {
               "name": "Payment Intent Id",
               "internalKey": "paymentIntentId",
               "type": "string",
-              "required": false,
               "description": "PaymentIntent ID (for refund)",
               "example": "pi_...",
               "placeholder": "pi_..."
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Stripe node.\nstructure: Value returned by the Stripe node.\nconvertible: Value returned by the Stripe node.\ndefaultValue: Value returned by the Stripe node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Stripe in a workflow and pass upstream data into refund.",
+            "scenario": "Use Stripe to refund in a workflow.",
             "inputValues": {
               "Api Key": "sk_live_...",
               "Amount": "1000",
               "Currency": "usd",
-              "Description": "{{ $json.description }}",
-              "Source": "tok_visa",
-              "Payment Method Id": "pm_...",
-              "Customer Id": "cus_...",
-              "Email": "{{ $json.email }}",
-              "Name": "{{ $json.name }}",
-              "Charge Id": "ch_..."
+              "Description": "",
+              "Source": "tok_visa"
             },
-            "expectedOutput": "The node runs refund and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes refund and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.stripe.com/api"
         },
         {
-          "name": "Create Customer",
+          "name": "CreateCustomer",
           "value": "createCustomer",
-          "description": "Create Customer with the Stripe node using the configured input fields.",
+          "description": "CreateCustomer using the Stripe node.",
           "fields": [
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Stripe secret key (optional if stored in vault under key \"stripe\")",
               "example": "sk_live_...",
               "placeholder": "sk_live_...",
@@ -297,7 +269,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Amount",
               "internalKey": "amount",
               "type": "number",
-              "required": false,
               "description": "Payment amount (in cents)",
               "example": "1000",
               "placeholder": "1000"
@@ -306,7 +277,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Currency",
               "internalKey": "currency",
               "type": "string",
-              "required": false,
               "description": "Currency (default: usd)",
               "example": "usd",
               "placeholder": "usd",
@@ -315,16 +285,13 @@ export const stripeDoc: NodeDoc = {
             {
               "name": "Description",
               "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Description for the charge/payment",
-              "example": "{{ $json.description }}"
+              "type": "textarea",
+              "description": "Description for the charge/payment"
             },
             {
               "name": "Source",
               "internalKey": "source",
               "type": "string",
-              "required": false,
               "description": "Legacy charge source token (for /v1/charges)",
               "example": "tok_visa",
               "placeholder": "tok_visa"
@@ -333,7 +300,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Payment Method Id",
               "internalKey": "paymentMethodId",
               "type": "string",
-              "required": false,
               "description": "Payment method ID (for PaymentIntents)",
               "example": "pm_...",
               "placeholder": "pm_..."
@@ -342,7 +308,6 @@ export const stripeDoc: NodeDoc = {
               "name": "Customer Id",
               "internalKey": "customerId",
               "type": "string",
-              "required": false,
               "description": "Stripe customer ID",
               "example": "cus_...",
               "placeholder": "cus_..."
@@ -351,23 +316,20 @@ export const stripeDoc: NodeDoc = {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
-              "required": false,
               "description": "Customer email (for createCustomer)",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Name",
               "internalKey": "name",
               "type": "string",
-              "required": false,
-              "description": "Customer name (for createCustomer)",
-              "example": "{{ $json.name }}"
+              "description": "Customer name (for createCustomer)"
             },
             {
               "name": "Charge Id",
               "internalKey": "chargeId",
               "type": "string",
-              "required": false,
               "description": "Charge ID (for refund)",
               "example": "ch_...",
               "placeholder": "ch_..."
@@ -376,34 +338,32 @@ export const stripeDoc: NodeDoc = {
               "name": "Payment Intent Id",
               "internalKey": "paymentIntentId",
               "type": "string",
-              "required": false,
               "description": "PaymentIntent ID (for refund)",
               "example": "pi_...",
               "placeholder": "pi_..."
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Stripe node.\nstructure: Value returned by the Stripe node.\nconvertible: Value returned by the Stripe node.\ndefaultValue: Value returned by the Stripe node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Stripe in a workflow and pass upstream data into create customer.",
+            "scenario": "Use Stripe to createcustomer in a workflow.",
             "inputValues": {
               "Api Key": "sk_live_...",
               "Amount": "1000",
               "Currency": "usd",
-              "Description": "{{ $json.description }}",
-              "Source": "tok_visa",
-              "Payment Method Id": "pm_...",
-              "Customer Id": "cus_...",
-              "Email": "{{ $json.email }}",
-              "Name": "{{ $json.name }}",
-              "Charge Id": "ch_..."
+              "Description": "",
+              "Source": "tok_visa"
             },
-            "expectedOutput": "The node runs create customer and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes createcustomer and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.stripe.com/api"
         }
@@ -413,25 +373,19 @@ export const stripeDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Stripe node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

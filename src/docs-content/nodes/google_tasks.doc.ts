@@ -5,10 +5,17 @@ export const googleTasksDoc: NodeDoc = {
   "displayName": "Google Tasks",
   "category": "Data",
   "logoUrl": "/icons/nodes/google_tasks.svg",
-  "description": "Manage Google Tasks Use this node when a workflow needs google tasks behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "Manage Google Tasks",
+  "credentialType": "Google Credential",
+  "credentialSetupSteps": [
+    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
+    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
+    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
+    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
+    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
+    "Sign in and grant the required scopes. The connection saves automatically."
+  ],
+  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
   "resources": [
     {
       "name": "Operations",
@@ -17,308 +24,124 @@ export const googleTasksDoc: NodeDoc = {
         {
           "name": "Create",
           "value": "create",
-          "description": "Create with the Google Tasks node using the configured input fields.",
+          "description": "Create using the Google Tasks node.",
           "fields": [
             {
               "name": "Task Id",
               "internalKey": "taskId",
               "type": "string",
-              "required": false,
               "description": "Task ID (for update/delete)",
               "example": "task-id",
               "placeholder": "task-id"
-            },
-            {
-              "name": "Task List Id",
-              "internalKey": "taskListId",
-              "type": "string",
-              "required": false,
-              "description": "Google Tasks task list ID. Use @default for the primary list.",
-              "example": "@default",
-              "defaultValue": "@default"
-            },
-            {
-              "name": "Title",
-              "internalKey": "title",
-              "type": "string",
-              "required": false,
-              "description": "Task title",
-              "example": "{{ $json.title }}"
-            },
-            {
-              "name": "Notes",
-              "internalKey": "notes",
-              "type": "string",
-              "required": false,
-              "description": "Task notes/details",
-              "example": "{{ $json.notes }}"
-            },
-            {
-              "name": "Due",
-              "internalKey": "due",
-              "type": "string",
-              "required": false,
-              "description": "Due date for the task as a calendar day. Google Tasks stores the day, not a time of day.",
-              "example": "2026-12-31"
-            },
-            {
-              "name": "Status",
-              "internalKey": "status",
-              "type": "string",
-              "required": false,
-              "description": "Task status, for example needsAction or completed",
-              "example": "{{ $json.status }}"
             }
           ],
-          "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Google Tasks node.\nitemType: Value returned by the Google Tasks node.\nconvertible: Value returned by the Google Tasks node.\ndefaultValue: Value returned by the Google Tasks node.",
+          "outputExample": [
+            {
+              "id": "1",
+              "name": "Example item",
+              "createdAt": "2025-01-15T09:00:00Z"
+            }
+          ],
+          "outputDescription": "Returns an array of result objects. Access individual fields via {{$json.fieldName}} in downstream nodes.",
           "usageExample": {
-            "scenario": "Use Google Tasks in a workflow and pass upstream data into create.",
+            "scenario": "Use Google Tasks to create in a workflow.",
             "inputValues": {
-              "Task Id": "task-id",
-              "Task List Id": "@default",
-              "Title": "{{ $json.title }}",
-              "Notes": "{{ $json.notes }}",
-              "Due": "{{ $json.due }}",
-              "Status": "{{ $json.status }}"
+              "Task Id": "task-id"
             },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes create and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.google.com/tasks/reference/rest"
         },
         {
           "name": "Read",
           "value": "read",
-          "description": "Read with the Google Tasks node using the configured input fields.",
+          "description": "Read using the Google Tasks node.",
           "fields": [
             {
               "name": "Task Id",
               "internalKey": "taskId",
               "type": "string",
-              "required": false,
               "description": "Task ID (for update/delete)",
               "example": "task-id",
               "placeholder": "task-id"
-            },
-            {
-              "name": "Task List Id",
-              "internalKey": "taskListId",
-              "type": "string",
-              "required": false,
-              "description": "Google Tasks task list ID. Use @default for the primary list.",
-              "example": "@default",
-              "defaultValue": "@default"
-            },
-            {
-              "name": "Title",
-              "internalKey": "title",
-              "type": "string",
-              "required": false,
-              "description": "Task title",
-              "example": "{{ $json.title }}"
-            },
-            {
-              "name": "Notes",
-              "internalKey": "notes",
-              "type": "string",
-              "required": false,
-              "description": "Task notes/details",
-              "example": "{{ $json.notes }}"
-            },
-            {
-              "name": "Due",
-              "internalKey": "due",
-              "type": "string",
-              "required": false,
-              "description": "Due date for the task as a calendar day. Google Tasks stores the day, not a time of day.",
-              "example": "2026-12-31"
-            },
-            {
-              "name": "Status",
-              "internalKey": "status",
-              "type": "string",
-              "required": false,
-              "description": "Task status, for example needsAction or completed",
-              "example": "{{ $json.status }}"
             }
           ],
-          "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Google Tasks node.\nitemType: Value returned by the Google Tasks node.\nconvertible: Value returned by the Google Tasks node.\ndefaultValue: Value returned by the Google Tasks node.",
+          "outputExample": [
+            {
+              "id": "1",
+              "name": "Example item",
+              "createdAt": "2025-01-15T09:00:00Z"
+            }
+          ],
+          "outputDescription": "Returns an array of result objects. Access individual fields via {{$json.fieldName}} in downstream nodes.",
           "usageExample": {
-            "scenario": "Use Google Tasks in a workflow and pass upstream data into read.",
+            "scenario": "Use Google Tasks to read in a workflow.",
             "inputValues": {
-              "Task Id": "task-id",
-              "Task List Id": "@default",
-              "Title": "{{ $json.title }}",
-              "Notes": "{{ $json.notes }}",
-              "Due": "{{ $json.due }}",
-              "Status": "{{ $json.status }}"
+              "Task Id": "task-id"
             },
-            "expectedOutput": "The node runs read and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes read and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.google.com/tasks/reference/rest"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the Google Tasks node using the configured input fields.",
+          "description": "Update using the Google Tasks node.",
           "fields": [
             {
               "name": "Task Id",
               "internalKey": "taskId",
               "type": "string",
-              "required": false,
               "description": "Task ID (for update/delete)",
               "example": "task-id",
               "placeholder": "task-id"
-            },
-            {
-              "name": "Task List Id",
-              "internalKey": "taskListId",
-              "type": "string",
-              "required": false,
-              "description": "Google Tasks task list ID. Use @default for the primary list.",
-              "example": "@default",
-              "defaultValue": "@default"
-            },
-            {
-              "name": "Title",
-              "internalKey": "title",
-              "type": "string",
-              "required": false,
-              "description": "Task title",
-              "example": "{{ $json.title }}"
-            },
-            {
-              "name": "Notes",
-              "internalKey": "notes",
-              "type": "string",
-              "required": false,
-              "description": "Task notes/details",
-              "example": "{{ $json.notes }}"
-            },
-            {
-              "name": "Due",
-              "internalKey": "due",
-              "type": "string",
-              "required": false,
-              "description": "Due date for the task as a calendar day. Google Tasks stores the day, not a time of day.",
-              "example": "2026-12-31"
-            },
-            {
-              "name": "Status",
-              "internalKey": "status",
-              "type": "string",
-              "required": false,
-              "description": "Task status, for example needsAction or completed",
-              "example": "{{ $json.status }}"
             }
           ],
-          "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Google Tasks node.\nitemType: Value returned by the Google Tasks node.\nconvertible: Value returned by the Google Tasks node.\ndefaultValue: Value returned by the Google Tasks node.",
+          "outputExample": [
+            {
+              "id": "1",
+              "name": "Example item",
+              "createdAt": "2025-01-15T09:00:00Z"
+            }
+          ],
+          "outputDescription": "Returns an array of result objects. Access individual fields via {{$json.fieldName}} in downstream nodes.",
           "usageExample": {
-            "scenario": "Use Google Tasks in a workflow and pass upstream data into update.",
+            "scenario": "Use Google Tasks to update in a workflow.",
             "inputValues": {
-              "Task Id": "task-id",
-              "Task List Id": "@default",
-              "Title": "{{ $json.title }}",
-              "Notes": "{{ $json.notes }}",
-              "Due": "{{ $json.due }}",
-              "Status": "{{ $json.status }}"
+              "Task Id": "task-id"
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes update and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.google.com/tasks/reference/rest"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the Google Tasks node using the configured input fields.",
+          "description": "Delete using the Google Tasks node.",
           "fields": [
             {
               "name": "Task Id",
               "internalKey": "taskId",
               "type": "string",
-              "required": false,
               "description": "Task ID (for update/delete)",
               "example": "task-id",
               "placeholder": "task-id"
-            },
-            {
-              "name": "Task List Id",
-              "internalKey": "taskListId",
-              "type": "string",
-              "required": false,
-              "description": "Google Tasks task list ID. Use @default for the primary list.",
-              "example": "@default",
-              "defaultValue": "@default"
-            },
-            {
-              "name": "Title",
-              "internalKey": "title",
-              "type": "string",
-              "required": false,
-              "description": "Task title",
-              "example": "{{ $json.title }}"
-            },
-            {
-              "name": "Notes",
-              "internalKey": "notes",
-              "type": "string",
-              "required": false,
-              "description": "Task notes/details",
-              "example": "{{ $json.notes }}"
-            },
-            {
-              "name": "Due",
-              "internalKey": "due",
-              "type": "string",
-              "required": false,
-              "description": "Due date for the task as a calendar day. Google Tasks stores the day, not a time of day.",
-              "example": "2026-12-31"
-            },
-            {
-              "name": "Status",
-              "internalKey": "status",
-              "type": "string",
-              "required": false,
-              "description": "Task status, for example needsAction or completed",
-              "example": "{{ $json.status }}"
             }
           ],
-          "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Google Tasks node.\nitemType: Value returned by the Google Tasks node.\nconvertible: Value returned by the Google Tasks node.\ndefaultValue: Value returned by the Google Tasks node.",
+          "outputExample": [
+            {
+              "id": "1",
+              "name": "Example item",
+              "createdAt": "2025-01-15T09:00:00Z"
+            }
+          ],
+          "outputDescription": "Returns an array of result objects. Access individual fields via {{$json.fieldName}} in downstream nodes.",
           "usageExample": {
-            "scenario": "Use Google Tasks in a workflow and pass upstream data into delete.",
+            "scenario": "Use Google Tasks to delete in a workflow.",
             "inputValues": {
-              "Task Id": "task-id",
-              "Task List Id": "@default",
-              "Title": "{{ $json.title }}",
-              "Notes": "{{ $json.notes }}",
-              "Due": "{{ $json.due }}",
-              "Status": "{{ $json.status }}"
+              "Task Id": "task-id"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.google.com/tasks/reference/rest"
         }
@@ -327,21 +150,20 @@ export const googleTasksDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Google Tasks node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

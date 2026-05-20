@@ -5,26 +5,31 @@ export const telegramDoc: NodeDoc = {
   "displayName": "Telegram",
   "category": "Communication",
   "logoUrl": "/icons/nodes/telegram.svg",
-  "description": "Send messages to Telegram chats using Telegram Bot API Use this node when a workflow needs telegram behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Telegram Token, Telegram Credential",
+  "description": "Send messages to Telegram chats using Telegram Bot API",
+  "credentialType": "Telegram Bot Token",
   "credentialSetupSteps": [
-    "Open the Telegram developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Telegram Token, Telegram Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Open Telegram and search for @BotFather.",
+    "Send /newbot, give your bot a name, then a username ending in \"bot\".",
+    "BotFather will reply with your Bot Token (e.g. 123456:ABC-DEF…).",
+    "In CtrlChecks, open Connections → Add Connection → Telegram → paste the Bot Token → Save."
   ],
-  "credentialDocsUrl": "https://core.telegram.org/bots/api",
+  "credentialDocsUrl": "https://core.telegram.org/bots/tutorial",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Telegram is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Telegram is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Telegram node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Send a message to a Telegram chat, group, or channel via a bot.",
           "fields": [
+            {
+              "name": "Bot Token",
+              "internalKey": "botToken",
+              "type": "string",
+              "description": "Telegram Bot Token (stored as credential, not user input at runtime)"
+            },
             {
               "name": "Chat Id",
               "internalKey": "chatId",
@@ -45,130 +50,108 @@ export const telegramDoc: NodeDoc = {
               "defaultValue": "text"
             },
             {
-              "name": "Bot Token",
-              "internalKey": "botToken",
-              "type": "password",
-              "required": false,
-              "description": "Telegram Bot Token (stored as credential, not user input at runtime)",
-              "example": "{{ $json.botToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Stored credential reference for Telegram bot token",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
               "name": "Message",
               "internalKey": "message",
-              "type": "string",
-              "required": false,
-              "description": "Message text (required when messageType is \"text\")",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text (required when messageType is \"text\")"
             },
             {
               "name": "Parse Mode",
               "internalKey": "parseMode",
               "type": "string",
-              "required": false,
               "description": "Text formatting mode: none, HTML, Markdown, MarkdownV2",
               "example": "HTML",
+              "placeholder": "HTML",
               "defaultValue": "HTML"
             },
             {
               "name": "Disable Web Page Preview",
               "internalKey": "disableWebPagePreview",
               "type": "boolean",
-              "required": false,
               "description": "Disable automatic link previews",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
-              "required": false,
               "description": "Media URL for photo/video/document/audio/animation message types",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Caption",
               "internalKey": "caption",
               "type": "string",
-              "required": false,
-              "description": "Caption for media messages",
-              "example": "{{ $json.caption }}"
+              "description": "Caption for media messages"
             },
             {
               "name": "Reply To Message Id",
               "internalKey": "replyToMessageId",
               "type": "number",
-              "required": false,
               "description": "Message ID to reply to",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Reply Markup",
               "internalKey": "replyMarkup",
               "type": "json",
-              "required": false,
               "description": "Reply markup JSON (inline keyboard, reply keyboard, etc.)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Disable Notification",
               "internalKey": "disableNotification",
               "type": "boolean",
-              "required": false,
               "description": "Send message silently without notification",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Protect Content",
               "internalKey": "protectContent",
-              "type": "boolean",
-              "required": false,
+              "type": "textarea",
               "description": "Protect content from being forwarded or saved",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Allow Sending Without Reply",
               "internalKey": "allowSendingWithoutReply",
               "type": "boolean",
-              "required": false,
               "description": "Allow sending even if replied-to message is missing",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "ok": true,
+            "result": {
+              "message_id": 101,
+              "from": {
+                "username": "my_bot"
+              },
+              "chat": {
+                "id": -100123456
+              },
+              "text": "Alert: server CPU above 90%"
+            }
           },
-          "outputDescription": "type: Value returned by the Telegram node.\nconvertible: Value returned by the Telegram node.\ndefaultValue: Value returned by the Telegram node.",
+          "outputDescription": "ok: true if message was sent. result.message_id: Telegram message ID. result.chat.id: The chat ID the message was sent to. result.text: The message text.",
           "usageExample": {
-            "scenario": "Use Telegram in a workflow and pass upstream data into configure.",
+            "scenario": "Send a server alert to a monitoring group when CPU exceeds a threshold",
             "inputValues": {
-              "Chat Id": "123456789",
-              "Message Type": "text",
-              "Bot Token": "{{ $json.botToken }}",
-              "Credential Id": "cred_123",
-              "Message": "Created from workflow data: {{ $json.summary }}",
-              "Parse Mode": "HTML",
-              "Disable Web Page Preview": "false",
-              "Media Url": "https://api.example.com/resource",
-              "Caption": "{{ $json.caption }}",
-              "Reply To Message Id": "Created from workflow data: {{ $json.summary }}"
+              "chatId": "-100123456",
+              "text": "🚨 Alert: {{$json.serverName}} CPU is {{$json.cpuPercent}}%\nTime: {{$now}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Message appears in the Telegram chat. Use `{{$json.result.message_id}}` to track or reply to the message."
           },
           "externalDocsUrl": "https://core.telegram.org/bots/api"
         }
@@ -178,25 +161,19 @@ export const telegramDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Telegram node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "google_gmail",
-    "outlook",
-    "slack_message",
-    "email",
-    "log_output"
-  ]
+  "relatedNodes": []
 };

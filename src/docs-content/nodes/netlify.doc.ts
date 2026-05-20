@@ -5,1095 +5,409 @@ export const netlifyDoc: NodeDoc = {
   "displayName": "Netlify",
   "category": "Data",
   "logoUrl": "/icons/nodes/netlify.svg",
-  "description": "Deploy sites, manage builds, and query site/deploy data through the Netlify REST API. Use this node when a workflow needs netlify behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Access Token Credential",
+  "description": "Deploy sites, manage builds, and query site/deploy data through the Netlify REST API.",
+  "credentialType": "Netlify API Key",
   "credentialSetupSteps": [
-    "Open the Netlify developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Access Token Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://docs.netlify.com/api/get-started/",
   "resources": [
     {
-      "name": "Sites",
-      "description": "Sites is a Netlify resource available in this node.",
+      "name": "Operations",
+      "description": "Netlify exposes operation choices directly.",
       "operations": [
         {
-          "name": "List Sites",
+          "name": "List sites",
           "value": "list_sites",
-          "description": "List Sites with the Netlify node using the configured input fields.",
+          "description": "List sites using the Netlify node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Netlify Personal Access Token"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Netlify resource",
+              "example": "sites",
+              "placeholder": "sites",
+              "defaultValue": "sites",
+              "options": [
+                "Sites",
+                "Deploys",
+                "Forms"
+              ]
             },
             {
               "name": "Site Id",
               "internalKey": "siteId",
               "type": "string",
-              "required": false,
               "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Deploy Id",
               "internalKey": "deployId",
               "type": "string",
-              "required": false,
               "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create_deploy",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max records to return",
               "example": "25",
+              "placeholder": "25",
               "defaultValue": "25"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "netlify"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into list sites.",
+            "scenario": "Use Netlify to list sites in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
+              "Access Token": "",
+              "Resource": "sites",
+              "Site Id": "abc123",
+              "Deploy Id": "abc123",
+              "Payload": "{}"
             },
-            "expectedOutput": "The node runs list sites and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes list sites and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
         },
         {
-          "name": "Get Site",
+          "name": "Get site",
           "value": "get_site",
-          "description": "Get Site with the Netlify node using the configured input fields.",
+          "description": "Get site using the Netlify node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Netlify Personal Access Token"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Netlify resource",
+              "example": "sites",
+              "placeholder": "sites",
+              "defaultValue": "sites",
+              "options": [
+                "Sites",
+                "Deploys",
+                "Forms"
+              ]
             },
             {
               "name": "Site Id",
               "internalKey": "siteId",
               "type": "string",
-              "required": false,
               "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Deploy Id",
               "internalKey": "deployId",
               "type": "string",
-              "required": false,
               "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create_deploy",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max records to return",
               "example": "25",
+              "placeholder": "25",
               "defaultValue": "25"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "netlify"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into get site.",
+            "scenario": "Use Netlify to get site in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
+              "Access Token": "",
+              "Resource": "sites",
+              "Site Id": "abc123",
+              "Deploy Id": "abc123",
+              "Payload": "{}"
             },
-            "expectedOutput": "The node runs get site and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get site and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
         },
         {
-          "name": "Create Deploy",
+          "name": "Create deploy",
           "value": "create_deploy",
-          "description": "Create Deploy with the Netlify node using the configured input fields.",
+          "description": "Create deploy using the Netlify node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Netlify Personal Access Token"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Netlify resource",
+              "example": "sites",
+              "placeholder": "sites",
+              "defaultValue": "sites",
+              "options": [
+                "Sites",
+                "Deploys",
+                "Forms"
+              ]
             },
             {
               "name": "Site Id",
               "internalKey": "siteId",
               "type": "string",
-              "required": false,
               "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Deploy Id",
               "internalKey": "deployId",
               "type": "string",
-              "required": false,
               "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create_deploy",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max records to return",
               "example": "25",
+              "placeholder": "25",
               "defaultValue": "25"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "netlify"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into create deploy.",
+            "scenario": "Use Netlify to create deploy in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
+              "Access Token": "",
+              "Resource": "sites",
+              "Site Id": "abc123",
+              "Deploy Id": "abc123",
+              "Payload": "{}"
             },
-            "expectedOutput": "The node runs create deploy and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes create deploy and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
         },
         {
-          "name": "List Deploys",
+          "name": "List deploys",
           "value": "list_deploys",
-          "description": "List Deploys with the Netlify node using the configured input fields.",
+          "description": "List deploys using the Netlify node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Netlify Personal Access Token"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Netlify resource",
+              "example": "sites",
+              "placeholder": "sites",
+              "defaultValue": "sites",
+              "options": [
+                "Sites",
+                "Deploys",
+                "Forms"
+              ]
             },
             {
               "name": "Site Id",
               "internalKey": "siteId",
               "type": "string",
-              "required": false,
               "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Deploy Id",
               "internalKey": "deployId",
               "type": "string",
-              "required": false,
               "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create_deploy",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max records to return",
               "example": "25",
+              "placeholder": "25",
               "defaultValue": "25"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "netlify"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into list deploys.",
+            "scenario": "Use Netlify to list deploys in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
+              "Access Token": "",
+              "Resource": "sites",
+              "Site Id": "abc123",
+              "Deploy Id": "abc123",
+              "Payload": "{}"
             },
-            "expectedOutput": "The node runs list deploys and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes list deploys and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
         },
         {
-          "name": "Get Deploy",
+          "name": "Get deploy",
           "value": "get_deploy",
-          "description": "Get Deploy with the Netlify node using the configured input fields.",
+          "description": "Get deploy using the Netlify node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Netlify Personal Access Token"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Netlify resource",
+              "example": "sites",
+              "placeholder": "sites",
+              "defaultValue": "sites",
+              "options": [
+                "Sites",
+                "Deploys",
+                "Forms"
+              ]
             },
             {
               "name": "Site Id",
               "internalKey": "siteId",
               "type": "string",
-              "required": false,
               "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Deploy Id",
               "internalKey": "deployId",
               "type": "string",
-              "required": false,
               "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create_deploy",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max records to return",
               "example": "25",
+              "placeholder": "25",
               "defaultValue": "25"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "netlify"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into get deploy.",
+            "scenario": "Use Netlify to get deploy in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
+              "Access Token": "",
+              "Resource": "sites",
+              "Site Id": "abc123",
+              "Deploy Id": "abc123",
+              "Payload": "{}"
             },
-            "expectedOutput": "The node runs get deploy and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
-        }
-      ]
-    },
-    {
-      "name": "Deploys",
-      "description": "Deploys is a Netlify resource available in this node.",
-      "operations": [
-        {
-          "name": "List Sites",
-          "value": "list_sites",
-          "description": "List Sites with the Netlify node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Site Id",
-              "internalKey": "siteId",
-              "type": "string",
-              "required": false,
-              "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Deploy Id",
-              "internalKey": "deployId",
-              "type": "string",
-              "required": false,
-              "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create_deploy",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records to return",
-              "example": "25",
-              "defaultValue": "25"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "netlify"
-          },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into list sites.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
-            },
-            "expectedOutput": "The node runs list sites and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
-        },
-        {
-          "name": "Get Site",
-          "value": "get_site",
-          "description": "Get Site with the Netlify node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Site Id",
-              "internalKey": "siteId",
-              "type": "string",
-              "required": false,
-              "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Deploy Id",
-              "internalKey": "deployId",
-              "type": "string",
-              "required": false,
-              "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create_deploy",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records to return",
-              "example": "25",
-              "defaultValue": "25"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "netlify"
-          },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into get site.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
-            },
-            "expectedOutput": "The node runs get site and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
-        },
-        {
-          "name": "Create Deploy",
-          "value": "create_deploy",
-          "description": "Create Deploy with the Netlify node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Site Id",
-              "internalKey": "siteId",
-              "type": "string",
-              "required": false,
-              "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Deploy Id",
-              "internalKey": "deployId",
-              "type": "string",
-              "required": false,
-              "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create_deploy",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records to return",
-              "example": "25",
-              "defaultValue": "25"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "netlify"
-          },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into create deploy.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
-            },
-            "expectedOutput": "The node runs create deploy and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
-        },
-        {
-          "name": "List Deploys",
-          "value": "list_deploys",
-          "description": "List Deploys with the Netlify node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Site Id",
-              "internalKey": "siteId",
-              "type": "string",
-              "required": false,
-              "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Deploy Id",
-              "internalKey": "deployId",
-              "type": "string",
-              "required": false,
-              "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create_deploy",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records to return",
-              "example": "25",
-              "defaultValue": "25"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "netlify"
-          },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into list deploys.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
-            },
-            "expectedOutput": "The node runs list deploys and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
-        },
-        {
-          "name": "Get Deploy",
-          "value": "get_deploy",
-          "description": "Get Deploy with the Netlify node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Site Id",
-              "internalKey": "siteId",
-              "type": "string",
-              "required": false,
-              "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Deploy Id",
-              "internalKey": "deployId",
-              "type": "string",
-              "required": false,
-              "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create_deploy",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records to return",
-              "example": "25",
-              "defaultValue": "25"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "netlify"
-          },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into get deploy.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
-            },
-            "expectedOutput": "The node runs get deploy and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
-        }
-      ]
-    },
-    {
-      "name": "Forms",
-      "description": "Forms is a Netlify resource available in this node.",
-      "operations": [
-        {
-          "name": "List Sites",
-          "value": "list_sites",
-          "description": "List Sites with the Netlify node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Site Id",
-              "internalKey": "siteId",
-              "type": "string",
-              "required": false,
-              "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Deploy Id",
-              "internalKey": "deployId",
-              "type": "string",
-              "required": false,
-              "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create_deploy",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records to return",
-              "example": "25",
-              "defaultValue": "25"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "netlify"
-          },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into list sites.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
-            },
-            "expectedOutput": "The node runs list sites and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
-        },
-        {
-          "name": "Get Site",
-          "value": "get_site",
-          "description": "Get Site with the Netlify node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Site Id",
-              "internalKey": "siteId",
-              "type": "string",
-              "required": false,
-              "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Deploy Id",
-              "internalKey": "deployId",
-              "type": "string",
-              "required": false,
-              "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create_deploy",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records to return",
-              "example": "25",
-              "defaultValue": "25"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "netlify"
-          },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into get site.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
-            },
-            "expectedOutput": "The node runs get site and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
-        },
-        {
-          "name": "Create Deploy",
-          "value": "create_deploy",
-          "description": "Create Deploy with the Netlify node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Site Id",
-              "internalKey": "siteId",
-              "type": "string",
-              "required": false,
-              "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Deploy Id",
-              "internalKey": "deployId",
-              "type": "string",
-              "required": false,
-              "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create_deploy",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records to return",
-              "example": "25",
-              "defaultValue": "25"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "netlify"
-          },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into create deploy.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
-            },
-            "expectedOutput": "The node runs create deploy and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
-        },
-        {
-          "name": "List Deploys",
-          "value": "list_deploys",
-          "description": "List Deploys with the Netlify node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Site Id",
-              "internalKey": "siteId",
-              "type": "string",
-              "required": false,
-              "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Deploy Id",
-              "internalKey": "deployId",
-              "type": "string",
-              "required": false,
-              "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create_deploy",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records to return",
-              "example": "25",
-              "defaultValue": "25"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "netlify"
-          },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into list deploys.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
-            },
-            "expectedOutput": "The node runs list deploys and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
-        },
-        {
-          "name": "Get Deploy",
-          "value": "get_deploy",
-          "description": "Get Deploy with the Netlify node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Netlify Personal Access Token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Site Id",
-              "internalKey": "siteId",
-              "type": "string",
-              "required": false,
-              "description": "Site ID",
-              "example": "{{ $json.siteId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Deploy Id",
-              "internalKey": "deployId",
-              "type": "string",
-              "required": false,
-              "description": "Deploy ID",
-              "example": "{{ $json.deployId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create_deploy",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records to return",
-              "example": "25",
-              "defaultValue": "25"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "netlify"
-          },
-          "outputDescription": "success: Indicates that the Netlify node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Netlify in a workflow and pass upstream data into get deploy.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Site Id": "{{ $json.siteId }}",
-              "Deploy Id": "{{ $json.deployId }}",
-              "Payload": "{}",
-              "Limit": "25"
-            },
-            "expectedOutput": "The node runs get deploy and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get deploy and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.netlify.com/api/get-started/"
         }
@@ -1103,25 +417,19 @@ export const netlifyDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Netlify node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

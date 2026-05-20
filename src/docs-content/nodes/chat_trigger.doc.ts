@@ -5,25 +5,26 @@ export const chatTriggerDoc: NodeDoc = {
   "displayName": "Chat Trigger",
   "category": "Triggers",
   "logoUrl": "/icons/nodes/chat_trigger.svg",
-  "description": "Trigger workflow from chat/AI interactions Use this node when a workflow needs chat trigger behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Trigger workflow from chat/AI interactions",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Chat Trigger is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Chat Trigger is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Chat Trigger node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Start the workflow when a user sends a chat message in the CtrlChecks chat interface.",
           "fields": [
             {
               "name": "Channel",
               "internalKey": "channel",
               "type": "string",
-              "required": false,
               "description": "Optional channel/context to filter incoming chat events",
               "example": "#support",
               "placeholder": "#support"
@@ -32,33 +33,28 @@ export const chatTriggerDoc: NodeDoc = {
               "name": "Allowed Senders",
               "internalKey": "allowedSenders",
               "type": "json",
-              "required": false,
               "description": "Optional allowlist of senders/usernames/IDs",
-              "example": "user1,user2",
-              "placeholder": "user1,user2"
+              "example": "[\"user1\",\"user2\"]",
+              "placeholder": "[\"user1\",\"user2\"]"
             },
             {
               "name": "Message",
               "internalKey": "message",
-              "type": "string",
-              "required": false,
-              "description": "Incoming chat message",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Incoming chat message"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
+            "message": "What is the status of order #1234?",
+            "sessionId": "sess_xyz",
+            "userId": "user_42",
+            "timestamp": "2025-01-15T11:00:00.000Z"
           },
-          "outputDescription": "type: Value returned by the Chat Trigger node.\nstructure: Value returned by the Chat Trigger node.",
+          "outputDescription": "message: The text typed by the user. sessionId: The current chat session ID. userId: The user who sent the message. timestamp: When the message was sent.",
           "usageExample": {
-            "scenario": "Use Chat Trigger in a workflow and pass upstream data into configure.",
-            "inputValues": {
-              "Channel": "#support",
-              "Allowed Senders": "user1,user2",
-              "Message": "Created from workflow data: {{ $json.summary }}"
-            },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "scenario": "Build a customer support chatbot that answers order status queries",
+            "inputValues": {},
+            "expectedOutput": "Use `{{$json.message}}` in a downstream AI Agent or HTTP Request node to process the user's question."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -68,20 +64,14 @@ export const chatTriggerDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "schedule",
-    "webhook",
-    "manual_trigger",
-    "interval",
-    "form"
-  ]
+  "relatedNodes": []
 };

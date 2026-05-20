@@ -5,19 +5,21 @@ export const javascriptDoc: NodeDoc = {
   "displayName": "JavaScript",
   "category": "Data",
   "logoUrl": "/icons/nodes/javascript.svg",
-  "description": "Execute custom JavaScript code Use this node when a workflow needs javascript behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Execute custom JavaScript code",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "JavaScript is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "JavaScript is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the JavaScript node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute custom JavaScript code to transform data or perform calculations.",
           "fields": [
             {
               "name": "Code",
@@ -30,16 +32,20 @@ export const javascriptDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible"
-          },
-          "outputDescription": "type: Value returned by the JavaScript node.\nconvertible: Value returned by the JavaScript node.",
-          "usageExample": {
-            "scenario": "Use JavaScript in a workflow and pass upstream data into configure.",
-            "inputValues": {
-              "Code": "return { ...$json, fullName: $json.firstName + \" \" + $json.lastName };"
+            "result": {
+              "totalRevenue": 12450,
+              "averageOrderValue": 207.5,
+              "orderCount": 60
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "executionMs": 3
+          },
+          "outputDescription": "result: Whatever your script returns. executionMs: How long the script took to run.",
+          "usageExample": {
+            "scenario": "Calculate revenue statistics from an array of orders",
+            "inputValues": {
+              "code": "const orders = $json.orders;\nconst total = orders.reduce((sum, o) => sum + o.amount, 0);\nreturn { totalRevenue: total, averageOrderValue: total / orders.length, orderCount: orders.length };"
+            },
+            "expectedOutput": "`{{$json.result.totalRevenue}}` holds the computed total. Use in downstream email or Slack notifications."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -49,20 +55,14 @@ export const javascriptDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

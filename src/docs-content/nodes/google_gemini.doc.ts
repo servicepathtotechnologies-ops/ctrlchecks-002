@@ -5,25 +5,24 @@ export const googleGeminiDoc: NodeDoc = {
   "displayName": "Gemini",
   "category": "AI",
   "logoUrl": "/icons/nodes/google_gemini.svg",
-  "description": "Google Gemini chat completion Use this node when a workflow needs gemini behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Google Credential",
+  "description": "Google Gemini chat completion",
+  "credentialType": "Google Gemini API Key",
   "credentialSetupSteps": [
-    "Open the Gemini developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Google Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to https://aistudio.google.com/app/apikey.",
+    "Click \"Create API Key\" → select or create a Google Cloud project.",
+    "Copy the generated API key.",
+    "In CtrlChecks, open Connections → Add Connection → Google Gemini → paste the API key → Save."
   ],
-  "credentialDocsUrl": "https://ai.google.dev/api",
+  "credentialDocsUrl": "https://ai.google.dev/tutorials/setup",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Gemini is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Gemini is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Gemini node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the Gemini node.",
           "fields": [
             {
               "name": "Model",
@@ -35,15 +34,6 @@ export const googleGeminiDoc: NodeDoc = {
               "placeholder": "gemini-2.5-pro"
             },
             {
-              "name": "Prompt",
-              "internalKey": "prompt",
-              "type": "string",
-              "required": true,
-              "description": "Prompt text",
-              "example": "{{$json.prompt}}",
-              "placeholder": "{{$json.prompt}}"
-            },
-            {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
@@ -52,22 +42,30 @@ export const googleGeminiDoc: NodeDoc = {
               "example": "AIza...",
               "placeholder": "AIza...",
               "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Prompt",
+              "internalKey": "prompt",
+              "type": "textarea",
+              "required": true,
+              "description": "Prompt text",
+              "example": "{{$json.prompt}}",
+              "placeholder": "{{$json.prompt}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": "Operation completed successfully.",
+            "text": ""
           },
-          "outputDescription": "type: Value returned by the Gemini node.\nconvertible: Value returned by the Gemini node.\ndefaultValue: Value returned by the Gemini node.",
+          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Gemini in a workflow and pass upstream data into configure.",
+            "scenario": "Use Gemini to execute in a workflow.",
             "inputValues": {
               "Model": "gemini-2.5-pro",
-              "Prompt": "{{$json.prompt}}",
-              "Api Key": "AIza..."
+              "Api Key": "AIza...",
+              "Prompt": "{{$json.prompt}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://ai.google.dev/api"
         }
@@ -77,25 +75,19 @@ export const googleGeminiDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Gemini node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "ai_agent",
-    "ai_chat_model",
-    "openai_gpt",
-    "anthropic_claude",
-    "ollama"
-  ]
+  "relatedNodes": []
 };

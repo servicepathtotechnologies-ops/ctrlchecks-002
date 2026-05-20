@@ -5,39 +5,38 @@ export const discordDoc: NodeDoc = {
   "displayName": "Discord",
   "category": "Communication",
   "logoUrl": "/icons/nodes/discord.svg",
-  "description": "Send messages to Discord channels or users via Discord Bot API Use this node when a workflow needs discord behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Discord Token",
+  "description": "Send messages to Discord channels or users via Discord Bot API",
+  "credentialType": "Discord Bot Token",
   "credentialSetupSteps": [
-    "Open the Discord developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Discord Token value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to https://discord.com/developers/applications → click \"New Application\".",
+    "Under \"Bot\", click \"Add Bot\" → \"Yes, do it!\".",
+    "Click \"Reset Token\" and copy the bot token.",
+    "Under \"OAuth2 → URL Generator\", select \"bot\" scope + \"Send Messages\" permission, copy the URL, and add the bot to your server.",
+    "In CtrlChecks, open Connections → Add Connection → Discord → paste the Bot Token → Save."
   ],
-  "credentialDocsUrl": "https://discord.com/developers/docs/intro",
+  "credentialDocsUrl": "https://discord.com/developers/docs/getting-started",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Discord is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Discord is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Discord node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Send a message to a Discord channel via a bot.",
           "fields": [
             {
               "name": "Channel Id",
               "internalKey": "channelId",
               "type": "string",
-              "required": true,
-              "description": "Discord channel ID",
+              "description": "Discord channel ID (required for Bot Token mode)",
               "example": "123456789012345678",
               "placeholder": "123456789012345678"
             },
             {
               "name": "Message",
               "internalKey": "message",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "Message text to send",
               "example": "Hello from workflow!",
@@ -46,27 +45,32 @@ export const discordDoc: NodeDoc = {
             {
               "name": "Bot Token",
               "internalKey": "botToken",
-              "type": "password",
-              "required": false,
-              "description": "Discord bot token (stored as credential)",
-              "example": "{{ $json.botToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Discord bot token (stored as credential)"
+            },
+            {
+              "name": "Webhook Url",
+              "internalKey": "webhookUrl",
+              "type": "url",
+              "description": "Discord webhook URL — alternative to Bot Token, no channelId needed",
+              "example": "https://discord.com/api/webhooks/...",
+              "placeholder": "https://discord.com/api/webhooks/..."
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "id": "1234567890123456789",
+            "channelId": "9876543210987654321",
+            "content": "Build #42 passed ✅",
+            "timestamp": "2025-01-15T11:00:00.000000+00:00"
           },
-          "outputDescription": "type: Value returned by the Discord node.\nconvertible: Value returned by the Discord node.\ndefaultValue: Value returned by the Discord node.",
+          "outputDescription": "id: Discord message ID. channelId: The channel it was sent to. content: The message text. timestamp: When the message was sent.",
           "usageExample": {
-            "scenario": "Use Discord in a workflow and pass upstream data into configure.",
+            "scenario": "Post CI/CD build status to a #ci-notifications Discord channel",
             "inputValues": {
-              "Channel Id": "123456789012345678",
-              "Message": "Hello from workflow!",
-              "Bot Token": "{{ $json.botToken }}"
+              "channelId": "{{$env.DISCORD_CI_CHANNEL_ID}}",
+              "content": "{{$json.status === \"pass\" ? \"✅\" : \"❌\"}} Build #{{$json.buildNumber}} — {{$json.status}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Message appears in the Discord channel. Use `{{$json.id}}` to track or edit the message."
           },
           "externalDocsUrl": "https://discord.com/developers/docs/intro"
         }
@@ -76,25 +80,19 @@ export const discordDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Discord node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "google_gmail",
-    "outlook",
-    "slack_message",
-    "email",
-    "log_output"
-  ]
+  "relatedNodes": []
 };

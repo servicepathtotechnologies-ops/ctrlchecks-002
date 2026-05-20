@@ -5,25 +5,23 @@ export const twilioDoc: NodeDoc = {
   "displayName": "Twilio",
   "category": "Communication",
   "logoUrl": "/icons/nodes/twilio.svg",
-  "description": "Send SMS/Voice via Twilio Use this node when a workflow needs twilio behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Twilio Token",
+  "description": "Send SMS/Voice via Twilio",
+  "credentialType": "Twilio Credential",
   "credentialSetupSteps": [
-    "Open the Twilio developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Twilio Token value and save the connection.",
-    "Test the connection before running the workflow."
+    "Log in to https://console.twilio.com → go to Account Info.",
+    "Copy the Account SID and Auth Token.",
+    "In CtrlChecks, open Connections → Add Connection → Twilio → paste Account SID and Auth Token → Save."
   ],
-  "credentialDocsUrl": "https://docs.ctrlchecks.com",
+  "credentialDocsUrl": "https://www.twilio.com/docs/usage/api",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Twilio is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Twilio is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Twilio node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Send an SMS message via Twilio.",
           "fields": [
             {
               "name": "To",
@@ -37,7 +35,7 @@ export const twilioDoc: NodeDoc = {
             {
               "name": "Message",
               "internalKey": "message",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "SMS message text",
               "example": "{{$json.message}}",
@@ -47,7 +45,6 @@ export const twilioDoc: NodeDoc = {
               "name": "From",
               "internalKey": "from",
               "type": "string",
-              "required": false,
               "description": "Sender phone number",
               "example": "+1234567890",
               "placeholder": "+1234567890"
@@ -56,7 +53,6 @@ export const twilioDoc: NodeDoc = {
               "name": "Account Sid",
               "internalKey": "accountSid",
               "type": "string",
-              "required": false,
               "description": "Twilio Account SID (optional if stored in Twilio vault credential JSON)",
               "example": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "placeholder": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -64,29 +60,25 @@ export const twilioDoc: NodeDoc = {
             {
               "name": "Auth Token",
               "internalKey": "authToken",
-              "type": "password",
-              "required": false,
-              "description": "Twilio Auth Token (optional if provided via vault)",
-              "example": "{{ $json.authToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Twilio Auth Token (optional if provided via vault)"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "sid": "SM1234abcd5678efgh",
+            "status": "queued",
+            "to": "+15551234567",
+            "from": "+15559876543",
+            "body": "Your verification code is 4821."
           },
-          "outputDescription": "type: Value returned by the Twilio node.\nconvertible: Value returned by the Twilio node.\ndefaultValue: Value returned by the Twilio node.",
+          "outputDescription": "sid: Twilio message SID for tracking. status: Message delivery status (queued, sent, delivered, failed). to / from: Recipient and sender phone numbers.",
           "usageExample": {
-            "scenario": "Use Twilio in a workflow and pass upstream data into configure.",
+            "scenario": "Send a 2FA SMS verification code to a user who is logging in",
             "inputValues": {
-              "To": "+1234567890",
-              "Message": "{{$json.message}}",
-              "From": "+1234567890",
-              "Account Sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-              "Auth Token": "{{ $json.authToken }}"
+              "to": "{{$json.phoneNumber}}",
+              "body": "Your CtrlChecks verification code is {{$json.otpCode}}. Expires in 10 minutes."
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "SMS is queued. Use `{{$json.sid}}` to check delivery status via the Twilio console."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -96,25 +88,19 @@ export const twilioDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Twilio node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "google_gmail",
-    "outlook",
-    "slack_message",
-    "email",
-    "log_output"
-  ]
+  "relatedNodes": []
 };

@@ -5,19 +5,21 @@ export const graphqlDoc: NodeDoc = {
   "displayName": "GraphQL",
   "category": "Utility",
   "logoUrl": "/icons/nodes/graphql.svg",
-  "description": "Make GraphQL requests Use this node when a workflow needs graphql behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Make GraphQL requests",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "GraphQL is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "GraphQL is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the GraphQL node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the GraphQL node.",
           "fields": [
             {
               "name": "Url",
@@ -31,7 +33,7 @@ export const graphqlDoc: NodeDoc = {
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "GraphQL query",
               "example": "{ user(id: 1) { name email } }",
@@ -41,27 +43,30 @@ export const graphqlDoc: NodeDoc = {
               "name": "Variables",
               "internalKey": "variables",
               "type": "json",
-              "required": false,
               "description": "GraphQL variables",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"id\":1}",
+              "placeholder": "{\"id\":1}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the GraphQL node.\nstructure: Value returned by the GraphQL node.\nconvertible: Value returned by the GraphQL node.\ndefaultValue: Value returned by the GraphQL node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use GraphQL in a workflow and pass upstream data into configure.",
+            "scenario": "Use GraphQL to execute in a workflow.",
             "inputValues": {
               "Url": "https://api.example.com/graphql",
               "Query": "{ user(id: 1) { name email } }",
-              "Variables": "[object Object]"
+              "Variables": "{\"id\":1}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -71,20 +76,14 @@ export const graphqlDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "http_request",
-    "respond_to_webhook",
-    "clickup",
-    "delay",
-    "queue_push"
-  ]
+  "relatedNodes": []
 };

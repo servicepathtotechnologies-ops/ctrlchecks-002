@@ -5,14 +5,10 @@ export const vercelDoc: NodeDoc = {
   "displayName": "Vercel",
   "category": "Data",
   "logoUrl": "/icons/nodes/vercel.svg",
-  "description": "Deploy projects and manage deployments on Vercel Use this node when a workflow needs vercel behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Vercel Token",
+  "description": "Deploy projects and manage deployments on Vercel",
+  "credentialType": "Vercel API Key",
   "credentialSetupSteps": [
-    "Open the Vercel developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Vercel Token value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://vercel.com/docs/rest-api",
   "resources": [
@@ -21,10 +17,19 @@ export const vercelDoc: NodeDoc = {
       "description": "Vercel exposes operation choices directly.",
       "operations": [
         {
-          "name": "Deploy Project",
+          "name": "Deploy",
           "value": "deploy",
-          "description": "Deploy Project with the Vercel node using the configured input fields.",
+          "description": "Deploy using the Vercel node.",
           "fields": [
+            {
+              "name": "Project Name",
+              "internalKey": "projectName",
+              "type": "string",
+              "required": true,
+              "description": "Vercel project name (required for deploy operation). Can use template syntax like {{$json.projectName}}",
+              "example": "my-app",
+              "placeholder": "my-app"
+            },
             {
               "name": "Token",
               "internalKey": "token",
@@ -34,37 +39,33 @@ export const vercelDoc: NodeDoc = {
               "example": "vercel_***",
               "placeholder": "vercel_***",
               "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Project Name",
-              "internalKey": "projectName",
-              "type": "string",
-              "required": false,
-              "description": "Vercel project name (required for deploy operation). Can use template syntax like {{$json.projectName}}",
-              "example": "my-app",
-              "placeholder": "my-app"
             }
           ],
           "outputExample": {
             "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "success: Whether the operation succeeded\ndata: Operation result data. For deploy: deploymentId, projectName, url, status, createdAt. For list: deployments array and total count\nerror: Error details if operation failed. Contains code, message, retriable, and optional details",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Vercel in a workflow and pass upstream data into deploy project.",
+            "scenario": "Use Vercel to deploy in a workflow.",
             "inputValues": {
-              "Token": "vercel_***",
-              "Project Name": "my-app"
+              "Project Name": "my-app",
+              "Token": "vercel_***"
             },
-            "expectedOutput": "The node runs deploy project and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes deploy and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://vercel.com/docs/rest-api"
         },
         {
-          "name": "List Deployments",
+          "name": "List deployments",
           "value": "list_deployments",
-          "description": "List Deployments with the Vercel node using the configured input fields.",
+          "description": "List deployments using the Vercel node.",
           "fields": [
             {
               "name": "Token",
@@ -75,30 +76,25 @@ export const vercelDoc: NodeDoc = {
               "example": "vercel_***",
               "placeholder": "vercel_***",
               "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Project Name",
-              "internalKey": "projectName",
-              "type": "string",
-              "required": false,
-              "description": "Vercel project name (required for deploy operation). Can use template syntax like {{$json.projectName}}",
-              "example": "my-app",
-              "placeholder": "my-app"
             }
           ],
           "outputExample": {
             "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "success: Whether the operation succeeded\ndata: Operation result data. For deploy: deploymentId, projectName, url, status, createdAt. For list: deployments array and total count\nerror: Error details if operation failed. Contains code, message, retriable, and optional details",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Vercel in a workflow and pass upstream data into list deployments.",
+            "scenario": "Use Vercel to list deployments in a workflow.",
             "inputValues": {
-              "Token": "vercel_***",
-              "Project Name": "my-app"
+              "Token": "vercel_***"
             },
-            "expectedOutput": "The node runs list deployments and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes list deployments and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://vercel.com/docs/rest-api"
         }
@@ -108,25 +104,19 @@ export const vercelDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Vercel node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

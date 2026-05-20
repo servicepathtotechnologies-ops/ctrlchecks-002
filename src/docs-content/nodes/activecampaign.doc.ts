@@ -5,16 +5,14 @@ export const activecampaignDoc: NodeDoc = {
   "displayName": "ActiveCampaign",
   "category": "Data",
   "logoUrl": "/icons/nodes/activecampaign.svg",
-  "description": "ActiveCampaign marketing automation Use this node when a workflow needs activecampaign behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Activecampaign Credential",
+  "description": "ActiveCampaign marketing automation",
+  "credentialType": "ActiveCampaign API Key",
   "credentialSetupSteps": [
-    "Open the ActiveCampaign developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Activecampaign Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Log in to ActiveCampaign → Settings → Developer.",
+    "Copy the API URL and API Key.",
+    "In CtrlChecks, open Connections → Add Connection → ActiveCampaign → paste the API URL and Key → Save."
   ],
-  "credentialDocsUrl": "https://developers.activecampaign.com/reference/overview",
+  "credentialDocsUrl": "https://developers.activecampaign.com/reference/url",
   "resources": [
     {
       "name": "Operations",
@@ -23,258 +21,102 @@ export const activecampaignDoc: NodeDoc = {
         {
           "name": "Add",
           "value": "add",
-          "description": "Add with the ActiveCampaign node using the configured input fields.",
+          "description": "Add using the ActiveCampaign node.",
           "fields": [
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
               "example": "contact-id",
               "placeholder": "contact-id"
-            },
-            {
-              "name": "Api Url",
-              "internalKey": "apiUrl",
-              "type": "url",
-              "required": true,
-              "description": "ActiveCampaign API URL, e.g. https://account.api-us1.com",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": true,
-              "description": "ActiveCampaign API key",
-              "example": "{{ $json.apiKey }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Email",
-              "internalKey": "email",
-              "type": "email",
-              "required": false,
-              "description": "Contact email address",
-              "example": "{{ $json.email }}"
-            },
-            {
-              "name": "First Name",
-              "internalKey": "firstName",
-              "type": "string",
-              "required": false,
-              "description": "Contact first name",
-              "example": "{{ $json.firstName }}"
-            },
-            {
-              "name": "Last Name",
-              "internalKey": "lastName",
-              "type": "string",
-              "required": false,
-              "description": "Contact last name",
-              "example": "{{ $json.lastName }}"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Raw ActiveCampaign contact payload override",
-              "example": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the ActiveCampaign node.\nstructure: Value returned by the ActiveCampaign node.\nconvertible: Value returned by the ActiveCampaign node.\ndefaultValue: Value returned by the ActiveCampaign node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use ActiveCampaign in a workflow and pass upstream data into add.",
+            "scenario": "Use ActiveCampaign to add in a workflow.",
             "inputValues": {
-              "Contact Id": "contact-id",
-              "Api Url": "https://api.example.com/resource",
-              "Api Key": "{{ $json.apiKey }}",
-              "Email": "{{ $json.email }}",
-              "First Name": "{{ $json.firstName }}",
-              "Last Name": "{{ $json.lastName }}",
-              "Data": "{\"key\":\"value\"}"
+              "Contact Id": "contact-id"
             },
-            "expectedOutput": "The node runs add and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes add and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.activecampaign.com/reference/overview"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the ActiveCampaign node using the configured input fields.",
+          "description": "Update using the ActiveCampaign node.",
           "fields": [
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
               "example": "contact-id",
               "placeholder": "contact-id"
-            },
-            {
-              "name": "Api Url",
-              "internalKey": "apiUrl",
-              "type": "url",
-              "required": true,
-              "description": "ActiveCampaign API URL, e.g. https://account.api-us1.com",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": true,
-              "description": "ActiveCampaign API key",
-              "example": "{{ $json.apiKey }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Email",
-              "internalKey": "email",
-              "type": "email",
-              "required": false,
-              "description": "Contact email address",
-              "example": "{{ $json.email }}"
-            },
-            {
-              "name": "First Name",
-              "internalKey": "firstName",
-              "type": "string",
-              "required": false,
-              "description": "Contact first name",
-              "example": "{{ $json.firstName }}"
-            },
-            {
-              "name": "Last Name",
-              "internalKey": "lastName",
-              "type": "string",
-              "required": false,
-              "description": "Contact last name",
-              "example": "{{ $json.lastName }}"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Raw ActiveCampaign contact payload override",
-              "example": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the ActiveCampaign node.\nstructure: Value returned by the ActiveCampaign node.\nconvertible: Value returned by the ActiveCampaign node.\ndefaultValue: Value returned by the ActiveCampaign node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use ActiveCampaign in a workflow and pass upstream data into update.",
+            "scenario": "Use ActiveCampaign to update in a workflow.",
             "inputValues": {
-              "Contact Id": "contact-id",
-              "Api Url": "https://api.example.com/resource",
-              "Api Key": "{{ $json.apiKey }}",
-              "Email": "{{ $json.email }}",
-              "First Name": "{{ $json.firstName }}",
-              "Last Name": "{{ $json.lastName }}",
-              "Data": "{\"key\":\"value\"}"
+              "Contact Id": "contact-id"
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes update and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.activecampaign.com/reference/overview"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the ActiveCampaign node using the configured input fields.",
+          "description": "Delete using the ActiveCampaign node.",
           "fields": [
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
               "example": "contact-id",
               "placeholder": "contact-id"
-            },
-            {
-              "name": "Api Url",
-              "internalKey": "apiUrl",
-              "type": "url",
-              "required": true,
-              "description": "ActiveCampaign API URL, e.g. https://account.api-us1.com",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": true,
-              "description": "ActiveCampaign API key",
-              "example": "{{ $json.apiKey }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Email",
-              "internalKey": "email",
-              "type": "email",
-              "required": false,
-              "description": "Contact email address",
-              "example": "{{ $json.email }}"
-            },
-            {
-              "name": "First Name",
-              "internalKey": "firstName",
-              "type": "string",
-              "required": false,
-              "description": "Contact first name",
-              "example": "{{ $json.firstName }}"
-            },
-            {
-              "name": "Last Name",
-              "internalKey": "lastName",
-              "type": "string",
-              "required": false,
-              "description": "Contact last name",
-              "example": "{{ $json.lastName }}"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Raw ActiveCampaign contact payload override",
-              "example": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the ActiveCampaign node.\nstructure: Value returned by the ActiveCampaign node.\nconvertible: Value returned by the ActiveCampaign node.\ndefaultValue: Value returned by the ActiveCampaign node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use ActiveCampaign in a workflow and pass upstream data into delete.",
+            "scenario": "Use ActiveCampaign to delete in a workflow.",
             "inputValues": {
-              "Contact Id": "contact-id",
-              "Api Url": "https://api.example.com/resource",
-              "Api Key": "{{ $json.apiKey }}",
-              "Email": "{{ $json.email }}",
-              "First Name": "{{ $json.firstName }}",
-              "Last Name": "{{ $json.lastName }}",
-              "Data": "{\"key\":\"value\"}"
+              "Contact Id": "contact-id"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.activecampaign.com/reference/overview"
         }
@@ -284,25 +126,19 @@ export const activecampaignDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the ActiveCampaign node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

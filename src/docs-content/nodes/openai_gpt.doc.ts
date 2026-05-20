@@ -5,25 +5,24 @@ export const openaiGptDoc: NodeDoc = {
   "displayName": "OpenAI GPT",
   "category": "AI",
   "logoUrl": "/icons/nodes/openai_gpt.svg",
-  "description": "OpenAI GPT chat completion (GPT-4, GPT-3.5) Use this node when a workflow needs openai gpt behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Openai Credential",
+  "description": "OpenAI GPT chat completion (GPT-4, GPT-3.5)",
+  "credentialType": "OpenAI API Key",
   "credentialSetupSteps": [
-    "Open the OpenAI GPT developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Openai Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to https://platform.openai.com/api-keys.",
+    "Click \"Create new secret key\", give it a name, and click \"Create secret key\".",
+    "Copy the key immediately — it will only be shown once.",
+    "In CtrlChecks, open Connections → Add Connection → OpenAI → paste the API key → Save."
   ],
-  "credentialDocsUrl": "https://platform.openai.com/docs/api-reference",
+  "credentialDocsUrl": "https://platform.openai.com/docs/api-reference/authentication",
   "resources": [
     {
       "name": "Configuration",
-      "description": "OpenAI GPT is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "OpenAI GPT is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the OpenAI GPT node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the OpenAI GPT node.",
           "fields": [
             {
               "name": "Model",
@@ -31,43 +30,31 @@ export const openaiGptDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Model name",
-              "example": "gpt-4",
-              "placeholder": "gpt-4"
+              "example": "gpt-4o",
+              "placeholder": "gpt-4o"
             },
             {
-              "name": "Messages",
-              "internalKey": "messages",
-              "type": "json",
+              "name": "Prompt",
+              "internalKey": "prompt",
+              "type": "textarea",
               "required": true,
-              "description": "Chat messages",
-              "example": "{{$json.messages}}",
-              "placeholder": "{{$json.messages}}"
-            },
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": true,
-              "description": "OpenAI API key (node-level, required for this node to run)",
-              "example": "sk-...",
-              "placeholder": "sk-...",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "User message or prompt to send to OpenAI",
+              "example": "Summarize {{$json.text}}",
+              "placeholder": "Summarize {{$json.text}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": "Operation completed successfully.",
+            "text": ""
           },
-          "outputDescription": "type: Value returned by the OpenAI GPT node.\nconvertible: Value returned by the OpenAI GPT node.\ndefaultValue: Value returned by the OpenAI GPT node.",
+          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use OpenAI GPT in a workflow and pass upstream data into configure.",
+            "scenario": "Use OpenAI GPT to execute in a workflow.",
             "inputValues": {
-              "Model": "gpt-4",
-              "Messages": "{{$json.messages}}",
-              "Api Key": "sk-..."
+              "Model": "gpt-4o",
+              "Prompt": "Summarize {{$json.text}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://platform.openai.com/docs/api-reference"
         }
@@ -77,25 +64,19 @@ export const openaiGptDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the OpenAI GPT node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "ai_agent",
-    "ai_chat_model",
-    "anthropic_claude",
-    "google_gemini",
-    "ollama"
-  ]
+  "relatedNodes": []
 };

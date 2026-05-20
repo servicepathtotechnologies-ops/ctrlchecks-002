@@ -5,129 +5,93 @@ export const firebaseDoc: NodeDoc = {
   "displayName": "Firebase",
   "category": "Data",
   "logoUrl": "/icons/nodes/firebase.svg",
-  "description": "Interact with Firebase Firestore and Realtime Database Use this node when a workflow needs firebase behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Firebase Credential, Firebase Credential",
+  "description": "Interact with Firebase Firestore and Realtime Database",
+  "credentialType": "Firebase Credential",
   "credentialSetupSteps": [
-    "Open the Firebase developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Firebase Credential, Firebase Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "In the Firebase Console, go to Project Settings → Service Accounts.",
+    "Click \"Generate new private key\" and download the JSON file.",
+    "Copy the content of the JSON file.",
+    "In CtrlChecks, open Connections → Add Connection → Firebase → paste the service account JSON → Save."
   ],
-  "credentialDocsUrl": "https://firebase.google.com/docs/reference",
+  "credentialDocsUrl": "https://firebase.google.com/docs/admin/setup",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Firebase is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Firebase is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Firebase node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the Firebase node.",
           "fields": [
-            {
-              "name": "Project Id",
-              "internalKey": "projectId",
-              "type": "string",
-              "required": true,
-              "description": "projectId field",
-              "example": "{{ $json.projectId }}"
-            },
-            {
-              "name": "Client Email",
-              "internalKey": "clientEmail",
-              "type": "email",
-              "required": true,
-              "description": "clientEmail field",
-              "example": "{{ $json.email }}"
-            },
-            {
-              "name": "Private Key",
-              "internalKey": "privateKey",
-              "type": "string",
-              "required": true,
-              "description": "privateKey field",
-              "example": "{{ $json.privateKey }}"
-            },
-            {
-              "name": "Operation",
-              "internalKey": "operation",
-              "type": "string",
-              "required": true,
-              "description": "operation field",
-              "example": "{{ $json.operation }}"
-            },
             {
               "name": "Collection",
               "internalKey": "collection",
               "type": "string",
-              "required": false,
-              "description": "Firestore collection name",
-              "example": "{{ $json.collection }}"
+              "description": "Firestore collection name"
             },
             {
               "name": "Document Id",
               "internalKey": "documentId",
               "type": "string",
-              "required": false,
               "description": "Document ID for get/update/delete",
-              "example": "{{ $json.documentId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Data for add/update/realtime_set",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Filter",
               "internalKey": "filter",
               "type": "json",
-              "required": false,
               "description": "Query filter conditions",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max documents to return for query",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Database Url",
               "internalKey": "databaseUrl",
               "type": "url",
-              "required": false,
               "description": "Realtime Database URL",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Firebase node.\nstructure: Value returned by the Firebase node.\nconvertible: Value returned by the Firebase node.\ndefaultValue: Value returned by the Firebase node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Firebase in a workflow and pass upstream data into configure.",
+            "scenario": "Use Firebase to execute in a workflow.",
             "inputValues": {
-              "Project Id": "{{ $json.projectId }}",
-              "Client Email": "{{ $json.email }}",
-              "Private Key": "{{ $json.privateKey }}",
-              "Operation": "{{ $json.operation }}",
-              "Collection": "{{ $json.collection }}",
-              "Document Id": "{{ $json.documentId }}",
+              "Collection": "",
+              "Document Id": "abc123",
               "Data": "{\"key\":\"value\"}",
               "Filter": "{\"key\":\"value\"}",
-              "Limit": "25",
-              "Database Url": "https://api.example.com/resource"
+              "Limit": "10"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://firebase.google.com/docs/reference"
         }
@@ -137,25 +101,19 @@ export const firebaseDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Firebase node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

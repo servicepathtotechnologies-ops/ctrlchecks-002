@@ -5,19 +5,21 @@ export const scheduleDoc: NodeDoc = {
   "displayName": "Schedule Trigger",
   "category": "Triggers",
   "logoUrl": "/icons/nodes/schedule.svg",
-  "description": "Executes workflow on a time-based schedule using cron expressions Use this node when a workflow needs schedule trigger behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Executes workflow on a time-based schedule using cron expressions",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Schedule Trigger is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Schedule Trigger is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Schedule Trigger node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Start the workflow automatically on a defined cron schedule.",
           "fields": [
             {
               "name": "Cron",
@@ -31,8 +33,7 @@ export const scheduleDoc: NodeDoc = {
             {
               "name": "Timezone",
               "internalKey": "timezone",
-              "type": "date",
-              "required": false,
+              "type": "string",
               "description": "Timezone for schedule",
               "example": "UTC",
               "placeholder": "UTC",
@@ -40,17 +41,18 @@ export const scheduleDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
+            "scheduledTime": "2025-01-15T09:00:00.000Z",
+            "timezone": "UTC",
+            "cronExpression": "0 9 * * 1-5"
           },
-          "outputDescription": "type: Value returned by the Schedule Trigger node.\nstructure: Value returned by the Schedule Trigger node.",
+          "outputDescription": "scheduledTime: ISO timestamp when the trigger fired. timezone: The schedule timezone. cronExpression: The cron expression that matched.",
           "usageExample": {
-            "scenario": "Use Schedule Trigger in a workflow and pass upstream data into configure.",
+            "scenario": "Send a daily summary email every weekday at 9 AM",
             "inputValues": {
-              "Cron": "0 9 * * *",
-              "Timezone": "UTC"
+              "cronExpression": "0 9 * * 1-5",
+              "timezone": "America/New_York"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The workflow fires at 9 AM Mon–Fri. Connect a Gmail Send node downstream to send the email."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -60,20 +62,14 @@ export const scheduleDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "webhook",
-    "manual_trigger",
-    "interval",
-    "chat_trigger",
-    "form"
-  ]
+  "relatedNodes": []
 };

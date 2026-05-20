@@ -5,48 +5,52 @@ export const salesforceDoc: NodeDoc = {
   "displayName": "Salesforce",
   "category": "Data",
   "logoUrl": "/icons/nodes/salesforce.svg",
-  "description": "Work with Salesforce objects (Account, Contact, Lead, Opportunity, etc.) using REST/SOQL/SOSL Use this node when a workflow needs salesforce behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Salesforce Token",
+  "description": "Work with Salesforce objects (Account, Contact, Lead, Opportunity, etc.) using REST/SOQL/SOSL",
+  "credentialType": "Salesforce Credential",
   "credentialSetupSteps": [
-    "Open the Salesforce developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Salesforce Token value and save the connection.",
-    "Test the connection before running the workflow."
+    "In Salesforce, go to Setup → Apps → App Manager → \"New Connected App\".",
+    "Enable OAuth Settings, set the callback URL to http://localhost:3001/api/oauth/salesforce/callback, and select required scopes.",
+    "Save and copy the Consumer Key (Client ID) and Consumer Secret.",
+    "In CtrlChecks, open Connections → Add Connection → Salesforce → click \"Connect with Salesforce\" → authorize."
   ],
-  "credentialDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm",
+  "credentialDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_oauth_and_connected_apps.htm",
   "resources": [
     {
-      "name": "Account",
-      "description": "Account is a Salesforce resource available in this node.",
+      "name": "Operations",
+      "description": "Salesforce exposes operation choices directly.",
       "operations": [
         {
           "name": "Query",
           "value": "query",
-          "description": "Query with the Salesforce node using the configured input fields.",
+          "description": "Run a SOQL query to retrieve Salesforce records.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -55,7 +59,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -64,7 +67,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -73,7 +75,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -82,7 +83,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -91,7 +91,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -100,73 +99,72 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "totalSize": 2,
+            "done": true,
+            "records": [
+              {
+                "Id": "001Xx...",
+                "Name": "Acme Corp",
+                "AnnualRevenue": 5000000
+              }
+            ]
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "totalSize: Number of records returned. records: Array of Salesforce sObject records with all selected fields.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into query.",
+            "scenario": "Fetch all high-value Salesforce accounts",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "query": "SELECT Id, Name, AnnualRevenue FROM Account WHERE AnnualRevenue > 1000000 ORDER BY AnnualRevenue DESC LIMIT 100"
             },
-            "expectedOutput": "The node runs query and exposes its result in the output panel for the next node."
+            "expectedOutput": "Returns matching records. Map field values to downstream nodes."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         },
         {
           "name": "Search",
           "value": "search",
-          "description": "Search with the Salesforce node using the configured input fields.",
+          "description": "Search using the Salesforce node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -175,7 +173,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -184,7 +181,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -193,7 +189,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -202,7 +197,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -211,7 +205,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -220,73 +213,75 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into search.",
+            "scenario": "Use Salesforce to search in a workflow.",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
+              "Instance Url": "https://api.example.com",
+              "Access Token": "",
+              "Resource": "Account",
               "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10"
             },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes search and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         },
         {
           "name": "Get",
           "value": "get",
-          "description": "Get with the Salesforce node using the configured input fields.",
+          "description": "Get using the Salesforce node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -295,7 +290,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -304,7 +298,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -313,7 +306,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -322,7 +314,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -331,7 +322,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -340,73 +330,75 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into get.",
+            "scenario": "Use Salesforce to get in a workflow.",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
+              "Instance Url": "https://api.example.com",
+              "Access Token": "",
+              "Resource": "Account",
               "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10"
             },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         },
         {
           "name": "Create",
           "value": "create",
-          "description": "Create with the Salesforce node using the configured input fields.",
+          "description": "Create a new Salesforce record (Account, Contact, Lead, Opportunity, etc.).",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -415,7 +407,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -424,7 +415,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -433,7 +423,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -442,7 +431,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -451,7 +439,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -460,73 +447,67 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "id": "001Xx...",
+            "success": true,
+            "errors": []
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "id: The Salesforce record ID of the created object. success: true if creation succeeded. errors: Any validation errors.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into create.",
+            "scenario": "Create a Salesforce Lead when someone fills in a website enquiry form",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "sObject": "Lead",
+              "fields": "{\"FirstName\": \"{{$json.firstName}}\", \"LastName\": \"{{$json.lastName}}\", \"Email\": \"{{$json.email}}\", \"Company\": \"{{$json.company}}\", \"LeadSource\": \"Website\"}"
             },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "expectedOutput": "Lead is created. `{{$json.id}}` is the Salesforce Lead ID."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the Salesforce node using the configured input fields.",
+          "description": "Update fields on an existing Salesforce record.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -535,7 +516,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -544,7 +524,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -553,7 +532,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -562,7 +540,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -571,7 +548,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -580,73 +556,66 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "success: true if the update succeeded without errors.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into update.",
+            "scenario": "Update Salesforce Opportunity stage when a deal progresses",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "sObject": "Opportunity",
+              "recordId": "{{$json.opportunityId}}",
+              "fields": "{\"StageName\": \"Closed Won\", \"CloseDate\": \"{{$now}}\"}"
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "`success: true` confirms the update."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the Salesforce node using the configured input fields.",
+          "description": "Delete using the Salesforce node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -655,7 +624,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -664,7 +632,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -673,7 +640,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -682,7 +648,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -691,7 +656,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -700,73 +664,75 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into delete.",
+            "scenario": "Use Salesforce to delete in a workflow.",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
+              "Instance Url": "https://api.example.com",
+              "Access Token": "",
+              "Resource": "Account",
               "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         },
         {
           "name": "Upsert",
           "value": "upsert",
-          "description": "Upsert with the Salesforce node using the configured input fields.",
+          "description": "Upsert using the Salesforce node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -775,7 +741,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -784,7 +749,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -793,7 +757,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -802,7 +765,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -811,7 +773,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -820,73 +781,75 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into upsert.",
+            "scenario": "Use Salesforce to upsert in a workflow.",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
+              "Instance Url": "https://api.example.com",
+              "Access Token": "",
+              "Resource": "Account",
               "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10"
             },
-            "expectedOutput": "The node runs upsert and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes upsert and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         },
         {
-          "name": "Bulk Create",
+          "name": "BulkCreate",
           "value": "bulkCreate",
-          "description": "Bulk Create with the Salesforce node using the configured input fields.",
+          "description": "BulkCreate using the Salesforce node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -895,7 +858,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -904,7 +866,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -913,7 +874,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -922,7 +882,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -931,7 +890,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -940,73 +898,75 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk create.",
+            "scenario": "Use Salesforce to bulkcreate in a workflow.",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
+              "Instance Url": "https://api.example.com",
+              "Access Token": "",
+              "Resource": "Account",
               "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10"
             },
-            "expectedOutput": "The node runs bulk create and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes bulkcreate and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         },
         {
-          "name": "Bulk Update",
+          "name": "BulkUpdate",
           "value": "bulkUpdate",
-          "description": "Bulk Update with the Salesforce node using the configured input fields.",
+          "description": "BulkUpdate using the Salesforce node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -1015,7 +975,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -1024,7 +983,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -1033,7 +991,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -1042,7 +999,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -1051,7 +1007,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -1060,73 +1015,75 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk update.",
+            "scenario": "Use Salesforce to bulkupdate in a workflow.",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
+              "Instance Url": "https://api.example.com",
+              "Access Token": "",
+              "Resource": "Account",
               "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10"
             },
-            "expectedOutput": "The node runs bulk update and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes bulkupdate and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         },
         {
-          "name": "Bulk Delete",
+          "name": "BulkDelete",
           "value": "bulkDelete",
-          "description": "Bulk Delete with the Salesforce node using the configured input fields.",
+          "description": "BulkDelete using the Salesforce node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -1135,7 +1092,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -1144,7 +1100,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -1153,7 +1108,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -1162,7 +1116,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -1171,7 +1124,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -1180,8029 +1132,75 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk delete.",
+            "scenario": "Use Salesforce to bulkdelete in a workflow.",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
+              "Instance Url": "https://api.example.com",
+              "Access Token": "",
+              "Resource": "Account",
               "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10"
             },
-            "expectedOutput": "The node runs bulk delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes bulkdelete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         },
         {
-          "name": "Bulk Upsert",
+          "name": "BulkUpsert",
           "value": "bulkUpsert",
-          "description": "Bulk Upsert with the Salesforce node using the configured input fields.",
+          "description": "BulkUpsert using the Salesforce node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        }
-      ]
-    },
-    {
-      "name": "Contact",
-      "description": "Contact is a Salesforce resource available in this node.",
-      "operations": [
-        {
-          "name": "Query",
-          "value": "query",
-          "description": "Query with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into query.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs query and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Upsert",
-          "value": "upsert",
-          "description": "Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Create",
-          "value": "bulkCreate",
-          "description": "Bulk Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Update",
-          "value": "bulkUpdate",
-          "description": "Bulk Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Delete",
-          "value": "bulkDelete",
-          "description": "Bulk Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Upsert",
-          "value": "bulkUpsert",
-          "description": "Bulk Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        }
-      ]
-    },
-    {
-      "name": "Lead",
-      "description": "Lead is a Salesforce resource available in this node.",
-      "operations": [
-        {
-          "name": "Query",
-          "value": "query",
-          "description": "Query with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into query.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs query and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Upsert",
-          "value": "upsert",
-          "description": "Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Create",
-          "value": "bulkCreate",
-          "description": "Bulk Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Update",
-          "value": "bulkUpdate",
-          "description": "Bulk Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Delete",
-          "value": "bulkDelete",
-          "description": "Bulk Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Upsert",
-          "value": "bulkUpsert",
-          "description": "Bulk Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        }
-      ]
-    },
-    {
-      "name": "Opportunity",
-      "description": "Opportunity is a Salesforce resource available in this node.",
-      "operations": [
-        {
-          "name": "Query",
-          "value": "query",
-          "description": "Query with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into query.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs query and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Upsert",
-          "value": "upsert",
-          "description": "Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Create",
-          "value": "bulkCreate",
-          "description": "Bulk Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Update",
-          "value": "bulkUpdate",
-          "description": "Bulk Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Delete",
-          "value": "bulkDelete",
-          "description": "Bulk Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Upsert",
-          "value": "bulkUpsert",
-          "description": "Bulk Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        }
-      ]
-    },
-    {
-      "name": "Case",
-      "description": "Case is a Salesforce resource available in this node.",
-      "operations": [
-        {
-          "name": "Query",
-          "value": "query",
-          "description": "Query with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into query.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs query and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Upsert",
-          "value": "upsert",
-          "description": "Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Create",
-          "value": "bulkCreate",
-          "description": "Bulk Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Update",
-          "value": "bulkUpdate",
-          "description": "Bulk Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Delete",
-          "value": "bulkDelete",
-          "description": "Bulk Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Upsert",
-          "value": "bulkUpsert",
-          "description": "Bulk Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        }
-      ]
-    },
-    {
-      "name": "Campaign",
-      "description": "Campaign is a Salesforce resource available in this node.",
-      "operations": [
-        {
-          "name": "Query",
-          "value": "query",
-          "description": "Query with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into query.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs query and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Upsert",
-          "value": "upsert",
-          "description": "Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Create",
-          "value": "bulkCreate",
-          "description": "Bulk Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Update",
-          "value": "bulkUpdate",
-          "description": "Bulk Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Delete",
-          "value": "bulkDelete",
-          "description": "Bulk Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Upsert",
-          "value": "bulkUpsert",
-          "description": "Bulk Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        }
-      ]
-    },
-    {
-      "name": "Product2",
-      "description": "Product2 is a Salesforce resource available in this node.",
-      "operations": [
-        {
-          "name": "Query",
-          "value": "query",
-          "description": "Query with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into query.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs query and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Upsert",
-          "value": "upsert",
-          "description": "Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into upsert.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs upsert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Create",
-          "value": "bulkCreate",
-          "description": "Bulk Create with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk create.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Update",
-          "value": "bulkUpdate",
-          "description": "Bulk Update with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
-              "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
-            },
-            {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
-              "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk update.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Delete",
-          "value": "bulkDelete",
-          "description": "Bulk Delete with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
               "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Object",
-              "internalKey": "customObject",
-              "type": "string",
-              "required": false,
-              "description": "Custom object API name (ends with __c) when resource is custom",
-              "example": "CustomObject__c",
-              "placeholder": "CustomObject__c"
-            },
-            {
-              "name": "Soql",
-              "internalKey": "soql",
-              "type": "string",
-              "required": false,
-              "description": "SOQL query (required for query operation)",
-              "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
-            },
-            {
-              "name": "Sosl",
-              "internalKey": "sosl",
-              "type": "string",
-              "required": false,
-              "description": "SOSL search query (required for search operation)",
-              "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record Id (required for get, update, delete operations)",
-              "example": "003xx000004TmiQAAS",
-              "placeholder": "003xx000004TmiQAAS"
-            },
-            {
-              "name": "External Id Field",
-              "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
-              "description": "External ID field API name (required for upsert operation)",
-              "example": "CustomId__c",
-              "placeholder": "CustomId__c"
+              "description": "OAuth2 access token for Salesforce (stored as credential)"
             },
             {
-              "name": "External Id Value",
-              "internalKey": "externalIdValue",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "External ID value (required for upsert operation)",
-              "example": "EXT-12345",
-              "placeholder": "EXT-12345"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Records",
-              "internalKey": "records",
-              "type": "json",
-              "required": false,
-              "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
-          "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk delete.",
-            "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
-            },
-            "expectedOutput": "The node runs bulk delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
-        },
-        {
-          "name": "Bulk Upsert",
-          "value": "bulkUpsert",
-          "description": "Bulk Upsert with the Salesforce node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": true,
-              "description": "Salesforce instance URL (e.g., https://yourinstance.my.salesforce.com)",
-              "example": "https://api.example.com/resource"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
               "required": true,
-              "description": "OAuth2 access token for Salesforce (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Salesforce object type (sObject), e.g. Account, Contact, Lead",
+              "example": "Account",
+              "placeholder": "Account"
             },
             {
               "name": "Custom Object",
               "internalKey": "customObject",
               "type": "string",
-              "required": false,
               "description": "Custom object API name (ends with __c) when resource is custom",
               "example": "CustomObject__c",
               "placeholder": "CustomObject__c"
@@ -9211,7 +1209,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Soql",
               "internalKey": "soql",
               "type": "string",
-              "required": false,
               "description": "SOQL query (required for query operation)",
               "example": "SELECT Id, Name, Email FROM Contact LIMIT 10",
               "placeholder": "SELECT Id, Name, Email FROM Contact LIMIT 10"
@@ -9220,7 +1217,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Sosl",
               "internalKey": "sosl",
               "type": "string",
-              "required": false,
               "description": "SOSL search query (required for search operation)",
               "example": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
               "placeholder": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)"
@@ -9229,7 +1225,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record Id (required for get, update, delete operations)",
               "example": "003xx000004TmiQAAS",
               "placeholder": "003xx000004TmiQAAS"
@@ -9238,7 +1233,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Field",
               "internalKey": "externalIdField",
               "type": "string",
-              "required": false,
               "description": "External ID field API name (required for upsert operation)",
               "example": "CustomId__c",
               "placeholder": "CustomId__c"
@@ -9247,7 +1241,6 @@ export const salesforceDoc: NodeDoc = {
               "name": "External Id Value",
               "internalKey": "externalIdValue",
               "type": "string",
-              "required": false,
               "description": "External ID value (required for upsert operation)",
               "example": "EXT-12345",
               "placeholder": "EXT-12345"
@@ -9256,43 +1249,40 @@ export const salesforceDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"LastName\":\"Doe\",\"Email\":\"test@example.com\"}"
             },
             {
               "name": "Records",
               "internalKey": "records",
               "type": "json",
-              "required": false,
               "description": "Array of records for bulk operations",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]",
+              "placeholder": "[{\"LastName\":\"Doe\",\"Email\":\"test1@example.com\"},{\"LastName\":\"Smith\",\"Email\":\"test2@example.com\"}]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Salesforce node.\nstructure: Value returned by the Salesforce node.\nconvertible: Value returned by the Salesforce node.\ndefaultValue: Value returned by the Salesforce node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Salesforce in a workflow and pass upstream data into bulk upsert.",
+            "scenario": "Use Salesforce to bulkupsert in a workflow.",
             "inputValues": {
-              "Instance Url": "https://api.example.com/resource",
-              "Access Token": "{{ $json.accessToken }}",
+              "Instance Url": "https://api.example.com",
+              "Access Token": "",
+              "Resource": "Account",
               "Custom Object": "CustomObject__c",
-              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10",
-              "Sosl": "FIND {test@example.com} IN EMAIL FIELDS RETURNING Contact(Id, Name)",
-              "Id": "003xx000004TmiQAAS",
-              "External Id Field": "CustomId__c",
-              "External Id Value": "EXT-12345",
-              "Fields": "[object Object]",
-              "Records": "[object Object],[object Object]"
+              "Soql": "SELECT Id, Name, Email FROM Contact LIMIT 10"
             },
-            "expectedOutput": "The node runs bulk upsert and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes bulkupsert and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm"
         }
@@ -9302,25 +1292,19 @@ export const salesforceDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Salesforce node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

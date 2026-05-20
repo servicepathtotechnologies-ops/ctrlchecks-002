@@ -5,19 +5,21 @@ export const webhookResponseDoc: NodeDoc = {
   "displayName": "Webhook Response",
   "category": "Utility",
   "logoUrl": "/icons/nodes/webhook_response.svg",
-  "description": "Send response to webhook request Use this node when a workflow needs webhook response behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Send response to webhook request",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Webhook Response is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Webhook Response is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Webhook Response node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the Webhook Response node.",
           "fields": [
             {
               "name": "Response Code",
@@ -32,24 +34,21 @@ export const webhookResponseDoc: NodeDoc = {
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Response body",
               "example": "{{$json.result}}",
               "placeholder": "{{$json.result}}"
             }
           ],
-          "outputExample": {
-            "type": "type"
-          },
-          "outputDescription": "type: Value returned by the Webhook Response node.",
+          "outputExample": {},
+          "outputDescription": "",
           "usageExample": {
-            "scenario": "Use Webhook Response in a workflow and pass upstream data into configure.",
+            "scenario": "Use Webhook Response to execute in a workflow.",
             "inputValues": {
               "Response Code": "200",
               "Body": "{{$json.result}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -59,20 +58,14 @@ export const webhookResponseDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "http_request",
-    "respond_to_webhook",
-    "clickup",
-    "delay",
-    "queue_push"
-  ]
+  "relatedNodes": []
 };

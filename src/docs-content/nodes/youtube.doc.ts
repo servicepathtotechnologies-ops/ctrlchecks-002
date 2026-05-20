@@ -1,172 +1,609 @@
 import type { NodeDoc } from '../types';
 
-const outputExample = {
-  success: true,
-  operation: 'upload_video',
-  videoId: 'VIDEO_ID',
-  title: 'Demo upload',
-  url: 'https://www.youtube.com/watch?v=VIDEO_ID',
-};
-
 export const youtubeDoc: NodeDoc = {
-  slug: 'youtube',
-  displayName: 'YouTube',
-  category: 'Communication',
-  logoUrl: '/icons/nodes/youtube.svg',
-  description: 'Read, upload, update, and delete YouTube videos with the connected user-owned YouTube OAuth account.',
-  credentialType: 'YouTube OAuth2 Connection',
-  credentialSetupSteps: [
-    'Open Connections in CtrlChecks.',
-    'Connect YouTube using OAuth.',
-    'Approve the YouTube read/manage/upload scopes.',
-    'Return to the workflow and select the YouTube OAuth2 connection on the node.',
-    'Run a read operation first, then use Upload Video with a private or unlisted privacy status for testing.',
+  "slug": "youtube",
+  "displayName": "YouTube",
+  "category": "Communication",
+  "logoUrl": "/icons/nodes/youtube.svg",
+  "description": "Publish videos or posts to YouTube channels",
+  "credentialType": "Google Credential",
+  "credentialSetupSteps": [
+    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
+    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
+    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
+    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
+    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
+    "Sign in and grant the required scopes. The connection saves automatically."
   ],
-  credentialDocsUrl: 'https://developers.google.com/youtube/v3/guides/authentication',
-  resources: [
+  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
+  "resources": [
     {
-      name: 'Operations',
-      description: 'YouTube exposes operation choices directly.',
-      operations: [
+      "name": "Operations",
+      "description": "YouTube exposes operation choices directly.",
+      "operations": [
         {
-          name: 'List my channels',
-          value: 'list_my_channels',
-          description: 'List channels available to the authenticated YouTube user.',
-          fields: [
-            { name: 'Max Results', internalKey: 'maxResults', type: 'number', required: false, description: 'Maximum channels to return.', defaultValue: '10' },
+          "name": "List my channels",
+          "value": "list_my_channels",
+          "description": "List my channels using the YouTube node.",
+          "fields": [
+            {
+              "name": "Title",
+              "internalKey": "title",
+              "type": "string",
+              "description": "Video title for upload_video or update_video_metadata",
+              "example": "New product demo",
+              "placeholder": "New product demo"
+            },
+            {
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Video description for upload_video or update_video_metadata",
+              "example": "Check out our latest feature...",
+              "placeholder": "Check out our latest feature..."
+            },
+            {
+              "name": "Tags",
+              "internalKey": "tags",
+              "type": "string",
+              "description": "Comma-separated tags for upload_video or update_video_metadata",
+              "example": "automation, demo",
+              "placeholder": "automation, demo"
+            },
+            {
+              "name": "Video Url",
+              "internalKey": "videoUrl",
+              "type": "url",
+              "description": "HTTP/HTTPS URL of the video file to upload",
+              "example": "https://example.com/video.mp4",
+              "placeholder": "https://example.com/video.mp4"
+            },
+            {
+              "name": "Video Data Base64",
+              "internalKey": "videoDataBase64",
+              "type": "string",
+              "description": "Base64-encoded video data for upload_video",
+              "example": "AAAAIGZ0eXBtcDQy...",
+              "placeholder": "AAAAIGZ0eXBtcDQy..."
+            },
+            {
+              "name": "Mime Type",
+              "internalKey": "mimeType",
+              "type": "string",
+              "description": "Video MIME type for upload_video",
+              "example": "video/mp4",
+              "placeholder": "video/mp4",
+              "defaultValue": "video/mp4"
+            },
+            {
+              "name": "Privacy Status",
+              "internalKey": "privacyStatus",
+              "type": "string",
+              "description": "Privacy status for upload_video: private, unlisted, public",
+              "example": "private",
+              "placeholder": "private",
+              "defaultValue": "private"
+            },
+            {
+              "name": "Made For Kids",
+              "internalKey": "madeForKids",
+              "type": "boolean",
+              "description": "Whether uploaded video is made for kids",
+              "example": "false",
+              "placeholder": "false",
+              "defaultValue": "false"
+            },
+            {
+              "name": "Category Id",
+              "internalKey": "categoryId",
+              "type": "string",
+              "description": "Optional YouTube category ID for upload_video",
+              "example": "22",
+              "placeholder": "22",
+              "defaultValue": "22"
+            },
+            {
+              "name": "Video Id",
+              "internalKey": "videoId",
+              "type": "string",
+              "description": "YouTube video ID for get_video_stats, update_video_metadata, or delete_video",
+              "example": "dQw4w9WgXcQ",
+              "placeholder": "dQw4w9WgXcQ"
+            },
+            {
+              "name": "Query",
+              "internalKey": "query",
+              "type": "textarea",
+              "description": "Search query for search_videos",
+              "example": "workflow automation",
+              "placeholder": "workflow automation"
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Maximum number of YouTube results to return",
+              "example": "10",
+              "placeholder": "10"
+            },
+            {
+              "name": "Channel Id",
+              "internalKey": "channelId",
+              "type": "string",
+              "description": "YouTube channel ID for get_channel or optional search filtering",
+              "example": "UCxxxxxxxxxxxx",
+              "placeholder": "UCxxxxxxxxxxxx"
+            }
           ],
-          outputExample: { success: true, channelId: 'UC...', title: 'My Channel', items: [] },
-          outputDescription: 'Returns channel items, channelId, title, and pageInfo.',
-          usageExample: {
-            scenario: 'Confirm the connected account can access YouTube.',
-            inputValues: { 'Max Results': '10' },
-            expectedOutput: 'The node returns the authenticated user channel list.',
+          "outputExample": {
+            "success": true,
+            "operation": "",
+            "videoId": "abc123",
+            "channelId": "abc123",
+            "title": "",
+            "url": "https://example.com",
+            "privacyStatus": "",
+            "statistics": {},
+            "items": [],
+            "video": "abc123",
+            "channel": {}
           },
-          externalDocsUrl: 'https://developers.google.com/youtube/v3/docs/channels/list',
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nvideoId: Value returned by this node.\nchannelId: Value returned by this node.\ntitle: Value returned by this node.\nurl: Value returned by this node.\nprivacyStatus: Value returned by this node.\nstatistics: Value returned by this node.\nitems: Value returned by this node.\nvideo: Value returned by this node.\nchannel: Value returned by this node.",
+          "usageExample": {
+            "scenario": "Use YouTube to list my channels in a workflow.",
+            "inputValues": {
+              "Title": "New product demo",
+              "Description": "Check out our latest feature...",
+              "Tags": "automation, demo",
+              "Video Url": "https://example.com/video.mp4",
+              "Video Data Base64": "AAAAIGZ0eXBtcDQy..."
+            },
+            "expectedOutput": "The node executes list my channels and exposes its result for downstream nodes."
+          },
+          "externalDocsUrl": "https://developers.google.com/youtube/v3/docs"
         },
         {
-          name: 'Get channel',
-          value: 'get_channel',
-          description: 'Get a specific channel by ID, or the authenticated channel if no ID is provided.',
-          fields: [
-            { name: 'Channel ID', internalKey: 'channelId', type: 'string', required: false, description: 'Optional YouTube channel ID.', placeholder: 'UCxxxxxxxxxxxx' },
+          "name": "Search videos",
+          "value": "search_videos",
+          "description": "Search videos using the YouTube node.",
+          "fields": [
+            {
+              "name": "Title",
+              "internalKey": "title",
+              "type": "string",
+              "description": "Video title for upload_video or update_video_metadata",
+              "example": "New product demo",
+              "placeholder": "New product demo"
+            },
+            {
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Video description for upload_video or update_video_metadata",
+              "example": "Check out our latest feature...",
+              "placeholder": "Check out our latest feature..."
+            },
+            {
+              "name": "Tags",
+              "internalKey": "tags",
+              "type": "string",
+              "description": "Comma-separated tags for upload_video or update_video_metadata",
+              "example": "automation, demo",
+              "placeholder": "automation, demo"
+            },
+            {
+              "name": "Video Url",
+              "internalKey": "videoUrl",
+              "type": "url",
+              "description": "HTTP/HTTPS URL of the video file to upload",
+              "example": "https://example.com/video.mp4",
+              "placeholder": "https://example.com/video.mp4"
+            },
+            {
+              "name": "Video Data Base64",
+              "internalKey": "videoDataBase64",
+              "type": "string",
+              "description": "Base64-encoded video data for upload_video",
+              "example": "AAAAIGZ0eXBtcDQy...",
+              "placeholder": "AAAAIGZ0eXBtcDQy..."
+            },
+            {
+              "name": "Mime Type",
+              "internalKey": "mimeType",
+              "type": "string",
+              "description": "Video MIME type for upload_video",
+              "example": "video/mp4",
+              "placeholder": "video/mp4",
+              "defaultValue": "video/mp4"
+            },
+            {
+              "name": "Privacy Status",
+              "internalKey": "privacyStatus",
+              "type": "string",
+              "description": "Privacy status for upload_video: private, unlisted, public",
+              "example": "private",
+              "placeholder": "private",
+              "defaultValue": "private"
+            },
+            {
+              "name": "Made For Kids",
+              "internalKey": "madeForKids",
+              "type": "boolean",
+              "description": "Whether uploaded video is made for kids",
+              "example": "false",
+              "placeholder": "false",
+              "defaultValue": "false"
+            },
+            {
+              "name": "Category Id",
+              "internalKey": "categoryId",
+              "type": "string",
+              "description": "Optional YouTube category ID for upload_video",
+              "example": "22",
+              "placeholder": "22",
+              "defaultValue": "22"
+            },
+            {
+              "name": "Video Id",
+              "internalKey": "videoId",
+              "type": "string",
+              "description": "YouTube video ID for get_video_stats, update_video_metadata, or delete_video",
+              "example": "dQw4w9WgXcQ",
+              "placeholder": "dQw4w9WgXcQ"
+            },
+            {
+              "name": "Query",
+              "internalKey": "query",
+              "type": "textarea",
+              "description": "Search query for search_videos",
+              "example": "workflow automation",
+              "placeholder": "workflow automation"
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Maximum number of YouTube results to return",
+              "example": "10",
+              "placeholder": "10"
+            },
+            {
+              "name": "Channel Id",
+              "internalKey": "channelId",
+              "type": "string",
+              "description": "YouTube channel ID for get_channel or optional search filtering",
+              "example": "UCxxxxxxxxxxxx",
+              "placeholder": "UCxxxxxxxxxxxx"
+            }
           ],
-          outputExample: { success: true, channelId: 'UC...', title: 'My Channel', channel: {} },
-          outputDescription: 'Returns one channel object plus flattened channelId and title.',
-          usageExample: {
-            scenario: 'Load a channel before working with its videos.',
-            inputValues: { 'Channel ID': 'UCxxxxxxxxxxxx' },
-            expectedOutput: 'The node returns the channel details.',
+          "outputExample": {
+            "success": true,
+            "operation": "",
+            "videoId": "abc123",
+            "channelId": "abc123",
+            "title": "",
+            "url": "https://example.com",
+            "privacyStatus": "",
+            "statistics": {},
+            "items": [],
+            "video": "abc123",
+            "channel": {}
           },
-          externalDocsUrl: 'https://developers.google.com/youtube/v3/docs/channels/list',
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nvideoId: Value returned by this node.\nchannelId: Value returned by this node.\ntitle: Value returned by this node.\nurl: Value returned by this node.\nprivacyStatus: Value returned by this node.\nstatistics: Value returned by this node.\nitems: Value returned by this node.\nvideo: Value returned by this node.\nchannel: Value returned by this node.",
+          "usageExample": {
+            "scenario": "Use YouTube to search videos in a workflow.",
+            "inputValues": {
+              "Title": "New product demo",
+              "Description": "Check out our latest feature...",
+              "Tags": "automation, demo",
+              "Video Url": "https://example.com/video.mp4",
+              "Video Data Base64": "AAAAIGZ0eXBtcDQy..."
+            },
+            "expectedOutput": "The node executes search videos and exposes its result for downstream nodes."
+          },
+          "externalDocsUrl": "https://developers.google.com/youtube/v3/docs"
         },
         {
-          name: 'Search videos',
-          value: 'search_videos',
-          description: 'Search YouTube videos by query.',
-          fields: [
-            { name: 'Search Query', internalKey: 'query', type: 'string', required: true, description: 'Search query.', placeholder: 'workflow automation tutorial' },
-            { name: 'Channel ID', internalKey: 'channelId', type: 'string', required: false, description: 'Optional channel filter.', placeholder: 'UCxxxxxxxxxxxx' },
-            { name: 'Max Results', internalKey: 'maxResults', type: 'number', required: false, description: 'Maximum videos to return.', defaultValue: '10' },
+          "name": "Upload video",
+          "value": "upload_video",
+          "description": "Upload video using the YouTube node.",
+          "fields": [
+            {
+              "name": "Title",
+              "internalKey": "title",
+              "type": "string",
+              "description": "Video title for upload_video or update_video_metadata",
+              "example": "New product demo",
+              "placeholder": "New product demo"
+            },
+            {
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Video description for upload_video or update_video_metadata",
+              "example": "Check out our latest feature...",
+              "placeholder": "Check out our latest feature..."
+            },
+            {
+              "name": "Tags",
+              "internalKey": "tags",
+              "type": "string",
+              "description": "Comma-separated tags for upload_video or update_video_metadata",
+              "example": "automation, demo",
+              "placeholder": "automation, demo"
+            },
+            {
+              "name": "Video Url",
+              "internalKey": "videoUrl",
+              "type": "url",
+              "description": "HTTP/HTTPS URL of the video file to upload",
+              "example": "https://example.com/video.mp4",
+              "placeholder": "https://example.com/video.mp4"
+            },
+            {
+              "name": "Video Data Base64",
+              "internalKey": "videoDataBase64",
+              "type": "string",
+              "description": "Base64-encoded video data for upload_video",
+              "example": "AAAAIGZ0eXBtcDQy...",
+              "placeholder": "AAAAIGZ0eXBtcDQy..."
+            },
+            {
+              "name": "Mime Type",
+              "internalKey": "mimeType",
+              "type": "string",
+              "description": "Video MIME type for upload_video",
+              "example": "video/mp4",
+              "placeholder": "video/mp4",
+              "defaultValue": "video/mp4"
+            },
+            {
+              "name": "Privacy Status",
+              "internalKey": "privacyStatus",
+              "type": "string",
+              "description": "Privacy status for upload_video: private, unlisted, public",
+              "example": "private",
+              "placeholder": "private",
+              "defaultValue": "private"
+            },
+            {
+              "name": "Made For Kids",
+              "internalKey": "madeForKids",
+              "type": "boolean",
+              "description": "Whether uploaded video is made for kids",
+              "example": "false",
+              "placeholder": "false",
+              "defaultValue": "false"
+            },
+            {
+              "name": "Category Id",
+              "internalKey": "categoryId",
+              "type": "string",
+              "description": "Optional YouTube category ID for upload_video",
+              "example": "22",
+              "placeholder": "22",
+              "defaultValue": "22"
+            },
+            {
+              "name": "Video Id",
+              "internalKey": "videoId",
+              "type": "string",
+              "description": "YouTube video ID for get_video_stats, update_video_metadata, or delete_video",
+              "example": "dQw4w9WgXcQ",
+              "placeholder": "dQw4w9WgXcQ"
+            },
+            {
+              "name": "Query",
+              "internalKey": "query",
+              "type": "textarea",
+              "description": "Search query for search_videos",
+              "example": "workflow automation",
+              "placeholder": "workflow automation"
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Maximum number of YouTube results to return",
+              "example": "10",
+              "placeholder": "10"
+            },
+            {
+              "name": "Channel Id",
+              "internalKey": "channelId",
+              "type": "string",
+              "description": "YouTube channel ID for get_channel or optional search filtering",
+              "example": "UCxxxxxxxxxxxx",
+              "placeholder": "UCxxxxxxxxxxxx"
+            }
           ],
-          outputExample: { success: true, items: [], pageInfo: {} },
-          outputDescription: 'Returns YouTube search result items and pageInfo.',
-          usageExample: {
-            scenario: 'Find videos to pass into a stats or logging node.',
-            inputValues: { 'Search Query': 'workflow automation', 'Max Results': '5' },
-            expectedOutput: 'The node returns matching video search results.',
+          "outputExample": {
+            "success": true,
+            "operation": "",
+            "videoId": "abc123",
+            "channelId": "abc123",
+            "title": "",
+            "url": "https://example.com",
+            "privacyStatus": "",
+            "statistics": {},
+            "items": [],
+            "video": "abc123",
+            "channel": {}
           },
-          externalDocsUrl: 'https://developers.google.com/youtube/v3/docs/search/list',
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nvideoId: Value returned by this node.\nchannelId: Value returned by this node.\ntitle: Value returned by this node.\nurl: Value returned by this node.\nprivacyStatus: Value returned by this node.\nstatistics: Value returned by this node.\nitems: Value returned by this node.\nvideo: Value returned by this node.\nchannel: Value returned by this node.",
+          "usageExample": {
+            "scenario": "Use YouTube to upload video in a workflow.",
+            "inputValues": {
+              "Title": "New product demo",
+              "Description": "Check out our latest feature...",
+              "Tags": "automation, demo",
+              "Video Url": "https://example.com/video.mp4",
+              "Video Data Base64": "AAAAIGZ0eXBtcDQy..."
+            },
+            "expectedOutput": "The node executes upload video and exposes its result for downstream nodes."
+          },
+          "externalDocsUrl": "https://developers.google.com/youtube/v3/docs"
         },
         {
-          name: 'Get video statistics',
-          value: 'get_video_stats',
-          description: 'Read video snippet, content details, and statistics.',
-          fields: [
-            { name: 'Video ID', internalKey: 'videoId', type: 'string', required: true, description: 'YouTube video ID.', placeholder: 'dQw4w9WgXcQ' },
+          "name": "Get video stats",
+          "value": "get_video_stats",
+          "description": "Get video stats using the YouTube node.",
+          "fields": [
+            {
+              "name": "Title",
+              "internalKey": "title",
+              "type": "string",
+              "description": "Video title for upload_video or update_video_metadata",
+              "example": "New product demo",
+              "placeholder": "New product demo"
+            },
+            {
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Video description for upload_video or update_video_metadata",
+              "example": "Check out our latest feature...",
+              "placeholder": "Check out our latest feature..."
+            },
+            {
+              "name": "Tags",
+              "internalKey": "tags",
+              "type": "string",
+              "description": "Comma-separated tags for upload_video or update_video_metadata",
+              "example": "automation, demo",
+              "placeholder": "automation, demo"
+            },
+            {
+              "name": "Video Url",
+              "internalKey": "videoUrl",
+              "type": "url",
+              "description": "HTTP/HTTPS URL of the video file to upload",
+              "example": "https://example.com/video.mp4",
+              "placeholder": "https://example.com/video.mp4"
+            },
+            {
+              "name": "Video Data Base64",
+              "internalKey": "videoDataBase64",
+              "type": "string",
+              "description": "Base64-encoded video data for upload_video",
+              "example": "AAAAIGZ0eXBtcDQy...",
+              "placeholder": "AAAAIGZ0eXBtcDQy..."
+            },
+            {
+              "name": "Mime Type",
+              "internalKey": "mimeType",
+              "type": "string",
+              "description": "Video MIME type for upload_video",
+              "example": "video/mp4",
+              "placeholder": "video/mp4",
+              "defaultValue": "video/mp4"
+            },
+            {
+              "name": "Privacy Status",
+              "internalKey": "privacyStatus",
+              "type": "string",
+              "description": "Privacy status for upload_video: private, unlisted, public",
+              "example": "private",
+              "placeholder": "private",
+              "defaultValue": "private"
+            },
+            {
+              "name": "Made For Kids",
+              "internalKey": "madeForKids",
+              "type": "boolean",
+              "description": "Whether uploaded video is made for kids",
+              "example": "false",
+              "placeholder": "false",
+              "defaultValue": "false"
+            },
+            {
+              "name": "Category Id",
+              "internalKey": "categoryId",
+              "type": "string",
+              "description": "Optional YouTube category ID for upload_video",
+              "example": "22",
+              "placeholder": "22",
+              "defaultValue": "22"
+            },
+            {
+              "name": "Video Id",
+              "internalKey": "videoId",
+              "type": "string",
+              "description": "YouTube video ID for get_video_stats, update_video_metadata, or delete_video",
+              "example": "dQw4w9WgXcQ",
+              "placeholder": "dQw4w9WgXcQ"
+            },
+            {
+              "name": "Query",
+              "internalKey": "query",
+              "type": "textarea",
+              "description": "Search query for search_videos",
+              "example": "workflow automation",
+              "placeholder": "workflow automation"
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Maximum number of YouTube results to return",
+              "example": "10",
+              "placeholder": "10"
+            },
+            {
+              "name": "Channel Id",
+              "internalKey": "channelId",
+              "type": "string",
+              "description": "YouTube channel ID for get_channel or optional search filtering",
+              "example": "UCxxxxxxxxxxxx",
+              "placeholder": "UCxxxxxxxxxxxx"
+            }
           ],
-          outputExample: { success: true, videoId: 'dQw4w9WgXcQ', title: 'Video title', statistics: {} },
-          outputDescription: 'Returns video, videoId, title, and statistics.',
-          usageExample: {
-            scenario: 'Read views and likes for a known video.',
-            inputValues: { 'Video ID': 'dQw4w9WgXcQ' },
-            expectedOutput: 'The node returns video statistics.',
+          "outputExample": {
+            "success": true,
+            "operation": "",
+            "videoId": "abc123",
+            "channelId": "abc123",
+            "title": "",
+            "url": "https://example.com",
+            "privacyStatus": "",
+            "statistics": {},
+            "items": [],
+            "video": "abc123",
+            "channel": {}
           },
-          externalDocsUrl: 'https://developers.google.com/youtube/v3/docs/videos/list',
-        },
-        {
-          name: 'Upload video',
-          value: 'upload_video',
-          description: 'Upload a video using YouTube resumable upload.',
-          fields: [
-            { name: 'Video Title', internalKey: 'title', type: 'string', required: true, description: 'Title for the uploaded video.', placeholder: 'Demo upload' },
-            { name: 'Video URL', internalKey: 'videoUrl', type: 'url', required: false, description: 'Direct HTTP/HTTPS URL to video file. Required unless base64 video data is provided.', placeholder: 'https://example.com/video.mp4' },
-            { name: 'Video Data Base64', internalKey: 'videoDataBase64', type: 'textarea', required: false, description: 'Base64 video bytes from an upstream node.' },
-            { name: 'MIME Type', internalKey: 'mimeType', type: 'string', required: false, description: 'Video MIME type.', defaultValue: 'video/mp4' },
-            { name: 'Description', internalKey: 'description', type: 'textarea', required: false, description: 'Video description.' },
-            { name: 'Tags', internalKey: 'tags', type: 'string', required: false, description: 'Comma-separated video tags.' },
-            { name: 'Privacy Status', internalKey: 'privacyStatus', type: 'select', required: false, description: 'Upload privacy.', defaultValue: 'private', options: ['private', 'unlisted', 'public'] },
-            { name: 'Made For Kids', internalKey: 'madeForKids', type: 'boolean', required: false, description: 'Whether the video is made for kids.', defaultValue: 'false' },
-            { name: 'Category ID', internalKey: 'categoryId', type: 'string', required: false, description: 'YouTube category ID.', defaultValue: '22' },
-          ],
-          outputExample,
-          outputDescription: 'Returns videoId, title, privacyStatus, url, and the YouTube video response.',
-          usageExample: {
-            scenario: 'Upload a test video privately.',
-            inputValues: { 'Video Title': 'Demo upload', 'Video URL': 'https://example.com/video.mp4', 'Privacy Status': 'private' },
-            expectedOutput: 'The node uploads the video and returns the created YouTube video ID and URL.',
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nvideoId: Value returned by this node.\nchannelId: Value returned by this node.\ntitle: Value returned by this node.\nurl: Value returned by this node.\nprivacyStatus: Value returned by this node.\nstatistics: Value returned by this node.\nitems: Value returned by this node.\nvideo: Value returned by this node.\nchannel: Value returned by this node.",
+          "usageExample": {
+            "scenario": "Use YouTube to get video stats in a workflow.",
+            "inputValues": {
+              "Title": "New product demo",
+              "Description": "Check out our latest feature...",
+              "Tags": "automation, demo",
+              "Video Url": "https://example.com/video.mp4",
+              "Video Data Base64": "AAAAIGZ0eXBtcDQy..."
+            },
+            "expectedOutput": "The node executes get video stats and exposes its result for downstream nodes."
           },
-          externalDocsUrl: 'https://developers.google.com/youtube/v3/docs/videos/insert',
-        },
-        {
-          name: 'Update video metadata',
-          value: 'update_video_metadata',
-          description: 'Update the title, description, or tags for an existing video.',
-          fields: [
-            { name: 'Video ID', internalKey: 'videoId', type: 'string', required: true, description: 'YouTube video ID.', placeholder: 'dQw4w9WgXcQ' },
-            { name: 'Video Title', internalKey: 'title', type: 'string', required: false, description: 'Updated video title.' },
-            { name: 'Description', internalKey: 'description', type: 'textarea', required: false, description: 'Updated video description.' },
-            { name: 'Tags', internalKey: 'tags', type: 'string', required: false, description: 'Updated comma-separated tags.' },
-          ],
-          outputExample: { success: true, videoId: 'VIDEO_ID', title: 'Updated title', video: {} },
-          outputDescription: 'Returns the updated video object plus flattened videoId and title.',
-          usageExample: {
-            scenario: 'Rename an uploaded video.',
-            inputValues: { 'Video ID': 'VIDEO_ID', 'Video Title': 'Updated title' },
-            expectedOutput: 'The node returns the updated video metadata.',
-          },
-          externalDocsUrl: 'https://developers.google.com/youtube/v3/docs/videos/update',
-        },
-        {
-          name: 'Delete video',
-          value: 'delete_video',
-          description: 'Delete a video owned by the authenticated user.',
-          fields: [
-            { name: 'Video ID', internalKey: 'videoId', type: 'string', required: true, description: 'YouTube video ID.', placeholder: 'VIDEO_ID' },
-          ],
-          outputExample: { success: true, deleted: true, videoId: 'VIDEO_ID' },
-          outputDescription: 'Returns deleted=true and the deleted videoId.',
-          usageExample: {
-            scenario: 'Delete a known private test video.',
-            inputValues: { 'Video ID': 'VIDEO_ID' },
-            expectedOutput: 'The node deletes the video and returns deleted=true.',
-          },
-          externalDocsUrl: 'https://developers.google.com/youtube/v3/docs/videos/delete',
-        },
-      ],
-    },
+          "externalDocsUrl": "https://developers.google.com/youtube/v3/docs"
+        }
+      ]
+    }
   ],
-  commonErrors: [
+  "commonErrors": [
     {
-      error: 'Missing YouTube upload scope',
-      cause: 'The existing OAuth connection was created before upload support was added.',
-      fix: 'Reconnect YouTube and approve the youtube.upload scope.',
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the YouTube node."
     },
     {
-      error: 'videoUrl or videoDataBase64 is required',
-      cause: 'Upload Video needs actual video bytes from a direct URL or upstream base64 field.',
-      fix: 'Provide a direct videoUrl or map base64 video data from an upstream node.',
+      "error": "Required field missing",
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
+    {
+      "error": "Invalid input format",
+      "cause": "A field value does not match the format expected by the node or service API.",
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
+    }
   ],
-  relatedNodes: ['google_drive', 'http_request', 'log_output'],
+  "relatedNodes": []
 };

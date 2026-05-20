@@ -5,111 +5,65 @@ export const googleCloudStorageDoc: NodeDoc = {
   "displayName": "Google Cloud Storage",
   "category": "Data",
   "logoUrl": "/icons/nodes/google_cloud_storage.svg",
-  "description": "Interact with Google Cloud Storage buckets (upload, download, delete, list) Use this node when a workflow needs google cloud storage behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Google Cloud Storage Credential",
+  "description": "Interact with Google Cloud Storage buckets (upload, download, delete, list)",
+  "credentialType": "Google Credential",
   "credentialSetupSteps": [
-    "Open the Google Cloud Storage developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Google Cloud Storage Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
+    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
+    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
+    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
+    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
+    "Sign in and grant the required scopes. The connection saves automatically."
   ],
-  "credentialDocsUrl": "https://cloud.google.com/storage/docs/json_api",
+  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Google Cloud Storage is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Google Cloud Storage is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Google Cloud Storage node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the Google Cloud Storage node.",
           "fields": [
-            {
-              "name": "Project Id",
-              "internalKey": "projectId",
-              "type": "string",
-              "required": true,
-              "description": "projectId field",
-              "example": "{{ $json.projectId }}"
-            },
-            {
-              "name": "Client Email",
-              "internalKey": "clientEmail",
-              "type": "email",
-              "required": true,
-              "description": "clientEmail field",
-              "example": "{{ $json.email }}"
-            },
-            {
-              "name": "Private Key",
-              "internalKey": "privateKey",
-              "type": "string",
-              "required": true,
-              "description": "privateKey field",
-              "example": "{{ $json.privateKey }}"
-            },
-            {
-              "name": "Operation",
-              "internalKey": "operation",
-              "type": "string",
-              "required": true,
-              "description": "operation field",
-              "example": "{{ $json.operation }}"
-            },
-            {
-              "name": "Bucket",
-              "internalKey": "bucket",
-              "type": "string",
-              "required": true,
-              "description": "bucket field",
-              "example": "{{ $json.bucket }}"
-            },
             {
               "name": "File Name",
               "internalKey": "fileName",
               "type": "string",
-              "required": false,
-              "description": "File name/path in bucket",
-              "example": "{{ $json.fileName }}"
+              "description": "File name/path in bucket"
             },
             {
               "name": "File Content",
               "internalKey": "fileContent",
-              "type": "string",
-              "required": false,
-              "description": "File content for upload",
-              "example": "{{ $json.fileContent }}"
+              "type": "textarea",
+              "description": "File content for upload"
             },
             {
               "name": "Filter",
               "internalKey": "filter",
               "type": "string",
-              "required": false,
-              "description": "Prefix filter for list operations",
-              "example": "{{ $json.filter }}"
+              "description": "Prefix filter for list operations"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Google Cloud Storage node.\nstructure: Value returned by the Google Cloud Storage node.\nconvertible: Value returned by the Google Cloud Storage node.\ndefaultValue: Value returned by the Google Cloud Storage node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Google Cloud Storage in a workflow and pass upstream data into configure.",
+            "scenario": "Use Google Cloud Storage to execute in a workflow.",
             "inputValues": {
-              "Project Id": "{{ $json.projectId }}",
-              "Client Email": "{{ $json.email }}",
-              "Private Key": "{{ $json.privateKey }}",
-              "Operation": "{{ $json.operation }}",
-              "Bucket": "{{ $json.bucket }}",
-              "File Name": "{{ $json.fileName }}",
-              "File Content": "{{ $json.fileContent }}",
-              "Filter": "{{ $json.filter }}"
+              "File Name": "",
+              "File Content": "",
+              "Filter": ""
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://cloud.google.com/storage/docs/json_api"
         }
@@ -119,25 +73,19 @@ export const googleCloudStorageDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Google Cloud Storage node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

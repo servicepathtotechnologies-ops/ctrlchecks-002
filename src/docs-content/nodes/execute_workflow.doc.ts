@@ -5,19 +5,21 @@ export const executeWorkflowDoc: NodeDoc = {
   "displayName": "Execute Workflow",
   "category": "Logic",
   "logoUrl": "/icons/nodes/execute_workflow.svg",
-  "description": "Executes another workflow and returns its result Use this node when a workflow needs execute workflow behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Executes another workflow and returns its result",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Execute Workflow is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Execute Workflow is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Execute Workflow node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Call another workflow and wait for its result.",
           "fields": [
             {
               "name": "Workflow Id",
@@ -32,7 +34,6 @@ export const executeWorkflowDoc: NodeDoc = {
               "name": "Input",
               "internalKey": "input",
               "type": "json",
-              "required": false,
               "description": "Input data to pass to the sub-workflow",
               "example": "{{$json}}",
               "placeholder": "{{$json}}"
@@ -41,26 +42,28 @@ export const executeWorkflowDoc: NodeDoc = {
               "name": "Wait For Completion",
               "internalKey": "waitForCompletion",
               "type": "boolean",
-              "required": false,
               "description": "Wait for the sub-workflow to finish",
               "example": "true",
+              "placeholder": "true",
               "defaultValue": "true"
             }
           ],
           "outputExample": {
-            "success": true,
-            "result": "result",
-            "workflowId": "workflowId"
-          },
-          "outputDescription": "success: Value returned by the Execute Workflow node.\nresult: Value returned by the Execute Workflow node.\nworkflowId: Value returned by the Execute Workflow node.",
-          "usageExample": {
-            "scenario": "Use Execute Workflow in a workflow and pass upstream data into configure.",
-            "inputValues": {
-              "Workflow Id": "123e4567-e89b-12d3-a456-426614174000",
-              "Input": "{{$json}}",
-              "Wait For Completion": "true"
+            "result": {
+              "success": true,
+              "processedCount": 42
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "calledWorkflowId": "wf_sub123",
+            "duration": 1250
+          },
+          "outputDescription": "result: The data returned by the called workflow's Return node. calledWorkflowId: The ID of the sub-workflow. duration: How long the sub-workflow took in milliseconds.",
+          "usageExample": {
+            "scenario": "Call a reusable \"send-notification\" sub-workflow from multiple workflows",
+            "inputValues": {
+              "workflowId": "{{$env.NOTIFY_WORKFLOW_ID}}",
+              "inputData": "{\"userId\": \"{{$json.userId}}\", \"message\": \"{{$json.message}}\"}"
+            },
+            "expectedOutput": "The sub-workflow runs and returns its result in `{{$json.result}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -70,20 +73,14 @@ export const executeWorkflowDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "function",
-    "function_item",
-    "if_else",
-    "switch",
-    "merge"
-  ]
+  "relatedNodes": []
 };

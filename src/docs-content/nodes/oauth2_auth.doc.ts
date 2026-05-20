@@ -5,25 +5,21 @@ export const oauth2AuthDoc: NodeDoc = {
   "displayName": "OAuth2 Auth",
   "category": "Utility",
   "logoUrl": "/icons/nodes/oauth2_auth.svg",
-  "description": "Handles OAuth2 authentication and provides access tokens Use this node when a workflow needs oauth2 auth behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Oauth2 Credential, Oauth2 Credential",
+  "description": "Handles OAuth2 authentication and provides access tokens",
+  "credentialType": "None",
   "credentialSetupSteps": [
-    "Open the OAuth2 Auth developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Oauth2 Credential, Oauth2 Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "OAuth2 Auth is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "OAuth2 Auth is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the OAuth2 Auth node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the OAuth2 Auth node.",
           "fields": [
             {
               "name": "Provider",
@@ -31,7 +27,8 @@ export const oauth2AuthDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "OAuth2 provider (google, github, etc.)",
-              "example": "Google",
+              "example": "google",
+              "placeholder": "google",
               "options": [
                 "Google",
                 "GitHub",
@@ -42,51 +39,46 @@ export const oauth2AuthDoc: NodeDoc = {
               "name": "Auth Url",
               "internalKey": "authUrl",
               "type": "url",
-              "required": false,
               "description": "Authorization URL (for custom provider)",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Token Url",
               "internalKey": "tokenUrl",
-              "type": "password",
-              "required": false,
+              "type": "url",
               "description": "Token URL (for custom provider)",
-              "example": "https://api.example.com/resource",
-              "notes": "Stored and displayed as a masked credential value."
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Client Id",
               "internalKey": "clientId",
               "type": "string",
-              "required": false,
               "description": "Client ID",
-              "example": "{{ $json.clientId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Client Secret",
               "internalKey": "clientSecret",
               "type": "password",
-              "required": false,
               "description": "Client Secret",
-              "example": "{{ $json.clientSecret }}",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Scope",
               "internalKey": "scope",
               "type": "string",
-              "required": false,
-              "description": "OAuth scopes",
-              "example": "{{ $json.scope }}"
+              "description": "OAuth scopes"
             },
             {
               "name": "Action",
               "internalKey": "action",
               "type": "select",
-              "required": false,
               "description": "Action: getToken, refresh, or startFlow",
               "example": "getToken",
+              "placeholder": "getToken",
               "defaultValue": "getToken",
               "options": [
                 "Get Token",
@@ -97,23 +89,25 @@ export const oauth2AuthDoc: NodeDoc = {
           ],
           "outputExample": {
             "success": true,
-            "accessToken": "accessToken",
-            "refreshToken": "refreshToken",
-            "expiresIn": 1
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "success: Value returned by the OAuth2 Auth node.\naccessToken: Value returned by the OAuth2 Auth node.\nrefreshToken: Value returned by the OAuth2 Auth node.\nexpiresIn: Value returned by the OAuth2 Auth node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use OAuth2 Auth in a workflow and pass upstream data into configure.",
+            "scenario": "Use OAuth2 Auth to execute in a workflow.",
             "inputValues": {
-              "Provider": "Google",
-              "Auth Url": "https://api.example.com/resource",
-              "Token Url": "https://api.example.com/resource",
-              "Client Id": "{{ $json.clientId }}",
-              "Client Secret": "{{ $json.clientSecret }}",
-              "Scope": "{{ $json.scope }}",
-              "Action": "getToken"
+              "Provider": "google",
+              "Auth Url": "https://api.example.com",
+              "Token Url": "https://api.example.com",
+              "Client Id": "abc123",
+              "Client Secret": ""
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -122,26 +116,15 @@ export const oauth2AuthDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
-      "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
-    },
-    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "http_request",
-    "respond_to_webhook",
-    "clickup",
-    "delay",
-    "queue_push"
-  ]
+  "relatedNodes": []
 };

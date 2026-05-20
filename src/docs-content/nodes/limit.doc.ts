@@ -5,19 +5,21 @@ export const limitDoc: NodeDoc = {
   "displayName": "Limit",
   "category": "Data",
   "logoUrl": "/icons/nodes/limit.svg",
-  "description": "Limit array size Use this node when a workflow needs limit behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Limit array size",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Limit is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Limit is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Limit node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Take only the first N items from an array.",
           "fields": [
             {
               "name": "Limit",
@@ -32,26 +34,34 @@ export const limitDoc: NodeDoc = {
               "name": "Array",
               "internalKey": "array",
               "type": "json",
-              "required": false,
               "description": "Array to limit",
               "example": "{{$json.items}}",
               "placeholder": "{{$json.items}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "items": [
+              {
+                "id": 1
+              },
+              {
+                "id": 2
+              },
+              {
+                "id": 3
+              }
+            ],
+            "total": 10,
+            "returned": 3
           },
-          "outputDescription": "type: Value returned by the Limit node.\nitemType: Value returned by the Limit node.\nconvertible: Value returned by the Limit node.\ndefaultValue: Value returned by the Limit node.",
+          "outputDescription": "items: The truncated array. total: Original array length. returned: Number of items after limiting.",
           "usageExample": {
-            "scenario": "Use Limit in a workflow and pass upstream data into configure.",
+            "scenario": "Take only the top 5 results from a large dataset",
             "inputValues": {
-              "Limit": "10",
-              "Array": "{{$json.items}}"
+              "items": "{{$json.results}}",
+              "limit": "5"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "First 5 items in `{{$json.items}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -61,20 +71,14 @@ export const limitDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

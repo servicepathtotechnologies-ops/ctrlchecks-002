@@ -5,16 +5,12 @@ export const ftpDoc: NodeDoc = {
   "displayName": "FTP",
   "category": "Data",
   "logoUrl": "/icons/nodes/ftp.svg",
-  "description": "FTP file operations Use this node when a workflow needs ftp behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Ftp Credential, Ftp Credential",
+  "description": "FTP file operations",
+  "credentialType": "FTP Credential",
   "credentialSetupSteps": [
-    "Open the FTP developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Ftp Credential, Ftp Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
-  "credentialDocsUrl": "https://docs.ctrlchecks.com",
+  "credentialDocsUrl": "https://en.wikipedia.org/wiki/File_Transfer_Protocol",
   "resources": [
     {
       "name": "Operations",
@@ -23,7 +19,7 @@ export const ftpDoc: NodeDoc = {
         {
           "name": "Upload",
           "value": "upload",
-          "description": "Upload with the FTP node using the configured input fields.",
+          "description": "Upload using the FTP node.",
           "fields": [
             {
               "name": "Host",
@@ -38,81 +34,36 @@ export const ftpDoc: NodeDoc = {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
-              "required": false,
               "description": "File path",
               "example": "/path/to/file.pdf",
               "placeholder": "/path/to/file.pdf"
-            },
-            {
-              "name": "Port",
-              "internalKey": "port",
-              "type": "number",
-              "required": false,
-              "description": "FTP port",
-              "example": "21",
-              "defaultValue": "21"
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": true,
-              "description": "FTP username",
-              "example": "{{ $json.username }}"
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": true,
-              "description": "FTP password",
-              "example": "{{ $json.password }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Secure",
-              "internalKey": "secure",
-              "type": "boolean",
-              "required": false,
-              "description": "Use explicit FTPS/TLS",
-              "example": "false",
-              "defaultValue": "false"
-            },
-            {
-              "name": "File Data",
-              "internalKey": "fileData",
-              "type": "string",
-              "required": false,
-              "description": "File content for upload. Supports plain text, base64, or data URL payloads.",
-              "example": "{{ $json.fileData }}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the FTP node.\nstructure: Value returned by the FTP node.\nconvertible: Value returned by the FTP node.\ndefaultValue: Value returned by the FTP node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use FTP in a workflow and pass upstream data into upload.",
+            "scenario": "Use FTP to upload in a workflow.",
             "inputValues": {
               "Host": "ftp.example.com",
-              "Path": "/path/to/file.pdf",
-              "Port": "21",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Secure": "false",
-              "File Data": "{{ $json.fileData }}"
+              "Path": "/path/to/file.pdf"
             },
-            "expectedOutput": "The node runs upload and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes upload and exposes its result for downstream nodes."
           },
-          "externalDocsUrl": "https://docs.ctrlchecks.com"
+          "externalDocsUrl": "https://en.wikipedia.org/wiki/File_Transfer_Protocol"
         },
         {
           "name": "Download",
           "value": "download",
-          "description": "Download with the FTP node using the configured input fields.",
+          "description": "Download using the FTP node.",
           "fields": [
             {
               "name": "Host",
@@ -127,81 +78,36 @@ export const ftpDoc: NodeDoc = {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
-              "required": false,
               "description": "File path",
               "example": "/path/to/file.pdf",
               "placeholder": "/path/to/file.pdf"
-            },
-            {
-              "name": "Port",
-              "internalKey": "port",
-              "type": "number",
-              "required": false,
-              "description": "FTP port",
-              "example": "21",
-              "defaultValue": "21"
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": true,
-              "description": "FTP username",
-              "example": "{{ $json.username }}"
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": true,
-              "description": "FTP password",
-              "example": "{{ $json.password }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Secure",
-              "internalKey": "secure",
-              "type": "boolean",
-              "required": false,
-              "description": "Use explicit FTPS/TLS",
-              "example": "false",
-              "defaultValue": "false"
-            },
-            {
-              "name": "File Data",
-              "internalKey": "fileData",
-              "type": "string",
-              "required": false,
-              "description": "File content for upload. Supports plain text, base64, or data URL payloads.",
-              "example": "{{ $json.fileData }}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the FTP node.\nstructure: Value returned by the FTP node.\nconvertible: Value returned by the FTP node.\ndefaultValue: Value returned by the FTP node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use FTP in a workflow and pass upstream data into download.",
+            "scenario": "Use FTP to download in a workflow.",
             "inputValues": {
               "Host": "ftp.example.com",
-              "Path": "/path/to/file.pdf",
-              "Port": "21",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Secure": "false",
-              "File Data": "{{ $json.fileData }}"
+              "Path": "/path/to/file.pdf"
             },
-            "expectedOutput": "The node runs download and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes download and exposes its result for downstream nodes."
           },
-          "externalDocsUrl": "https://docs.ctrlchecks.com"
+          "externalDocsUrl": "https://en.wikipedia.org/wiki/File_Transfer_Protocol"
         },
         {
           "name": "List",
           "value": "list",
-          "description": "List with the FTP node using the configured input fields.",
+          "description": "List using the FTP node.",
           "fields": [
             {
               "name": "Host",
@@ -216,76 +122,31 @@ export const ftpDoc: NodeDoc = {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
-              "required": false,
               "description": "File path",
               "example": "/path/to/file.pdf",
               "placeholder": "/path/to/file.pdf"
-            },
-            {
-              "name": "Port",
-              "internalKey": "port",
-              "type": "number",
-              "required": false,
-              "description": "FTP port",
-              "example": "21",
-              "defaultValue": "21"
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": true,
-              "description": "FTP username",
-              "example": "{{ $json.username }}"
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": true,
-              "description": "FTP password",
-              "example": "{{ $json.password }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Secure",
-              "internalKey": "secure",
-              "type": "boolean",
-              "required": false,
-              "description": "Use explicit FTPS/TLS",
-              "example": "false",
-              "defaultValue": "false"
-            },
-            {
-              "name": "File Data",
-              "internalKey": "fileData",
-              "type": "string",
-              "required": false,
-              "description": "File content for upload. Supports plain text, base64, or data URL payloads.",
-              "example": "{{ $json.fileData }}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the FTP node.\nstructure: Value returned by the FTP node.\nconvertible: Value returned by the FTP node.\ndefaultValue: Value returned by the FTP node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use FTP in a workflow and pass upstream data into list.",
+            "scenario": "Use FTP to list in a workflow.",
             "inputValues": {
               "Host": "ftp.example.com",
-              "Path": "/path/to/file.pdf",
-              "Port": "21",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Secure": "false",
-              "File Data": "{{ $json.fileData }}"
+              "Path": "/path/to/file.pdf"
             },
-            "expectedOutput": "The node runs list and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes list and exposes its result for downstream nodes."
           },
-          "externalDocsUrl": "https://docs.ctrlchecks.com"
+          "externalDocsUrl": "https://en.wikipedia.org/wiki/File_Transfer_Protocol"
         }
       ]
     }
@@ -293,25 +154,19 @@ export const ftpDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the FTP node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

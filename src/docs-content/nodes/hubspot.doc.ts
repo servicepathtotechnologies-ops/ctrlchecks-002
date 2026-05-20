@@ -5,31 +5,39 @@ export const hubspotDoc: NodeDoc = {
   "displayName": "HubSpot",
   "category": "Data",
   "logoUrl": "/icons/nodes/hubspot.svg",
-  "description": "HubSpot CRM operations - create, update, retrieve, or search contacts, companies, deals, tickets, and other objects Use this node when a workflow needs hubspot behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Hubspot Credential, Hubspot Token, Hubspot Credential",
+  "description": "HubSpot CRM operations - create, update, retrieve, or search contacts, companies, deals, tickets, and other objects",
+  "credentialType": "HubSpot API Key",
   "credentialSetupSteps": [
-    "Open the HubSpot developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Hubspot Credential, Hubspot Token, Hubspot Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Log in to HubSpot → Settings (gear icon) → Integrations → Private Apps.",
+    "Click \"Create private app\", give it a name, and under \"Scopes\" select the required ones (e.g. crm.objects.contacts.read/write).",
+    "Click \"Create app\" and copy the Access Token.",
+    "In CtrlChecks, open Connections → Add Connection → HubSpot → paste the Access Token → Save."
   ],
-  "credentialDocsUrl": "https://developers.hubspot.com/docs/api/overview",
+  "credentialDocsUrl": "https://developers.hubspot.com/docs/api/private-apps",
   "resources": [
     {
-      "name": "Contact",
-      "description": "Contact is a HubSpot resource available in this node.",
+      "name": "Operations",
+      "description": "HubSpot exposes operation choices directly.",
       "operations": [
         {
           "name": "Get",
           "value": "get",
-          "description": "Get with the HubSpot node using the configured input fields.",
+          "description": "Get a HubSpot CRM object (contact, company, or deal) by its ID.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
+              "example": "contact",
+              "placeholder": "contact",
+              "defaultValue": "contact"
+            },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "HubSpot API key or Private App access token (required for authentication)",
               "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
               "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
@@ -38,27 +46,15 @@ export const hubspotDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "HubSpot OAuth2 access token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Object ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -67,7 +63,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Object Id",
               "internalKey": "objectId",
               "type": "string",
-              "required": false,
               "description": "Alias for id (legacy field name)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -76,16 +71,14 @@ export const hubspotDoc: NodeDoc = {
               "name": "Properties",
               "internalKey": "properties",
               "type": "json",
-              "required": false,
               "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}",
+              "placeholder": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}"
             },
             {
               "name": "Search Query",
               "internalKey": "searchQuery",
               "type": "string",
-              "required": false,
               "description": "Search query (required for search operation)",
               "example": "email:test@example.com",
               "placeholder": "email:test@example.com"
@@ -94,7 +87,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Number of records to return",
               "example": "10",
               "placeholder": "10",
@@ -104,46 +96,51 @@ export const hubspotDoc: NodeDoc = {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
               "description": "Pagination token for next page",
               "example": "paging_token",
               "placeholder": "paging_token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
+            "id": "12345",
+            "properties": {
+              "firstname": "Alice",
+              "lastname": "Smith",
+              "email": "alice@example.com",
+              "hubspot_owner_id": "6789"
             },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
+            "createdAt": "2024-01-01T00:00:00Z"
+          },
+          "outputDescription": "id: HubSpot object ID. properties: All CRM properties. createdAt: When the record was created.",
+          "usageExample": {
+            "scenario": "Look up a HubSpot contact before updating their properties",
+            "inputValues": {
+              "objectType": "contacts",
+              "objectId": "{{$json.contactId}}"
+            },
+            "expectedOutput": "Returns the full contact record."
           },
           "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
         },
         {
-          "name": "Get Many",
+          "name": "GetMany",
           "value": "getMany",
-          "description": "Get Many with the HubSpot node using the configured input fields.",
+          "description": "GetMany using the HubSpot node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
+              "example": "contact",
+              "placeholder": "contact",
+              "defaultValue": "contact"
+            },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "HubSpot API key or Private App access token (required for authentication)",
               "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
               "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
@@ -152,27 +149,15 @@ export const hubspotDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "HubSpot OAuth2 access token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Object ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -181,7 +166,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Object Id",
               "internalKey": "objectId",
               "type": "string",
-              "required": false,
               "description": "Alias for id (legacy field name)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -190,16 +174,14 @@ export const hubspotDoc: NodeDoc = {
               "name": "Properties",
               "internalKey": "properties",
               "type": "json",
-              "required": false,
               "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}",
+              "placeholder": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}"
             },
             {
               "name": "Search Query",
               "internalKey": "searchQuery",
               "type": "string",
-              "required": false,
               "description": "Search query (required for search operation)",
               "example": "email:test@example.com",
               "placeholder": "email:test@example.com"
@@ -208,7 +190,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Number of records to return",
               "example": "10",
               "placeholder": "10",
@@ -218,46 +199,54 @@ export const hubspotDoc: NodeDoc = {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
               "description": "Pagination token for next page",
               "example": "paging_token",
               "placeholder": "paging_token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into get many.",
+            "scenario": "Use HubSpot to getmany in a workflow.",
             "inputValues": {
+              "Resource": "contact",
               "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
               "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
               "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
+              "Object Id": "123456789"
             },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes getmany and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
         },
         {
           "name": "Create",
           "value": "create",
-          "description": "Create with the HubSpot node using the configured input fields.",
+          "description": "Create a new contact, company, or deal in HubSpot.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
+              "example": "contact",
+              "placeholder": "contact",
+              "defaultValue": "contact"
+            },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "HubSpot API key or Private App access token (required for authentication)",
               "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
               "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
@@ -266,27 +255,15 @@ export const hubspotDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "HubSpot OAuth2 access token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Object ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -295,7 +272,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Object Id",
               "internalKey": "objectId",
               "type": "string",
-              "required": false,
               "description": "Alias for id (legacy field name)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -304,16 +280,14 @@ export const hubspotDoc: NodeDoc = {
               "name": "Properties",
               "internalKey": "properties",
               "type": "json",
-              "required": false,
               "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}",
+              "placeholder": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}"
             },
             {
               "name": "Search Query",
               "internalKey": "searchQuery",
               "type": "string",
-              "required": false,
               "description": "Search query (required for search operation)",
               "example": "email:test@example.com",
               "placeholder": "email:test@example.com"
@@ -322,7 +296,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Number of records to return",
               "example": "10",
               "placeholder": "10",
@@ -332,46 +305,49 @@ export const hubspotDoc: NodeDoc = {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
               "description": "Pagination token for next page",
               "example": "paging_token",
               "placeholder": "paging_token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "id": "new_12345",
+            "properties": {
+              "firstname": "Bob",
+              "email": "bob@example.com",
+              "hs_object_id": "new_12345"
+            }
           },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
+          "outputDescription": "id: The new HubSpot record ID. properties: The properties set for the new record.",
           "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into create.",
+            "scenario": "Create a HubSpot contact when a new user signs up via a website form",
             "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
+              "objectType": "contacts",
+              "properties": "{\"firstname\": \"{{$json.firstName}}\", \"lastname\": \"{{$json.lastName}}\", \"email\": \"{{$json.email}}\", \"source\": \"website_form\"}"
             },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "expectedOutput": "Contact is created. `{{$json.id}}` is the HubSpot contact ID."
           },
           "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the HubSpot node using the configured input fields.",
+          "description": "Update properties on an existing HubSpot contact, company, or deal.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
+              "example": "contact",
+              "placeholder": "contact",
+              "defaultValue": "contact"
+            },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "HubSpot API key or Private App access token (required for authentication)",
               "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
               "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
@@ -380,27 +356,15 @@ export const hubspotDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "HubSpot OAuth2 access token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Object ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -409,7 +373,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Object Id",
               "internalKey": "objectId",
               "type": "string",
-              "required": false,
               "description": "Alias for id (legacy field name)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -418,16 +381,14 @@ export const hubspotDoc: NodeDoc = {
               "name": "Properties",
               "internalKey": "properties",
               "type": "json",
-              "required": false,
               "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}",
+              "placeholder": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}"
             },
             {
               "name": "Search Query",
               "internalKey": "searchQuery",
               "type": "string",
-              "required": false,
               "description": "Search query (required for search operation)",
               "example": "email:test@example.com",
               "placeholder": "email:test@example.com"
@@ -436,7 +397,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Number of records to return",
               "example": "10",
               "placeholder": "10",
@@ -446,46 +406,49 @@ export const hubspotDoc: NodeDoc = {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
               "description": "Pagination token for next page",
               "example": "paging_token",
               "placeholder": "paging_token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "id": "12345",
+            "properties": {
+              "lifecyclestage": "customer",
+              "dealstage": "closedwon"
+            }
           },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
+          "outputDescription": "id: The updated record ID. properties: The properties as they stand after the update.",
           "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into update.",
+            "scenario": "Move a HubSpot deal to \"Closed Won\" when a Stripe payment succeeds",
             "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
+              "objectType": "deals",
+              "objectId": "{{$json.dealId}}",
+              "properties": "{\"dealstage\": \"closedwon\", \"closedate\": \"{{$now}}\"}"
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "Deal stage is updated in HubSpot."
           },
           "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the HubSpot node using the configured input fields.",
+          "description": "Delete using the HubSpot node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
+              "example": "contact",
+              "placeholder": "contact",
+              "defaultValue": "contact"
+            },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "HubSpot API key or Private App access token (required for authentication)",
               "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
               "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
@@ -494,27 +457,15 @@ export const hubspotDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "HubSpot OAuth2 access token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Object ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -523,7 +474,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Object Id",
               "internalKey": "objectId",
               "type": "string",
-              "required": false,
               "description": "Alias for id (legacy field name)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -532,16 +482,14 @@ export const hubspotDoc: NodeDoc = {
               "name": "Properties",
               "internalKey": "properties",
               "type": "json",
-              "required": false,
               "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}",
+              "placeholder": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}"
             },
             {
               "name": "Search Query",
               "internalKey": "searchQuery",
               "type": "string",
-              "required": false,
               "description": "Search query (required for search operation)",
               "example": "email:test@example.com",
               "placeholder": "email:test@example.com"
@@ -550,7 +498,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Number of records to return",
               "example": "10",
               "placeholder": "10",
@@ -560,46 +507,54 @@ export const hubspotDoc: NodeDoc = {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
               "description": "Pagination token for next page",
               "example": "paging_token",
               "placeholder": "paging_token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into delete.",
+            "scenario": "Use HubSpot to delete in a workflow.",
             "inputValues": {
+              "Resource": "contact",
               "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
               "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
               "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
+              "Object Id": "123456789"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
         },
         {
           "name": "Search",
           "value": "search",
-          "description": "Search with the HubSpot node using the configured input fields.",
+          "description": "Search using the HubSpot node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
+              "example": "contact",
+              "placeholder": "contact",
+              "defaultValue": "contact"
+            },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "HubSpot API key or Private App access token (required for authentication)",
               "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
               "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
@@ -608,27 +563,15 @@ export const hubspotDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "HubSpot OAuth2 access token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Object ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -637,7 +580,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Object Id",
               "internalKey": "objectId",
               "type": "string",
-              "required": false,
               "description": "Alias for id (legacy field name)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -646,16 +588,14 @@ export const hubspotDoc: NodeDoc = {
               "name": "Properties",
               "internalKey": "properties",
               "type": "json",
-              "required": false,
               "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}",
+              "placeholder": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}"
             },
             {
               "name": "Search Query",
               "internalKey": "searchQuery",
               "type": "string",
-              "required": false,
               "description": "Search query (required for search operation)",
               "example": "email:test@example.com",
               "placeholder": "email:test@example.com"
@@ -664,7 +604,6 @@ export const hubspotDoc: NodeDoc = {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Number of records to return",
               "example": "10",
               "placeholder": "10",
@@ -674,2103 +613,32 @@ export const hubspotDoc: NodeDoc = {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
               "description": "Pagination token for next page",
               "example": "paging_token",
               "placeholder": "paging_token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into search.",
+            "scenario": "Use HubSpot to search in a workflow.",
             "inputValues": {
+              "Resource": "contact",
               "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
               "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
               "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
+              "Object Id": "123456789"
             },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        }
-      ]
-    },
-    {
-      "name": "Company",
-      "description": "Company is a HubSpot resource available in this node.",
-      "operations": [
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Get Many",
-          "value": "getMany",
-          "description": "Get Many with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into get many.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        }
-      ]
-    },
-    {
-      "name": "Deal",
-      "description": "Deal is a HubSpot resource available in this node.",
-      "operations": [
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Get Many",
-          "value": "getMany",
-          "description": "Get Many with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into get many.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        }
-      ]
-    },
-    {
-      "name": "Ticket",
-      "description": "Ticket is a HubSpot resource available in this node.",
-      "operations": [
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Get Many",
-          "value": "getMany",
-          "description": "Get Many with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into get many.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the HubSpot node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot API key or Private App access token (required for authentication)",
-              "example": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "placeholder": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "HubSpot OAuth2 access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored HubSpot credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Object ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Object Id",
-              "internalKey": "objectId",
-              "type": "string",
-              "required": false,
-              "description": "Alias for id (legacy field name)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Properties",
-              "internalKey": "properties",
-              "type": "json",
-              "required": false,
-              "description": "Object properties for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Search Query",
-              "internalKey": "searchQuery",
-              "type": "string",
-              "required": false,
-              "description": "Search query (required for search operation)",
-              "example": "email:test@example.com",
-              "placeholder": "email:test@example.com"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Number of records to return",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
-            },
-            {
-              "name": "After",
-              "internalKey": "after",
-              "type": "string",
-              "required": false,
-              "description": "Pagination token for next page",
-              "example": "paging_token",
-              "placeholder": "paging_token"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HubSpot node.\nstructure: Value returned by the HubSpot node.\nconvertible: Value returned by the HubSpot node.\ndefaultValue: Value returned by the HubSpot node.",
-          "usageExample": {
-            "scenario": "Use HubSpot in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Api Key": "HUBSPOT_ACCESS_TOKEN_REPLACE_ME",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Id": "123456789",
-              "Object Id": "123456789",
-              "Properties": "[object Object]",
-              "Search Query": "email:test@example.com",
-              "Limit": "10",
-              "After": "paging_token"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes search and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.hubspot.com/docs/api/overview"
         }
@@ -2780,25 +648,19 @@ export const hubspotDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the HubSpot node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

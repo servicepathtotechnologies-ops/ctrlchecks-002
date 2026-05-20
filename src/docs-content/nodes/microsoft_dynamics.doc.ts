@@ -5,31 +5,30 @@ export const microsoftDynamicsDoc: NodeDoc = {
   "displayName": "Microsoft Dynamics",
   "category": "Data",
   "logoUrl": "/icons/nodes/microsoft_dynamics.svg",
-  "description": "Manage CRM data in Microsoft Dynamics 365 (contacts, leads, accounts, opportunities, and more) via the Web API Use this node when a workflow needs microsoft dynamics behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Microsoft Token",
+  "description": "Manage CRM data in Microsoft Dynamics 365 (contacts, leads, accounts, opportunities, and more) via the Web API",
+  "credentialType": "Microsoft Credential",
   "credentialSetupSteps": [
-    "Open the Microsoft Dynamics developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Microsoft Token value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to Azure Portal → App registrations → New registration.",
+    "Set redirect URI to http://localhost:3001/api/oauth/microsoft/callback.",
+    "Under API Permissions, add Microsoft Graph: Mail.ReadWrite, Mail.Send.",
+    "Create a client secret and copy it.",
+    "In CtrlChecks, open Connections → Add Connection → Outlook → enter Client ID, Secret, and Tenant ID → click \"Connect with Microsoft\" → authorize."
   ],
-  "credentialDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview",
+  "credentialDocsUrl": "https://docs.microsoft.com/en-us/graph/api/resources/mail-api-overview",
   "resources": [
     {
-      "name": "Contacts",
-      "description": "Contacts is a Microsoft Dynamics resource available in this node.",
+      "name": "Operations",
+      "description": "Microsoft Dynamics exposes operation choices directly.",
       "operations": [
         {
-          "name": "Get Records",
+          "name": "GetRecords",
           "value": "getRecords",
-          "description": "Get Records with the Microsoft Dynamics node using the configured input fields.",
+          "description": "GetRecords using the Microsoft Dynamics node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
               "example": "https://yourorg.crm.dynamics.com",
               "placeholder": "https://yourorg.crm.dynamics.com"
@@ -37,17 +36,23 @@ export const microsoftDynamicsDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Azure AD OAuth2 access token (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
+              "example": "contacts",
+              "placeholder": "contacts",
+              "defaultValue": "contacts"
             },
             {
               "name": "Custom Entity",
               "internalKey": "customEntity",
               "type": "string",
-              "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
               "example": "new_customentity",
               "placeholder": "new_customentity"
@@ -56,7 +61,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
               "example": "00000000-0000-0000-0000-000000000000",
               "placeholder": "00000000-0000-0000-0000-000000000000"
@@ -65,16 +69,14 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
+              "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
             {
               "name": "Fetch Xml",
               "internalKey": "fetchXml",
               "type": "string",
-              "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
@@ -83,7 +85,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Select",
               "internalKey": "select",
               "type": "string",
-              "required": false,
               "description": "OData $select — comma-separated field names to return",
               "example": "fullname,emailaddress1,telephone1",
               "placeholder": "fullname,emailaddress1,telephone1"
@@ -92,7 +93,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Filter",
               "internalKey": "filter",
               "type": "string",
-              "required": false,
               "description": "OData $filter expression to filter records",
               "example": "emailaddress1 eq 'john@example.com'",
               "placeholder": "emailaddress1 eq 'john@example.com'"
@@ -101,45 +101,45 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Top",
               "internalKey": "top",
               "type": "number",
-              "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into get records.",
+            "scenario": "Use Microsoft Dynamics to getrecords in a workflow.",
             "inputValues": {
               "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
+              "Access Token": "",
+              "Resource": "contacts",
               "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
+              "Id": "00000000-0000-0000-0000-000000000000"
             },
-            "expectedOutput": "The node runs get records and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes getrecords and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
         },
         {
-          "name": "Get Record",
+          "name": "GetRecord",
           "value": "getRecord",
-          "description": "Get Record with the Microsoft Dynamics node using the configured input fields.",
+          "description": "GetRecord using the Microsoft Dynamics node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
               "example": "https://yourorg.crm.dynamics.com",
               "placeholder": "https://yourorg.crm.dynamics.com"
@@ -147,17 +147,23 @@ export const microsoftDynamicsDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Azure AD OAuth2 access token (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
+              "example": "contacts",
+              "placeholder": "contacts",
+              "defaultValue": "contacts"
             },
             {
               "name": "Custom Entity",
               "internalKey": "customEntity",
               "type": "string",
-              "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
               "example": "new_customentity",
               "placeholder": "new_customentity"
@@ -166,7 +172,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
               "example": "00000000-0000-0000-0000-000000000000",
               "placeholder": "00000000-0000-0000-0000-000000000000"
@@ -175,16 +180,14 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
+              "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
             {
               "name": "Fetch Xml",
               "internalKey": "fetchXml",
               "type": "string",
-              "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
@@ -193,7 +196,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Select",
               "internalKey": "select",
               "type": "string",
-              "required": false,
               "description": "OData $select — comma-separated field names to return",
               "example": "fullname,emailaddress1,telephone1",
               "placeholder": "fullname,emailaddress1,telephone1"
@@ -202,7 +204,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Filter",
               "internalKey": "filter",
               "type": "string",
-              "required": false,
               "description": "OData $filter expression to filter records",
               "example": "emailaddress1 eq 'john@example.com'",
               "placeholder": "emailaddress1 eq 'john@example.com'"
@@ -211,45 +212,45 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Top",
               "internalKey": "top",
               "type": "number",
-              "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into get record.",
+            "scenario": "Use Microsoft Dynamics to getrecord in a workflow.",
             "inputValues": {
               "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
+              "Access Token": "",
+              "Resource": "contacts",
               "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
+              "Id": "00000000-0000-0000-0000-000000000000"
             },
-            "expectedOutput": "The node runs get record and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes getrecord and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
         },
         {
-          "name": "Create Record",
+          "name": "CreateRecord",
           "value": "createRecord",
-          "description": "Create Record with the Microsoft Dynamics node using the configured input fields.",
+          "description": "CreateRecord using the Microsoft Dynamics node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
               "example": "https://yourorg.crm.dynamics.com",
               "placeholder": "https://yourorg.crm.dynamics.com"
@@ -257,17 +258,23 @@ export const microsoftDynamicsDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Azure AD OAuth2 access token (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
+              "example": "contacts",
+              "placeholder": "contacts",
+              "defaultValue": "contacts"
             },
             {
               "name": "Custom Entity",
               "internalKey": "customEntity",
               "type": "string",
-              "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
               "example": "new_customentity",
               "placeholder": "new_customentity"
@@ -276,7 +283,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
               "example": "00000000-0000-0000-0000-000000000000",
               "placeholder": "00000000-0000-0000-0000-000000000000"
@@ -285,16 +291,14 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
+              "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
             {
               "name": "Fetch Xml",
               "internalKey": "fetchXml",
               "type": "string",
-              "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
@@ -303,7 +307,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Select",
               "internalKey": "select",
               "type": "string",
-              "required": false,
               "description": "OData $select — comma-separated field names to return",
               "example": "fullname,emailaddress1,telephone1",
               "placeholder": "fullname,emailaddress1,telephone1"
@@ -312,7 +315,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Filter",
               "internalKey": "filter",
               "type": "string",
-              "required": false,
               "description": "OData $filter expression to filter records",
               "example": "emailaddress1 eq 'john@example.com'",
               "placeholder": "emailaddress1 eq 'john@example.com'"
@@ -321,45 +323,45 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Top",
               "internalKey": "top",
               "type": "number",
-              "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into create record.",
+            "scenario": "Use Microsoft Dynamics to createrecord in a workflow.",
             "inputValues": {
               "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
+              "Access Token": "",
+              "Resource": "contacts",
               "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
+              "Id": "00000000-0000-0000-0000-000000000000"
             },
-            "expectedOutput": "The node runs create record and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes createrecord and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
         },
         {
-          "name": "Update Record",
+          "name": "UpdateRecord",
           "value": "updateRecord",
-          "description": "Update Record with the Microsoft Dynamics node using the configured input fields.",
+          "description": "UpdateRecord using the Microsoft Dynamics node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
               "example": "https://yourorg.crm.dynamics.com",
               "placeholder": "https://yourorg.crm.dynamics.com"
@@ -367,17 +369,23 @@ export const microsoftDynamicsDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Azure AD OAuth2 access token (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
+              "example": "contacts",
+              "placeholder": "contacts",
+              "defaultValue": "contacts"
             },
             {
               "name": "Custom Entity",
               "internalKey": "customEntity",
               "type": "string",
-              "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
               "example": "new_customentity",
               "placeholder": "new_customentity"
@@ -386,7 +394,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
               "example": "00000000-0000-0000-0000-000000000000",
               "placeholder": "00000000-0000-0000-0000-000000000000"
@@ -395,16 +402,14 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
+              "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
             {
               "name": "Fetch Xml",
               "internalKey": "fetchXml",
               "type": "string",
-              "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
@@ -413,7 +418,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Select",
               "internalKey": "select",
               "type": "string",
-              "required": false,
               "description": "OData $select — comma-separated field names to return",
               "example": "fullname,emailaddress1,telephone1",
               "placeholder": "fullname,emailaddress1,telephone1"
@@ -422,7 +426,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Filter",
               "internalKey": "filter",
               "type": "string",
-              "required": false,
               "description": "OData $filter expression to filter records",
               "example": "emailaddress1 eq 'john@example.com'",
               "placeholder": "emailaddress1 eq 'john@example.com'"
@@ -431,45 +434,45 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Top",
               "internalKey": "top",
               "type": "number",
-              "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into update record.",
+            "scenario": "Use Microsoft Dynamics to updaterecord in a workflow.",
             "inputValues": {
               "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
+              "Access Token": "",
+              "Resource": "contacts",
               "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
+              "Id": "00000000-0000-0000-0000-000000000000"
             },
-            "expectedOutput": "The node runs update record and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes updaterecord and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
         },
         {
-          "name": "Delete Record",
+          "name": "DeleteRecord",
           "value": "deleteRecord",
-          "description": "Delete Record with the Microsoft Dynamics node using the configured input fields.",
+          "description": "DeleteRecord using the Microsoft Dynamics node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
               "example": "https://yourorg.crm.dynamics.com",
               "placeholder": "https://yourorg.crm.dynamics.com"
@@ -477,17 +480,23 @@ export const microsoftDynamicsDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Azure AD OAuth2 access token (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
+              "example": "contacts",
+              "placeholder": "contacts",
+              "defaultValue": "contacts"
             },
             {
               "name": "Custom Entity",
               "internalKey": "customEntity",
               "type": "string",
-              "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
               "example": "new_customentity",
               "placeholder": "new_customentity"
@@ -496,7 +505,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
               "example": "00000000-0000-0000-0000-000000000000",
               "placeholder": "00000000-0000-0000-0000-000000000000"
@@ -505,16 +513,14 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
+              "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
             {
               "name": "Fetch Xml",
               "internalKey": "fetchXml",
               "type": "string",
-              "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
@@ -523,7 +529,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Select",
               "internalKey": "select",
               "type": "string",
-              "required": false,
               "description": "OData $select — comma-separated field names to return",
               "example": "fullname,emailaddress1,telephone1",
               "placeholder": "fullname,emailaddress1,telephone1"
@@ -532,7 +537,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Filter",
               "internalKey": "filter",
               "type": "string",
-              "required": false,
               "description": "OData $filter expression to filter records",
               "example": "emailaddress1 eq 'john@example.com'",
               "placeholder": "emailaddress1 eq 'john@example.com'"
@@ -541,45 +545,45 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Top",
               "internalKey": "top",
               "type": "number",
-              "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into delete record.",
+            "scenario": "Use Microsoft Dynamics to deleterecord in a workflow.",
             "inputValues": {
               "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
+              "Access Token": "",
+              "Resource": "contacts",
               "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
+              "Id": "00000000-0000-0000-0000-000000000000"
             },
-            "expectedOutput": "The node runs delete record and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes deleterecord and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
         },
         {
-          "name": "Fetch Xml",
+          "name": "FetchXml",
           "value": "fetchXml",
-          "description": "Fetch Xml with the Microsoft Dynamics node using the configured input fields.",
+          "description": "FetchXml using the Microsoft Dynamics node.",
           "fields": [
             {
               "name": "Instance Url",
               "internalKey": "instanceUrl",
               "type": "url",
-              "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
               "example": "https://yourorg.crm.dynamics.com",
               "placeholder": "https://yourorg.crm.dynamics.com"
@@ -587,17 +591,23 @@ export const microsoftDynamicsDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "Azure AD OAuth2 access token (stored as credential)"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
+              "example": "contacts",
+              "placeholder": "contacts",
+              "defaultValue": "contacts"
             },
             {
               "name": "Custom Entity",
               "internalKey": "customEntity",
               "type": "string",
-              "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
               "example": "new_customentity",
               "placeholder": "new_customentity"
@@ -606,7 +616,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
               "example": "00000000-0000-0000-0000-000000000000",
               "placeholder": "00000000-0000-0000-0000-000000000000"
@@ -615,16 +624,14 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
+              "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
             {
               "name": "Fetch Xml",
               "internalKey": "fetchXml",
               "type": "string",
-              "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
@@ -633,7 +640,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Select",
               "internalKey": "select",
               "type": "string",
-              "required": false,
               "description": "OData $select — comma-separated field names to return",
               "example": "fullname,emailaddress1,telephone1",
               "placeholder": "fullname,emailaddress1,telephone1"
@@ -642,7 +648,6 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Filter",
               "internalKey": "filter",
               "type": "string",
-              "required": false,
               "description": "OData $filter expression to filter records",
               "example": "emailaddress1 eq 'john@example.com'",
               "placeholder": "emailaddress1 eq 'john@example.com'"
@@ -651,2696 +656,33 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "name": "Top",
               "internalKey": "top",
               "type": "number",
-              "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into fetch xml.",
+            "scenario": "Use Microsoft Dynamics to fetchxml in a workflow.",
             "inputValues": {
               "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
+              "Access Token": "",
+              "Resource": "contacts",
               "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
+              "Id": "00000000-0000-0000-0000-000000000000"
             },
-            "expectedOutput": "The node runs fetch xml and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        }
-      ]
-    },
-    {
-      "name": "Leads",
-      "description": "Leads is a Microsoft Dynamics resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Records",
-          "value": "getRecords",
-          "description": "Get Records with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into get records.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs get records and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Get Record",
-          "value": "getRecord",
-          "description": "Get Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into get record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs get record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Create Record",
-          "value": "createRecord",
-          "description": "Create Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into create record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs create record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Update Record",
-          "value": "updateRecord",
-          "description": "Update Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into update record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs update record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Delete Record",
-          "value": "deleteRecord",
-          "description": "Delete Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into delete record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs delete record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Fetch Xml",
-          "value": "fetchXml",
-          "description": "Fetch Xml with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into fetch xml.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs fetch xml and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        }
-      ]
-    },
-    {
-      "name": "Accounts",
-      "description": "Accounts is a Microsoft Dynamics resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Records",
-          "value": "getRecords",
-          "description": "Get Records with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into get records.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs get records and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Get Record",
-          "value": "getRecord",
-          "description": "Get Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into get record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs get record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Create Record",
-          "value": "createRecord",
-          "description": "Create Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into create record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs create record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Update Record",
-          "value": "updateRecord",
-          "description": "Update Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into update record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs update record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Delete Record",
-          "value": "deleteRecord",
-          "description": "Delete Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into delete record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs delete record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Fetch Xml",
-          "value": "fetchXml",
-          "description": "Fetch Xml with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into fetch xml.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs fetch xml and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        }
-      ]
-    },
-    {
-      "name": "Opportunities",
-      "description": "Opportunities is a Microsoft Dynamics resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Records",
-          "value": "getRecords",
-          "description": "Get Records with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into get records.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs get records and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Get Record",
-          "value": "getRecord",
-          "description": "Get Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into get record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs get record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Create Record",
-          "value": "createRecord",
-          "description": "Create Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into create record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs create record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Update Record",
-          "value": "updateRecord",
-          "description": "Update Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into update record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs update record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Delete Record",
-          "value": "deleteRecord",
-          "description": "Delete Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into delete record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs delete record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Fetch Xml",
-          "value": "fetchXml",
-          "description": "Fetch Xml with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into fetch xml.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs fetch xml and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        }
-      ]
-    },
-    {
-      "name": "Incidents",
-      "description": "Incidents is a Microsoft Dynamics resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Records",
-          "value": "getRecords",
-          "description": "Get Records with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into get records.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs get records and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Get Record",
-          "value": "getRecord",
-          "description": "Get Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into get record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs get record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Create Record",
-          "value": "createRecord",
-          "description": "Create Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into create record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs create record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Update Record",
-          "value": "updateRecord",
-          "description": "Update Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into update record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs update record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Delete Record",
-          "value": "deleteRecord",
-          "description": "Delete Record with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into delete record.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs delete record and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
-        },
-        {
-          "name": "Fetch Xml",
-          "value": "fetchXml",
-          "description": "Fetch Xml with the Microsoft Dynamics node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Instance Url",
-              "internalKey": "instanceUrl",
-              "type": "url",
-              "required": false,
-              "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "example": "https://yourorg.crm.dynamics.com",
-              "placeholder": "https://yourorg.crm.dynamics.com"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Azure AD OAuth2 access token (stored as credential)",
-              "example": "{{ $json.accessToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Custom Entity",
-              "internalKey": "customEntity",
-              "type": "string",
-              "required": false,
-              "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "example": "new_customentity",
-              "placeholder": "new_customentity"
-            },
-            {
-              "name": "Id",
-              "internalKey": "id",
-              "type": "string",
-              "required": false,
-              "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "example": "00000000-0000-0000-0000-000000000000",
-              "placeholder": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-              "name": "Fields",
-              "internalKey": "fields",
-              "type": "json",
-              "required": false,
-              "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            },
-            {
-              "name": "Fetch Xml",
-              "internalKey": "fetchXml",
-              "type": "string",
-              "required": false,
-              "description": "FetchXML query string (required for fetchXml operation)",
-              "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
-            },
-            {
-              "name": "Select",
-              "internalKey": "select",
-              "type": "string",
-              "required": false,
-              "description": "OData $select — comma-separated field names to return",
-              "example": "fullname,emailaddress1,telephone1",
-              "placeholder": "fullname,emailaddress1,telephone1"
-            },
-            {
-              "name": "Filter",
-              "internalKey": "filter",
-              "type": "string",
-              "required": false,
-              "description": "OData $filter expression to filter records",
-              "example": "emailaddress1 eq 'john@example.com'",
-              "placeholder": "emailaddress1 eq 'john@example.com'"
-            },
-            {
-              "name": "Top",
-              "internalKey": "top",
-              "type": "number",
-              "required": false,
-              "description": "OData $top — maximum number of records to return (max 5000)",
-              "example": "50",
-              "defaultValue": "50"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "error": {}
-          },
-          "outputDescription": "success: Value returned by the Microsoft Dynamics node.\ndata: Value returned by the Microsoft Dynamics node.\nerror: Value returned by the Microsoft Dynamics node.",
-          "usageExample": {
-            "scenario": "Use Microsoft Dynamics in a workflow and pass upstream data into fetch xml.",
-            "inputValues": {
-              "Instance Url": "https://yourorg.crm.dynamics.com",
-              "Access Token": "{{ $json.accessToken }}",
-              "Custom Entity": "new_customentity",
-              "Id": "00000000-0000-0000-0000-000000000000",
-              "Fields": "[object Object]",
-              "Fetch Xml": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
-              "Select": "fullname,emailaddress1,telephone1",
-              "Filter": "emailaddress1 eq 'john@example.com'",
-              "Top": "50"
-            },
-            "expectedOutput": "The node runs fetch xml and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes fetchxml and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview"
         }
@@ -3350,25 +692,19 @@ export const microsoftDynamicsDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Microsoft Dynamics node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

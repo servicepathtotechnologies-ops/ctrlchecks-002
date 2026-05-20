@@ -5,16 +5,16 @@ export const outlookDoc: NodeDoc = {
   "displayName": "Outlook",
   "category": "Communication",
   "logoUrl": "/icons/nodes/outlook.svg",
-  "description": "Send/receive emails via Microsoft Outlook API (OAuth) Use this node when a workflow needs outlook behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Microsoft Token, Microsoft Credential",
+  "description": "Send/receive emails via Microsoft Outlook API (OAuth)",
+  "credentialType": "Microsoft Credential",
   "credentialSetupSteps": [
-    "Open the Outlook developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Microsoft Token, Microsoft Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to Azure Portal → App registrations → New registration.",
+    "Set redirect URI to http://localhost:3001/api/oauth/microsoft/callback.",
+    "Under API Permissions, add Microsoft Graph: Mail.ReadWrite, Mail.Send.",
+    "Create a client secret and copy it.",
+    "In CtrlChecks, open Connections → Add Connection → Outlook → enter Client ID, Secret, and Tenant ID → click \"Connect with Microsoft\" → authorize."
   ],
-  "credentialDocsUrl": "https://learn.microsoft.com/en-us/graph/api/resources/message",
+  "credentialDocsUrl": "https://docs.microsoft.com/en-us/graph/api/resources/mail-api-overview",
   "resources": [
     {
       "name": "Operations",
@@ -23,13 +23,12 @@ export const outlookDoc: NodeDoc = {
         {
           "name": "Send",
           "value": "send",
-          "description": "Send with the Outlook node using the configured input fields.",
+          "description": "Send an email via Microsoft Outlook.",
           "fields": [
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
               "description": "Recipient email address (required for send operation)",
               "example": "recipient@example.com",
               "placeholder": "recipient@example.com"
@@ -38,7 +37,6 @@ export const outlookDoc: NodeDoc = {
               "name": "Subject",
               "internalKey": "subject",
               "type": "string",
-              "required": false,
               "description": "Email subject (required for send operation)",
               "example": "Hello",
               "placeholder": "Hello"
@@ -46,8 +44,7 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Email body content (required for send operation)",
               "example": "Email content",
               "placeholder": "Email content"
@@ -56,7 +53,6 @@ export const outlookDoc: NodeDoc = {
               "name": "From",
               "internalKey": "from",
               "type": "string",
-              "required": false,
               "description": "Sender email address (optional - uses OAuth account if not provided)",
               "example": "your-email@outlook.com",
               "placeholder": "your-email@outlook.com"
@@ -64,27 +60,15 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for Outlook (if using OAuth authentication)",
               "example": "your-outlook-oauth-token",
-              "placeholder": "your-outlook-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "microsoft_oauth_123",
-              "placeholder": "microsoft_oauth_123"
+              "placeholder": "your-outlook-oauth-token"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
               "description": "Outlook message ID (required for get operation)",
               "example": "abc123def456",
               "placeholder": "abc123def456"
@@ -92,8 +76,7 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Outlook search query (for list/search operations)",
               "example": "from:example@outlook.com",
               "placeholder": "from:example@outlook.com"
@@ -102,46 +85,38 @@ export const outlookDoc: NodeDoc = {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
-              "required": false,
               "description": "Maximum number of results (for list/search)",
               "example": "10",
+              "placeholder": "10",
               "defaultValue": "10"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "id": "AAMkAGI...",
+            "subject": "Meeting Tomorrow",
+            "sentDateTime": "2025-01-15T09:00:00Z"
           },
-          "outputDescription": "type: Value returned by the Outlook node.\nstructure: Value returned by the Outlook node.\nconvertible: Value returned by the Outlook node.\ndefaultValue: Value returned by the Outlook node.",
+          "outputDescription": "id: Outlook message ID. subject: Subject of the sent email. sentDateTime: ISO timestamp when it was sent.",
           "usageExample": {
-            "scenario": "Use Outlook in a workflow and pass upstream data into send.",
+            "scenario": "Send a daily digest email to your team via Outlook",
             "inputValues": {
-              "To": "recipient@example.com",
-              "Subject": "Hello",
-              "Body": "Email content",
-              "From": "your-email@outlook.com",
-              "Access Token": "your-outlook-oauth-token",
-              "Credential Id": "microsoft_oauth_123",
-              "Message Id": "abc123def456",
-              "Query": "from:example@outlook.com",
-              "Max Results": "10"
+              "toRecipients": "team@company.com",
+              "subject": "Daily Digest — {{$now}}",
+              "body": "{{$json.digestContent}}"
             },
-            "expectedOutput": "The node runs send and exposes its result in the output panel for the next node."
+            "expectedOutput": "The email is sent. `{{$json.id}}` can be used to track the message."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/graph/api/resources/message"
         },
         {
           "name": "List",
           "value": "list",
-          "description": "List with the Outlook node using the configured input fields.",
+          "description": "List emails from an Outlook mailbox folder.",
           "fields": [
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
               "description": "Recipient email address (required for send operation)",
               "example": "recipient@example.com",
               "placeholder": "recipient@example.com"
@@ -150,7 +125,6 @@ export const outlookDoc: NodeDoc = {
               "name": "Subject",
               "internalKey": "subject",
               "type": "string",
-              "required": false,
               "description": "Email subject (required for send operation)",
               "example": "Hello",
               "placeholder": "Hello"
@@ -158,8 +132,7 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Email body content (required for send operation)",
               "example": "Email content",
               "placeholder": "Email content"
@@ -168,7 +141,6 @@ export const outlookDoc: NodeDoc = {
               "name": "From",
               "internalKey": "from",
               "type": "string",
-              "required": false,
               "description": "Sender email address (optional - uses OAuth account if not provided)",
               "example": "your-email@outlook.com",
               "placeholder": "your-email@outlook.com"
@@ -176,27 +148,15 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for Outlook (if using OAuth authentication)",
               "example": "your-outlook-oauth-token",
-              "placeholder": "your-outlook-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "microsoft_oauth_123",
-              "placeholder": "microsoft_oauth_123"
+              "placeholder": "your-outlook-oauth-token"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
               "description": "Outlook message ID (required for get operation)",
               "example": "abc123def456",
               "placeholder": "abc123def456"
@@ -204,8 +164,7 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Outlook search query (for list/search operations)",
               "example": "from:example@outlook.com",
               "placeholder": "from:example@outlook.com"
@@ -214,46 +173,46 @@ export const outlookDoc: NodeDoc = {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
-              "required": false,
               "description": "Maximum number of results (for list/search)",
               "example": "10",
+              "placeholder": "10",
               "defaultValue": "10"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "value": [
+              {
+                "id": "AAMkAGI...",
+                "subject": "Re: Project Update",
+                "from": {
+                  "emailAddress": {
+                    "address": "colleague@company.com"
+                  }
+                }
+              }
+            ]
           },
-          "outputDescription": "type: Value returned by the Outlook node.\nstructure: Value returned by the Outlook node.\nconvertible: Value returned by the Outlook node.\ndefaultValue: Value returned by the Outlook node.",
+          "outputDescription": "value: Array of email objects. Each has id, subject, from (with address), and more.",
           "usageExample": {
-            "scenario": "Use Outlook in a workflow and pass upstream data into list.",
+            "scenario": "Retrieve unread emails from a specific Outlook folder",
             "inputValues": {
-              "To": "recipient@example.com",
-              "Subject": "Hello",
-              "Body": "Email content",
-              "From": "your-email@outlook.com",
-              "Access Token": "your-outlook-oauth-token",
-              "Credential Id": "microsoft_oauth_123",
-              "Message Id": "abc123def456",
-              "Query": "from:example@outlook.com",
-              "Max Results": "10"
+              "folder": "Inbox",
+              "filter": "isRead eq false",
+              "top": "20"
             },
-            "expectedOutput": "The node runs list and exposes its result in the output panel for the next node."
+            "expectedOutput": "Returns up to 20 unread emails. Process each with the Get operation to read the full body."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/graph/api/resources/message"
         },
         {
           "name": "Get",
           "value": "get",
-          "description": "Get with the Outlook node using the configured input fields.",
+          "description": "Fetch a specific Outlook email by its message ID.",
           "fields": [
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
               "description": "Recipient email address (required for send operation)",
               "example": "recipient@example.com",
               "placeholder": "recipient@example.com"
@@ -262,7 +221,6 @@ export const outlookDoc: NodeDoc = {
               "name": "Subject",
               "internalKey": "subject",
               "type": "string",
-              "required": false,
               "description": "Email subject (required for send operation)",
               "example": "Hello",
               "placeholder": "Hello"
@@ -270,8 +228,7 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Email body content (required for send operation)",
               "example": "Email content",
               "placeholder": "Email content"
@@ -280,7 +237,6 @@ export const outlookDoc: NodeDoc = {
               "name": "From",
               "internalKey": "from",
               "type": "string",
-              "required": false,
               "description": "Sender email address (optional - uses OAuth account if not provided)",
               "example": "your-email@outlook.com",
               "placeholder": "your-email@outlook.com"
@@ -288,27 +244,15 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for Outlook (if using OAuth authentication)",
               "example": "your-outlook-oauth-token",
-              "placeholder": "your-outlook-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "microsoft_oauth_123",
-              "placeholder": "microsoft_oauth_123"
+              "placeholder": "your-outlook-oauth-token"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
               "description": "Outlook message ID (required for get operation)",
               "example": "abc123def456",
               "placeholder": "abc123def456"
@@ -316,8 +260,7 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Outlook search query (for list/search operations)",
               "example": "from:example@outlook.com",
               "placeholder": "from:example@outlook.com"
@@ -326,46 +269,39 @@ export const outlookDoc: NodeDoc = {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
-              "required": false,
               "description": "Maximum number of results (for list/search)",
               "example": "10",
+              "placeholder": "10",
               "defaultValue": "10"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Outlook node.\nstructure: Value returned by the Outlook node.\nconvertible: Value returned by the Outlook node.\ndefaultValue: Value returned by the Outlook node.",
-          "usageExample": {
-            "scenario": "Use Outlook in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "To": "recipient@example.com",
-              "Subject": "Hello",
-              "Body": "Email content",
-              "From": "your-email@outlook.com",
-              "Access Token": "your-outlook-oauth-token",
-              "Credential Id": "microsoft_oauth_123",
-              "Message Id": "abc123def456",
-              "Query": "from:example@outlook.com",
-              "Max Results": "10"
+            "id": "AAMkAGI...",
+            "subject": "Contract Terms",
+            "body": {
+              "content": "Please review the attached contract."
             },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
+            "receivedDateTime": "2025-01-14T15:00:00Z"
+          },
+          "outputDescription": "id: Outlook message ID. subject: Email subject. body.content: Full email body HTML or text. receivedDateTime: When the email was received.",
+          "usageExample": {
+            "scenario": "Read each email returned from an Outlook List operation",
+            "inputValues": {
+              "messageId": "{{$json.id}}"
+            },
+            "expectedOutput": "Full message with body content. Use `{{$json.body.content}}` downstream."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/graph/api/resources/message"
         },
         {
           "name": "Search",
           "value": "search",
-          "description": "Search with the Outlook node using the configured input fields.",
+          "description": "Search using the Outlook node.",
           "fields": [
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
               "description": "Recipient email address (required for send operation)",
               "example": "recipient@example.com",
               "placeholder": "recipient@example.com"
@@ -374,7 +310,6 @@ export const outlookDoc: NodeDoc = {
               "name": "Subject",
               "internalKey": "subject",
               "type": "string",
-              "required": false,
               "description": "Email subject (required for send operation)",
               "example": "Hello",
               "placeholder": "Hello"
@@ -382,8 +317,7 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Email body content (required for send operation)",
               "example": "Email content",
               "placeholder": "Email content"
@@ -392,7 +326,6 @@ export const outlookDoc: NodeDoc = {
               "name": "From",
               "internalKey": "from",
               "type": "string",
-              "required": false,
               "description": "Sender email address (optional - uses OAuth account if not provided)",
               "example": "your-email@outlook.com",
               "placeholder": "your-email@outlook.com"
@@ -400,27 +333,15 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for Outlook (if using OAuth authentication)",
               "example": "your-outlook-oauth-token",
-              "placeholder": "your-outlook-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "microsoft_oauth_123",
-              "placeholder": "microsoft_oauth_123"
+              "placeholder": "your-outlook-oauth-token"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
               "description": "Outlook message ID (required for get operation)",
               "example": "abc123def456",
               "placeholder": "abc123def456"
@@ -428,8 +349,7 @@ export const outlookDoc: NodeDoc = {
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Outlook search query (for list/search operations)",
               "example": "from:example@outlook.com",
               "placeholder": "from:example@outlook.com"
@@ -438,33 +358,33 @@ export const outlookDoc: NodeDoc = {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
-              "required": false,
               "description": "Maximum number of results (for list/search)",
               "example": "10",
+              "placeholder": "10",
               "defaultValue": "10"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Outlook node.\nstructure: Value returned by the Outlook node.\nconvertible: Value returned by the Outlook node.\ndefaultValue: Value returned by the Outlook node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Outlook in a workflow and pass upstream data into search.",
+            "scenario": "Use Outlook to search in a workflow.",
             "inputValues": {
               "To": "recipient@example.com",
               "Subject": "Hello",
               "Body": "Email content",
               "From": "your-email@outlook.com",
-              "Access Token": "your-outlook-oauth-token",
-              "Credential Id": "microsoft_oauth_123",
-              "Message Id": "abc123def456",
-              "Query": "from:example@outlook.com",
-              "Max Results": "10"
+              "Access Token": "your-outlook-oauth-token"
             },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes search and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/graph/api/resources/message"
         }
@@ -474,25 +394,19 @@ export const outlookDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Outlook node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "google_gmail",
-    "slack_message",
-    "email",
-    "log_output",
-    "telegram"
-  ]
+  "relatedNodes": []
 };

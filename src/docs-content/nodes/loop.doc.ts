@@ -5,19 +5,21 @@ export const loopDoc: NodeDoc = {
   "displayName": "Loop",
   "category": "Logic",
   "logoUrl": "/icons/nodes/loop.svg",
-  "description": "Iterate over array items with max iterations limit Use this node when a workflow needs loop behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Iterate over array items with max iterations limit",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Loop is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Loop is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Loop node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Loop over an array of items and run the connected branch for each one.",
           "fields": [
             {
               "name": "Items",
@@ -32,7 +34,6 @@ export const loopDoc: NodeDoc = {
               "name": "Max Iterations",
               "internalKey": "maxIterations",
               "type": "number",
-              "required": false,
               "description": "Maximum iterations",
               "example": "100",
               "placeholder": "100",
@@ -40,19 +41,29 @@ export const loopDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "processedCount": 3,
+            "results": [
+              {
+                "id": 1,
+                "sent": true
+              },
+              {
+                "id": 2,
+                "sent": true
+              },
+              {
+                "id": 3,
+                "sent": true
+              }
+            ]
           },
-          "outputDescription": "type: Value returned by the Loop node.\nitemType: Value returned by the Loop node.\nconvertible: Value returned by the Loop node.\ndefaultValue: Value returned by the Loop node.",
+          "outputDescription": "processedCount: How many items were processed. results: Array of outputs from each iteration.",
           "usageExample": {
-            "scenario": "Use Loop in a workflow and pass upstream data into configure.",
+            "scenario": "Send a personalised email to each user in a list",
             "inputValues": {
-              "Items": "{{$json.items}}",
-              "Max Iterations": "100"
+              "items": "{{$json.users}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The connected branch runs once per user. Each iteration receives `{{$item}}` as the current user."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -62,20 +73,14 @@ export const loopDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "function",
-    "function_item",
-    "if_else",
-    "switch",
-    "merge"
-  ]
+  "relatedNodes": []
 };

@@ -5,19 +5,21 @@ export const cacheSetDoc: NodeDoc = {
   "displayName": "Cache Set",
   "category": "Utility",
   "logoUrl": "/icons/nodes/cache_set.svg",
-  "description": "Store a value in cache with optional TTL Use this node when a workflow needs cache set behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Store a value in cache with optional TTL",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Cache Set is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Cache Set is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Cache Set node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Store a value in the Redis cache with an optional expiry (TTL).",
           "fields": [
             {
               "name": "Key",
@@ -41,24 +43,26 @@ export const cacheSetDoc: NodeDoc = {
               "name": "Ttl",
               "internalKey": "ttl",
               "type": "number",
-              "required": false,
               "description": "Time-to-live in seconds (0 = no expiration)",
               "example": "0",
+              "placeholder": "0",
               "defaultValue": "0"
             }
           ],
           "outputExample": {
-            "success": true
+            "key": "user:u_123:profile",
+            "set": true,
+            "ttl": 3600
           },
-          "outputDescription": "success: Value returned by the Cache Set node.",
+          "outputDescription": "key: The cache key. set: true if stored successfully. ttl: The TTL set in seconds.",
           "usageExample": {
-            "scenario": "Use Cache Set in a workflow and pass upstream data into configure.",
+            "scenario": "Cache a user profile for 1 hour after fetching from the database",
             "inputValues": {
-              "Key": "user:123",
-              "Value": "{{$json}}",
-              "Ttl": "0"
+              "key": "user:{{$json.userId}}:profile",
+              "value": "{{$json.profile}}",
+              "ttl": "3600"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "`set: true` confirms the value is cached."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -68,20 +72,14 @@ export const cacheSetDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "http_request",
-    "respond_to_webhook",
-    "clickup",
-    "delay",
-    "queue_push"
-  ]
+  "relatedNodes": []
 };

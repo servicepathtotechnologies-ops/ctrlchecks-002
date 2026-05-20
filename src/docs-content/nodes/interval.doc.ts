@@ -5,19 +5,21 @@ export const intervalDoc: NodeDoc = {
   "displayName": "Interval Trigger",
   "category": "Triggers",
   "logoUrl": "/icons/nodes/interval.svg",
-  "description": "Trigger workflow at fixed intervals Use this node when a workflow needs interval trigger behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Trigger workflow at fixed intervals",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Interval Trigger is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Interval Trigger is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Interval Trigger node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Start the workflow at a fixed time interval (e.g. every 5 minutes).",
           "fields": [
             {
               "name": "Interval",
@@ -39,17 +41,18 @@ export const intervalDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
+            "firedAt": "2025-01-15T10:05:00.000Z",
+            "intervalMs": 300000,
+            "iteration": 42
           },
-          "outputDescription": "type: Value returned by the Interval Trigger node.\nstructure: Value returned by the Interval Trigger node.",
+          "outputDescription": "firedAt: ISO timestamp when this iteration fired. intervalMs: The configured interval in milliseconds. iteration: How many times this trigger has fired.",
           "usageExample": {
-            "scenario": "Use Interval Trigger in a workflow and pass upstream data into configure.",
+            "scenario": "Poll an external API every 5 minutes for new records",
             "inputValues": {
-              "Interval": "1",
-              "Unit": "seconds"
+              "interval": "300000",
+              "unit": "milliseconds"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The workflow fires every 5 minutes. Connect an HTTP Request node to fetch the API data on each run."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -59,20 +62,14 @@ export const intervalDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "schedule",
-    "webhook",
-    "manual_trigger",
-    "chat_trigger",
-    "form"
-  ]
+  "relatedNodes": []
 };

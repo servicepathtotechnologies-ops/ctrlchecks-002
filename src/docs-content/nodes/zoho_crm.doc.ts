@@ -5,60 +5,52 @@ export const zohoCrmDoc: NodeDoc = {
   "displayName": "Zoho CRM",
   "category": "Data",
   "logoUrl": "/icons/nodes/zoho_crm.svg",
-  "description": "Zoho CRM operations - work with modules, records, and related lists Use this node when a workflow needs zoho crm behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Zoho Token, Zoho Token, Zoho Credential",
+  "description": "Zoho CRM operations - work with modules, records, and related lists",
+  "credentialType": "Zoho Credential",
   "credentialSetupSteps": [
-    "Open the Zoho CRM developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Zoho Token, Zoho Token, Zoho Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/",
   "resources": [
     {
-      "name": "Contacts",
-      "description": "Contacts is a Zoho CRM resource available in this node.",
+      "name": "Operations",
+      "description": "Zoho CRM exposes operation choices directly.",
       "operations": [
         {
           "name": "Get",
           "value": "get",
-          "description": "Get with the Zoho CRM node using the configured input fields.",
+          "description": "Get using the Zoho CRM node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Zoho CRM OAuth access token (required for authentication)",
               "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-zoho-oauth-access-token"
             },
             {
               "name": "Refresh Token",
               "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Zoho CRM OAuth refresh token",
               "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-zoho-refresh-token"
             },
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Zoho CRM module: Leads, Contacts, Accounts, Deals, etc.",
+              "example": "Leads",
+              "placeholder": "Leads",
+              "defaultValue": "Contacts"
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -67,7 +59,6 @@ export const zohoCrmDoc: NodeDoc = {
               "name": "Criteria",
               "internalKey": "criteria",
               "type": "string",
-              "required": false,
               "description": "Search criteria (optional, used for search operation)",
               "example": "(Email:equals:test@example.com)",
               "placeholder": "(Email:equals:test@example.com)"
@@ -76,72 +67,70 @@ export const zohoCrmDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"First_Name\":\"John\",\"Last_Name\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"First_Name\":\"John\",\"Last_Name\":\"Doe\",\"Email\":\"test@example.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into get.",
+            "scenario": "Use Zoho CRM to get in a workflow.",
             "inputValues": {
               "Access Token": "your-zoho-oauth-access-token",
               "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
+              "Resource": "Leads",
               "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
+              "Criteria": "(Email:equals:test@example.com)"
             },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
         },
         {
           "name": "Create",
           "value": "create",
-          "description": "Create with the Zoho CRM node using the configured input fields.",
+          "description": "Create using the Zoho CRM node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Zoho CRM OAuth access token (required for authentication)",
               "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-zoho-oauth-access-token"
             },
             {
               "name": "Refresh Token",
               "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Zoho CRM OAuth refresh token",
               "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-zoho-refresh-token"
             },
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Zoho CRM module: Leads, Contacts, Accounts, Deals, etc.",
+              "example": "Leads",
+              "placeholder": "Leads",
+              "defaultValue": "Contacts"
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -150,7 +139,6 @@ export const zohoCrmDoc: NodeDoc = {
               "name": "Criteria",
               "internalKey": "criteria",
               "type": "string",
-              "required": false,
               "description": "Search criteria (optional, used for search operation)",
               "example": "(Email:equals:test@example.com)",
               "placeholder": "(Email:equals:test@example.com)"
@@ -159,72 +147,70 @@ export const zohoCrmDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"First_Name\":\"John\",\"Last_Name\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"First_Name\":\"John\",\"Last_Name\":\"Doe\",\"Email\":\"test@example.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into create.",
+            "scenario": "Use Zoho CRM to create in a workflow.",
             "inputValues": {
               "Access Token": "your-zoho-oauth-access-token",
               "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
+              "Resource": "Leads",
               "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
+              "Criteria": "(Email:equals:test@example.com)"
             },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes create and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the Zoho CRM node using the configured input fields.",
+          "description": "Update using the Zoho CRM node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Zoho CRM OAuth access token (required for authentication)",
               "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-zoho-oauth-access-token"
             },
             {
               "name": "Refresh Token",
               "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Zoho CRM OAuth refresh token",
               "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-zoho-refresh-token"
             },
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Zoho CRM module: Leads, Contacts, Accounts, Deals, etc.",
+              "example": "Leads",
+              "placeholder": "Leads",
+              "defaultValue": "Contacts"
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -233,7 +219,6 @@ export const zohoCrmDoc: NodeDoc = {
               "name": "Criteria",
               "internalKey": "criteria",
               "type": "string",
-              "required": false,
               "description": "Search criteria (optional, used for search operation)",
               "example": "(Email:equals:test@example.com)",
               "placeholder": "(Email:equals:test@example.com)"
@@ -242,72 +227,70 @@ export const zohoCrmDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"First_Name\":\"John\",\"Last_Name\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"First_Name\":\"John\",\"Last_Name\":\"Doe\",\"Email\":\"test@example.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into update.",
+            "scenario": "Use Zoho CRM to update in a workflow.",
             "inputValues": {
               "Access Token": "your-zoho-oauth-access-token",
               "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
+              "Resource": "Leads",
               "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
+              "Criteria": "(Email:equals:test@example.com)"
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes update and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the Zoho CRM node using the configured input fields.",
+          "description": "Delete using the Zoho CRM node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Zoho CRM OAuth access token (required for authentication)",
               "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-zoho-oauth-access-token"
             },
             {
               "name": "Refresh Token",
               "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Zoho CRM OAuth refresh token",
               "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-zoho-refresh-token"
             },
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Zoho CRM module: Leads, Contacts, Accounts, Deals, etc.",
+              "example": "Leads",
+              "placeholder": "Leads",
+              "defaultValue": "Contacts"
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -316,7 +299,6 @@ export const zohoCrmDoc: NodeDoc = {
               "name": "Criteria",
               "internalKey": "criteria",
               "type": "string",
-              "required": false,
               "description": "Search criteria (optional, used for search operation)",
               "example": "(Email:equals:test@example.com)",
               "placeholder": "(Email:equals:test@example.com)"
@@ -325,72 +307,70 @@ export const zohoCrmDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"First_Name\":\"John\",\"Last_Name\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"First_Name\":\"John\",\"Last_Name\":\"Doe\",\"Email\":\"test@example.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into delete.",
+            "scenario": "Use Zoho CRM to delete in a workflow.",
             "inputValues": {
               "Access Token": "your-zoho-oauth-access-token",
               "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
+              "Resource": "Leads",
               "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
+              "Criteria": "(Email:equals:test@example.com)"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
         },
         {
           "name": "Search",
           "value": "search",
-          "description": "Search with the Zoho CRM node using the configured input fields.",
+          "description": "Search using the Zoho CRM node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Zoho CRM OAuth access token (required for authentication)",
               "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-zoho-oauth-access-token"
             },
             {
               "name": "Refresh Token",
               "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Zoho CRM OAuth refresh token",
               "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-zoho-refresh-token"
             },
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Zoho CRM module: Leads, Contacts, Accounts, Deals, etc.",
+              "example": "Leads",
+              "placeholder": "Leads",
+              "defaultValue": "Contacts"
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID (required for get, update, delete)",
               "example": "123456789",
               "placeholder": "123456789"
@@ -399,7 +379,6 @@ export const zohoCrmDoc: NodeDoc = {
               "name": "Criteria",
               "internalKey": "criteria",
               "type": "string",
-              "required": false,
               "description": "Search criteria (optional, used for search operation)",
               "example": "(Email:equals:test@example.com)",
               "placeholder": "(Email:equals:test@example.com)"
@@ -408,1293 +387,32 @@ export const zohoCrmDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"First_Name\":\"John\",\"Last_Name\":\"Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"First_Name\":\"John\",\"Last_Name\":\"Doe\",\"Email\":\"test@example.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into search.",
+            "scenario": "Use Zoho CRM to search in a workflow.",
             "inputValues": {
               "Access Token": "your-zoho-oauth-access-token",
               "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
+              "Resource": "Leads",
               "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
+              "Criteria": "(Email:equals:test@example.com)"
             },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        }
-      ]
-    },
-    {
-      "name": "Leads",
-      "description": "Leads is a Zoho CRM resource available in this node.",
-      "operations": [
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        }
-      ]
-    },
-    {
-      "name": "Accounts",
-      "description": "Accounts is a Zoho CRM resource available in this node.",
-      "operations": [
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        }
-      ]
-    },
-    {
-      "name": "Deals",
-      "description": "Deals is a Zoho CRM resource available in this node.",
-      "operations": [
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the Zoho CRM node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth access token (required for authentication)",
-              "example": "your-zoho-oauth-access-token",
-              "placeholder": "your-zoho-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Refresh Token",
-              "internalKey": "refreshToken",
-              "type": "password",
-              "required": false,
-              "description": "Zoho CRM OAuth refresh token",
-              "example": "your-zoho-refresh-token",
-              "placeholder": "your-zoho-refresh-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Zoho CRM credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID (required for get, update, delete)",
-              "example": "123456789",
-              "placeholder": "123456789"
-            },
-            {
-              "name": "Criteria",
-              "internalKey": "criteria",
-              "type": "string",
-              "required": false,
-              "description": "Search criteria (optional, used for search operation)",
-              "example": "(Email:equals:test@example.com)",
-              "placeholder": "(Email:equals:test@example.com)"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Record data for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Zoho CRM node.\nstructure: Value returned by the Zoho CRM node.\nconvertible: Value returned by the Zoho CRM node.\ndefaultValue: Value returned by the Zoho CRM node.",
-          "usageExample": {
-            "scenario": "Use Zoho CRM in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Access Token": "your-zoho-oauth-access-token",
-              "Refresh Token": "your-zoho-refresh-token",
-              "Credential Id": "cred_123",
-              "Record Id": "123456789",
-              "Criteria": "(Email:equals:test@example.com)",
-              "Data": "[object Object]"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes search and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.zoho.com/crm/developer/docs/api/v6/"
         }
@@ -1704,25 +422,19 @@ export const zohoCrmDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Zoho CRM node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

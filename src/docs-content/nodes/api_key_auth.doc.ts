@@ -5,42 +5,49 @@ export const apiKeyAuthDoc: NodeDoc = {
   "displayName": "API Key Auth",
   "category": "Utility",
   "logoUrl": "/icons/nodes/api_key_auth.svg",
-  "description": "Provides an API key for authentication Use this node when a workflow needs api key auth behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Provides an API key for authentication",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "API Key Auth is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "API Key Auth is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the API Key Auth node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the API Key Auth node.",
           "fields": [
             {
               "name": "Api Key Name",
               "internalKey": "apiKeyName",
-              "type": "password",
+              "type": "string",
               "required": true,
               "description": "Name of the stored API key",
               "example": "openai",
-              "placeholder": "openai",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "openai"
             }
           ],
           "outputExample": {
             "success": true,
-            "apiKey": "apiKey"
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "success: Value returned by the API Key Auth node.\napiKey: Value returned by the API Key Auth node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use API Key Auth in a workflow and pass upstream data into configure.",
+            "scenario": "Use API Key Auth to execute in a workflow.",
             "inputValues": {
               "Api Key Name": "openai"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -50,20 +57,14 @@ export const apiKeyAuthDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "http_request",
-    "respond_to_webhook",
-    "clickup",
-    "delay",
-    "queue_push"
-  ]
+  "relatedNodes": []
 };

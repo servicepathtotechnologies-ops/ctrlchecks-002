@@ -5,10 +5,16 @@ export const dropboxDoc: NodeDoc = {
   "displayName": "Dropbox",
   "category": "Data",
   "logoUrl": "/icons/nodes/dropbox.svg",
-  "description": "Dropbox file operations Use this node when a workflow needs dropbox behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "Dropbox file operations",
+  "credentialType": "Dropbox Credential",
+  "credentialSetupSteps": [
+    "Go to https://www.dropbox.com/developers/apps → Create app.",
+    "Choose \"Scoped access\" → \"Full Dropbox\" (or \"App folder\"), give it a name.",
+    "Under Permissions, enable the scopes you need (files.metadata.read, files.content.read/write, etc.).",
+    "Under Settings, add http://localhost:3001/api/oauth/dropbox/callback as a redirect URI.",
+    "In CtrlChecks, open Connections → Add Connection → Dropbox → click \"Connect with Dropbox\" → authorize."
+  ],
+  "credentialDocsUrl": "https://developers.dropbox.com/oauth-guide",
   "resources": [
     {
       "name": "Operations",
@@ -17,13 +23,12 @@ export const dropboxDoc: NodeDoc = {
         {
           "name": "Upload",
           "value": "upload",
-          "description": "Upload with the Dropbox node using the configured input fields.",
+          "description": "Upload using the Dropbox node.",
           "fields": [
             {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
-              "required": false,
               "description": "File path",
               "example": "/path/to/file.pdf",
               "placeholder": "/path/to/file.pdf"
@@ -32,7 +37,6 @@ export const dropboxDoc: NodeDoc = {
               "name": "Data Base64",
               "internalKey": "dataBase64",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload (alternative to data)",
               "example": "{{$json.dataBase64}}",
               "placeholder": "{{$json.dataBase64}}"
@@ -41,7 +45,6 @@ export const dropboxDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload",
               "example": "{{$json.data}}",
               "placeholder": "{{$json.data}}"
@@ -50,41 +53,44 @@ export const dropboxDoc: NodeDoc = {
               "name": "Recursive",
               "internalKey": "recursive",
               "type": "boolean",
-              "required": false,
               "description": "List recursively (list operation)",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Dropbox node.\nstructure: Value returned by the Dropbox node.\nconvertible: Value returned by the Dropbox node.\ndefaultValue: Value returned by the Dropbox node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Dropbox in a workflow and pass upstream data into upload.",
+            "scenario": "Use Dropbox to upload in a workflow.",
             "inputValues": {
               "Path": "/path/to/file.pdf",
               "Data Base64": "{{$json.dataBase64}}",
               "Data": "{{$json.data}}",
               "Recursive": "false"
             },
-            "expectedOutput": "The node runs upload and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes upload and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.dropbox.com/developers/documentation/http/documentation"
         },
         {
           "name": "Download",
           "value": "download",
-          "description": "Download with the Dropbox node using the configured input fields.",
+          "description": "Download using the Dropbox node.",
           "fields": [
             {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
-              "required": false,
               "description": "File path",
               "example": "/path/to/file.pdf",
               "placeholder": "/path/to/file.pdf"
@@ -93,7 +99,6 @@ export const dropboxDoc: NodeDoc = {
               "name": "Data Base64",
               "internalKey": "dataBase64",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload (alternative to data)",
               "example": "{{$json.dataBase64}}",
               "placeholder": "{{$json.dataBase64}}"
@@ -102,7 +107,6 @@ export const dropboxDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload",
               "example": "{{$json.data}}",
               "placeholder": "{{$json.data}}"
@@ -111,41 +115,44 @@ export const dropboxDoc: NodeDoc = {
               "name": "Recursive",
               "internalKey": "recursive",
               "type": "boolean",
-              "required": false,
               "description": "List recursively (list operation)",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Dropbox node.\nstructure: Value returned by the Dropbox node.\nconvertible: Value returned by the Dropbox node.\ndefaultValue: Value returned by the Dropbox node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Dropbox in a workflow and pass upstream data into download.",
+            "scenario": "Use Dropbox to download in a workflow.",
             "inputValues": {
               "Path": "/path/to/file.pdf",
               "Data Base64": "{{$json.dataBase64}}",
               "Data": "{{$json.data}}",
               "Recursive": "false"
             },
-            "expectedOutput": "The node runs download and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes download and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.dropbox.com/developers/documentation/http/documentation"
         },
         {
           "name": "List",
           "value": "list",
-          "description": "List with the Dropbox node using the configured input fields.",
+          "description": "List using the Dropbox node.",
           "fields": [
             {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
-              "required": false,
               "description": "File path",
               "example": "/path/to/file.pdf",
               "placeholder": "/path/to/file.pdf"
@@ -154,7 +161,6 @@ export const dropboxDoc: NodeDoc = {
               "name": "Data Base64",
               "internalKey": "dataBase64",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload (alternative to data)",
               "example": "{{$json.dataBase64}}",
               "placeholder": "{{$json.dataBase64}}"
@@ -163,7 +169,6 @@ export const dropboxDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "string",
-              "required": false,
               "description": "Base64 payload for upload",
               "example": "{{$json.data}}",
               "placeholder": "{{$json.data}}"
@@ -172,28 +177,32 @@ export const dropboxDoc: NodeDoc = {
               "name": "Recursive",
               "internalKey": "recursive",
               "type": "boolean",
-              "required": false,
               "description": "List recursively (list operation)",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Dropbox node.\nstructure: Value returned by the Dropbox node.\nconvertible: Value returned by the Dropbox node.\ndefaultValue: Value returned by the Dropbox node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Dropbox in a workflow and pass upstream data into list.",
+            "scenario": "Use Dropbox to list in a workflow.",
             "inputValues": {
               "Path": "/path/to/file.pdf",
               "Data Base64": "{{$json.dataBase64}}",
               "Data": "{{$json.data}}",
               "Recursive": "false"
             },
-            "expectedOutput": "The node runs list and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes list and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.dropbox.com/developers/documentation/http/documentation"
         }
@@ -202,21 +211,20 @@ export const dropboxDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Dropbox node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

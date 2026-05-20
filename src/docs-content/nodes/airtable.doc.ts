@@ -5,14 +5,14 @@ export const airtableDoc: NodeDoc = {
   "displayName": "Airtable",
   "category": "Data",
   "logoUrl": "/icons/nodes/airtable.svg",
-  "description": "Read, write, update, or delete records in Airtable bases and tables Use this node when a workflow needs airtable behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Airtable Credential, Airtable Token, Airtable Credential",
+  "description": "Read, write, update, or delete records in Airtable bases and tables",
+  "credentialType": "Airtable API Key",
   "credentialSetupSteps": [
-    "Open the Airtable developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Airtable Credential, Airtable Token, Airtable Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to https://airtable.com/account → scroll to \"API\" section → click \"Create token\" (or \"Generate API key\" for legacy).",
+    "Add scopes: data.records:read, data.records:write, schema.bases:read.",
+    "Under \"Access\", add the bases you want to grant access to.",
+    "Copy the Personal Access Token.",
+    "In CtrlChecks, open Connections → Add Connection → Airtable → paste the token → Save."
   ],
   "credentialDocsUrl": "https://airtable.com/developers/web/api/introduction",
   "resources": [
@@ -23,8 +23,25 @@ export const airtableDoc: NodeDoc = {
         {
           "name": "Read",
           "value": "read",
-          "description": "Read with the Airtable node using the configured input fields.",
+          "description": "Read using the Airtable node.",
           "fields": [
+            {
+              "name": "Api Key",
+              "internalKey": "apiKey",
+              "type": "password",
+              "description": "Airtable API key (required for authentication)",
+              "example": "patXXXXXXXXXXXXXX",
+              "placeholder": "patXXXXXXXXXXXXXX",
+              "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Access Token",
+              "internalKey": "accessToken",
+              "type": "string",
+              "description": "Airtable OAuth access token (alternative to API key)",
+              "example": "your-oauth-access-token",
+              "placeholder": "your-oauth-access-token"
+            },
             {
               "name": "Base Id",
               "internalKey": "baseId",
@@ -44,39 +61,9 @@ export const airtableDoc: NodeDoc = {
               "placeholder": "tblXXXXXXXXXXXXXX"
             },
             {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "Airtable API key (required for authentication)",
-              "example": "patXXXXXXXXXXXXXX",
-              "placeholder": "patXXXXXXXXXXXXXX",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Airtable OAuth access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Airtable credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID (required for update/delete)",
               "example": "recXXXXXXXXXXXXXX",
               "placeholder": "recXXXXXXXXXXXXXX"
@@ -85,39 +72,57 @@ export const airtableDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field values for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Airtable node.\nstructure: Value returned by the Airtable node.\nconvertible: Value returned by the Airtable node.\ndefaultValue: Value returned by the Airtable node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Airtable in a workflow and pass upstream data into read.",
+            "scenario": "Use Airtable to read in a workflow.",
             "inputValues": {
-              "Base Id": "appXXXXXXXXXXXXXX",
-              "Table Id": "tblXXXXXXXXXXXXXX",
               "Api Key": "patXXXXXXXXXXXXXX",
               "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Record Id": "recXXXXXXXXXXXXXX",
-              "Fields": "[object Object]"
+              "Base Id": "appXXXXXXXXXXXXXX",
+              "Table Id": "tblXXXXXXXXXXXXXX",
+              "Record Id": "recXXXXXXXXXXXXXX"
             },
-            "expectedOutput": "The node runs read and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes read and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://airtable.com/developers/web/api/introduction"
         },
         {
           "name": "Create",
           "value": "create",
-          "description": "Create with the Airtable node using the configured input fields.",
+          "description": "Create a new record in an Airtable table.",
           "fields": [
+            {
+              "name": "Api Key",
+              "internalKey": "apiKey",
+              "type": "password",
+              "description": "Airtable API key (required for authentication)",
+              "example": "patXXXXXXXXXXXXXX",
+              "placeholder": "patXXXXXXXXXXXXXX",
+              "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Access Token",
+              "internalKey": "accessToken",
+              "type": "string",
+              "description": "Airtable OAuth access token (alternative to API key)",
+              "example": "your-oauth-access-token",
+              "placeholder": "your-oauth-access-token"
+            },
             {
               "name": "Base Id",
               "internalKey": "baseId",
@@ -137,39 +142,9 @@ export const airtableDoc: NodeDoc = {
               "placeholder": "tblXXXXXXXXXXXXXX"
             },
             {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "Airtable API key (required for authentication)",
-              "example": "patXXXXXXXXXXXXXX",
-              "placeholder": "patXXXXXXXXXXXXXX",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Airtable OAuth access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Airtable credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID (required for update/delete)",
               "example": "recXXXXXXXXXXXXXX",
               "placeholder": "recXXXXXXXXXXXXXX"
@@ -178,39 +153,54 @@ export const airtableDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field values for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Airtable node.\nstructure: Value returned by the Airtable node.\nconvertible: Value returned by the Airtable node.\ndefaultValue: Value returned by the Airtable node.",
-          "usageExample": {
-            "scenario": "Use Airtable in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Base Id": "appXXXXXXXXXXXXXX",
-              "Table Id": "tblXXXXXXXXXXXXXX",
-              "Api Key": "patXXXXXXXXXXXXXX",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Record Id": "recXXXXXXXXXXXXXX",
-              "Fields": "[object Object]"
+            "id": "recNewXyz456",
+            "fields": {
+              "Name": "Bob",
+              "Email": "bob@example.com",
+              "Status": "New"
             },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "createdTime": "2025-01-15T10:00:00Z"
+          },
+          "outputDescription": "id: The new Airtable record ID. fields: The data saved for this record. createdTime: When the record was created.",
+          "usageExample": {
+            "scenario": "Add a new lead to Airtable when a website form is submitted",
+            "inputValues": {
+              "baseId": "{{$env.AIRTABLE_BASE_ID}}",
+              "tableId": "Leads",
+              "fields": "{\"Name\": \"{{$json.name}}\", \"Email\": \"{{$json.email}}\", \"Source\": \"Website Form\", \"Date\": \"{{$now}}\"}"
+            },
+            "expectedOutput": "Record is created. `{{$json.id}}` is the Airtable record ID for future updates."
           },
           "externalDocsUrl": "https://airtable.com/developers/web/api/introduction"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the Airtable node using the configured input fields.",
+          "description": "Update an existing Airtable record by its record ID.",
           "fields": [
+            {
+              "name": "Api Key",
+              "internalKey": "apiKey",
+              "type": "password",
+              "description": "Airtable API key (required for authentication)",
+              "example": "patXXXXXXXXXXXXXX",
+              "placeholder": "patXXXXXXXXXXXXXX",
+              "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Access Token",
+              "internalKey": "accessToken",
+              "type": "string",
+              "description": "Airtable OAuth access token (alternative to API key)",
+              "example": "your-oauth-access-token",
+              "placeholder": "your-oauth-access-token"
+            },
             {
               "name": "Base Id",
               "internalKey": "baseId",
@@ -230,39 +220,9 @@ export const airtableDoc: NodeDoc = {
               "placeholder": "tblXXXXXXXXXXXXXX"
             },
             {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "Airtable API key (required for authentication)",
-              "example": "patXXXXXXXXXXXXXX",
-              "placeholder": "patXXXXXXXXXXXXXX",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Airtable OAuth access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Airtable credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID (required for update/delete)",
               "example": "recXXXXXXXXXXXXXX",
               "placeholder": "recXXXXXXXXXXXXXX"
@@ -271,39 +231,54 @@ export const airtableDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field values for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "id": "recAbc123",
+            "fields": {
+              "Name": "Alice",
+              "Status": "Converted",
+              "Close Date": "2025-01-15"
+            }
           },
-          "outputDescription": "type: Value returned by the Airtable node.\nstructure: Value returned by the Airtable node.\nconvertible: Value returned by the Airtable node.\ndefaultValue: Value returned by the Airtable node.",
+          "outputDescription": "id: The updated record ID. fields: All field values after the update.",
           "usageExample": {
-            "scenario": "Use Airtable in a workflow and pass upstream data into update.",
+            "scenario": "Mark an Airtable lead as Converted when a CRM deal is closed",
             "inputValues": {
-              "Base Id": "appXXXXXXXXXXXXXX",
-              "Table Id": "tblXXXXXXXXXXXXXX",
-              "Api Key": "patXXXXXXXXXXXXXX",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Record Id": "recXXXXXXXXXXXXXX",
-              "Fields": "[object Object]"
+              "baseId": "{{$env.AIRTABLE_BASE_ID}}",
+              "tableId": "Leads",
+              "recordId": "{{$json.recordId}}",
+              "fields": "{\"Status\": \"Converted\", \"Close Date\": \"{{$now}}\"}"
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "Record is updated with new field values."
           },
           "externalDocsUrl": "https://airtable.com/developers/web/api/introduction"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the Airtable node using the configured input fields.",
+          "description": "Delete a record from an Airtable table by its record ID.",
           "fields": [
+            {
+              "name": "Api Key",
+              "internalKey": "apiKey",
+              "type": "password",
+              "description": "Airtable API key (required for authentication)",
+              "example": "patXXXXXXXXXXXXXX",
+              "placeholder": "patXXXXXXXXXXXXXX",
+              "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Access Token",
+              "internalKey": "accessToken",
+              "type": "string",
+              "description": "Airtable OAuth access token (alternative to API key)",
+              "example": "your-oauth-access-token",
+              "placeholder": "your-oauth-access-token"
+            },
             {
               "name": "Base Id",
               "internalKey": "baseId",
@@ -323,39 +298,9 @@ export const airtableDoc: NodeDoc = {
               "placeholder": "tblXXXXXXXXXXXXXX"
             },
             {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "required": false,
-              "description": "Airtable API key (required for authentication)",
-              "example": "patXXXXXXXXXXXXXX",
-              "placeholder": "patXXXXXXXXXXXXXX",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "Airtable OAuth access token (alternative to API key)",
-              "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Airtable credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID (required for update/delete)",
               "example": "recXXXXXXXXXXXXXX",
               "placeholder": "recXXXXXXXXXXXXXX"
@@ -364,31 +309,24 @@ export const airtableDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
-              "required": false,
               "description": "Field values for create/update",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}",
+              "placeholder": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "deleted": true,
+            "id": "recAbc123"
           },
-          "outputDescription": "type: Value returned by the Airtable node.\nstructure: Value returned by the Airtable node.\nconvertible: Value returned by the Airtable node.\ndefaultValue: Value returned by the Airtable node.",
+          "outputDescription": "deleted: true if the record was successfully removed. id: The ID of the deleted record.",
           "usageExample": {
-            "scenario": "Use Airtable in a workflow and pass upstream data into delete.",
+            "scenario": "Remove a cancelled subscription record from Airtable",
             "inputValues": {
-              "Base Id": "appXXXXXXXXXXXXXX",
-              "Table Id": "tblXXXXXXXXXXXXXX",
-              "Api Key": "patXXXXXXXXXXXXXX",
-              "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
-              "Record Id": "recXXXXXXXXXXXXXX",
-              "Fields": "[object Object]"
+              "baseId": "{{$env.AIRTABLE_BASE_ID}}",
+              "tableId": "Subscriptions",
+              "recordId": "{{$json.recordId}}"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "`deleted: true` confirms the record was removed."
           },
           "externalDocsUrl": "https://airtable.com/developers/web/api/introduction"
         }
@@ -398,25 +336,19 @@ export const airtableDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Airtable node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

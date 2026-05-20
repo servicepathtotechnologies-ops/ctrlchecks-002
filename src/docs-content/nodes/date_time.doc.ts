@@ -5,10 +5,12 @@ export const dateTimeDoc: NodeDoc = {
   "displayName": "Date/Time",
   "category": "Data",
   "logoUrl": "/icons/nodes/date_time.svg",
-  "description": "Parse, format, and manipulate dates and times Use this node when a workflow needs date/time behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Parse, format, and manipulate dates and times",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Operations",
@@ -17,13 +19,12 @@ export const dateTimeDoc: NodeDoc = {
         {
           "name": "Format",
           "value": "format",
-          "description": "Format with the Date/Time node using the configured input fields.",
+          "description": "Format a date/time value into a specific string format.",
           "fields": [
             {
               "name": "Date Value",
               "internalKey": "dateValue",
-              "type": "date",
-              "required": false,
+              "type": "string",
               "description": "Input date",
               "example": "{{$json.timestamp}}",
               "placeholder": "{{$json.timestamp}}"
@@ -32,38 +33,36 @@ export const dateTimeDoc: NodeDoc = {
               "name": "Format",
               "internalKey": "format",
               "type": "string",
-              "required": false,
               "description": "Output format",
               "example": "YYYY-MM-DD",
               "placeholder": "YYYY-MM-DD"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "formatted": "15 Jan 2025",
+            "original": "2025-01-15T10:00:00Z",
+            "format": "DD MMM YYYY"
           },
-          "outputDescription": "type: Value returned by the Date/Time node.\nconvertible: Value returned by the Date/Time node.\ndefaultValue: Value returned by the Date/Time node.",
+          "outputDescription": "formatted: The date as a formatted string. original: The original input value. format: The format string used.",
           "usageExample": {
-            "scenario": "Use Date/Time in a workflow and pass upstream data into format.",
+            "scenario": "Format an ISO date from a database for display in an email",
             "inputValues": {
-              "Date Value": "{{$json.timestamp}}",
-              "Format": "YYYY-MM-DD"
+              "date": "{{$json.createdAt}}",
+              "format": "MMMM D, YYYY"
             },
-            "expectedOutput": "The node runs format and exposes its result in the output panel for the next node."
+            "expectedOutput": "Formatted date string like \"January 15, 2025\"."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Calculate",
           "value": "calculate",
-          "description": "Calculate with the Date/Time node using the configured input fields.",
+          "description": "Calculate using the Date/Time node.",
           "fields": [
             {
               "name": "Date Value",
               "internalKey": "dateValue",
-              "type": "date",
-              "required": false,
+              "type": "string",
               "description": "Input date",
               "example": "{{$json.timestamp}}",
               "placeholder": "{{$json.timestamp}}"
@@ -72,38 +71,35 @@ export const dateTimeDoc: NodeDoc = {
               "name": "Format",
               "internalKey": "format",
               "type": "string",
-              "required": false,
               "description": "Output format",
               "example": "YYYY-MM-DD",
               "placeholder": "YYYY-MM-DD"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": "Operation completed successfully.",
+            "text": ""
           },
-          "outputDescription": "type: Value returned by the Date/Time node.\nconvertible: Value returned by the Date/Time node.\ndefaultValue: Value returned by the Date/Time node.",
+          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Date/Time in a workflow and pass upstream data into calculate.",
+            "scenario": "Use Date/Time to calculate in a workflow.",
             "inputValues": {
               "Date Value": "{{$json.timestamp}}",
               "Format": "YYYY-MM-DD"
             },
-            "expectedOutput": "The node runs calculate and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes calculate and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Extract",
           "value": "extract",
-          "description": "Extract with the Date/Time node using the configured input fields.",
+          "description": "Extract using the Date/Time node.",
           "fields": [
             {
               "name": "Date Value",
               "internalKey": "dateValue",
-              "type": "date",
-              "required": false,
+              "type": "string",
               "description": "Input date",
               "example": "{{$json.timestamp}}",
               "placeholder": "{{$json.timestamp}}"
@@ -112,38 +108,35 @@ export const dateTimeDoc: NodeDoc = {
               "name": "Format",
               "internalKey": "format",
               "type": "string",
-              "required": false,
               "description": "Output format",
               "example": "YYYY-MM-DD",
               "placeholder": "YYYY-MM-DD"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": "Operation completed successfully.",
+            "text": ""
           },
-          "outputDescription": "type: Value returned by the Date/Time node.\nconvertible: Value returned by the Date/Time node.\ndefaultValue: Value returned by the Date/Time node.",
+          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Date/Time in a workflow and pass upstream data into extract.",
+            "scenario": "Use Date/Time to extract in a workflow.",
             "inputValues": {
               "Date Value": "{{$json.timestamp}}",
               "Format": "YYYY-MM-DD"
             },
-            "expectedOutput": "The node runs extract and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes extract and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Parse",
           "value": "parse",
-          "description": "Parse with the Date/Time node using the configured input fields.",
+          "description": "Parse a date string into a structured object with year, month, day, etc.",
           "fields": [
             {
               "name": "Date Value",
               "internalKey": "dateValue",
-              "type": "date",
-              "required": false,
+              "type": "string",
               "description": "Input date",
               "example": "{{$json.timestamp}}",
               "placeholder": "{{$json.timestamp}}"
@@ -152,25 +145,27 @@ export const dateTimeDoc: NodeDoc = {
               "name": "Format",
               "internalKey": "format",
               "type": "string",
-              "required": false,
               "description": "Output format",
               "example": "YYYY-MM-DD",
               "placeholder": "YYYY-MM-DD"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "year": 2025,
+            "month": 1,
+            "day": 15,
+            "hour": 10,
+            "minute": 0,
+            "timestamp": 1736935200000,
+            "iso": "2025-01-15T10:00:00.000Z"
           },
-          "outputDescription": "type: Value returned by the Date/Time node.\nconvertible: Value returned by the Date/Time node.\ndefaultValue: Value returned by the Date/Time node.",
+          "outputDescription": "year/month/day/hour/minute: Components of the parsed date. timestamp: Unix milliseconds. iso: ISO 8601 string.",
           "usageExample": {
-            "scenario": "Use Date/Time in a workflow and pass upstream data into parse.",
+            "scenario": "Extract the year from a date string for grouping records",
             "inputValues": {
-              "Date Value": "{{$json.timestamp}}",
-              "Format": "YYYY-MM-DD"
+              "date": "{{$json.dateString}}"
             },
-            "expectedOutput": "The node runs parse and exposes its result in the output panel for the next node."
+            "expectedOutput": "Use `{{$json.year}}` in SQL queries or conditional checks."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -180,20 +175,14 @@ export const dateTimeDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

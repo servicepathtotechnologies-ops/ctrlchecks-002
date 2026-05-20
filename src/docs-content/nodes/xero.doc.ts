@@ -5,35 +5,31 @@ export const xeroDoc: NodeDoc = {
   "displayName": "Xero",
   "category": "Utility",
   "logoUrl": "/icons/nodes/xero.svg",
-  "description": "Create, fetch, update, and search Xero accounting records (contacts, invoices, items, payments, accounts). Use this node when a workflow needs xero behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Access Token Credential",
+  "description": "Create, fetch, update, and search Xero accounting records (contacts, invoices, items, payments, accounts).",
+  "credentialType": "Xero Credential",
   "credentialSetupSteps": [
-    "Open the Xero developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Access Token Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to https://developer.xero.com/app/manage → click \"New app\".",
+    "Set redirect URI to http://localhost:3001/api/oauth/xero/callback.",
+    "Copy Client ID and Client Secret.",
+    "In CtrlChecks, open Connections → Add Connection → Xero → click \"Connect with Xero\" → authorize."
   ],
-  "credentialDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview",
+  "credentialDocsUrl": "https://developer.xero.com/documentation/getting-started-guide",
   "resources": [
     {
-      "name": "Contacts",
-      "description": "Contacts is a Xero resource available in this node.",
+      "name": "Operations",
+      "description": "Xero exposes operation choices directly.",
       "operations": [
         {
-          "name": "Get Many",
+          "name": "Get many",
           "value": "get_many",
-          "description": "Get Many with the Xero node using the configured input fields.",
+          "description": "Get many using the Xero node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Xero OAuth 2.0 access token"
             },
             {
               "name": "Tenant Id",
@@ -41,100 +37,100 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Xero resource",
+              "example": "invoices",
+              "placeholder": "invoices",
+              "defaultValue": "invoices",
+              "options": [
+                "Contacts",
+                "Invoices",
+                "Items",
+                "Payments",
+                "Accounts"
+              ]
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create/update",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Where",
               "internalKey": "where",
               "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
+              "description": "Xero WHERE filter"
             },
             {
               "name": "Order",
               "internalKey": "order",
               "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
+              "description": "Sort order"
             },
             {
               "name": "Page",
               "internalKey": "page",
               "type": "number",
-              "required": false,
               "description": "Page number",
               "example": "1",
+              "placeholder": "1",
               "defaultValue": "1"
             },
             {
               "name": "Modified After",
               "internalKey": "modifiedAfter",
               "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
+              "description": "ISO date — only records modified after"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "xero"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into get many.",
+            "scenario": "Use Xero to get many in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
+              "Access Token": "",
+              "Tenant Id": "abc123",
+              "Resource": "invoices",
+              "Record Id": "abc123",
+              "Payload": "{}"
             },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get many and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
         },
         {
-          "name": "Get By ID",
+          "name": "Get by id",
           "value": "get_by_id",
-          "description": "Get By ID with the Xero node using the configured input fields.",
+          "description": "Get by id using the Xero node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Xero OAuth 2.0 access token"
             },
             {
               "name": "Tenant Id",
@@ -142,100 +138,100 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Xero resource",
+              "example": "invoices",
+              "placeholder": "invoices",
+              "defaultValue": "invoices",
+              "options": [
+                "Contacts",
+                "Invoices",
+                "Items",
+                "Payments",
+                "Accounts"
+              ]
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create/update",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Where",
               "internalKey": "where",
               "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
+              "description": "Xero WHERE filter"
             },
             {
               "name": "Order",
               "internalKey": "order",
               "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
+              "description": "Sort order"
             },
             {
               "name": "Page",
               "internalKey": "page",
               "type": "number",
-              "required": false,
               "description": "Page number",
               "example": "1",
+              "placeholder": "1",
               "defaultValue": "1"
             },
             {
               "name": "Modified After",
               "internalKey": "modifiedAfter",
               "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
+              "description": "ISO date — only records modified after"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "xero"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into get by id.",
+            "scenario": "Use Xero to get by id in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
+              "Access Token": "",
+              "Tenant Id": "abc123",
+              "Resource": "invoices",
+              "Record Id": "abc123",
+              "Payload": "{}"
             },
-            "expectedOutput": "The node runs get by id and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get by id and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
         },
         {
           "name": "Create",
           "value": "create",
-          "description": "Create with the Xero node using the configured input fields.",
+          "description": "Create using the Xero node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Xero OAuth 2.0 access token"
             },
             {
               "name": "Tenant Id",
@@ -243,100 +239,100 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Xero resource",
+              "example": "invoices",
+              "placeholder": "invoices",
+              "defaultValue": "invoices",
+              "options": [
+                "Contacts",
+                "Invoices",
+                "Items",
+                "Payments",
+                "Accounts"
+              ]
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create/update",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Where",
               "internalKey": "where",
               "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
+              "description": "Xero WHERE filter"
             },
             {
               "name": "Order",
               "internalKey": "order",
               "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
+              "description": "Sort order"
             },
             {
               "name": "Page",
               "internalKey": "page",
               "type": "number",
-              "required": false,
               "description": "Page number",
               "example": "1",
+              "placeholder": "1",
               "defaultValue": "1"
             },
             {
               "name": "Modified After",
               "internalKey": "modifiedAfter",
               "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
+              "description": "ISO date — only records modified after"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "xero"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into create.",
+            "scenario": "Use Xero to create in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
+              "Access Token": "",
+              "Tenant Id": "abc123",
+              "Resource": "invoices",
+              "Record Id": "abc123",
+              "Payload": "{}"
             },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes create and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the Xero node using the configured input fields.",
+          "description": "Update using the Xero node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Xero OAuth 2.0 access token"
             },
             {
               "name": "Tenant Id",
@@ -344,1723 +340,86 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Xero resource",
+              "example": "invoices",
+              "placeholder": "invoices",
+              "defaultValue": "invoices",
+              "options": [
+                "Contacts",
+                "Invoices",
+                "Items",
+                "Payments",
+                "Accounts"
+              ]
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create/update",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Where",
               "internalKey": "where",
               "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
+              "description": "Xero WHERE filter"
             },
             {
               "name": "Order",
               "internalKey": "order",
               "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
+              "description": "Sort order"
             },
             {
               "name": "Page",
               "internalKey": "page",
               "type": "number",
-              "required": false,
               "description": "Page number",
               "example": "1",
+              "placeholder": "1",
               "defaultValue": "1"
             },
             {
               "name": "Modified After",
               "internalKey": "modifiedAfter",
               "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
+              "description": "ISO date — only records modified after"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "xero"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into update.",
+            "scenario": "Use Xero to update in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        }
-      ]
-    },
-    {
-      "name": "Invoices",
-      "description": "Invoices is a Xero resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Many",
-          "value": "get_many",
-          "description": "Get Many with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into get many.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Get By ID",
-          "value": "get_by_id",
-          "description": "Get By ID with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into get by id.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs get by id and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        }
-      ]
-    },
-    {
-      "name": "Items",
-      "description": "Items is a Xero resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Many",
-          "value": "get_many",
-          "description": "Get Many with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into get many.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Get By ID",
-          "value": "get_by_id",
-          "description": "Get By ID with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into get by id.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs get by id and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        }
-      ]
-    },
-    {
-      "name": "Payments",
-      "description": "Payments is a Xero resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Many",
-          "value": "get_many",
-          "description": "Get Many with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into get many.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Get By ID",
-          "value": "get_by_id",
-          "description": "Get By ID with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into get by id.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs get by id and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        }
-      ]
-    },
-    {
-      "name": "Accounts",
-      "description": "Accounts is a Xero resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Many",
-          "value": "get_many",
-          "description": "Get Many with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into get many.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Get By ID",
-          "value": "get_by_id",
-          "description": "Get By ID with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into get by id.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs get by id and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Xero node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": true,
-              "description": "Xero OAuth 2.0 access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Tenant Id",
-              "internalKey": "tenantId",
-              "type": "string",
-              "required": true,
-              "description": "Xero tenant ID",
-              "example": "{{ $json.tenantId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID for get_by_id or update",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Where",
-              "internalKey": "where",
-              "type": "string",
-              "required": false,
-              "description": "Xero WHERE filter",
-              "example": "{{ $json.where }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Order",
-              "internalKey": "order",
-              "type": "string",
-              "required": false,
-              "description": "Sort order",
-              "example": "{{ $json.order }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Page",
-              "internalKey": "page",
-              "type": "number",
-              "required": false,
-              "description": "Page number",
-              "example": "1",
-              "defaultValue": "1"
-            },
-            {
-              "name": "Modified After",
-              "internalKey": "modifiedAfter",
-              "type": "string",
-              "required": false,
-              "description": "ISO date — only records modified after",
-              "example": "{{ $json.modifiedAfter }}",
-              "defaultValue": ""
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "xero"
-          },
-          "outputDescription": "success: Indicates that the Xero node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Xero in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "Tenant Id": "{{ $json.tenantId }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Where": "{{ $json.where }}",
-              "Order": "{{ $json.order }}",
-              "Page": "1",
-              "Modified After": "{{ $json.modifiedAfter }}"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+              "Access Token": "",
+              "Tenant Id": "abc123",
+              "Resource": "invoices",
+              "Record Id": "abc123",
+              "Payload": "{}"
+            },
+            "expectedOutput": "The node executes update and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.xero.com/documentation/api/accounting/overview"
         }
@@ -2070,25 +429,19 @@ export const xeroDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Xero node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "http_request",
-    "respond_to_webhook",
-    "clickup",
-    "delay",
-    "queue_push"
-  ]
+  "relatedNodes": []
 };

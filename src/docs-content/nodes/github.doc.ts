@@ -5,14 +5,10 @@ export const githubDoc: NodeDoc = {
   "displayName": "GitHub",
   "category": "Data",
   "logoUrl": "/icons/nodes/github.svg",
-  "description": "GitHub repository operations Use this node when a workflow needs github behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Github Token, Github Credential, Github Credential",
+  "description": "GitHub repository operations",
+  "credentialType": "GitHub API Key",
   "credentialSetupSteps": [
-    "Open the GitHub developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Github Token, Github Credential, Github Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://docs.github.com/en/rest",
   "resources": [
@@ -23,13 +19,12 @@ export const githubDoc: NodeDoc = {
         {
           "name": "Create issue",
           "value": "create_issue",
-          "description": "Create issue with the GitHub node using the configured input fields.",
+          "description": "Create a new issue in a GitHub repository.",
           "fields": [
             {
               "name": "Owner",
               "internalKey": "owner",
               "type": "string",
-              "required": false,
               "description": "Repository owner (user/org)",
               "example": "octocat",
               "placeholder": "octocat"
@@ -38,7 +33,6 @@ export const githubDoc: NodeDoc = {
               "name": "Repo",
               "internalKey": "repo",
               "type": "string",
-              "required": false,
               "description": "Repository name",
               "example": "hello-world",
               "placeholder": "hello-world"
@@ -47,47 +41,40 @@ export const githubDoc: NodeDoc = {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Issue/PR title",
-              "example": "{{ $json.title }}"
+              "description": "Issue/PR title"
             },
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "string",
-              "required": false,
-              "description": "Issue/PR body or comment text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Issue/PR body or comment text"
             },
             {
               "name": "Issue Number",
               "internalKey": "issueNumber",
               "type": "number",
-              "required": false,
               "description": "Issue number (for comments/updates)",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Comment",
               "internalKey": "comment",
               "type": "string",
-              "required": false,
-              "description": "Issue comment text (for add_issue_comment)",
-              "example": "{{ $json.comment }}"
+              "description": "Issue comment text (for add_issue_comment)"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Issue labels (array of strings)",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Ref",
               "internalKey": "ref",
               "type": "string",
-              "required": false,
               "description": "Base branch/ref (for PR/workflow)",
               "example": "main",
               "placeholder": "main"
@@ -96,83 +83,63 @@ export const githubDoc: NodeDoc = {
               "name": "Branch Name",
               "internalKey": "branchName",
               "type": "string",
-              "required": false,
-              "description": "Head branch name (for PR)",
-              "example": "{{ $json.branchName }}"
+              "description": "Head branch name (for PR)"
             },
             {
               "name": "Workflow Id",
               "internalKey": "workflowId",
               "type": "string",
-              "required": false,
               "description": "Workflow ID or filename (for trigger_workflow)",
-              "example": "{{ $json.workflowId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for GitHub (if using OAuth authentication)",
               "example": "your-github-oauth-token",
-              "placeholder": "your-github-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-github-oauth-token"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "GitHub Personal Access Token (alternative to OAuth)",
               "example": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "github_oauth_123",
-              "placeholder": "github_oauth_123"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "number": 42,
+            "title": "Bug: Login fails for SSO users",
+            "state": "open",
+            "html_url": "https://github.com/org/repo/issues/42",
+            "created_at": "2025-01-15T10:00:00Z"
           },
-          "outputDescription": "type: Value returned by the GitHub node.\nstructure: Value returned by the GitHub node.\nconvertible: Value returned by the GitHub node.\ndefaultValue: Value returned by the GitHub node.",
+          "outputDescription": "number: The issue number. html_url: Direct link to the issue. state: \"open\" means it was created.",
           "usageExample": {
-            "scenario": "Use GitHub in a workflow and pass upstream data into create issue.",
+            "scenario": "Create a GitHub issue when a critical error is logged",
             "inputValues": {
-              "Owner": "octocat",
-              "Repo": "hello-world",
-              "Title": "{{ $json.title }}",
-              "Body": "Created from workflow data: {{ $json.summary }}",
-              "Issue Number": "25",
-              "Comment": "{{ $json.comment }}",
-              "Labels": "[\"value\"]",
-              "Ref": "main",
-              "Branch Name": "{{ $json.branchName }}",
-              "Workflow Id": "{{ $json.workflowId }}"
+              "owner": "{{$env.GH_OWNER}}",
+              "repo": "{{$env.GH_REPO}}",
+              "title": "[ERROR] {{$json.errorMessage}}",
+              "body": "**Workflow:** {{$json.workflowId}}\n**Time:** {{$now}}\n\n```\n{{$json.stack}}\n```"
             },
-            "expectedOutput": "The node runs create issue and exposes its result in the output panel for the next node."
+            "expectedOutput": "Issue is created. Share `{{$json.html_url}}` in a Slack alert."
           },
           "externalDocsUrl": "https://docs.github.com/en/rest"
         },
         {
           "name": "Add issue comment",
           "value": "add_issue_comment",
-          "description": "Add issue comment with the GitHub node using the configured input fields.",
+          "description": "Add issue comment using the GitHub node.",
           "fields": [
             {
               "name": "Owner",
               "internalKey": "owner",
               "type": "string",
-              "required": false,
               "description": "Repository owner (user/org)",
               "example": "octocat",
               "placeholder": "octocat"
@@ -181,7 +148,6 @@ export const githubDoc: NodeDoc = {
               "name": "Repo",
               "internalKey": "repo",
               "type": "string",
-              "required": false,
               "description": "Repository name",
               "example": "hello-world",
               "placeholder": "hello-world"
@@ -190,47 +156,40 @@ export const githubDoc: NodeDoc = {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Issue/PR title",
-              "example": "{{ $json.title }}"
+              "description": "Issue/PR title"
             },
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "string",
-              "required": false,
-              "description": "Issue/PR body or comment text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Issue/PR body or comment text"
             },
             {
               "name": "Issue Number",
               "internalKey": "issueNumber",
               "type": "number",
-              "required": false,
               "description": "Issue number (for comments/updates)",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Comment",
               "internalKey": "comment",
               "type": "string",
-              "required": false,
-              "description": "Issue comment text (for add_issue_comment)",
-              "example": "{{ $json.comment }}"
+              "description": "Issue comment text (for add_issue_comment)"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Issue labels (array of strings)",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Ref",
               "internalKey": "ref",
               "type": "string",
-              "required": false,
               "description": "Base branch/ref (for PR/workflow)",
               "example": "main",
               "placeholder": "main"
@@ -239,83 +198,67 @@ export const githubDoc: NodeDoc = {
               "name": "Branch Name",
               "internalKey": "branchName",
               "type": "string",
-              "required": false,
-              "description": "Head branch name (for PR)",
-              "example": "{{ $json.branchName }}"
+              "description": "Head branch name (for PR)"
             },
             {
               "name": "Workflow Id",
               "internalKey": "workflowId",
               "type": "string",
-              "required": false,
               "description": "Workflow ID or filename (for trigger_workflow)",
-              "example": "{{ $json.workflowId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for GitHub (if using OAuth authentication)",
               "example": "your-github-oauth-token",
-              "placeholder": "your-github-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-github-oauth-token"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "GitHub Personal Access Token (alternative to OAuth)",
               "example": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "github_oauth_123",
-              "placeholder": "github_oauth_123"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the GitHub node.\nstructure: Value returned by the GitHub node.\nconvertible: Value returned by the GitHub node.\ndefaultValue: Value returned by the GitHub node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use GitHub in a workflow and pass upstream data into add issue comment.",
+            "scenario": "Use GitHub to add issue comment in a workflow.",
             "inputValues": {
               "Owner": "octocat",
               "Repo": "hello-world",
-              "Title": "{{ $json.title }}",
-              "Body": "Created from workflow data: {{ $json.summary }}",
-              "Issue Number": "25",
-              "Comment": "{{ $json.comment }}",
-              "Labels": "[\"value\"]",
-              "Ref": "main",
-              "Branch Name": "{{ $json.branchName }}",
-              "Workflow Id": "{{ $json.workflowId }}"
+              "Title": "",
+              "Body": "",
+              "Issue Number": "10"
             },
-            "expectedOutput": "The node runs add issue comment and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes add issue comment and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.github.com/en/rest"
         },
         {
           "name": "Create pr",
           "value": "create_pr",
-          "description": "Create pr with the GitHub node using the configured input fields.",
+          "description": "Create pr using the GitHub node.",
           "fields": [
             {
               "name": "Owner",
               "internalKey": "owner",
               "type": "string",
-              "required": false,
               "description": "Repository owner (user/org)",
               "example": "octocat",
               "placeholder": "octocat"
@@ -324,7 +267,6 @@ export const githubDoc: NodeDoc = {
               "name": "Repo",
               "internalKey": "repo",
               "type": "string",
-              "required": false,
               "description": "Repository name",
               "example": "hello-world",
               "placeholder": "hello-world"
@@ -333,47 +275,40 @@ export const githubDoc: NodeDoc = {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Issue/PR title",
-              "example": "{{ $json.title }}"
+              "description": "Issue/PR title"
             },
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "string",
-              "required": false,
-              "description": "Issue/PR body or comment text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Issue/PR body or comment text"
             },
             {
               "name": "Issue Number",
               "internalKey": "issueNumber",
               "type": "number",
-              "required": false,
               "description": "Issue number (for comments/updates)",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Comment",
               "internalKey": "comment",
               "type": "string",
-              "required": false,
-              "description": "Issue comment text (for add_issue_comment)",
-              "example": "{{ $json.comment }}"
+              "description": "Issue comment text (for add_issue_comment)"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Issue labels (array of strings)",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Ref",
               "internalKey": "ref",
               "type": "string",
-              "required": false,
               "description": "Base branch/ref (for PR/workflow)",
               "example": "main",
               "placeholder": "main"
@@ -382,83 +317,67 @@ export const githubDoc: NodeDoc = {
               "name": "Branch Name",
               "internalKey": "branchName",
               "type": "string",
-              "required": false,
-              "description": "Head branch name (for PR)",
-              "example": "{{ $json.branchName }}"
+              "description": "Head branch name (for PR)"
             },
             {
               "name": "Workflow Id",
               "internalKey": "workflowId",
               "type": "string",
-              "required": false,
               "description": "Workflow ID or filename (for trigger_workflow)",
-              "example": "{{ $json.workflowId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for GitHub (if using OAuth authentication)",
               "example": "your-github-oauth-token",
-              "placeholder": "your-github-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-github-oauth-token"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "GitHub Personal Access Token (alternative to OAuth)",
               "example": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "github_oauth_123",
-              "placeholder": "github_oauth_123"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the GitHub node.\nstructure: Value returned by the GitHub node.\nconvertible: Value returned by the GitHub node.\ndefaultValue: Value returned by the GitHub node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use GitHub in a workflow and pass upstream data into create pr.",
+            "scenario": "Use GitHub to create pr in a workflow.",
             "inputValues": {
               "Owner": "octocat",
               "Repo": "hello-world",
-              "Title": "{{ $json.title }}",
-              "Body": "Created from workflow data: {{ $json.summary }}",
-              "Issue Number": "25",
-              "Comment": "{{ $json.comment }}",
-              "Labels": "[\"value\"]",
-              "Ref": "main",
-              "Branch Name": "{{ $json.branchName }}",
-              "Workflow Id": "{{ $json.workflowId }}"
+              "Title": "",
+              "Body": "",
+              "Issue Number": "10"
             },
-            "expectedOutput": "The node runs create pr and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes create pr and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.github.com/en/rest"
         },
         {
           "name": "Trigger workflow",
           "value": "trigger_workflow",
-          "description": "Trigger workflow with the GitHub node using the configured input fields.",
+          "description": "Trigger workflow using the GitHub node.",
           "fields": [
             {
               "name": "Owner",
               "internalKey": "owner",
               "type": "string",
-              "required": false,
               "description": "Repository owner (user/org)",
               "example": "octocat",
               "placeholder": "octocat"
@@ -467,7 +386,6 @@ export const githubDoc: NodeDoc = {
               "name": "Repo",
               "internalKey": "repo",
               "type": "string",
-              "required": false,
               "description": "Repository name",
               "example": "hello-world",
               "placeholder": "hello-world"
@@ -476,47 +394,40 @@ export const githubDoc: NodeDoc = {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Issue/PR title",
-              "example": "{{ $json.title }}"
+              "description": "Issue/PR title"
             },
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "string",
-              "required": false,
-              "description": "Issue/PR body or comment text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Issue/PR body or comment text"
             },
             {
               "name": "Issue Number",
               "internalKey": "issueNumber",
               "type": "number",
-              "required": false,
               "description": "Issue number (for comments/updates)",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Comment",
               "internalKey": "comment",
               "type": "string",
-              "required": false,
-              "description": "Issue comment text (for add_issue_comment)",
-              "example": "{{ $json.comment }}"
+              "description": "Issue comment text (for add_issue_comment)"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Issue labels (array of strings)",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Ref",
               "internalKey": "ref",
               "type": "string",
-              "required": false,
               "description": "Base branch/ref (for PR/workflow)",
               "example": "main",
               "placeholder": "main"
@@ -525,83 +436,67 @@ export const githubDoc: NodeDoc = {
               "name": "Branch Name",
               "internalKey": "branchName",
               "type": "string",
-              "required": false,
-              "description": "Head branch name (for PR)",
-              "example": "{{ $json.branchName }}"
+              "description": "Head branch name (for PR)"
             },
             {
               "name": "Workflow Id",
               "internalKey": "workflowId",
               "type": "string",
-              "required": false,
               "description": "Workflow ID or filename (for trigger_workflow)",
-              "example": "{{ $json.workflowId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for GitHub (if using OAuth authentication)",
               "example": "your-github-oauth-token",
-              "placeholder": "your-github-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-github-oauth-token"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "GitHub Personal Access Token (alternative to OAuth)",
               "example": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "github_oauth_123",
-              "placeholder": "github_oauth_123"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the GitHub node.\nstructure: Value returned by the GitHub node.\nconvertible: Value returned by the GitHub node.\ndefaultValue: Value returned by the GitHub node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use GitHub in a workflow and pass upstream data into trigger workflow.",
+            "scenario": "Use GitHub to trigger workflow in a workflow.",
             "inputValues": {
               "Owner": "octocat",
               "Repo": "hello-world",
-              "Title": "{{ $json.title }}",
-              "Body": "Created from workflow data: {{ $json.summary }}",
-              "Issue Number": "25",
-              "Comment": "{{ $json.comment }}",
-              "Labels": "[\"value\"]",
-              "Ref": "main",
-              "Branch Name": "{{ $json.branchName }}",
-              "Workflow Id": "{{ $json.workflowId }}"
+              "Title": "",
+              "Body": "",
+              "Issue Number": "10"
             },
-            "expectedOutput": "The node runs trigger workflow and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes trigger workflow and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.github.com/en/rest"
         },
         {
           "name": "List repos",
           "value": "list_repos",
-          "description": "List repos with the GitHub node using the configured input fields.",
+          "description": "List repos using the GitHub node.",
           "fields": [
             {
               "name": "Owner",
               "internalKey": "owner",
               "type": "string",
-              "required": false,
               "description": "Repository owner (user/org)",
               "example": "octocat",
               "placeholder": "octocat"
@@ -610,7 +505,6 @@ export const githubDoc: NodeDoc = {
               "name": "Repo",
               "internalKey": "repo",
               "type": "string",
-              "required": false,
               "description": "Repository name",
               "example": "hello-world",
               "placeholder": "hello-world"
@@ -619,47 +513,40 @@ export const githubDoc: NodeDoc = {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Issue/PR title",
-              "example": "{{ $json.title }}"
+              "description": "Issue/PR title"
             },
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "string",
-              "required": false,
-              "description": "Issue/PR body or comment text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Issue/PR body or comment text"
             },
             {
               "name": "Issue Number",
               "internalKey": "issueNumber",
               "type": "number",
-              "required": false,
               "description": "Issue number (for comments/updates)",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Comment",
               "internalKey": "comment",
               "type": "string",
-              "required": false,
-              "description": "Issue comment text (for add_issue_comment)",
-              "example": "{{ $json.comment }}"
+              "description": "Issue comment text (for add_issue_comment)"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Issue labels (array of strings)",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Ref",
               "internalKey": "ref",
               "type": "string",
-              "required": false,
               "description": "Base branch/ref (for PR/workflow)",
               "example": "main",
               "placeholder": "main"
@@ -668,70 +555,55 @@ export const githubDoc: NodeDoc = {
               "name": "Branch Name",
               "internalKey": "branchName",
               "type": "string",
-              "required": false,
-              "description": "Head branch name (for PR)",
-              "example": "{{ $json.branchName }}"
+              "description": "Head branch name (for PR)"
             },
             {
               "name": "Workflow Id",
               "internalKey": "workflowId",
               "type": "string",
-              "required": false,
               "description": "Workflow ID or filename (for trigger_workflow)",
-              "example": "{{ $json.workflowId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for GitHub (if using OAuth authentication)",
               "example": "your-github-oauth-token",
-              "placeholder": "your-github-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "placeholder": "your-github-oauth-token"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "GitHub Personal Access Token (alternative to OAuth)",
               "example": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "github_oauth_123",
-              "placeholder": "github_oauth_123"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the GitHub node.\nstructure: Value returned by the GitHub node.\nconvertible: Value returned by the GitHub node.\ndefaultValue: Value returned by the GitHub node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use GitHub in a workflow and pass upstream data into list repos.",
+            "scenario": "Use GitHub to list repos in a workflow.",
             "inputValues": {
               "Owner": "octocat",
               "Repo": "hello-world",
-              "Title": "{{ $json.title }}",
-              "Body": "Created from workflow data: {{ $json.summary }}",
-              "Issue Number": "25",
-              "Comment": "{{ $json.comment }}",
-              "Labels": "[\"value\"]",
-              "Ref": "main",
-              "Branch Name": "{{ $json.branchName }}",
-              "Workflow Id": "{{ $json.workflowId }}"
+              "Title": "",
+              "Body": "",
+              "Issue Number": "10"
             },
-            "expectedOutput": "The node runs list repos and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes list repos and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.github.com/en/rest"
         }
@@ -741,25 +613,19 @@ export const githubDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the GitHub node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

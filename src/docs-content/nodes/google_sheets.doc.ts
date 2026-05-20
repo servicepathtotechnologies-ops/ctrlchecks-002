@@ -5,10 +5,17 @@ export const googleSheetsDoc: NodeDoc = {
   "displayName": "Google Sheets",
   "category": "Data",
   "logoUrl": "/icons/nodes/google_sheets.svg",
-  "description": "Read, write, append, or update data in Google Sheets Use this node when a workflow needs google sheets behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "Read, write, append, or update data in Google Sheets",
+  "credentialType": "Google Credential",
+  "credentialSetupSteps": [
+    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
+    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
+    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
+    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
+    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
+    "Sign in and grant the required scopes. The connection saves automatically."
+  ],
+  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
   "resources": [
     {
       "name": "Operations",
@@ -17,7 +24,7 @@ export const googleSheetsDoc: NodeDoc = {
         {
           "name": "Read",
           "value": "read",
-          "description": "Read with the Google Sheets node using the configured input fields.",
+          "description": "Read rows from a Google Sheets spreadsheet.",
           "fields": [
             {
               "name": "Spreadsheet Id",
@@ -32,7 +39,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Sheet Name",
               "internalKey": "sheetName",
               "type": "string",
-              "required": false,
               "description": "Sheet name/tab (leave empty for first sheet)",
               "example": "Sheet1",
               "placeholder": "Sheet1"
@@ -41,7 +47,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Range",
               "internalKey": "range",
               "type": "string",
-              "required": false,
               "description": "Cell range (e.g., A1:D100, leave empty for all used cells)",
               "example": "A1:D100",
               "placeholder": "A1:D100"
@@ -50,7 +55,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Output Format",
               "internalKey": "outputFormat",
               "type": "string",
-              "required": false,
               "description": "Output format for read operations",
               "example": "json",
               "placeholder": "json",
@@ -60,44 +64,50 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Values",
               "internalKey": "values",
               "type": "json",
-              "required": false,
               "description": "Data to write/append (for write/append operations)",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Data object to write/append (alternative to values array)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "rows": [
+              {
+                "Name": "Alice",
+                "Email": "alice@example.com",
+                "Status": "Active"
+              },
+              {
+                "Name": "Bob",
+                "Email": "bob@example.com",
+                "Status": "Inactive"
+              }
+            ],
+            "count": 2
           },
-          "outputDescription": "type: Value returned by the Google Sheets node.\nitemType: Value returned by the Google Sheets node.\nconvertible: Value returned by the Google Sheets node.\ndefaultValue: Value returned by the Google Sheets node.",
+          "outputDescription": "rows: Array of objects where each key is a column header and each value is the cell value. count: Total number of rows returned.",
           "usageExample": {
-            "scenario": "Use Google Sheets in a workflow and pass upstream data into read.",
+            "scenario": "Read a list of customers from a Google Sheet and send each a personalised email",
             "inputValues": {
-              "Spreadsheet Id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-              "Sheet Name": "Sheet1",
-              "Range": "A1:D100",
-              "Output Format": "json",
-              "Values": "[\"value\"]",
-              "Data": "{\"key\":\"value\"}"
+              "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+              "sheetName": "Customers",
+              "range": "A:D"
             },
-            "expectedOutput": "The node runs read and exposes its result in the output panel for the next node."
+            "expectedOutput": "Returns all rows as objects. Use a Loop node downstream to iterate over each row and pass `{{$json.Email}}` to Gmail."
           },
           "externalDocsUrl": "https://developers.google.com/sheets/api/reference/rest"
         },
         {
           "name": "Write",
           "value": "write",
-          "description": "Write with the Google Sheets node using the configured input fields.",
+          "description": "Write data to specific cells or a range in a Google Sheet.",
           "fields": [
             {
               "name": "Spreadsheet Id",
@@ -112,7 +122,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Sheet Name",
               "internalKey": "sheetName",
               "type": "string",
-              "required": false,
               "description": "Sheet name/tab (leave empty for first sheet)",
               "example": "Sheet1",
               "placeholder": "Sheet1"
@@ -121,7 +130,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Range",
               "internalKey": "range",
               "type": "string",
-              "required": false,
               "description": "Cell range (e.g., A1:D100, leave empty for all used cells)",
               "example": "A1:D100",
               "placeholder": "A1:D100"
@@ -130,7 +138,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Output Format",
               "internalKey": "outputFormat",
               "type": "string",
-              "required": false,
               "description": "Output format for read operations",
               "example": "json",
               "placeholder": "json",
@@ -140,44 +147,41 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Values",
               "internalKey": "values",
               "type": "json",
-              "required": false,
               "description": "Data to write/append (for write/append operations)",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Data object to write/append (alternative to values array)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "updatedRange": "Sheet1!A2:C2",
+            "updatedRows": 1,
+            "updatedColumns": 3,
+            "updatedCells": 3
           },
-          "outputDescription": "type: Value returned by the Google Sheets node.\nitemType: Value returned by the Google Sheets node.\nconvertible: Value returned by the Google Sheets node.\ndefaultValue: Value returned by the Google Sheets node.",
+          "outputDescription": "updatedRange: The A1 notation of the range that was written. updatedRows / Columns / Cells: How many rows, columns, and cells were updated.",
           "usageExample": {
-            "scenario": "Use Google Sheets in a workflow and pass upstream data into write.",
+            "scenario": "Write form submission data to a Google Sheet",
             "inputValues": {
-              "Spreadsheet Id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-              "Sheet Name": "Sheet1",
-              "Range": "A1:D100",
-              "Output Format": "json",
-              "Values": "[\"value\"]",
-              "Data": "{\"key\":\"value\"}"
+              "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+              "range": "Sheet1!A:C",
+              "values": "[[\"{{$json.name}}\", \"{{$json.email}}\", \"{{$now}}\"]]"
             },
-            "expectedOutput": "The node runs write and exposes its result in the output panel for the next node."
+            "expectedOutput": "Row is written to the sheet. `{{$json.updatedRange}}` confirms where the data was placed."
           },
           "externalDocsUrl": "https://developers.google.com/sheets/api/reference/rest"
         },
         {
           "name": "Append",
           "value": "append",
-          "description": "Append with the Google Sheets node using the configured input fields.",
+          "description": "Append a new row to the end of a Google Sheet.",
           "fields": [
             {
               "name": "Spreadsheet Id",
@@ -192,7 +196,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Sheet Name",
               "internalKey": "sheetName",
               "type": "string",
-              "required": false,
               "description": "Sheet name/tab (leave empty for first sheet)",
               "example": "Sheet1",
               "placeholder": "Sheet1"
@@ -201,7 +204,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Range",
               "internalKey": "range",
               "type": "string",
-              "required": false,
               "description": "Cell range (e.g., A1:D100, leave empty for all used cells)",
               "example": "A1:D100",
               "placeholder": "A1:D100"
@@ -210,7 +212,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Output Format",
               "internalKey": "outputFormat",
               "type": "string",
-              "required": false,
               "description": "Output format for read operations",
               "example": "json",
               "placeholder": "json",
@@ -220,44 +221,42 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Values",
               "internalKey": "values",
               "type": "json",
-              "required": false,
               "description": "Data to write/append (for write/append operations)",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Data object to write/append (alternative to values array)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "tableRange": "Sheet1!A1:C100",
+            "updates": {
+              "updatedRange": "Sheet1!A101:C101",
+              "updatedRows": 1
+            }
           },
-          "outputDescription": "type: Value returned by the Google Sheets node.\nitemType: Value returned by the Google Sheets node.\nconvertible: Value returned by the Google Sheets node.\ndefaultValue: Value returned by the Google Sheets node.",
+          "outputDescription": "tableRange: The entire table range including the new row. updates.updatedRange: The specific range of the newly appended row.",
           "usageExample": {
-            "scenario": "Use Google Sheets in a workflow and pass upstream data into append.",
+            "scenario": "Append a new order row to a tracking spreadsheet each time a Shopify order is placed",
             "inputValues": {
-              "Spreadsheet Id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-              "Sheet Name": "Sheet1",
-              "Range": "A1:D100",
-              "Output Format": "json",
-              "Values": "[\"value\"]",
-              "Data": "{\"key\":\"value\"}"
+              "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+              "sheetName": "Orders",
+              "values": "[[\"{{$json.orderId}}\", \"{{$json.customerEmail}}\", \"{{$json.total}}\", \"{{$now}}\"]]"
             },
-            "expectedOutput": "The node runs append and exposes its result in the output panel for the next node."
+            "expectedOutput": "A new row is appended. `{{$json.updates.updatedRange}}` shows where it was placed."
           },
           "externalDocsUrl": "https://developers.google.com/sheets/api/reference/rest"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the Google Sheets node using the configured input fields.",
+          "description": "Update specific cells in an existing Google Sheet row.",
           "fields": [
             {
               "name": "Spreadsheet Id",
@@ -272,7 +271,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Sheet Name",
               "internalKey": "sheetName",
               "type": "string",
-              "required": false,
               "description": "Sheet name/tab (leave empty for first sheet)",
               "example": "Sheet1",
               "placeholder": "Sheet1"
@@ -281,7 +279,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Range",
               "internalKey": "range",
               "type": "string",
-              "required": false,
               "description": "Cell range (e.g., A1:D100, leave empty for all used cells)",
               "example": "A1:D100",
               "placeholder": "A1:D100"
@@ -290,7 +287,6 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Output Format",
               "internalKey": "outputFormat",
               "type": "string",
-              "required": false,
               "description": "Output format for read operations",
               "example": "json",
               "placeholder": "json",
@@ -300,37 +296,33 @@ export const googleSheetsDoc: NodeDoc = {
               "name": "Values",
               "internalKey": "values",
               "type": "json",
-              "required": false,
               "description": "Data to write/append (for write/append operations)",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Data object to write/append (alternative to values array)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+            "updatedRange": "Sheet1!D5",
+            "updatedCells": 1
           },
-          "outputDescription": "type: Value returned by the Google Sheets node.\nitemType: Value returned by the Google Sheets node.\nconvertible: Value returned by the Google Sheets node.\ndefaultValue: Value returned by the Google Sheets node.",
+          "outputDescription": "updatedRange: The range that was updated. updatedCells: The number of cells that changed.",
           "usageExample": {
-            "scenario": "Use Google Sheets in a workflow and pass upstream data into update.",
+            "scenario": "Update the \"Status\" column of a row when an order is fulfilled",
             "inputValues": {
-              "Spreadsheet Id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-              "Sheet Name": "Sheet1",
-              "Range": "A1:D100",
-              "Output Format": "json",
-              "Values": "[\"value\"]",
-              "Data": "{\"key\":\"value\"}"
+              "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+              "range": "Sheet1!D{{$json.rowNumber}}",
+              "values": "[[\"Fulfilled\"]]"
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "The specified cell is updated. Use `{{$json.updatedRange}}` to confirm."
           },
           "externalDocsUrl": "https://developers.google.com/sheets/api/reference/rest"
         }
@@ -339,21 +331,20 @@ export const googleSheetsDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Google Sheets node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_doc"
-  ]
+  "relatedNodes": []
 };

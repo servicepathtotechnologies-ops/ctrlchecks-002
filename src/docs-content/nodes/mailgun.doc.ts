@@ -5,25 +5,23 @@ export const mailgunDoc: NodeDoc = {
   "displayName": "Mailgun",
   "category": "Communication",
   "logoUrl": "/icons/nodes/mailgun.svg",
-  "description": "Send transactional emails using the Mailgun API. Use this node when a workflow needs mailgun behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Mailgun Credential",
+  "description": "Send transactional emails using the Mailgun API.",
+  "credentialType": "Mailgun API Key",
   "credentialSetupSteps": [
-    "Open the Mailgun developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Mailgun Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Log in to https://app.mailgun.com → Settings → API Keys.",
+    "Copy the Private API Key.",
+    "In CtrlChecks, open Connections → Add Connection → Mailgun → paste the API Key and enter your domain → Save."
   ],
-  "credentialDocsUrl": "https://documentation.mailgun.com/docs/mailgun/api-reference/overview",
+  "credentialDocsUrl": "https://documentation.mailgun.com/en/latest/api_reference.html",
   "resources": [
     {
-      "name": "Operations",
-      "description": "Mailgun exposes operation choices directly.",
+      "name": "Configuration",
+      "description": "Mailgun is configured directly with input fields.",
       "operations": [
         {
-          "name": "Send Email",
+          "name": "Send email",
           "value": "send_email",
-          "description": "Send Email with the Mailgun node using the configured input fields.",
+          "description": "Send a transactional email via Mailgun.",
           "fields": [
             {
               "name": "Domain",
@@ -66,7 +64,6 @@ export const mailgunDoc: NodeDoc = {
               "name": "Subject",
               "internalKey": "subject",
               "type": "string",
-              "required": false,
               "description": "Email subject line",
               "example": "Hello!",
               "placeholder": "Hello!"
@@ -74,8 +71,7 @@ export const mailgunDoc: NodeDoc = {
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Plain text body of the email",
               "example": "Your message here",
               "placeholder": "Your message here"
@@ -83,32 +79,26 @@ export const mailgunDoc: NodeDoc = {
             {
               "name": "Html",
               "internalKey": "html",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "HTML body of the email (overrides plain text for HTML clients)",
               "example": "<p>Your message</p>",
               "placeholder": "<p>Your message</p>"
             }
           ],
           "outputExample": {
-            "success": true,
-            "messageId": "messageId",
-            "message": "message",
-            "error": {}
+            "id": "<20250115.abc123@mg.example.com>",
+            "message": "Queued. Thank you."
           },
-          "outputDescription": "success: Value returned by the Mailgun node.\nmessageId: Value returned by the Mailgun node.\nmessage: Value returned by the Mailgun node.\nerror: Value returned by the Mailgun node.",
+          "outputDescription": "id: Mailgun message ID for tracking. message: Confirmation from Mailgun.",
           "usageExample": {
-            "scenario": "Use Mailgun in a workflow and pass upstream data into send email.",
+            "scenario": "Send a password reset email using Mailgun",
             "inputValues": {
-              "Domain": "mg.yourdomain.com",
-              "Api Key": "key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-              "From": "noreply@mg.yourdomain.com",
-              "To": "user@example.com",
-              "Subject": "Hello!",
-              "Text": "Your message here",
-              "Html": "<p>Your message</p>"
+              "from": "noreply@yourapp.com",
+              "to": "{{$json.email}}",
+              "subject": "Reset your password",
+              "html": "<p>Click <a href=\"{{$json.resetUrl}}\">here</a> to reset your password. Link expires in 1 hour.</p>"
             },
-            "expectedOutput": "The node runs send email and exposes its result in the output panel for the next node."
+            "expectedOutput": "Email is queued by Mailgun. Track delivery in the Mailgun logs using `{{$json.id}}`."
           },
           "externalDocsUrl": "https://documentation.mailgun.com/docs/mailgun/api-reference/overview"
         }
@@ -118,25 +108,19 @@ export const mailgunDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Mailgun node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "google_gmail",
-    "outlook",
-    "slack_message",
-    "email",
-    "log_output"
-  ]
+  "relatedNodes": []
 };

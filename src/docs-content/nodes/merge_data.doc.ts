@@ -5,19 +5,21 @@ export const mergeDataDoc: NodeDoc = {
   "displayName": "Merge Data",
   "category": "Data",
   "logoUrl": "/icons/nodes/merge_data.svg",
-  "description": "Merge data structures from multiple sources Use this node when a workflow needs merge data behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Merge data structures from multiple sources",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Merge Data is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Merge Data is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Merge Data node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the Merge Data node.",
           "fields": [
             {
               "name": "Mode",
@@ -33,26 +35,29 @@ export const mergeDataDoc: NodeDoc = {
               "name": "Join By",
               "internalKey": "joinBy",
               "type": "string",
-              "required": false,
               "description": "Field to join by (for join mode)",
               "example": "id",
               "placeholder": "id"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Merge Data node.\nstructure: Value returned by the Merge Data node.\nconvertible: Value returned by the Merge Data node.\ndefaultValue: Value returned by the Merge Data node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Merge Data in a workflow and pass upstream data into configure.",
+            "scenario": "Use Merge Data to execute in a workflow.",
             "inputValues": {
               "Mode": "append",
               "Join By": "id"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -62,20 +67,14 @@ export const mergeDataDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

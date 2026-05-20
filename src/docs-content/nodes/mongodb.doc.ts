@@ -5,10 +5,12 @@ export const mongodbDoc: NodeDoc = {
   "displayName": "MongoDB",
   "category": "Data",
   "logoUrl": "/icons/nodes/mongodb.svg",
-  "description": "MongoDB database operations Use this node when a workflow needs mongodb behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "MongoDB database operations",
+  "credentialType": "MongoDB Credential",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://www.mongodb.com/docs/drivers/node/current/",
   "resources": [
     {
       "name": "Operations",
@@ -17,7 +19,7 @@ export const mongodbDoc: NodeDoc = {
         {
           "name": "Find",
           "value": "find",
-          "description": "Find with the MongoDB node using the configured input fields.",
+          "description": "Find using the MongoDB node.",
           "fields": [
             {
               "name": "Collection",
@@ -31,34 +33,37 @@ export const mongodbDoc: NodeDoc = {
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "MongoDB query",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"name\":\"John\"}",
+              "placeholder": "{\"name\":\"John\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the MongoDB node.\nstructure: Value returned by the MongoDB node.\nconvertible: Value returned by the MongoDB node.\ndefaultValue: Value returned by the MongoDB node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use MongoDB in a workflow and pass upstream data into find.",
+            "scenario": "Use MongoDB to find in a workflow.",
             "inputValues": {
               "Collection": "users",
-              "Query": "[object Object]"
+              "Query": "{\"name\":\"John\"}"
             },
-            "expectedOutput": "The node runs find and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes find and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.mongodb.com/docs/drivers/node/current/"
         },
         {
           "name": "Insert",
           "value": "insert",
-          "description": "Insert with the MongoDB node using the configured input fields.",
+          "description": "Insert using the MongoDB node.",
           "fields": [
             {
               "name": "Collection",
@@ -72,34 +77,37 @@ export const mongodbDoc: NodeDoc = {
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "MongoDB query",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"name\":\"John\"}",
+              "placeholder": "{\"name\":\"John\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the MongoDB node.\nstructure: Value returned by the MongoDB node.\nconvertible: Value returned by the MongoDB node.\ndefaultValue: Value returned by the MongoDB node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use MongoDB in a workflow and pass upstream data into insert.",
+            "scenario": "Use MongoDB to insert in a workflow.",
             "inputValues": {
               "Collection": "users",
-              "Query": "[object Object]"
+              "Query": "{\"name\":\"John\"}"
             },
-            "expectedOutput": "The node runs insert and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes insert and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.mongodb.com/docs/drivers/node/current/"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the MongoDB node using the configured input fields.",
+          "description": "Update using the MongoDB node.",
           "fields": [
             {
               "name": "Collection",
@@ -113,34 +121,37 @@ export const mongodbDoc: NodeDoc = {
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "MongoDB query",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"name\":\"John\"}",
+              "placeholder": "{\"name\":\"John\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the MongoDB node.\nstructure: Value returned by the MongoDB node.\nconvertible: Value returned by the MongoDB node.\ndefaultValue: Value returned by the MongoDB node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use MongoDB in a workflow and pass upstream data into update.",
+            "scenario": "Use MongoDB to update in a workflow.",
             "inputValues": {
               "Collection": "users",
-              "Query": "[object Object]"
+              "Query": "{\"name\":\"John\"}"
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes update and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.mongodb.com/docs/drivers/node/current/"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the MongoDB node using the configured input fields.",
+          "description": "Delete using the MongoDB node.",
           "fields": [
             {
               "name": "Collection",
@@ -154,27 +165,30 @@ export const mongodbDoc: NodeDoc = {
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "MongoDB query",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"name\":\"John\"}",
+              "placeholder": "{\"name\":\"John\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the MongoDB node.\nstructure: Value returned by the MongoDB node.\nconvertible: Value returned by the MongoDB node.\ndefaultValue: Value returned by the MongoDB node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use MongoDB in a workflow and pass upstream data into delete.",
+            "scenario": "Use MongoDB to delete in a workflow.",
             "inputValues": {
               "Collection": "users",
-              "Query": "[object Object]"
+              "Query": "{\"name\":\"John\"}"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.mongodb.com/docs/drivers/node/current/"
         }
@@ -183,21 +197,20 @@ export const mongodbDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the MongoDB node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

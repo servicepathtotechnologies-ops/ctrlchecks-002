@@ -5,24 +5,31 @@ export const googleBigqueryDoc: NodeDoc = {
   "displayName": "Google BigQuery",
   "category": "Data",
   "logoUrl": "/icons/nodes/google_bigquery.svg",
-  "description": "Query Google BigQuery data warehouse Use this node when a workflow needs google bigquery behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "Query Google BigQuery data warehouse",
+  "credentialType": "Google Credential",
+  "credentialSetupSteps": [
+    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
+    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
+    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
+    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
+    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
+    "Sign in and grant the required scopes. The connection saves automatically."
+  ],
+  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Google BigQuery is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Google BigQuery is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Google BigQuery node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the Google BigQuery node.",
           "fields": [
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "SQL query",
               "example": "SELECT * FROM dataset.table LIMIT 10",
@@ -32,36 +39,29 @@ export const googleBigqueryDoc: NodeDoc = {
               "name": "Project Id",
               "internalKey": "projectId",
               "type": "string",
-              "required": true,
               "description": "Project ID",
               "example": "my-project",
               "placeholder": "my-project"
-            },
-            {
-              "name": "Use Legacy Sql",
-              "internalKey": "useLegacySql",
-              "type": "boolean",
-              "required": false,
-              "description": "Whether to use BigQuery legacy SQL. Defaults to false.",
-              "example": "false",
-              "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Google BigQuery node.\nstructure: Value returned by the Google BigQuery node.\nconvertible: Value returned by the Google BigQuery node.\ndefaultValue: Value returned by the Google BigQuery node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Google BigQuery in a workflow and pass upstream data into configure.",
+            "scenario": "Use Google BigQuery to execute in a workflow.",
             "inputValues": {
               "Query": "SELECT * FROM dataset.table LIMIT 10",
-              "Project Id": "my-project",
-              "Use Legacy Sql": "false"
+              "Project Id": "my-project"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://cloud.google.com/bigquery/docs/reference/rest"
         }
@@ -70,21 +70,20 @@ export const googleBigqueryDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Google BigQuery node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

@@ -5,41 +5,41 @@ export const manualTriggerDoc: NodeDoc = {
   "displayName": "Manual Trigger",
   "category": "Triggers",
   "logoUrl": "/icons/nodes/manual_trigger.svg",
-  "description": "Workflow executes when user manually triggers it Use this node when a workflow needs manual trigger behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Workflow executes when user manually triggers it",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Manual Trigger is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Manual Trigger is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Manual Trigger node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Start the workflow when you click the \"Run\" button in CtrlChecks.",
           "fields": [
             {
               "name": "Input Data",
               "internalKey": "inputData",
               "type": "json",
-              "required": false,
               "description": "Optional input data when triggered manually",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "defaultValue": "defaultValue"
+            "executedAt": "2025-01-15T14:30:00.000Z",
+            "triggeredBy": "manual",
+            "workflowId": "wf_abc123"
           },
-          "outputDescription": "type: Value returned by the Manual Trigger node.\nstructure: Value returned by the Manual Trigger node.\ndefaultValue: Value returned by the Manual Trigger node.",
+          "outputDescription": "executedAt: ISO timestamp of the manual run. triggeredBy: Always \"manual\" for this trigger. workflowId: The current workflow ID.",
           "usageExample": {
-            "scenario": "Use Manual Trigger in a workflow and pass upstream data into configure.",
-            "inputValues": {
-              "Input Data": "{\"key\":\"value\"}"
-            },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "scenario": "Manually run a data migration workflow on demand",
+            "inputValues": {},
+            "expectedOutput": "The workflow starts immediately. Use this trigger when testing or running one-off automation tasks."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -49,20 +49,14 @@ export const manualTriggerDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "schedule",
-    "webhook",
-    "interval",
-    "chat_trigger",
-    "form"
-  ]
+  "relatedNodes": []
 };

@@ -5,19 +5,21 @@ export const jsonParserDoc: NodeDoc = {
   "displayName": "JSON Parser",
   "category": "Data",
   "logoUrl": "/icons/nodes/json_parser.svg",
-  "description": "Parse JSON strings into objects and extract specific fields Use this node when a workflow needs json parser behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Parse JSON strings into objects and extract specific fields",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "JSON Parser is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "JSON Parser is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the JSON Parser node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the JSON Parser node.",
           "fields": [
             {
               "name": "Json",
@@ -32,24 +34,23 @@ export const jsonParserDoc: NodeDoc = {
               "name": "Extract Fields",
               "internalKey": "extractFields",
               "type": "json",
-              "required": false,
               "description": "Fields to extract from parsed JSON",
-              "example": "name,age,email",
-              "placeholder": "name,age,email"
+              "example": "[\"name\",\"age\",\"email\"]",
+              "placeholder": "[\"name\",\"age\",\"email\"]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible"
+            "success": true,
+            "data": {}
           },
-          "outputDescription": "type: Value returned by the JSON Parser node.\nconvertible: Value returned by the JSON Parser node.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use JSON Parser in a workflow and pass upstream data into configure.",
+            "scenario": "Use JSON Parser to execute in a workflow.",
             "inputValues": {
               "Json": "{{$json.data}}",
-              "Extract Fields": "name,age,email"
+              "Extract Fields": "[\"name\",\"age\",\"email\"]"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -59,20 +60,14 @@ export const jsonParserDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

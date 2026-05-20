@@ -5,19 +5,21 @@ export const waitDoc: NodeDoc = {
   "displayName": "Wait",
   "category": "Logic",
   "logoUrl": "/icons/nodes/wait.svg",
-  "description": "Pause workflow execution Use this node when a workflow needs wait behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Pause workflow execution",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Wait is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Wait is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Wait node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Pause the workflow until a specific condition is met or a timeout expires.",
           "fields": [
             {
               "name": "Duration",
@@ -32,7 +34,6 @@ export const waitDoc: NodeDoc = {
               "name": "Unit",
               "internalKey": "unit",
               "type": "string",
-              "required": false,
               "description": "Duration unit",
               "example": "milliseconds",
               "placeholder": "milliseconds",
@@ -40,17 +41,19 @@ export const waitDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
+            "resumed": true,
+            "reason": "condition_met",
+            "waitedMs": 3500
           },
-          "outputDescription": "type: Value returned by the Wait node.\nstructure: Value returned by the Wait node.",
+          "outputDescription": "resumed: true when the wait is over. reason: Why it resumed (condition_met or timeout). waitedMs: How long it actually waited.",
           "usageExample": {
-            "scenario": "Use Wait in a workflow and pass upstream data into configure.",
+            "scenario": "Wait until a payment status changes to \"paid\" before sending a receipt",
             "inputValues": {
-              "Duration": "1000",
-              "Unit": "milliseconds"
+              "condition": "{{$json.status}} === \"paid\"",
+              "pollIntervalMs": "1000",
+              "timeoutMs": "30000"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Workflow resumes when `status` becomes \"paid\" or times out after 30 seconds."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -60,20 +63,14 @@ export const waitDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "function",
-    "function_item",
-    "if_else",
-    "switch",
-    "merge"
-  ]
+  "relatedNodes": []
 };

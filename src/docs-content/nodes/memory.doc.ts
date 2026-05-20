@@ -5,41 +5,42 @@ export const memoryDoc: NodeDoc = {
   "displayName": "Memory",
   "category": "AI",
   "logoUrl": "/icons/nodes/memory.svg",
-  "description": "Memory storage for AI Agent context Use this node when a workflow needs memory behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Memory storage for AI Agent context",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Memory is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Memory is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Memory node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the Memory node.",
           "fields": [
             {
               "name": "Context",
               "internalKey": "context",
               "type": "string",
-              "required": false,
               "description": "Memory context",
               "example": "{{$json.context}}",
               "placeholder": "{{$json.context}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
+            "messages": [],
+            "context": {}
           },
-          "outputDescription": "type: Value returned by the Memory node.\nstructure: Value returned by the Memory node.",
+          "outputDescription": "messages: Value returned by this node.\ncontext: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Memory in a workflow and pass upstream data into configure.",
+            "scenario": "Use Memory to execute in a workflow.",
             "inputValues": {
               "Context": "{{$json.context}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -49,20 +50,14 @@ export const memoryDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "ai_agent",
-    "ai_chat_model",
-    "openai_gpt",
-    "anthropic_claude",
-    "google_gemini"
-  ]
+  "relatedNodes": []
 };

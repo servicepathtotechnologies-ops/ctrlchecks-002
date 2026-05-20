@@ -5,24 +5,26 @@ export const sentimentAnalyzerDoc: NodeDoc = {
   "displayName": "Sentiment Analyzer",
   "category": "AI",
   "logoUrl": "/icons/nodes/sentiment_analyzer.svg",
-  "description": "Analyze sentiment and emotions in text Use this node when a workflow needs sentiment analyzer behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Analyze sentiment and emotions in text",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Sentiment Analyzer is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Sentiment Analyzer is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Sentiment Analyzer node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Analyse the sentiment (positive / negative / neutral) of a piece of text.",
           "fields": [
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "Text to analyze",
               "example": "{{$json.text}}",
@@ -30,17 +32,19 @@ export const sentimentAnalyzerDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible"
+            "sentiment": "positive",
+            "score": 0.87,
+            "label": "Positive",
+            "confidence": "high",
+            "text": "Great product, very easy to use!"
           },
-          "outputDescription": "type: Value returned by the Sentiment Analyzer node.\nstructure: Value returned by the Sentiment Analyzer node.\nconvertible: Value returned by the Sentiment Analyzer node.",
+          "outputDescription": "sentiment: positive, negative, or neutral. score: Confidence score from 0 to 1. label: Human-readable label. confidence: high, medium, or low.",
           "usageExample": {
-            "scenario": "Use Sentiment Analyzer in a workflow and pass upstream data into configure.",
+            "scenario": "Route negative customer feedback to a priority queue",
             "inputValues": {
-              "Text": "{{$json.text}}"
+              "text": "{{$json.reviewText}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Use `{{$json.sentiment}}` in an If/Else node to route negatives to a Slack alert channel."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -50,20 +54,14 @@ export const sentimentAnalyzerDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "ai_agent",
-    "ai_chat_model",
-    "openai_gpt",
-    "anthropic_claude",
-    "google_gemini"
-  ]
+  "relatedNodes": []
 };

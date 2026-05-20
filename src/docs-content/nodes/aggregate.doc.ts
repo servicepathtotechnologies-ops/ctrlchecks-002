@@ -5,10 +5,12 @@ export const aggregateDoc: NodeDoc = {
   "displayName": "Aggregate",
   "category": "Data",
   "logoUrl": "/icons/nodes/aggregate.svg",
-  "description": "Aggregate data Use this node when a workflow needs aggregate behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Aggregate data",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Operations",
@@ -17,13 +19,12 @@ export const aggregateDoc: NodeDoc = {
         {
           "name": "Sum",
           "value": "sum",
-          "description": "Sum with the Aggregate node using the configured input fields.",
+          "description": "Aggregate an array of items — sum, average, count, min, max, or group.",
           "fields": [
             {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
-              "required": false,
               "description": "Field to aggregate",
               "example": "{{$json.amount}}",
               "placeholder": "{{$json.amount}}"
@@ -32,7 +33,6 @@ export const aggregateDoc: NodeDoc = {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
-              "required": false,
               "description": "Delimiter used for join/concat operations",
               "example": "\\n",
               "placeholder": "\\n",
@@ -42,39 +42,40 @@ export const aggregateDoc: NodeDoc = {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
-              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
               "example": "category",
               "placeholder": "category"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible"
+            "sum": 4500,
+            "average": 900,
+            "count": 5,
+            "min": 200,
+            "max": 2000,
+            "field": "amount"
           },
-          "outputDescription": "type: Value returned by the Aggregate node.\nstructure: Value returned by the Aggregate node.\nconvertible: Value returned by the Aggregate node.",
+          "outputDescription": "sum: Sum of all values. average: Mean value. count: Number of items. min / max: Smallest / largest value.",
           "usageExample": {
-            "scenario": "Use Aggregate in a workflow and pass upstream data into sum.",
+            "scenario": "Calculate total sales from an array of order amounts",
             "inputValues": {
-              "Field": "{{$json.amount}}",
-              "Delimiter": "\\n",
-              "Group By": "category"
+              "items": "{{$json.orders}}",
+              "field": "amount",
+              "operation": "sum"
             },
-            "expectedOutput": "The node runs sum and exposes its result in the output panel for the next node."
+            "expectedOutput": "`{{$json.sum}}` holds the total sales figure."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Avg",
           "value": "avg",
-          "description": "Avg with the Aggregate node using the configured input fields.",
+          "description": "Aggregate an array of items — sum, average, count, min, max, or group.",
           "fields": [
             {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
-              "required": false,
               "description": "Field to aggregate",
               "example": "{{$json.amount}}",
               "placeholder": "{{$json.amount}}"
@@ -83,7 +84,6 @@ export const aggregateDoc: NodeDoc = {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
-              "required": false,
               "description": "Delimiter used for join/concat operations",
               "example": "\\n",
               "placeholder": "\\n",
@@ -93,39 +93,40 @@ export const aggregateDoc: NodeDoc = {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
-              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
               "example": "category",
               "placeholder": "category"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible"
+            "sum": 4500,
+            "average": 900,
+            "count": 5,
+            "min": 200,
+            "max": 2000,
+            "field": "amount"
           },
-          "outputDescription": "type: Value returned by the Aggregate node.\nstructure: Value returned by the Aggregate node.\nconvertible: Value returned by the Aggregate node.",
+          "outputDescription": "sum: Sum of all values. average: Mean value. count: Number of items. min / max: Smallest / largest value.",
           "usageExample": {
-            "scenario": "Use Aggregate in a workflow and pass upstream data into avg.",
+            "scenario": "Calculate total sales from an array of order amounts",
             "inputValues": {
-              "Field": "{{$json.amount}}",
-              "Delimiter": "\\n",
-              "Group By": "category"
+              "items": "{{$json.orders}}",
+              "field": "amount",
+              "operation": "sum"
             },
-            "expectedOutput": "The node runs avg and exposes its result in the output panel for the next node."
+            "expectedOutput": "`{{$json.sum}}` holds the total sales figure."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Count",
           "value": "count",
-          "description": "Count with the Aggregate node using the configured input fields.",
+          "description": "Aggregate an array of items — sum, average, count, min, max, or group.",
           "fields": [
             {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
-              "required": false,
               "description": "Field to aggregate",
               "example": "{{$json.amount}}",
               "placeholder": "{{$json.amount}}"
@@ -134,7 +135,6 @@ export const aggregateDoc: NodeDoc = {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
-              "required": false,
               "description": "Delimiter used for join/concat operations",
               "example": "\\n",
               "placeholder": "\\n",
@@ -144,39 +144,40 @@ export const aggregateDoc: NodeDoc = {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
-              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
               "example": "category",
               "placeholder": "category"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible"
+            "sum": 4500,
+            "average": 900,
+            "count": 5,
+            "min": 200,
+            "max": 2000,
+            "field": "amount"
           },
-          "outputDescription": "type: Value returned by the Aggregate node.\nstructure: Value returned by the Aggregate node.\nconvertible: Value returned by the Aggregate node.",
+          "outputDescription": "sum: Sum of all values. average: Mean value. count: Number of items. min / max: Smallest / largest value.",
           "usageExample": {
-            "scenario": "Use Aggregate in a workflow and pass upstream data into count.",
+            "scenario": "Calculate total sales from an array of order amounts",
             "inputValues": {
-              "Field": "{{$json.amount}}",
-              "Delimiter": "\\n",
-              "Group By": "category"
+              "items": "{{$json.orders}}",
+              "field": "amount",
+              "operation": "sum"
             },
-            "expectedOutput": "The node runs count and exposes its result in the output panel for the next node."
+            "expectedOutput": "`{{$json.sum}}` holds the total sales figure."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Min",
           "value": "min",
-          "description": "Min with the Aggregate node using the configured input fields.",
+          "description": "Aggregate an array of items — sum, average, count, min, max, or group.",
           "fields": [
             {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
-              "required": false,
               "description": "Field to aggregate",
               "example": "{{$json.amount}}",
               "placeholder": "{{$json.amount}}"
@@ -185,7 +186,6 @@ export const aggregateDoc: NodeDoc = {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
-              "required": false,
               "description": "Delimiter used for join/concat operations",
               "example": "\\n",
               "placeholder": "\\n",
@@ -195,39 +195,40 @@ export const aggregateDoc: NodeDoc = {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
-              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
               "example": "category",
               "placeholder": "category"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible"
+            "sum": 4500,
+            "average": 900,
+            "count": 5,
+            "min": 200,
+            "max": 2000,
+            "field": "amount"
           },
-          "outputDescription": "type: Value returned by the Aggregate node.\nstructure: Value returned by the Aggregate node.\nconvertible: Value returned by the Aggregate node.",
+          "outputDescription": "sum: Sum of all values. average: Mean value. count: Number of items. min / max: Smallest / largest value.",
           "usageExample": {
-            "scenario": "Use Aggregate in a workflow and pass upstream data into min.",
+            "scenario": "Calculate total sales from an array of order amounts",
             "inputValues": {
-              "Field": "{{$json.amount}}",
-              "Delimiter": "\\n",
-              "Group By": "category"
+              "items": "{{$json.orders}}",
+              "field": "amount",
+              "operation": "sum"
             },
-            "expectedOutput": "The node runs min and exposes its result in the output panel for the next node."
+            "expectedOutput": "`{{$json.sum}}` holds the total sales figure."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Max",
           "value": "max",
-          "description": "Max with the Aggregate node using the configured input fields.",
+          "description": "Aggregate an array of items — sum, average, count, min, max, or group.",
           "fields": [
             {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
-              "required": false,
               "description": "Field to aggregate",
               "example": "{{$json.amount}}",
               "placeholder": "{{$json.amount}}"
@@ -236,7 +237,6 @@ export const aggregateDoc: NodeDoc = {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
-              "required": false,
               "description": "Delimiter used for join/concat operations",
               "example": "\\n",
               "placeholder": "\\n",
@@ -246,39 +246,40 @@ export const aggregateDoc: NodeDoc = {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
-              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
               "example": "category",
               "placeholder": "category"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible"
+            "sum": 4500,
+            "average": 900,
+            "count": 5,
+            "min": 200,
+            "max": 2000,
+            "field": "amount"
           },
-          "outputDescription": "type: Value returned by the Aggregate node.\nstructure: Value returned by the Aggregate node.\nconvertible: Value returned by the Aggregate node.",
+          "outputDescription": "sum: Sum of all values. average: Mean value. count: Number of items. min / max: Smallest / largest value.",
           "usageExample": {
-            "scenario": "Use Aggregate in a workflow and pass upstream data into max.",
+            "scenario": "Calculate total sales from an array of order amounts",
             "inputValues": {
-              "Field": "{{$json.amount}}",
-              "Delimiter": "\\n",
-              "Group By": "category"
+              "items": "{{$json.orders}}",
+              "field": "amount",
+              "operation": "sum"
             },
-            "expectedOutput": "The node runs max and exposes its result in the output panel for the next node."
+            "expectedOutput": "`{{$json.sum}}` holds the total sales figure."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Join",
           "value": "join",
-          "description": "Join with the Aggregate node using the configured input fields.",
+          "description": "Aggregate an array of items — sum, average, count, min, max, or group.",
           "fields": [
             {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
-              "required": false,
               "description": "Field to aggregate",
               "example": "{{$json.amount}}",
               "placeholder": "{{$json.amount}}"
@@ -287,7 +288,6 @@ export const aggregateDoc: NodeDoc = {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
-              "required": false,
               "description": "Delimiter used for join/concat operations",
               "example": "\\n",
               "placeholder": "\\n",
@@ -297,26 +297,28 @@ export const aggregateDoc: NodeDoc = {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
-              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
               "example": "category",
               "placeholder": "category"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible"
+            "sum": 4500,
+            "average": 900,
+            "count": 5,
+            "min": 200,
+            "max": 2000,
+            "field": "amount"
           },
-          "outputDescription": "type: Value returned by the Aggregate node.\nstructure: Value returned by the Aggregate node.\nconvertible: Value returned by the Aggregate node.",
+          "outputDescription": "sum: Sum of all values. average: Mean value. count: Number of items. min / max: Smallest / largest value.",
           "usageExample": {
-            "scenario": "Use Aggregate in a workflow and pass upstream data into join.",
+            "scenario": "Calculate total sales from an array of order amounts",
             "inputValues": {
-              "Field": "{{$json.amount}}",
-              "Delimiter": "\\n",
-              "Group By": "category"
+              "items": "{{$json.orders}}",
+              "field": "amount",
+              "operation": "sum"
             },
-            "expectedOutput": "The node runs join and exposes its result in the output panel for the next node."
+            "expectedOutput": "`{{$json.sum}}` holds the total sales figure."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -326,20 +328,14 @@ export const aggregateDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

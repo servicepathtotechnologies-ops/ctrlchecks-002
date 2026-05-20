@@ -5,19 +5,21 @@ export const formDoc: NodeDoc = {
   "displayName": "Form Trigger",
   "category": "Triggers",
   "logoUrl": "/icons/nodes/form.svg",
-  "description": "Trigger workflow when user submits a form Use this node when a workflow needs form trigger behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Trigger workflow when user submits a form",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Form Trigger is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Form Trigger is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Form Trigger node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Start the workflow when a user submits a CtrlChecks form.",
           "fields": [
             {
               "name": "Form Title",
@@ -30,87 +32,81 @@ export const formDoc: NodeDoc = {
               "defaultValue": "Form Submission"
             },
             {
+              "name": "Form Description",
+              "internalKey": "formDescription",
+              "type": "string",
+              "description": "Description shown on the form"
+            },
+            {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
               "required": true,
               "description": "Form fields configuration",
               "example": "[]",
+              "placeholder": "[]",
               "defaultValue": "[]"
-            },
-            {
-              "name": "Form Description",
-              "internalKey": "formDescription",
-              "type": "string",
-              "required": false,
-              "description": "Description shown on the form",
-              "example": "{{ $json.formDescription }}",
-              "defaultValue": ""
             },
             {
               "name": "Submit Button Text",
               "internalKey": "submitButtonText",
               "type": "string",
-              "required": false,
               "description": "Text on submit button",
               "example": "Submit",
+              "placeholder": "Submit",
               "defaultValue": "Submit"
             },
             {
               "name": "Success Message",
               "internalKey": "successMessage",
               "type": "string",
-              "required": false,
               "description": "Message shown after successful submission",
               "example": "Thank you for your submission!",
+              "placeholder": "Thank you for your submission!",
               "defaultValue": "Thank you for your submission!"
             },
             {
               "name": "Allow Multiple Submissions",
               "internalKey": "allowMultipleSubmissions",
               "type": "boolean",
-              "required": false,
               "description": "Allow same user to submit multiple times",
               "example": "true",
+              "placeholder": "true",
               "defaultValue": "true"
             },
             {
               "name": "Require Authentication",
               "internalKey": "requireAuthentication",
               "type": "boolean",
-              "required": false,
               "description": "Require user authentication",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Captcha",
               "internalKey": "captcha",
               "type": "boolean",
-              "required": false,
               "description": "Enable CAPTCHA verification",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
-          },
-          "outputDescription": "type: Value returned by the Form Trigger node.\nstructure: Value returned by the Form Trigger node.",
-          "usageExample": {
-            "scenario": "Use Form Trigger in a workflow and pass upstream data into configure.",
-            "inputValues": {
-              "Form Title": "Contact Us Form",
-              "Fields": "[]",
-              "Form Description": "{{ $json.formDescription }}",
-              "Submit Button Text": "Submit",
-              "Success Message": "Thank you for your submission!",
-              "Allow Multiple Submissions": "true",
-              "Require Authentication": "false",
-              "Captcha": "false"
+            "formData": {
+              "name": "Alice",
+              "email": "alice@example.com",
+              "message": "I need help with billing."
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "submittedAt": "2025-01-15T09:45:00.000Z",
+            "formId": "form_xyz"
+          },
+          "outputDescription": "formData: Key-value pairs of form field names and the submitted values. submittedAt: ISO timestamp of the form submission. formId: The ID of the form that was submitted.",
+          "usageExample": {
+            "scenario": "Send a welcome email after a contact form submission",
+            "inputValues": {},
+            "expectedOutput": "Access submitted fields via `{{$json.formData.email}}`, `{{$json.formData.name}}`, etc. Connect a Gmail Send node to respond to the submitter."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -120,20 +116,14 @@ export const formDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "schedule",
-    "webhook",
-    "manual_trigger",
-    "interval",
-    "chat_trigger"
-  ]
+  "relatedNodes": []
 };

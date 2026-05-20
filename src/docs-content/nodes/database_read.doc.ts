@@ -5,68 +5,66 @@ export const databaseReadDoc: NodeDoc = {
   "displayName": "Database Read",
   "category": "Data",
   "logoUrl": "/icons/nodes/database_read.svg",
-  "description": "Read data from database using SQL queries Use this node when a workflow needs database read behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Postgresql Credential",
+  "description": "Read data from database using SQL queries",
+  "credentialType": "None",
   "credentialSetupSteps": [
-    "Open the Database Read developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Postgresql Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Database Read is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Database Read is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Database Read node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Run a SELECT query on the configured database.",
           "fields": [
+            {
+              "name": "Connection String",
+              "internalKey": "connectionString",
+              "type": "string",
+              "description": "Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment.",
+              "example": "postgresql://user:pass@host:5432/dbname",
+              "placeholder": "postgresql://user:pass@host:5432/dbname"
+            },
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "SELECT query",
               "example": "SELECT * FROM users WHERE status = $1",
               "placeholder": "SELECT * FROM users WHERE status = $1"
             },
             {
-              "name": "Connection String",
-              "internalKey": "connectionString",
-              "type": "string",
-              "required": false,
-              "description": "Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment.",
-              "example": "postgresql://user:pass@host:5432/dbname",
-              "placeholder": "postgresql://user:pass@host:5432/dbname"
-            },
-            {
               "name": "Parameters",
               "internalKey": "parameters",
               "type": "json",
-              "required": false,
               "description": "Query parameters",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "rows": [
+              {
+                "id": 1,
+                "name": "Alice",
+                "value": 100
+              }
+            ],
+            "rowCount": 1
           },
-          "outputDescription": "type: Value returned by the Database Read node.\nitemType: Value returned by the Database Read node.\nconvertible: Value returned by the Database Read node.\ndefaultValue: Value returned by the Database Read node.",
+          "outputDescription": "rows: Array of result objects with column names as keys. rowCount: Total rows returned.",
           "usageExample": {
-            "scenario": "Use Database Read in a workflow and pass upstream data into configure.",
+            "scenario": "Read records from any SQL database",
             "inputValues": {
-              "Query": "SELECT * FROM users WHERE status = $1",
-              "Connection String": "postgresql://user:pass@host:5432/dbname",
-              "Parameters": "[\"value\"]"
+              "query": "SELECT * FROM orders WHERE status = $1",
+              "parameters": "[\"pending\"]"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Returns matching rows as JavaScript objects."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -75,26 +73,15 @@ export const databaseReadDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
-      "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
-    },
-    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_write",
-    "google_sheets",
-    "google_doc"
-  ]
+  "relatedNodes": []
 };

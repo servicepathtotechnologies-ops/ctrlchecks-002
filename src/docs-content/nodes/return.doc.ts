@@ -5,25 +5,26 @@ export const returnDoc: NodeDoc = {
   "displayName": "Return",
   "category": "Logic",
   "logoUrl": "/icons/nodes/return.svg",
-  "description": "Stops workflow execution and returns the specified data Use this node when a workflow needs return behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Stops workflow execution and returns the specified data",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Return is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Return is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Return node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Stop the current workflow and return a specified value to the caller.",
           "fields": [
             {
               "name": "Value",
               "internalKey": "value",
               "type": "string",
-              "required": false,
               "description": "Value to return (can be a template or static value)",
               "example": "{{$json}}",
               "placeholder": "{{$json}}"
@@ -32,24 +33,26 @@ export const returnDoc: NodeDoc = {
               "name": "Include Input",
               "internalKey": "includeInput",
               "type": "boolean",
-              "required": false,
               "description": "Include the input data in the return value",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "value": "value",
-            "input": {}
+            "returned": true,
+            "value": {
+              "success": true,
+              "orderId": "ord_123"
+            }
           },
-          "outputDescription": "value: Value returned by the Return node.\ninput: Value returned by the Return node.",
+          "outputDescription": "returned: true if the return was executed. value: The data returned to the caller.",
           "usageExample": {
-            "scenario": "Use Return in a workflow and pass upstream data into configure.",
+            "scenario": "Return a success response from a sub-workflow to the parent workflow",
             "inputValues": {
-              "Value": "{{$json}}",
-              "Include Input": "false"
+              "value": "{\"success\": true, \"recordId\": \"{{$json.id}}\"}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The parent workflow receives `{{$json.value}}` from the Execute Workflow node."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -59,20 +62,14 @@ export const returnDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "function",
-    "function_item",
-    "if_else",
-    "switch",
-    "merge"
-  ]
+  "relatedNodes": []
 };

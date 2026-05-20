@@ -5,25 +5,26 @@ export const sortDoc: NodeDoc = {
   "displayName": "Sort",
   "category": "Data",
   "logoUrl": "/icons/nodes/sort.svg",
-  "description": "Sort arrays Use this node when a workflow needs sort behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Sort arrays",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Sort is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Sort is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Sort node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Sort an array of items by a field in ascending or descending order.",
           "fields": [
             {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
-              "required": false,
               "description": "Field to sort by",
               "example": "name",
               "placeholder": "name"
@@ -32,7 +33,6 @@ export const sortDoc: NodeDoc = {
               "name": "Direction",
               "internalKey": "direction",
               "type": "string",
-              "required": false,
               "description": "Sort direction: asc, desc",
               "example": "asc",
               "placeholder": "asc",
@@ -42,7 +42,6 @@ export const sortDoc: NodeDoc = {
               "name": "Type",
               "internalKey": "type",
               "type": "string",
-              "required": false,
               "description": "Value type: auto, number, string, date",
               "example": "auto",
               "placeholder": "auto",
@@ -50,20 +49,32 @@ export const sortDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "sorted": [
+              {
+                "name": "Alice",
+                "score": 95
+              },
+              {
+                "name": "Bob",
+                "score": 80
+              },
+              {
+                "name": "Carol",
+                "score": 72
+              }
+            ],
+            "field": "score",
+            "direction": "desc"
           },
-          "outputDescription": "type: Value returned by the Sort node.\nitemType: Value returned by the Sort node.\nconvertible: Value returned by the Sort node.\ndefaultValue: Value returned by the Sort node.",
+          "outputDescription": "sorted: The items array after sorting. field: The field used for sorting. direction: \"asc\" or \"desc\".",
           "usageExample": {
-            "scenario": "Use Sort in a workflow and pass upstream data into configure.",
+            "scenario": "Sort a leaderboard by score descending before displaying it",
             "inputValues": {
-              "Field": "name",
-              "Direction": "asc",
-              "Type": "auto"
+              "items": "{{$json.players}}",
+              "field": "score",
+              "direction": "desc"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Top scores first in `{{$json.sorted}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -73,20 +84,14 @@ export const sortDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

@@ -5,19 +5,21 @@ export const httpRequestDoc: NodeDoc = {
   "displayName": "HTTP Request",
   "category": "Utility",
   "logoUrl": "/icons/nodes/http_request.svg",
-  "description": "Makes HTTP requests to external APIs or services Use this node when a workflow needs http request behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Makes HTTP requests to external APIs or services",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "HTTP Request is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "HTTP Request is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the HTTP Request node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Make an HTTP request (GET, POST, PUT, PATCH, DELETE) to any URL.",
           "fields": [
             {
               "name": "Url",
@@ -32,7 +34,6 @@ export const httpRequestDoc: NodeDoc = {
               "name": "Method",
               "internalKey": "method",
               "type": "string",
-              "required": false,
               "description": "HTTP method",
               "example": "GET",
               "placeholder": "GET",
@@ -42,74 +43,74 @@ export const httpRequestDoc: NodeDoc = {
               "name": "Headers",
               "internalKey": "headers",
               "type": "json",
-              "required": false,
               "description": "HTTP headers to send",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"Authorization\":\"Bearer {{$credentials.apiKey}}\",\"Content-Type\":\"application/json\"}",
+              "placeholder": "{\"Authorization\":\"Bearer {{$credentials.apiKey}}\",\"Content-Type\":\"application/json\"}"
             },
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Request body for POST/PUT/PATCH",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Qs",
               "internalKey": "qs",
               "type": "json",
-              "required": false,
               "description": "Query string parameters",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Timeout",
               "internalKey": "timeout",
-              "type": "date",
-              "required": false,
+              "type": "number",
               "description": "Request timeout in milliseconds",
               "example": "10000",
+              "placeholder": "10000",
               "defaultValue": "10000"
             },
             {
               "name": "Retry On Fail",
               "internalKey": "retryOnFail",
               "type": "boolean",
-              "required": false,
               "description": "Retry on failure",
               "example": "true",
+              "placeholder": "true",
               "defaultValue": "true"
             },
             {
               "name": "Max Retries",
               "internalKey": "maxRetries",
               "type": "number",
-              "required": false,
               "description": "Maximum retry attempts",
               "example": "3",
+              "placeholder": "3",
               "defaultValue": "3"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible"
-          },
-          "outputDescription": "type: Value returned by the HTTP Request node.\nstructure: Value returned by the HTTP Request node.\nconvertible: Value returned by the HTTP Request node.",
-          "usageExample": {
-            "scenario": "Use HTTP Request in a workflow and pass upstream data into configure.",
-            "inputValues": {
-              "Url": "https://api.example.com/data",
-              "Method": "GET",
-              "Headers": "[object Object]",
-              "Body": "Created from workflow data: {{ $json.summary }}",
-              "Qs": "{\"key\":\"value\"}",
-              "Timeout": "10000",
-              "Retry On Fail": "true",
-              "Max Retries": "3"
+            "status": 200,
+            "body": {
+              "id": 101,
+              "title": "Hello World",
+              "completed": false
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "headers": {
+              "content-type": "application/json; charset=utf-8"
+            }
+          },
+          "outputDescription": "status: HTTP response code. body: Parsed response body (object if JSON, string otherwise). headers: Response headers.",
+          "usageExample": {
+            "scenario": "Fetch user details from a REST API to enrich webhook data",
+            "inputValues": {
+              "url": "https://api.example.com/users/{{$json.userId}}",
+              "method": "GET",
+              "headers": "{\"Authorization\": \"Bearer {{$env.API_TOKEN}}\", \"Accept\": \"application/json\"}"
+            },
+            "expectedOutput": "API response in `{{$json.body}}`. Access fields via `{{$json.body.email}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -119,20 +120,14 @@ export const httpRequestDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "respond_to_webhook",
-    "clickup",
-    "delay",
-    "queue_push",
-    "queue_consume"
-  ]
+  "relatedNodes": []
 };

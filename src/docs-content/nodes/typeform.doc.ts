@@ -5,25 +5,23 @@ export const typeformDoc: NodeDoc = {
   "displayName": "Typeform",
   "category": "Data",
   "logoUrl": "/icons/nodes/typeform.svg",
-  "description": "Retrieve form responses, create forms, and fetch form definitions using Typeform. Use this node when a workflow needs typeform behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Api Key Credential",
+  "description": "Retrieve form responses, create forms, and fetch form definitions using Typeform.",
+  "credentialType": "Typeform API Key",
   "credentialSetupSteps": [
-    "Open the Typeform developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Api Key Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Log in to Typeform → click your profile → Settings → Personal tokens.",
+    "Click \"Generate a new token\", give it a name, and copy it.",
+    "In CtrlChecks, open Connections → Add Connection → Typeform → paste the token → Save."
   ],
-  "credentialDocsUrl": "https://www.typeform.com/developers/",
+  "credentialDocsUrl": "https://developer.typeform.com/get-started/personal-access-token/",
   "resources": [
     {
       "name": "Operations",
       "description": "Typeform exposes operation choices directly.",
       "operations": [
         {
-          "name": "Get Responses",
+          "name": "Get responses",
           "value": "get_responses",
-          "description": "Get Responses with the Typeform node using the configured input fields.",
+          "description": "Get responses using the Typeform node.",
           "fields": [
             {
               "name": "Api Key",
@@ -31,50 +29,43 @@ export const typeformDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Typeform personal access token",
-              "example": "{{ $json.apiKey }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Form Id",
               "internalKey": "formId",
               "type": "string",
-              "required": false,
               "description": "Form ID",
-              "example": "{{ $json.formId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Form title (for create_form)",
-              "example": "{{ $json.title }}",
-              "defaultValue": ""
+              "description": "Form title (for create_form)"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "typeform"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Typeform node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Typeform in a workflow and pass upstream data into get responses.",
+            "scenario": "Use Typeform to get responses in a workflow.",
             "inputValues": {
-              "Api Key": "{{ $json.apiKey }}",
-              "Form Id": "{{ $json.formId }}",
-              "Title": "{{ $json.title }}"
+              "Api Key": "",
+              "Form Id": "abc123",
+              "Title": ""
             },
-            "expectedOutput": "The node runs get responses and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get responses and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.typeform.com/developers/"
         },
         {
-          "name": "Create Form",
+          "name": "Create form",
           "value": "create_form",
-          "description": "Create Form with the Typeform node using the configured input fields.",
+          "description": "Create form using the Typeform node.",
           "fields": [
             {
               "name": "Api Key",
@@ -82,50 +73,43 @@ export const typeformDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Typeform personal access token",
-              "example": "{{ $json.apiKey }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Form Id",
               "internalKey": "formId",
               "type": "string",
-              "required": false,
               "description": "Form ID",
-              "example": "{{ $json.formId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Form title (for create_form)",
-              "example": "{{ $json.title }}",
-              "defaultValue": ""
+              "description": "Form title (for create_form)"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "typeform"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Typeform node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Typeform in a workflow and pass upstream data into create form.",
+            "scenario": "Use Typeform to create form in a workflow.",
             "inputValues": {
-              "Api Key": "{{ $json.apiKey }}",
-              "Form Id": "{{ $json.formId }}",
-              "Title": "{{ $json.title }}"
+              "Api Key": "",
+              "Form Id": "abc123",
+              "Title": ""
             },
-            "expectedOutput": "The node runs create form and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes create form and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.typeform.com/developers/"
         },
         {
-          "name": "Get Form",
+          "name": "Get form",
           "value": "get_form",
-          "description": "Get Form with the Typeform node using the configured input fields.",
+          "description": "Get form using the Typeform node.",
           "fields": [
             {
               "name": "Api Key",
@@ -133,43 +117,36 @@ export const typeformDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Typeform personal access token",
-              "example": "{{ $json.apiKey }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Form Id",
               "internalKey": "formId",
               "type": "string",
-              "required": false,
               "description": "Form ID",
-              "example": "{{ $json.formId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Title",
               "internalKey": "title",
               "type": "string",
-              "required": false,
-              "description": "Form title (for create_form)",
-              "example": "{{ $json.title }}",
-              "defaultValue": ""
+              "description": "Form title (for create_form)"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "typeform"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Typeform node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Typeform in a workflow and pass upstream data into get form.",
+            "scenario": "Use Typeform to get form in a workflow.",
             "inputValues": {
-              "Api Key": "{{ $json.apiKey }}",
-              "Form Id": "{{ $json.formId }}",
-              "Title": "{{ $json.title }}"
+              "Api Key": "",
+              "Form Id": "abc123",
+              "Title": ""
             },
-            "expectedOutput": "The node runs get form and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get form and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://www.typeform.com/developers/"
         }
@@ -179,25 +156,19 @@ export const typeformDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Typeform node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

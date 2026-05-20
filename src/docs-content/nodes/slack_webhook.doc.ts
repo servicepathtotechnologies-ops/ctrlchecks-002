@@ -5,19 +5,25 @@ export const slackWebhookDoc: NodeDoc = {
   "displayName": "Slack Webhook",
   "category": "Communication",
   "logoUrl": "/icons/nodes/slack_webhook.svg",
-  "description": "Send messages via Slack webhook Use this node when a workflow needs slack webhook behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "Send messages via Slack webhook",
+  "credentialType": "Slack Credential",
+  "credentialSetupSteps": [
+    "Go to https://api.slack.com/apps → click \"Create New App\" → \"From scratch\".",
+    "Under \"OAuth & Permissions\", add the Bot Token Scopes you need (e.g. chat:write, channels:read).",
+    "Click \"Install to Workspace\" and allow the permissions.",
+    "Copy the Bot User OAuth Token (starts with xoxb-).",
+    "In CtrlChecks, open Connections → Add Connection → Slack → paste the Bot Token → Save."
+  ],
+  "credentialDocsUrl": "https://api.slack.com/authentication/basics",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Slack Webhook is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Slack Webhook is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Slack Webhook node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Send a message to Slack using an Incoming Webhook URL — no OAuth required.",
           "fields": [
             {
               "name": "Webhook Url",
@@ -31,7 +37,7 @@ export const slackWebhookDoc: NodeDoc = {
             {
               "name": "Message",
               "internalKey": "message",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "Message text",
               "example": "{{$json.message}}",
@@ -39,19 +45,18 @@ export const slackWebhookDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "status": 200,
+            "response": "ok"
           },
-          "outputDescription": "type: Value returned by the Slack Webhook node.\nstructure: Value returned by the Slack Webhook node.\nconvertible: Value returned by the Slack Webhook node.\ndefaultValue: Value returned by the Slack Webhook node.",
+          "outputDescription": "success: true if Slack accepted the message. status: HTTP response code. response: \"ok\" indicates success.",
           "usageExample": {
-            "scenario": "Use Slack Webhook in a workflow and pass upstream data into configure.",
+            "scenario": "Post a quick alert to Slack without setting up a full bot integration",
             "inputValues": {
-              "Webhook Url": "https://hooks.slack.com/services/...",
-              "Message": "{{$json.message}}"
+              "webhookUrl": "{{$env.SLACK_WEBHOOK_URL}}",
+              "text": "🔔 New sign-up: {{$json.email}} at {{$now}}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Message appears in the configured channel. This is the simplest way to send Slack messages."
           },
           "externalDocsUrl": "https://api.slack.com/messaging/webhooks"
         }
@@ -60,21 +65,20 @@ export const slackWebhookDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Slack Webhook node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "google_gmail",
-    "outlook",
-    "slack_message",
-    "email",
-    "log_output"
-  ]
+  "relatedNodes": []
 };

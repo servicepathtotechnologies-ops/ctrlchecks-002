@@ -5,25 +5,24 @@ export const sendgridDoc: NodeDoc = {
   "displayName": "SendGrid",
   "category": "Communication",
   "logoUrl": "/icons/nodes/sendgrid.svg",
-  "description": "Send transactional emails using the SendGrid API. Use this node when a workflow needs sendgrid behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Sendgrid Credential",
+  "description": "Send transactional emails using the SendGrid API.",
+  "credentialType": "SendGrid API Key",
   "credentialSetupSteps": [
-    "Open the SendGrid developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Sendgrid Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Log in to https://app.sendgrid.com → Settings → API Keys → Create API Key.",
+    "Select \"Restricted Access\" and enable Mail Send permission.",
+    "Copy the API key.",
+    "In CtrlChecks, open Connections → Add Connection → SendGrid → paste the API key → Save."
   ],
-  "credentialDocsUrl": "https://www.twilio.com/docs/sendgrid/api-reference",
+  "credentialDocsUrl": "https://docs.sendgrid.com/api-reference/how-to-use-the-sendgrid-v3-api/authentication",
   "resources": [
     {
-      "name": "Operations",
-      "description": "SendGrid exposes operation choices directly.",
+      "name": "Configuration",
+      "description": "SendGrid is configured directly with input fields.",
       "operations": [
         {
-          "name": "Send Email",
+          "name": "Send email",
           "value": "send_email",
-          "description": "Send Email with the SendGrid node using the configured input fields.",
+          "description": "Send a transactional or marketing email via SendGrid.",
           "fields": [
             {
               "name": "Api Key",
@@ -57,7 +56,6 @@ export const sendgridDoc: NodeDoc = {
               "name": "Subject",
               "internalKey": "subject",
               "type": "string",
-              "required": false,
               "description": "Email subject line",
               "example": "Hello!",
               "placeholder": "Hello!"
@@ -65,8 +63,7 @@ export const sendgridDoc: NodeDoc = {
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Plain text body of the email",
               "example": "Your message here",
               "placeholder": "Your message here"
@@ -74,31 +71,29 @@ export const sendgridDoc: NodeDoc = {
             {
               "name": "Html",
               "internalKey": "html",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "HTML body of the email (overrides plain text for HTML clients)",
               "example": "<p>Your message</p>",
               "placeholder": "<p>Your message</p>"
             }
           ],
           "outputExample": {
-            "success": true,
-            "messageId": "messageId",
-            "status": 1,
-            "error": {}
+            "statusCode": 202,
+            "body": "",
+            "headers": {
+              "x-message-id": "ABC123"
+            }
           },
-          "outputDescription": "success: Value returned by the SendGrid node.\nmessageId: Value returned by the SendGrid node.\nstatus: Value returned by the SendGrid node.\nerror: Value returned by the SendGrid node.",
+          "outputDescription": "statusCode: HTTP 202 means the message was accepted. headers[x-message-id]: SendGrid message ID for tracking in the SendGrid Activity Feed.",
           "usageExample": {
-            "scenario": "Use SendGrid in a workflow and pass upstream data into send email.",
+            "scenario": "Send a receipt email after a successful payment",
             "inputValues": {
-              "Api Key": "SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-              "From": "noreply@yourdomain.com",
-              "To": "user@example.com",
-              "Subject": "Hello!",
-              "Text": "Your message here",
-              "Html": "<p>Your message</p>"
+              "to": "{{$json.customerEmail}}",
+              "from": "receipts@yourapp.com",
+              "subject": "Your receipt for order #{{$json.orderId}}",
+              "html": "<h1>Thank you!</h1><p>You paid ${{$json.amount}} on {{$json.date}}.</p>"
             },
-            "expectedOutput": "The node runs send email and exposes its result in the output panel for the next node."
+            "expectedOutput": "Email is accepted by SendGrid for delivery. Track via the x-message-id in the SendGrid Activity Feed."
           },
           "externalDocsUrl": "https://www.twilio.com/docs/sendgrid/api-reference"
         }
@@ -108,25 +103,19 @@ export const sendgridDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the SendGrid node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "google_gmail",
-    "outlook",
-    "slack_message",
-    "email",
-    "log_output"
-  ]
+  "relatedNodes": []
 };

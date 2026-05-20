@@ -5,14 +5,10 @@ export const jiraDoc: NodeDoc = {
   "displayName": "Jira",
   "category": "Data",
   "logoUrl": "/icons/nodes/jira.svg",
-  "description": "Jira issue tracking operations Use this node when a workflow needs jira behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Jira Token",
+  "description": "Jira issue tracking operations",
+  "credentialType": "Atlassian API Key",
   "credentialSetupSteps": [
-    "Open the Jira developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Jira Token value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/",
   "resources": [
@@ -21,402 +17,1023 @@ export const jiraDoc: NodeDoc = {
       "description": "Jira exposes operation choices directly.",
       "operations": [
         {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Jira node using the configured input fields.",
+          "name": "Create issue",
+          "value": "create_issue",
+          "description": "Create a new Jira issue.",
           "fields": [
             {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Jira base URL (e.g., https://your-domain.atlassian.net)",
-              "example": "https://mycompany.atlassian.net",
-              "placeholder": "https://mycompany.atlassian.net"
-            },
-            {
-              "name": "Email",
-              "internalKey": "email",
-              "type": "email",
-              "required": false,
-              "description": "Jira account email (for basic auth with API token)",
-              "example": "user@company.com",
-              "placeholder": "user@company.com"
-            },
-            {
-              "name": "Api Token",
-              "internalKey": "apiToken",
-              "type": "password",
-              "required": false,
-              "description": "Jira API token (optional if stored in vault under key \"jira\")",
-              "example": "{{ $json.apiToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Issue Key",
-              "internalKey": "issueKey",
+              "name": "Domain",
+              "internalKey": "domain",
               "type": "string",
-              "required": false,
-              "description": "Issue key (for read/update/delete)",
-              "example": "PROJ-123",
-              "placeholder": "PROJ-123"
+              "description": "Atlassian domain (without https://)",
+              "example": "yourcompany.atlassian.net",
+              "placeholder": "yourcompany.atlassian.net"
             },
             {
               "name": "Project Key",
               "internalKey": "projectKey",
               "type": "string",
-              "required": false,
-              "description": "Project key (create)",
+              "description": "Project key — required for create_issue",
               "example": "PROJ",
               "placeholder": "PROJ"
+            },
+            {
+              "name": "Issue Key",
+              "internalKey": "issueKey",
+              "type": "string",
+              "description": "Issue key — required for get/update/delete/comment/transition",
+              "example": "PROJ-123",
+              "placeholder": "PROJ-123"
             },
             {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "required": false,
-              "description": "Issue summary/title (create)",
-              "example": "{{ $json.summary }}"
+              "description": "Issue title/summary — required for create_issue"
             },
             {
-              "name": "Description Text",
-              "internalKey": "descriptionText",
-              "type": "string",
-              "required": false,
-              "description": "Issue description (create/update)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Issue description (plain text, converted to ADF automatically)"
             },
             {
               "name": "Issue Type",
               "internalKey": "issueType",
               "type": "string",
-              "required": false,
-              "description": "Issue type (default: Task)",
+              "description": "Issue type — default: Task",
               "example": "Task",
               "placeholder": "Task",
               "defaultValue": "Task"
+            },
+            {
+              "name": "Priority",
+              "internalKey": "priority",
+              "type": "string",
+              "description": "Issue priority",
+              "example": "Highest",
+              "placeholder": "Highest"
+            },
+            {
+              "name": "Assignee",
+              "internalKey": "assignee",
+              "type": "string",
+              "description": "Assignee account ID (get from Jira user search)"
+            },
+            {
+              "name": "Labels",
+              "internalKey": "labels",
+              "type": "json",
+              "description": "Labels to attach to the issue",
+              "example": "[\"bug\",\"urgent\"]",
+              "placeholder": "[\"bug\",\"urgent\"]"
+            },
+            {
+              "name": "Jql",
+              "internalKey": "jql",
+              "type": "string",
+              "description": "JQL query — required for search_issues",
+              "example": "project = PROJ AND status = \"In Progress\"",
+              "placeholder": "project = PROJ AND status = \"In Progress\""
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Max results for search_issues (default: 50)",
+              "example": "50",
+              "placeholder": "50",
+              "defaultValue": "50"
+            },
+            {
+              "name": "Comment Body",
+              "internalKey": "commentBody",
+              "type": "textarea",
+              "description": "Comment text — required for add_comment"
+            },
+            {
+              "name": "Transition Id",
+              "internalKey": "transitionId",
+              "type": "string",
+              "description": "Transition ID — required for transition_issue",
+              "example": "abc123",
+              "placeholder": "abc123"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "id": "10001",
+            "key": "PROJ-42",
+            "self": "https://yourcompany.atlassian.net/rest/api/3/issue/10001"
           },
-          "outputDescription": "type: Value returned by the Jira node.\nstructure: Value returned by the Jira node.\nconvertible: Value returned by the Jira node.\ndefaultValue: Value returned by the Jira node.",
+          "outputDescription": "id: Jira internal issue ID. key: Human-readable issue key (e.g. PROJ-42). self: API URL to the issue.",
           "usageExample": {
-            "scenario": "Use Jira in a workflow and pass upstream data into create.",
+            "scenario": "Create a Jira bug ticket when a Sentry error is detected",
             "inputValues": {
-              "Base Url": "https://mycompany.atlassian.net",
-              "Email": "user@company.com",
-              "Api Token": "{{ $json.apiToken }}",
-              "Issue Key": "PROJ-123",
-              "Project Key": "PROJ",
-              "Summary": "{{ $json.summary }}",
-              "Description Text": "Created from workflow data: {{ $json.summary }}",
-              "Issue Type": "Task"
+              "project": "PROJ",
+              "summary": "{{$json.errorTitle}}",
+              "description": "{{$json.errorDetails}}",
+              "issuetype": "Bug",
+              "priority": "High"
             },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "expectedOutput": "`{{$json.key}}` is the Jira issue key (e.g. PROJ-42)."
           },
           "externalDocsUrl": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/"
         },
         {
-          "name": "Read",
-          "value": "read",
-          "description": "Read with the Jira node using the configured input fields.",
+          "name": "Get issue",
+          "value": "get_issue",
+          "description": "Get details of a Jira issue by its key.",
           "fields": [
             {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Jira base URL (e.g., https://your-domain.atlassian.net)",
-              "example": "https://mycompany.atlassian.net",
-              "placeholder": "https://mycompany.atlassian.net"
-            },
-            {
-              "name": "Email",
-              "internalKey": "email",
-              "type": "email",
-              "required": false,
-              "description": "Jira account email (for basic auth with API token)",
-              "example": "user@company.com",
-              "placeholder": "user@company.com"
-            },
-            {
-              "name": "Api Token",
-              "internalKey": "apiToken",
-              "type": "password",
-              "required": false,
-              "description": "Jira API token (optional if stored in vault under key \"jira\")",
-              "example": "{{ $json.apiToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Issue Key",
-              "internalKey": "issueKey",
+              "name": "Domain",
+              "internalKey": "domain",
               "type": "string",
-              "required": false,
-              "description": "Issue key (for read/update/delete)",
-              "example": "PROJ-123",
-              "placeholder": "PROJ-123"
+              "description": "Atlassian domain (without https://)",
+              "example": "yourcompany.atlassian.net",
+              "placeholder": "yourcompany.atlassian.net"
             },
             {
               "name": "Project Key",
               "internalKey": "projectKey",
               "type": "string",
-              "required": false,
-              "description": "Project key (create)",
+              "description": "Project key — required for create_issue",
               "example": "PROJ",
               "placeholder": "PROJ"
+            },
+            {
+              "name": "Issue Key",
+              "internalKey": "issueKey",
+              "type": "string",
+              "description": "Issue key — required for get/update/delete/comment/transition",
+              "example": "PROJ-123",
+              "placeholder": "PROJ-123"
             },
             {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "required": false,
-              "description": "Issue summary/title (create)",
-              "example": "{{ $json.summary }}"
+              "description": "Issue title/summary — required for create_issue"
             },
             {
-              "name": "Description Text",
-              "internalKey": "descriptionText",
-              "type": "string",
-              "required": false,
-              "description": "Issue description (create/update)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Issue description (plain text, converted to ADF automatically)"
             },
             {
               "name": "Issue Type",
               "internalKey": "issueType",
               "type": "string",
-              "required": false,
-              "description": "Issue type (default: Task)",
+              "description": "Issue type — default: Task",
               "example": "Task",
               "placeholder": "Task",
               "defaultValue": "Task"
+            },
+            {
+              "name": "Priority",
+              "internalKey": "priority",
+              "type": "string",
+              "description": "Issue priority",
+              "example": "Highest",
+              "placeholder": "Highest"
+            },
+            {
+              "name": "Assignee",
+              "internalKey": "assignee",
+              "type": "string",
+              "description": "Assignee account ID (get from Jira user search)"
+            },
+            {
+              "name": "Labels",
+              "internalKey": "labels",
+              "type": "json",
+              "description": "Labels to attach to the issue",
+              "example": "[\"bug\",\"urgent\"]",
+              "placeholder": "[\"bug\",\"urgent\"]"
+            },
+            {
+              "name": "Jql",
+              "internalKey": "jql",
+              "type": "string",
+              "description": "JQL query — required for search_issues",
+              "example": "project = PROJ AND status = \"In Progress\"",
+              "placeholder": "project = PROJ AND status = \"In Progress\""
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Max results for search_issues (default: 50)",
+              "example": "50",
+              "placeholder": "50",
+              "defaultValue": "50"
+            },
+            {
+              "name": "Comment Body",
+              "internalKey": "commentBody",
+              "type": "textarea",
+              "description": "Comment text — required for add_comment"
+            },
+            {
+              "name": "Transition Id",
+              "internalKey": "transitionId",
+              "type": "string",
+              "description": "Transition ID — required for transition_issue",
+              "example": "abc123",
+              "placeholder": "abc123"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "id": "10001",
+            "key": "PROJ-42",
+            "fields": {
+              "summary": "Login fails for SSO users",
+              "status": {
+                "name": "In Progress"
+              },
+              "assignee": {
+                "displayName": "Alice Smith"
+              },
+              "priority": {
+                "name": "High"
+              }
+            }
           },
-          "outputDescription": "type: Value returned by the Jira node.\nstructure: Value returned by the Jira node.\nconvertible: Value returned by the Jira node.\ndefaultValue: Value returned by the Jira node.",
+          "outputDescription": "key: Issue key. fields.summary: Issue title. fields.status.name: Current status. fields.assignee.displayName: Assignee name.",
           "usageExample": {
-            "scenario": "Use Jira in a workflow and pass upstream data into read.",
+            "scenario": "Read a Jira issue to check its status before sending a reminder",
             "inputValues": {
-              "Base Url": "https://mycompany.atlassian.net",
-              "Email": "user@company.com",
-              "Api Token": "{{ $json.apiToken }}",
-              "Issue Key": "PROJ-123",
-              "Project Key": "PROJ",
-              "Summary": "{{ $json.summary }}",
-              "Description Text": "Created from workflow data: {{ $json.summary }}",
-              "Issue Type": "Task"
+              "issueKey": "{{$json.jiraKey}}"
             },
-            "expectedOutput": "The node runs read and exposes its result in the output panel for the next node."
+            "expectedOutput": "Full issue details in `{{$json.fields}}`."
           },
           "externalDocsUrl": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/"
         },
         {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Jira node using the configured input fields.",
+          "name": "Update issue",
+          "value": "update_issue",
+          "description": "Update issue using the Jira node.",
           "fields": [
             {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Jira base URL (e.g., https://your-domain.atlassian.net)",
-              "example": "https://mycompany.atlassian.net",
-              "placeholder": "https://mycompany.atlassian.net"
-            },
-            {
-              "name": "Email",
-              "internalKey": "email",
-              "type": "email",
-              "required": false,
-              "description": "Jira account email (for basic auth with API token)",
-              "example": "user@company.com",
-              "placeholder": "user@company.com"
-            },
-            {
-              "name": "Api Token",
-              "internalKey": "apiToken",
-              "type": "password",
-              "required": false,
-              "description": "Jira API token (optional if stored in vault under key \"jira\")",
-              "example": "{{ $json.apiToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Issue Key",
-              "internalKey": "issueKey",
+              "name": "Domain",
+              "internalKey": "domain",
               "type": "string",
-              "required": false,
-              "description": "Issue key (for read/update/delete)",
-              "example": "PROJ-123",
-              "placeholder": "PROJ-123"
+              "description": "Atlassian domain (without https://)",
+              "example": "yourcompany.atlassian.net",
+              "placeholder": "yourcompany.atlassian.net"
             },
             {
               "name": "Project Key",
               "internalKey": "projectKey",
               "type": "string",
-              "required": false,
-              "description": "Project key (create)",
+              "description": "Project key — required for create_issue",
               "example": "PROJ",
               "placeholder": "PROJ"
+            },
+            {
+              "name": "Issue Key",
+              "internalKey": "issueKey",
+              "type": "string",
+              "description": "Issue key — required for get/update/delete/comment/transition",
+              "example": "PROJ-123",
+              "placeholder": "PROJ-123"
             },
             {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "required": false,
-              "description": "Issue summary/title (create)",
-              "example": "{{ $json.summary }}"
+              "description": "Issue title/summary — required for create_issue"
             },
             {
-              "name": "Description Text",
-              "internalKey": "descriptionText",
-              "type": "string",
-              "required": false,
-              "description": "Issue description (create/update)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Issue description (plain text, converted to ADF automatically)"
             },
             {
               "name": "Issue Type",
               "internalKey": "issueType",
               "type": "string",
-              "required": false,
-              "description": "Issue type (default: Task)",
+              "description": "Issue type — default: Task",
               "example": "Task",
               "placeholder": "Task",
               "defaultValue": "Task"
+            },
+            {
+              "name": "Priority",
+              "internalKey": "priority",
+              "type": "string",
+              "description": "Issue priority",
+              "example": "Highest",
+              "placeholder": "Highest"
+            },
+            {
+              "name": "Assignee",
+              "internalKey": "assignee",
+              "type": "string",
+              "description": "Assignee account ID (get from Jira user search)"
+            },
+            {
+              "name": "Labels",
+              "internalKey": "labels",
+              "type": "json",
+              "description": "Labels to attach to the issue",
+              "example": "[\"bug\",\"urgent\"]",
+              "placeholder": "[\"bug\",\"urgent\"]"
+            },
+            {
+              "name": "Jql",
+              "internalKey": "jql",
+              "type": "string",
+              "description": "JQL query — required for search_issues",
+              "example": "project = PROJ AND status = \"In Progress\"",
+              "placeholder": "project = PROJ AND status = \"In Progress\""
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Max results for search_issues (default: 50)",
+              "example": "50",
+              "placeholder": "50",
+              "defaultValue": "50"
+            },
+            {
+              "name": "Comment Body",
+              "internalKey": "commentBody",
+              "type": "textarea",
+              "description": "Comment text — required for add_comment"
+            },
+            {
+              "name": "Transition Id",
+              "internalKey": "transitionId",
+              "type": "string",
+              "description": "Transition ID — required for transition_issue",
+              "example": "abc123",
+              "placeholder": "abc123"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Jira node.\nstructure: Value returned by the Jira node.\nconvertible: Value returned by the Jira node.\ndefaultValue: Value returned by the Jira node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Jira in a workflow and pass upstream data into update.",
+            "scenario": "Use Jira to update issue in a workflow.",
             "inputValues": {
-              "Base Url": "https://mycompany.atlassian.net",
-              "Email": "user@company.com",
-              "Api Token": "{{ $json.apiToken }}",
-              "Issue Key": "PROJ-123",
+              "Domain": "yourcompany.atlassian.net",
               "Project Key": "PROJ",
-              "Summary": "{{ $json.summary }}",
-              "Description Text": "Created from workflow data: {{ $json.summary }}",
-              "Issue Type": "Task"
+              "Issue Key": "PROJ-123",
+              "Summary": "",
+              "Description": ""
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes update issue and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/"
         },
         {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Jira node using the configured input fields.",
+          "name": "Delete issue",
+          "value": "delete_issue",
+          "description": "Delete issue using the Jira node.",
           "fields": [
             {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Jira base URL (e.g., https://your-domain.atlassian.net)",
-              "example": "https://mycompany.atlassian.net",
-              "placeholder": "https://mycompany.atlassian.net"
-            },
-            {
-              "name": "Email",
-              "internalKey": "email",
-              "type": "email",
-              "required": false,
-              "description": "Jira account email (for basic auth with API token)",
-              "example": "user@company.com",
-              "placeholder": "user@company.com"
-            },
-            {
-              "name": "Api Token",
-              "internalKey": "apiToken",
-              "type": "password",
-              "required": false,
-              "description": "Jira API token (optional if stored in vault under key \"jira\")",
-              "example": "{{ $json.apiToken }}",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Issue Key",
-              "internalKey": "issueKey",
+              "name": "Domain",
+              "internalKey": "domain",
               "type": "string",
-              "required": false,
-              "description": "Issue key (for read/update/delete)",
-              "example": "PROJ-123",
-              "placeholder": "PROJ-123"
+              "description": "Atlassian domain (without https://)",
+              "example": "yourcompany.atlassian.net",
+              "placeholder": "yourcompany.atlassian.net"
             },
             {
               "name": "Project Key",
               "internalKey": "projectKey",
               "type": "string",
-              "required": false,
-              "description": "Project key (create)",
+              "description": "Project key — required for create_issue",
               "example": "PROJ",
               "placeholder": "PROJ"
+            },
+            {
+              "name": "Issue Key",
+              "internalKey": "issueKey",
+              "type": "string",
+              "description": "Issue key — required for get/update/delete/comment/transition",
+              "example": "PROJ-123",
+              "placeholder": "PROJ-123"
             },
             {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "required": false,
-              "description": "Issue summary/title (create)",
-              "example": "{{ $json.summary }}"
+              "description": "Issue title/summary — required for create_issue"
             },
             {
-              "name": "Description Text",
-              "internalKey": "descriptionText",
-              "type": "string",
-              "required": false,
-              "description": "Issue description (create/update)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Issue description (plain text, converted to ADF automatically)"
             },
             {
               "name": "Issue Type",
               "internalKey": "issueType",
               "type": "string",
-              "required": false,
-              "description": "Issue type (default: Task)",
+              "description": "Issue type — default: Task",
               "example": "Task",
               "placeholder": "Task",
               "defaultValue": "Task"
+            },
+            {
+              "name": "Priority",
+              "internalKey": "priority",
+              "type": "string",
+              "description": "Issue priority",
+              "example": "Highest",
+              "placeholder": "Highest"
+            },
+            {
+              "name": "Assignee",
+              "internalKey": "assignee",
+              "type": "string",
+              "description": "Assignee account ID (get from Jira user search)"
+            },
+            {
+              "name": "Labels",
+              "internalKey": "labels",
+              "type": "json",
+              "description": "Labels to attach to the issue",
+              "example": "[\"bug\",\"urgent\"]",
+              "placeholder": "[\"bug\",\"urgent\"]"
+            },
+            {
+              "name": "Jql",
+              "internalKey": "jql",
+              "type": "string",
+              "description": "JQL query — required for search_issues",
+              "example": "project = PROJ AND status = \"In Progress\"",
+              "placeholder": "project = PROJ AND status = \"In Progress\""
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Max results for search_issues (default: 50)",
+              "example": "50",
+              "placeholder": "50",
+              "defaultValue": "50"
+            },
+            {
+              "name": "Comment Body",
+              "internalKey": "commentBody",
+              "type": "textarea",
+              "description": "Comment text — required for add_comment"
+            },
+            {
+              "name": "Transition Id",
+              "internalKey": "transitionId",
+              "type": "string",
+              "description": "Transition ID — required for transition_issue",
+              "example": "abc123",
+              "placeholder": "abc123"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Jira node.\nstructure: Value returned by the Jira node.\nconvertible: Value returned by the Jira node.\ndefaultValue: Value returned by the Jira node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Jira in a workflow and pass upstream data into delete.",
+            "scenario": "Use Jira to delete issue in a workflow.",
             "inputValues": {
-              "Base Url": "https://mycompany.atlassian.net",
-              "Email": "user@company.com",
-              "Api Token": "{{ $json.apiToken }}",
-              "Issue Key": "PROJ-123",
+              "Domain": "yourcompany.atlassian.net",
               "Project Key": "PROJ",
-              "Summary": "{{ $json.summary }}",
-              "Description Text": "Created from workflow data: {{ $json.summary }}",
-              "Issue Type": "Task"
+              "Issue Key": "PROJ-123",
+              "Summary": "",
+              "Description": ""
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete issue and exposes its result for downstream nodes."
+          },
+          "externalDocsUrl": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/"
+        },
+        {
+          "name": "Search issues",
+          "value": "search_issues",
+          "description": "Search issues using the Jira node.",
+          "fields": [
+            {
+              "name": "Domain",
+              "internalKey": "domain",
+              "type": "string",
+              "description": "Atlassian domain (without https://)",
+              "example": "yourcompany.atlassian.net",
+              "placeholder": "yourcompany.atlassian.net"
+            },
+            {
+              "name": "Project Key",
+              "internalKey": "projectKey",
+              "type": "string",
+              "description": "Project key — required for create_issue",
+              "example": "PROJ",
+              "placeholder": "PROJ"
+            },
+            {
+              "name": "Issue Key",
+              "internalKey": "issueKey",
+              "type": "string",
+              "description": "Issue key — required for get/update/delete/comment/transition",
+              "example": "PROJ-123",
+              "placeholder": "PROJ-123"
+            },
+            {
+              "name": "Summary",
+              "internalKey": "summary",
+              "type": "string",
+              "description": "Issue title/summary — required for create_issue"
+            },
+            {
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Issue description (plain text, converted to ADF automatically)"
+            },
+            {
+              "name": "Issue Type",
+              "internalKey": "issueType",
+              "type": "string",
+              "description": "Issue type — default: Task",
+              "example": "Task",
+              "placeholder": "Task",
+              "defaultValue": "Task"
+            },
+            {
+              "name": "Priority",
+              "internalKey": "priority",
+              "type": "string",
+              "description": "Issue priority",
+              "example": "Highest",
+              "placeholder": "Highest"
+            },
+            {
+              "name": "Assignee",
+              "internalKey": "assignee",
+              "type": "string",
+              "description": "Assignee account ID (get from Jira user search)"
+            },
+            {
+              "name": "Labels",
+              "internalKey": "labels",
+              "type": "json",
+              "description": "Labels to attach to the issue",
+              "example": "[\"bug\",\"urgent\"]",
+              "placeholder": "[\"bug\",\"urgent\"]"
+            },
+            {
+              "name": "Jql",
+              "internalKey": "jql",
+              "type": "string",
+              "description": "JQL query — required for search_issues",
+              "example": "project = PROJ AND status = \"In Progress\"",
+              "placeholder": "project = PROJ AND status = \"In Progress\""
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Max results for search_issues (default: 50)",
+              "example": "50",
+              "placeholder": "50",
+              "defaultValue": "50"
+            },
+            {
+              "name": "Comment Body",
+              "internalKey": "commentBody",
+              "type": "textarea",
+              "description": "Comment text — required for add_comment"
+            },
+            {
+              "name": "Transition Id",
+              "internalKey": "transitionId",
+              "type": "string",
+              "description": "Transition ID — required for transition_issue",
+              "example": "abc123",
+              "placeholder": "abc123"
+            }
+          ],
+          "outputExample": {
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
+          },
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "usageExample": {
+            "scenario": "Use Jira to search issues in a workflow.",
+            "inputValues": {
+              "Domain": "yourcompany.atlassian.net",
+              "Project Key": "PROJ",
+              "Issue Key": "PROJ-123",
+              "Summary": "",
+              "Description": ""
+            },
+            "expectedOutput": "The node executes search issues and exposes its result for downstream nodes."
+          },
+          "externalDocsUrl": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/"
+        },
+        {
+          "name": "Add comment",
+          "value": "add_comment",
+          "description": "Add comment using the Jira node.",
+          "fields": [
+            {
+              "name": "Domain",
+              "internalKey": "domain",
+              "type": "string",
+              "description": "Atlassian domain (without https://)",
+              "example": "yourcompany.atlassian.net",
+              "placeholder": "yourcompany.atlassian.net"
+            },
+            {
+              "name": "Project Key",
+              "internalKey": "projectKey",
+              "type": "string",
+              "description": "Project key — required for create_issue",
+              "example": "PROJ",
+              "placeholder": "PROJ"
+            },
+            {
+              "name": "Issue Key",
+              "internalKey": "issueKey",
+              "type": "string",
+              "description": "Issue key — required for get/update/delete/comment/transition",
+              "example": "PROJ-123",
+              "placeholder": "PROJ-123"
+            },
+            {
+              "name": "Summary",
+              "internalKey": "summary",
+              "type": "string",
+              "description": "Issue title/summary — required for create_issue"
+            },
+            {
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Issue description (plain text, converted to ADF automatically)"
+            },
+            {
+              "name": "Issue Type",
+              "internalKey": "issueType",
+              "type": "string",
+              "description": "Issue type — default: Task",
+              "example": "Task",
+              "placeholder": "Task",
+              "defaultValue": "Task"
+            },
+            {
+              "name": "Priority",
+              "internalKey": "priority",
+              "type": "string",
+              "description": "Issue priority",
+              "example": "Highest",
+              "placeholder": "Highest"
+            },
+            {
+              "name": "Assignee",
+              "internalKey": "assignee",
+              "type": "string",
+              "description": "Assignee account ID (get from Jira user search)"
+            },
+            {
+              "name": "Labels",
+              "internalKey": "labels",
+              "type": "json",
+              "description": "Labels to attach to the issue",
+              "example": "[\"bug\",\"urgent\"]",
+              "placeholder": "[\"bug\",\"urgent\"]"
+            },
+            {
+              "name": "Jql",
+              "internalKey": "jql",
+              "type": "string",
+              "description": "JQL query — required for search_issues",
+              "example": "project = PROJ AND status = \"In Progress\"",
+              "placeholder": "project = PROJ AND status = \"In Progress\""
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Max results for search_issues (default: 50)",
+              "example": "50",
+              "placeholder": "50",
+              "defaultValue": "50"
+            },
+            {
+              "name": "Comment Body",
+              "internalKey": "commentBody",
+              "type": "textarea",
+              "description": "Comment text — required for add_comment"
+            },
+            {
+              "name": "Transition Id",
+              "internalKey": "transitionId",
+              "type": "string",
+              "description": "Transition ID — required for transition_issue",
+              "example": "abc123",
+              "placeholder": "abc123"
+            }
+          ],
+          "outputExample": {
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
+          },
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "usageExample": {
+            "scenario": "Use Jira to add comment in a workflow.",
+            "inputValues": {
+              "Domain": "yourcompany.atlassian.net",
+              "Project Key": "PROJ",
+              "Issue Key": "PROJ-123",
+              "Summary": "",
+              "Description": ""
+            },
+            "expectedOutput": "The node executes add comment and exposes its result for downstream nodes."
+          },
+          "externalDocsUrl": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/"
+        },
+        {
+          "name": "Transition issue",
+          "value": "transition_issue",
+          "description": "Transition issue using the Jira node.",
+          "fields": [
+            {
+              "name": "Domain",
+              "internalKey": "domain",
+              "type": "string",
+              "description": "Atlassian domain (without https://)",
+              "example": "yourcompany.atlassian.net",
+              "placeholder": "yourcompany.atlassian.net"
+            },
+            {
+              "name": "Project Key",
+              "internalKey": "projectKey",
+              "type": "string",
+              "description": "Project key — required for create_issue",
+              "example": "PROJ",
+              "placeholder": "PROJ"
+            },
+            {
+              "name": "Issue Key",
+              "internalKey": "issueKey",
+              "type": "string",
+              "description": "Issue key — required for get/update/delete/comment/transition",
+              "example": "PROJ-123",
+              "placeholder": "PROJ-123"
+            },
+            {
+              "name": "Summary",
+              "internalKey": "summary",
+              "type": "string",
+              "description": "Issue title/summary — required for create_issue"
+            },
+            {
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Issue description (plain text, converted to ADF automatically)"
+            },
+            {
+              "name": "Issue Type",
+              "internalKey": "issueType",
+              "type": "string",
+              "description": "Issue type — default: Task",
+              "example": "Task",
+              "placeholder": "Task",
+              "defaultValue": "Task"
+            },
+            {
+              "name": "Priority",
+              "internalKey": "priority",
+              "type": "string",
+              "description": "Issue priority",
+              "example": "Highest",
+              "placeholder": "Highest"
+            },
+            {
+              "name": "Assignee",
+              "internalKey": "assignee",
+              "type": "string",
+              "description": "Assignee account ID (get from Jira user search)"
+            },
+            {
+              "name": "Labels",
+              "internalKey": "labels",
+              "type": "json",
+              "description": "Labels to attach to the issue",
+              "example": "[\"bug\",\"urgent\"]",
+              "placeholder": "[\"bug\",\"urgent\"]"
+            },
+            {
+              "name": "Jql",
+              "internalKey": "jql",
+              "type": "string",
+              "description": "JQL query — required for search_issues",
+              "example": "project = PROJ AND status = \"In Progress\"",
+              "placeholder": "project = PROJ AND status = \"In Progress\""
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Max results for search_issues (default: 50)",
+              "example": "50",
+              "placeholder": "50",
+              "defaultValue": "50"
+            },
+            {
+              "name": "Comment Body",
+              "internalKey": "commentBody",
+              "type": "textarea",
+              "description": "Comment text — required for add_comment"
+            },
+            {
+              "name": "Transition Id",
+              "internalKey": "transitionId",
+              "type": "string",
+              "description": "Transition ID — required for transition_issue",
+              "example": "abc123",
+              "placeholder": "abc123"
+            }
+          ],
+          "outputExample": {
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
+          },
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "usageExample": {
+            "scenario": "Use Jira to transition issue in a workflow.",
+            "inputValues": {
+              "Domain": "yourcompany.atlassian.net",
+              "Project Key": "PROJ",
+              "Issue Key": "PROJ-123",
+              "Summary": "",
+              "Description": ""
+            },
+            "expectedOutput": "The node executes transition issue and exposes its result for downstream nodes."
+          },
+          "externalDocsUrl": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/"
+        },
+        {
+          "name": "Get projects",
+          "value": "get_projects",
+          "description": "Get projects using the Jira node.",
+          "fields": [
+            {
+              "name": "Domain",
+              "internalKey": "domain",
+              "type": "string",
+              "description": "Atlassian domain (without https://)",
+              "example": "yourcompany.atlassian.net",
+              "placeholder": "yourcompany.atlassian.net"
+            },
+            {
+              "name": "Project Key",
+              "internalKey": "projectKey",
+              "type": "string",
+              "description": "Project key — required for create_issue",
+              "example": "PROJ",
+              "placeholder": "PROJ"
+            },
+            {
+              "name": "Issue Key",
+              "internalKey": "issueKey",
+              "type": "string",
+              "description": "Issue key — required for get/update/delete/comment/transition",
+              "example": "PROJ-123",
+              "placeholder": "PROJ-123"
+            },
+            {
+              "name": "Summary",
+              "internalKey": "summary",
+              "type": "string",
+              "description": "Issue title/summary — required for create_issue"
+            },
+            {
+              "name": "Description",
+              "internalKey": "description",
+              "type": "textarea",
+              "description": "Issue description (plain text, converted to ADF automatically)"
+            },
+            {
+              "name": "Issue Type",
+              "internalKey": "issueType",
+              "type": "string",
+              "description": "Issue type — default: Task",
+              "example": "Task",
+              "placeholder": "Task",
+              "defaultValue": "Task"
+            },
+            {
+              "name": "Priority",
+              "internalKey": "priority",
+              "type": "string",
+              "description": "Issue priority",
+              "example": "Highest",
+              "placeholder": "Highest"
+            },
+            {
+              "name": "Assignee",
+              "internalKey": "assignee",
+              "type": "string",
+              "description": "Assignee account ID (get from Jira user search)"
+            },
+            {
+              "name": "Labels",
+              "internalKey": "labels",
+              "type": "json",
+              "description": "Labels to attach to the issue",
+              "example": "[\"bug\",\"urgent\"]",
+              "placeholder": "[\"bug\",\"urgent\"]"
+            },
+            {
+              "name": "Jql",
+              "internalKey": "jql",
+              "type": "string",
+              "description": "JQL query — required for search_issues",
+              "example": "project = PROJ AND status = \"In Progress\"",
+              "placeholder": "project = PROJ AND status = \"In Progress\""
+            },
+            {
+              "name": "Max Results",
+              "internalKey": "maxResults",
+              "type": "number",
+              "description": "Max results for search_issues (default: 50)",
+              "example": "50",
+              "placeholder": "50",
+              "defaultValue": "50"
+            },
+            {
+              "name": "Comment Body",
+              "internalKey": "commentBody",
+              "type": "textarea",
+              "description": "Comment text — required for add_comment"
+            },
+            {
+              "name": "Transition Id",
+              "internalKey": "transitionId",
+              "type": "string",
+              "description": "Transition ID — required for transition_issue",
+              "example": "abc123",
+              "placeholder": "abc123"
+            }
+          ],
+          "outputExample": {
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
+          },
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "usageExample": {
+            "scenario": "Use Jira to get projects in a workflow.",
+            "inputValues": {
+              "Domain": "yourcompany.atlassian.net",
+              "Project Key": "PROJ",
+              "Issue Key": "PROJ-123",
+              "Summary": "",
+              "Description": ""
+            },
+            "expectedOutput": "The node executes get projects and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/"
         }
@@ -426,25 +1043,19 @@ export const jiraDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Jira node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

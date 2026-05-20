@@ -5,25 +5,31 @@ export const googleDriveDoc: NodeDoc = {
   "displayName": "Google Drive",
   "category": "Data",
   "logoUrl": "/icons/nodes/google_drive.svg",
-  "description": "Google Drive file operations (upload, download, list) Use this node when a workflow needs google drive behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "Google Drive file operations (upload, download, list)",
+  "credentialType": "Google Credential",
+  "credentialSetupSteps": [
+    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
+    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
+    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
+    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
+    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
+    "Sign in and grant the required scopes. The connection saves automatically."
+  ],
+  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
   "resources": [
     {
       "name": "Operations",
       "description": "Google Drive exposes operation choices directly.",
       "operations": [
         {
-          "name": "List",
-          "value": "list",
-          "description": "List with the Google Drive node using the configured input fields.",
+          "name": "Upload",
+          "value": "upload",
+          "description": "Upload a file to Google Drive.",
           "fields": [
             {
               "name": "File Id",
               "internalKey": "fileId",
               "type": "string",
-              "required": false,
               "description": "File ID (for download)",
               "example": "file-id",
               "placeholder": "file-id"
@@ -32,67 +38,39 @@ export const googleDriveDoc: NodeDoc = {
               "name": "File Name",
               "internalKey": "fileName",
               "type": "string",
-              "required": false,
               "description": "File name (for upload)",
               "example": "document.pdf",
               "placeholder": "document.pdf"
-            },
-            {
-              "name": "File Data",
-              "internalKey": "fileData",
-              "type": "string",
-              "required": false,
-              "description": "File content for upload. Supports plain text, base64, or data URL payloads.",
-              "example": "{{ $json.fileData }}"
-            },
-            {
-              "name": "Mime Type",
-              "internalKey": "mimeType",
-              "type": "string",
-              "required": false,
-              "description": "MIME type for uploaded file",
-              "example": "application/octet-stream",
-              "defaultValue": "application/octet-stream"
-            },
-            {
-              "name": "Folder Id",
-              "internalKey": "folderId",
-              "type": "string",
-              "required": false,
-              "description": "Optional parent folder ID for uploads/lists",
-              "example": "{{ $json.folderId }}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "id": "newFile456",
+            "name": "report-2025-01.pdf",
+            "webViewLink": "https://drive.google.com/file/d/newFile456/view",
+            "mimeType": "application/pdf"
           },
-          "outputDescription": "type: Value returned by the Google Drive node.\nitemType: Value returned by the Google Drive node.\nconvertible: Value returned by the Google Drive node.\ndefaultValue: Value returned by the Google Drive node.",
+          "outputDescription": "id: The new file ID in Drive. name: File name. webViewLink: Browser-accessible URL to the file.",
           "usageExample": {
-            "scenario": "Use Google Drive in a workflow and pass upstream data into list.",
+            "scenario": "Upload a generated PDF report to a shared Drive folder",
             "inputValues": {
-              "File Id": "file-id",
-              "File Name": "document.pdf",
-              "File Data": "{{ $json.fileData }}",
-              "Mime Type": "application/octet-stream",
-              "Folder Id": "{{ $json.folderId }}"
+              "folderId": "{{$env.REPORTS_FOLDER_ID}}",
+              "fileName": "report-{{$now}}.pdf",
+              "content": "{{$json.pdfContent}}",
+              "mimeType": "application/pdf"
             },
-            "expectedOutput": "The node runs list and exposes its result in the output panel for the next node."
+            "expectedOutput": "File is uploaded. Share `{{$json.webViewLink}}` with stakeholders."
           },
           "externalDocsUrl": "https://developers.google.com/drive/api/reference/rest/v3"
         },
         {
           "name": "Download",
           "value": "download",
-          "description": "Download with the Google Drive node using the configured input fields.",
+          "description": "Download the content of a file from Google Drive.",
           "fields": [
             {
               "name": "File Id",
               "internalKey": "fileId",
               "type": "string",
-              "required": false,
               "description": "File ID (for download)",
               "example": "file-id",
               "placeholder": "file-id"
@@ -101,67 +79,37 @@ export const googleDriveDoc: NodeDoc = {
               "name": "File Name",
               "internalKey": "fileName",
               "type": "string",
-              "required": false,
               "description": "File name (for upload)",
               "example": "document.pdf",
               "placeholder": "document.pdf"
-            },
-            {
-              "name": "File Data",
-              "internalKey": "fileData",
-              "type": "string",
-              "required": false,
-              "description": "File content for upload. Supports plain text, base64, or data URL payloads.",
-              "example": "{{ $json.fileData }}"
-            },
-            {
-              "name": "Mime Type",
-              "internalKey": "mimeType",
-              "type": "string",
-              "required": false,
-              "description": "MIME type for uploaded file",
-              "example": "application/octet-stream",
-              "defaultValue": "application/octet-stream"
-            },
-            {
-              "name": "Folder Id",
-              "internalKey": "folderId",
-              "type": "string",
-              "required": false,
-              "description": "Optional parent folder ID for uploads/lists",
-              "example": "{{ $json.folderId }}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "fileId": "file1",
+            "fileName": "data.csv",
+            "content": "Name,Email\nAlice,alice@example.com\n",
+            "mimeType": "text/csv",
+            "size": 1024
           },
-          "outputDescription": "type: Value returned by the Google Drive node.\nitemType: Value returned by the Google Drive node.\nconvertible: Value returned by the Google Drive node.\ndefaultValue: Value returned by the Google Drive node.",
+          "outputDescription": "fileId: The Drive file ID. fileName: The file name. content: The raw file content as a string. mimeType: The file MIME type.",
           "usageExample": {
-            "scenario": "Use Google Drive in a workflow and pass upstream data into download.",
+            "scenario": "Download a CSV export from Drive and process each row",
             "inputValues": {
-              "File Id": "file-id",
-              "File Name": "document.pdf",
-              "File Data": "{{ $json.fileData }}",
-              "Mime Type": "application/octet-stream",
-              "Folder Id": "{{ $json.folderId }}"
+              "fileId": "{{$json.fileId}}"
             },
-            "expectedOutput": "The node runs download and exposes its result in the output panel for the next node."
+            "expectedOutput": "File content is returned in `{{$json.content}}`. Pass to a CSV node to parse rows."
           },
           "externalDocsUrl": "https://developers.google.com/drive/api/reference/rest/v3"
         },
         {
-          "name": "Upload",
-          "value": "upload",
-          "description": "Upload with the Google Drive node using the configured input fields.",
+          "name": "List",
+          "value": "list",
+          "description": "List files and folders in Google Drive.",
           "fields": [
             {
               "name": "File Id",
               "internalKey": "fileId",
               "type": "string",
-              "required": false,
               "description": "File ID (for download)",
               "example": "file-id",
               "placeholder": "file-id"
@@ -170,54 +118,31 @@ export const googleDriveDoc: NodeDoc = {
               "name": "File Name",
               "internalKey": "fileName",
               "type": "string",
-              "required": false,
               "description": "File name (for upload)",
               "example": "document.pdf",
               "placeholder": "document.pdf"
-            },
-            {
-              "name": "File Data",
-              "internalKey": "fileData",
-              "type": "string",
-              "required": false,
-              "description": "File content for upload. Supports plain text, base64, or data URL payloads.",
-              "example": "{{ $json.fileData }}"
-            },
-            {
-              "name": "Mime Type",
-              "internalKey": "mimeType",
-              "type": "string",
-              "required": false,
-              "description": "MIME type for uploaded file",
-              "example": "application/octet-stream",
-              "defaultValue": "application/octet-stream"
-            },
-            {
-              "name": "Folder Id",
-              "internalKey": "folderId",
-              "type": "string",
-              "required": false,
-              "description": "Optional parent folder ID for uploads/lists",
-              "example": "{{ $json.folderId }}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "files": [
+              {
+                "id": "file1",
+                "name": "Q4 Report.pdf",
+                "mimeType": "application/pdf",
+                "modifiedTime": "2025-01-14T10:00:00Z"
+              }
+            ],
+            "nextPageToken": null
           },
-          "outputDescription": "type: Value returned by the Google Drive node.\nitemType: Value returned by the Google Drive node.\nconvertible: Value returned by the Google Drive node.\ndefaultValue: Value returned by the Google Drive node.",
+          "outputDescription": "files: Array of file/folder objects with id, name, mimeType, and modifiedTime. nextPageToken: Token for paginating results.",
           "usageExample": {
-            "scenario": "Use Google Drive in a workflow and pass upstream data into upload.",
+            "scenario": "List all PDF files in a specific Drive folder to process each one",
             "inputValues": {
-              "File Id": "file-id",
-              "File Name": "document.pdf",
-              "File Data": "{{ $json.fileData }}",
-              "Mime Type": "application/octet-stream",
-              "Folder Id": "{{ $json.folderId }}"
+              "folderId": "{{$env.DRIVE_FOLDER_ID}}",
+              "mimeType": "application/pdf",
+              "maxResults": "50"
             },
-            "expectedOutput": "The node runs upload and exposes its result in the output panel for the next node."
+            "expectedOutput": "Returns matching files. Loop over `{{$json.files}}` and use each `{{$json.id}}` in a Download operation."
           },
           "externalDocsUrl": "https://developers.google.com/drive/api/reference/rest/v3"
         }
@@ -226,21 +151,20 @@ export const googleDriveDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Google Drive node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

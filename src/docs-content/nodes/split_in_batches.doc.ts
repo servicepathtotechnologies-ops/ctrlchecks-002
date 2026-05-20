@@ -5,19 +5,21 @@ export const splitInBatchesDoc: NodeDoc = {
   "displayName": "Split In Batches",
   "category": "Logic",
   "logoUrl": "/icons/nodes/split_in_batches.svg",
-  "description": "Split array into batches for processing Use this node when a workflow needs split in batches behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Split array into batches for processing",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Split In Batches is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Split In Batches is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Split In Batches node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Split a large array into smaller batches and process each batch separately.",
           "fields": [
             {
               "name": "Batch Size",
@@ -31,17 +33,30 @@ export const splitInBatchesDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "defaultValue": "defaultValue"
+            "batch": [
+              {
+                "id": 1
+              },
+              {
+                "id": 2
+              },
+              {
+                "id": 3
+              }
+            ],
+            "batchIndex": 0,
+            "totalBatches": 4,
+            "totalItems": 12,
+            "isLastBatch": false
           },
-          "outputDescription": "type: Value returned by the Split In Batches node.\nitemType: Value returned by the Split In Batches node.\ndefaultValue: Value returned by the Split In Batches node.",
+          "outputDescription": "batch: The items in this batch. batchIndex: Zero-based batch number. totalBatches: Total number of batches. isLastBatch: true on the final batch.",
           "usageExample": {
-            "scenario": "Use Split In Batches in a workflow and pass upstream data into configure.",
+            "scenario": "Process 1000 API records in batches of 100 to avoid rate limits",
             "inputValues": {
-              "Batch Size": "10"
+              "items": "{{$json.records}}",
+              "batchSize": "100"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Each batch runs through the connected branch. Use `{{$json.isLastBatch}}` to trigger a completion action."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -51,20 +66,14 @@ export const splitInBatchesDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "function",
-    "function_item",
-    "if_else",
-    "switch",
-    "merge"
-  ]
+  "relatedNodes": []
 };

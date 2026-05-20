@@ -5,16 +5,14 @@ export const oracleDatabaseDoc: NodeDoc = {
   "displayName": "Oracle Database",
   "category": "Data",
   "logoUrl": "/icons/nodes/oracle_database.svg",
-  "description": "Execute SQL and perform select, insert, update, upsert, and delete operations on Oracle Database. Use this node when a workflow needs oracle database behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Password Credential",
+  "description": "Execute SQL and perform select, insert, update, upsert, and delete operations on Oracle Database.",
+  "credentialType": "Oracle Credential",
   "credentialSetupSteps": [
-    "Open the Oracle Database developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Password Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Obtain the Oracle connection details: Host, Port (default 1521), Service Name, Username, Password.",
+    "Ensure the Oracle Instant Client is installed on the worker host if required.",
+    "In CtrlChecks, open Connections → Add Connection → Oracle Database → enter connection details → Save."
   ],
-  "credentialDocsUrl": "https://node-oracledb.readthedocs.io/en/latest/",
+  "credentialDocsUrl": "https://docs.oracle.com/en/database/oracle/oracle-database/19/netag/index.html",
   "resources": [
     {
       "name": "Operations",
@@ -23,16 +21,14 @@ export const oracleDatabaseDoc: NodeDoc = {
         {
           "name": "Select",
           "value": "select",
-          "description": "Select with the Oracle Database node using the configured input fields.",
+          "description": "Select using the Oracle Database node.",
           "fields": [
             {
               "name": "User",
               "internalKey": "user",
               "type": "string",
               "required": true,
-              "description": "Oracle username",
-              "example": "{{ $json.user }}",
-              "defaultValue": ""
+              "description": "Oracle username"
             },
             {
               "name": "Password",
@@ -40,8 +36,6 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -49,81 +43,65 @@ export const oracleDatabaseDoc: NodeDoc = {
               "internalKey": "connectionString",
               "type": "string",
               "required": true,
-              "description": "Oracle connection string",
-              "example": "{{ $json.connectionString }}",
-              "defaultValue": ""
+              "description": "Oracle connection string"
             },
             {
               "name": "Schema",
               "internalKey": "schema",
               "type": "string",
-              "required": false,
-              "description": "Oracle schema",
-              "example": "{{ $json.schema }}",
-              "defaultValue": ""
+              "description": "Oracle schema"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "required": false,
-              "description": "Table name",
-              "example": "{{ $json.table }}",
-              "defaultValue": ""
+              "description": "Table name"
             },
             {
               "name": "Statement",
               "internalKey": "statement",
               "type": "string",
-              "required": false,
-              "description": "SQL statement for execute_sql",
-              "example": "{{ $json.statement }}",
-              "defaultValue": ""
+              "description": "SQL statement for execute_sql"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max rows to return",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "oracle_database"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Oracle Database node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Oracle Database in a workflow and pass upstream data into select.",
+            "scenario": "Use Oracle Database to select in a workflow.",
             "inputValues": {
-              "User": "{{ $json.user }}",
-              "Password": "{{ $json.password }}",
-              "Connection String": "{{ $json.connectionString }}",
-              "Schema": "{{ $json.schema }}",
-              "Table": "{{ $json.table }}",
-              "Statement": "{{ $json.statement }}",
-              "Limit": "50"
+              "User": "",
+              "Password": "",
+              "Connection String": "",
+              "Schema": "",
+              "Table": ""
             },
-            "expectedOutput": "The node runs select and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes select and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://node-oracledb.readthedocs.io/en/latest/"
         },
         {
           "name": "Insert",
           "value": "insert",
-          "description": "Insert with the Oracle Database node using the configured input fields.",
+          "description": "Insert using the Oracle Database node.",
           "fields": [
             {
               "name": "User",
               "internalKey": "user",
               "type": "string",
               "required": true,
-              "description": "Oracle username",
-              "example": "{{ $json.user }}",
-              "defaultValue": ""
+              "description": "Oracle username"
             },
             {
               "name": "Password",
@@ -131,8 +109,6 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -140,81 +116,65 @@ export const oracleDatabaseDoc: NodeDoc = {
               "internalKey": "connectionString",
               "type": "string",
               "required": true,
-              "description": "Oracle connection string",
-              "example": "{{ $json.connectionString }}",
-              "defaultValue": ""
+              "description": "Oracle connection string"
             },
             {
               "name": "Schema",
               "internalKey": "schema",
               "type": "string",
-              "required": false,
-              "description": "Oracle schema",
-              "example": "{{ $json.schema }}",
-              "defaultValue": ""
+              "description": "Oracle schema"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "required": false,
-              "description": "Table name",
-              "example": "{{ $json.table }}",
-              "defaultValue": ""
+              "description": "Table name"
             },
             {
               "name": "Statement",
               "internalKey": "statement",
               "type": "string",
-              "required": false,
-              "description": "SQL statement for execute_sql",
-              "example": "{{ $json.statement }}",
-              "defaultValue": ""
+              "description": "SQL statement for execute_sql"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max rows to return",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "oracle_database"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Oracle Database node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Oracle Database in a workflow and pass upstream data into insert.",
+            "scenario": "Use Oracle Database to insert in a workflow.",
             "inputValues": {
-              "User": "{{ $json.user }}",
-              "Password": "{{ $json.password }}",
-              "Connection String": "{{ $json.connectionString }}",
-              "Schema": "{{ $json.schema }}",
-              "Table": "{{ $json.table }}",
-              "Statement": "{{ $json.statement }}",
-              "Limit": "50"
+              "User": "",
+              "Password": "",
+              "Connection String": "",
+              "Schema": "",
+              "Table": ""
             },
-            "expectedOutput": "The node runs insert and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes insert and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://node-oracledb.readthedocs.io/en/latest/"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the Oracle Database node using the configured input fields.",
+          "description": "Update using the Oracle Database node.",
           "fields": [
             {
               "name": "User",
               "internalKey": "user",
               "type": "string",
               "required": true,
-              "description": "Oracle username",
-              "example": "{{ $json.user }}",
-              "defaultValue": ""
+              "description": "Oracle username"
             },
             {
               "name": "Password",
@@ -222,8 +182,6 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -231,81 +189,65 @@ export const oracleDatabaseDoc: NodeDoc = {
               "internalKey": "connectionString",
               "type": "string",
               "required": true,
-              "description": "Oracle connection string",
-              "example": "{{ $json.connectionString }}",
-              "defaultValue": ""
+              "description": "Oracle connection string"
             },
             {
               "name": "Schema",
               "internalKey": "schema",
               "type": "string",
-              "required": false,
-              "description": "Oracle schema",
-              "example": "{{ $json.schema }}",
-              "defaultValue": ""
+              "description": "Oracle schema"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "required": false,
-              "description": "Table name",
-              "example": "{{ $json.table }}",
-              "defaultValue": ""
+              "description": "Table name"
             },
             {
               "name": "Statement",
               "internalKey": "statement",
               "type": "string",
-              "required": false,
-              "description": "SQL statement for execute_sql",
-              "example": "{{ $json.statement }}",
-              "defaultValue": ""
+              "description": "SQL statement for execute_sql"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max rows to return",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "oracle_database"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Oracle Database node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Oracle Database in a workflow and pass upstream data into update.",
+            "scenario": "Use Oracle Database to update in a workflow.",
             "inputValues": {
-              "User": "{{ $json.user }}",
-              "Password": "{{ $json.password }}",
-              "Connection String": "{{ $json.connectionString }}",
-              "Schema": "{{ $json.schema }}",
-              "Table": "{{ $json.table }}",
-              "Statement": "{{ $json.statement }}",
-              "Limit": "50"
+              "User": "",
+              "Password": "",
+              "Connection String": "",
+              "Schema": "",
+              "Table": ""
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes update and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://node-oracledb.readthedocs.io/en/latest/"
         },
         {
-          "name": "Insert or Update (Upsert)",
+          "name": "Insert or update",
           "value": "insert_or_update",
-          "description": "Insert or Update (Upsert) with the Oracle Database node using the configured input fields.",
+          "description": "Insert or update using the Oracle Database node.",
           "fields": [
             {
               "name": "User",
               "internalKey": "user",
               "type": "string",
               "required": true,
-              "description": "Oracle username",
-              "example": "{{ $json.user }}",
-              "defaultValue": ""
+              "description": "Oracle username"
             },
             {
               "name": "Password",
@@ -313,8 +255,6 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -322,81 +262,65 @@ export const oracleDatabaseDoc: NodeDoc = {
               "internalKey": "connectionString",
               "type": "string",
               "required": true,
-              "description": "Oracle connection string",
-              "example": "{{ $json.connectionString }}",
-              "defaultValue": ""
+              "description": "Oracle connection string"
             },
             {
               "name": "Schema",
               "internalKey": "schema",
               "type": "string",
-              "required": false,
-              "description": "Oracle schema",
-              "example": "{{ $json.schema }}",
-              "defaultValue": ""
+              "description": "Oracle schema"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "required": false,
-              "description": "Table name",
-              "example": "{{ $json.table }}",
-              "defaultValue": ""
+              "description": "Table name"
             },
             {
               "name": "Statement",
               "internalKey": "statement",
               "type": "string",
-              "required": false,
-              "description": "SQL statement for execute_sql",
-              "example": "{{ $json.statement }}",
-              "defaultValue": ""
+              "description": "SQL statement for execute_sql"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max rows to return",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "oracle_database"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Oracle Database node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Oracle Database in a workflow and pass upstream data into insert or update (upsert).",
+            "scenario": "Use Oracle Database to insert or update in a workflow.",
             "inputValues": {
-              "User": "{{ $json.user }}",
-              "Password": "{{ $json.password }}",
-              "Connection String": "{{ $json.connectionString }}",
-              "Schema": "{{ $json.schema }}",
-              "Table": "{{ $json.table }}",
-              "Statement": "{{ $json.statement }}",
-              "Limit": "50"
+              "User": "",
+              "Password": "",
+              "Connection String": "",
+              "Schema": "",
+              "Table": ""
             },
-            "expectedOutput": "The node runs insert or update (upsert) and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes insert or update and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://node-oracledb.readthedocs.io/en/latest/"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the Oracle Database node using the configured input fields.",
+          "description": "Delete using the Oracle Database node.",
           "fields": [
             {
               "name": "User",
               "internalKey": "user",
               "type": "string",
               "required": true,
-              "description": "Oracle username",
-              "example": "{{ $json.user }}",
-              "defaultValue": ""
+              "description": "Oracle username"
             },
             {
               "name": "Password",
@@ -404,8 +328,6 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -413,81 +335,65 @@ export const oracleDatabaseDoc: NodeDoc = {
               "internalKey": "connectionString",
               "type": "string",
               "required": true,
-              "description": "Oracle connection string",
-              "example": "{{ $json.connectionString }}",
-              "defaultValue": ""
+              "description": "Oracle connection string"
             },
             {
               "name": "Schema",
               "internalKey": "schema",
               "type": "string",
-              "required": false,
-              "description": "Oracle schema",
-              "example": "{{ $json.schema }}",
-              "defaultValue": ""
+              "description": "Oracle schema"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "required": false,
-              "description": "Table name",
-              "example": "{{ $json.table }}",
-              "defaultValue": ""
+              "description": "Table name"
             },
             {
               "name": "Statement",
               "internalKey": "statement",
               "type": "string",
-              "required": false,
-              "description": "SQL statement for execute_sql",
-              "example": "{{ $json.statement }}",
-              "defaultValue": ""
+              "description": "SQL statement for execute_sql"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max rows to return",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "oracle_database"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Oracle Database node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Oracle Database in a workflow and pass upstream data into delete.",
+            "scenario": "Use Oracle Database to delete in a workflow.",
             "inputValues": {
-              "User": "{{ $json.user }}",
-              "Password": "{{ $json.password }}",
-              "Connection String": "{{ $json.connectionString }}",
-              "Schema": "{{ $json.schema }}",
-              "Table": "{{ $json.table }}",
-              "Statement": "{{ $json.statement }}",
-              "Limit": "50"
+              "User": "",
+              "Password": "",
+              "Connection String": "",
+              "Schema": "",
+              "Table": ""
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://node-oracledb.readthedocs.io/en/latest/"
         },
         {
-          "name": "Execute SQL",
+          "name": "Execute sql",
           "value": "execute_sql",
-          "description": "Execute SQL with the Oracle Database node using the configured input fields.",
+          "description": "Execute sql using the Oracle Database node.",
           "fields": [
             {
               "name": "User",
               "internalKey": "user",
               "type": "string",
               "required": true,
-              "description": "Oracle username",
-              "example": "{{ $json.user }}",
-              "defaultValue": ""
+              "description": "Oracle username"
             },
             {
               "name": "Password",
@@ -495,8 +401,6 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -504,65 +408,51 @@ export const oracleDatabaseDoc: NodeDoc = {
               "internalKey": "connectionString",
               "type": "string",
               "required": true,
-              "description": "Oracle connection string",
-              "example": "{{ $json.connectionString }}",
-              "defaultValue": ""
+              "description": "Oracle connection string"
             },
             {
               "name": "Schema",
               "internalKey": "schema",
               "type": "string",
-              "required": false,
-              "description": "Oracle schema",
-              "example": "{{ $json.schema }}",
-              "defaultValue": ""
+              "description": "Oracle schema"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "required": false,
-              "description": "Table name",
-              "example": "{{ $json.table }}",
-              "defaultValue": ""
+              "description": "Table name"
             },
             {
               "name": "Statement",
               "internalKey": "statement",
               "type": "string",
-              "required": false,
-              "description": "SQL statement for execute_sql",
-              "example": "{{ $json.statement }}",
-              "defaultValue": ""
+              "description": "SQL statement for execute_sql"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max rows to return",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "oracle_database"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Oracle Database node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Oracle Database in a workflow and pass upstream data into execute sql.",
+            "scenario": "Use Oracle Database to execute sql in a workflow.",
             "inputValues": {
-              "User": "{{ $json.user }}",
-              "Password": "{{ $json.password }}",
-              "Connection String": "{{ $json.connectionString }}",
-              "Schema": "{{ $json.schema }}",
-              "Table": "{{ $json.table }}",
-              "Statement": "{{ $json.statement }}",
-              "Limit": "50"
+              "User": "",
+              "Password": "",
+              "Connection String": "",
+              "Schema": "",
+              "Table": ""
             },
-            "expectedOutput": "The node runs execute sql and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute sql and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://node-oracledb.readthedocs.io/en/latest/"
         }
@@ -572,25 +462,19 @@ export const oracleDatabaseDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Oracle Database node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

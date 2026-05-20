@@ -5,19 +5,21 @@ export const setDoc: NodeDoc = {
   "displayName": "Set",
   "category": "Data",
   "logoUrl": "/icons/nodes/set.svg",
-  "description": "Set/override multiple fields on the current item Use this node when a workflow needs set behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Set/override multiple fields on the current item",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Set is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Set is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Set node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the Set node.",
           "fields": [
             {
               "name": "Fields",
@@ -30,18 +32,22 @@ export const setDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Set node.\nstructure: Value returned by the Set node.\nconvertible: Value returned by the Set node.\ndefaultValue: Value returned by the Set node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Set in a workflow and pass upstream data into configure.",
+            "scenario": "Use Set to execute in a workflow.",
             "inputValues": {
               "Fields": "{\"status\":\"new\",\"email\":\"{{$json.email}}\"}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -51,20 +57,14 @@ export const setDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

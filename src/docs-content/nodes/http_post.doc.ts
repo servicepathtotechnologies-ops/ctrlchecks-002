@@ -5,19 +5,21 @@ export const httpPostDoc: NodeDoc = {
   "displayName": "HTTP POST",
   "category": "Utility",
   "logoUrl": "/icons/nodes/http_post.svg",
-  "description": "Send POST requests with JSON data Use this node when a workflow needs http post behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Send POST requests with JSON data",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "HTTP POST is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "HTTP POST is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the HTTP POST node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Make an HTTP POST request to send data to an external endpoint.",
           "fields": [
             {
               "name": "Url",
@@ -31,7 +33,7 @@ export const httpPostDoc: NodeDoc = {
             {
               "name": "Body",
               "internalKey": "body",
-              "type": "json",
+              "type": "textarea",
               "required": true,
               "description": "POST body data",
               "example": "{{$json.data}}",
@@ -41,27 +43,30 @@ export const httpPostDoc: NodeDoc = {
               "name": "Headers",
               "internalKey": "headers",
               "type": "json",
-              "required": false,
               "description": "HTTP headers",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"Content-Type\":\"application/json\"}",
+              "placeholder": "{\"Content-Type\":\"application/json\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the HTTP POST node.\nstructure: Value returned by the HTTP POST node.\nconvertible: Value returned by the HTTP POST node.\ndefaultValue: Value returned by the HTTP POST node.",
-          "usageExample": {
-            "scenario": "Use HTTP POST in a workflow and pass upstream data into configure.",
-            "inputValues": {
-              "Url": "https://api.example.com/data",
-              "Body": "{{$json.data}}",
-              "Headers": "[object Object]"
+            "status": 201,
+            "body": {
+              "id": "new_item_123",
+              "created": true
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "headers": {
+              "location": "/api/items/new_item_123"
+            }
+          },
+          "outputDescription": "status: HTTP response code. body: Response body. headers: Response headers including Location for created resources.",
+          "usageExample": {
+            "scenario": "Submit form data to an external API",
+            "inputValues": {
+              "url": "https://api.example.com/submissions",
+              "body": "{\"name\": \"{{$json.name}}\", \"email\": \"{{$json.email}}\"}",
+              "headers": "{\"Content-Type\": \"application/json\", \"Authorization\": \"Bearer {{$env.TOKEN}}\"}"
+            },
+            "expectedOutput": "Created resource in `{{$json.body}}`. Use `{{$json.body.id}}` to reference it."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -71,20 +76,14 @@ export const httpPostDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "http_request",
-    "respond_to_webhook",
-    "clickup",
-    "delay",
-    "queue_push"
-  ]
+  "relatedNodes": []
 };

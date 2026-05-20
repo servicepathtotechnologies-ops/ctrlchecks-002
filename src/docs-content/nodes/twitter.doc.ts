@@ -5,31 +5,38 @@ export const twitterDoc: NodeDoc = {
   "displayName": "Twitter/X",
   "category": "Communication",
   "logoUrl": "/icons/nodes/twitter.svg",
-  "description": "Post tweets, manage Twitter account Use this node when a workflow needs twitter/x behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Twitter Token, Twitter Credential",
+  "description": "Post tweets, manage Twitter account",
+  "credentialType": "Twitter API Key",
   "credentialSetupSteps": [
-    "Open the Twitter/X developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Twitter Token, Twitter Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to https://developer.twitter.com/en/portal/dashboard → create a project and an app.",
+    "Under \"Keys and Tokens\", generate API Key, API Secret, Access Token, and Access Token Secret.",
+    "In CtrlChecks, open Connections → Add Connection → Twitter/X → enter all four keys → Save."
   ],
-  "credentialDocsUrl": "https://developer.x.com/en/docs/x-api",
+  "credentialDocsUrl": "https://developer.twitter.com/en/docs/twitter-api/getting-started/getting-access-to-the-twitter-api",
   "resources": [
     {
-      "name": "Tweet",
-      "description": "Tweet is a Twitter/X resource available in this node.",
+      "name": "Operations",
+      "description": "Twitter/X exposes operation choices directly.",
       "operations": [
         {
           "name": "Create",
           "value": "create",
-          "description": "Create with the Twitter/X node using the configured input fields.",
+          "description": "Create using the Twitter/X node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Twitter resource",
+              "example": "tweet",
+              "placeholder": "tweet",
+              "defaultValue": "tweet"
+            },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Tweet text (max 280 characters)",
               "example": "{{$json.tweet}}",
               "placeholder": "{{$json.tweet}}"
@@ -38,67 +45,62 @@ export const twitterDoc: NodeDoc = {
               "name": "Tweet Id",
               "internalKey": "tweetId",
               "type": "string",
-              "required": false,
               "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
+              "type": "textarea",
+              "description": "Search query (for search operations)"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
               "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
+              "placeholder": "your-twitter-oauth-token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": "Operation completed successfully.",
+            "text": ""
           },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
+          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into create.",
+            "scenario": "Use Twitter/X to create in a workflow.",
             "inputValues": {
+              "Resource": "tweet",
               "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
+              "Tweet Id": "abc123",
+              "Query": "",
+              "Access Token": "your-twitter-oauth-token"
             },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes create and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the Twitter/X node using the configured input fields.",
+          "description": "Delete using the Twitter/X node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Twitter resource",
+              "example": "tweet",
+              "placeholder": "tweet",
+              "defaultValue": "tweet"
+            },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Tweet text (max 280 characters)",
               "example": "{{$json.tweet}}",
               "placeholder": "{{$json.tweet}}"
@@ -107,67 +109,62 @@ export const twitterDoc: NodeDoc = {
               "name": "Tweet Id",
               "internalKey": "tweetId",
               "type": "string",
-              "required": false,
               "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
+              "type": "textarea",
+              "description": "Search query (for search operations)"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
               "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
+              "placeholder": "your-twitter-oauth-token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": "Operation completed successfully.",
+            "text": ""
           },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
+          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into delete.",
+            "scenario": "Use Twitter/X to delete in a workflow.",
             "inputValues": {
+              "Resource": "tweet",
               "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
+              "Tweet Id": "abc123",
+              "Query": "",
+              "Access Token": "your-twitter-oauth-token"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
         },
         {
           "name": "Get",
           "value": "get",
-          "description": "Get with the Twitter/X node using the configured input fields.",
+          "description": "Fetch a specific tweet by its ID.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Twitter resource",
+              "example": "tweet",
+              "placeholder": "tweet",
+              "defaultValue": "tweet"
+            },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Tweet text (max 280 characters)",
               "example": "{{$json.tweet}}",
               "placeholder": "{{$json.tweet}}"
@@ -176,67 +173,64 @@ export const twitterDoc: NodeDoc = {
               "name": "Tweet Id",
               "internalKey": "tweetId",
               "type": "string",
-              "required": false,
               "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
+              "type": "textarea",
+              "description": "Search query (for search operations)"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
               "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
+              "placeholder": "your-twitter-oauth-token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "data": {
+              "id": "1749876543210",
+              "text": "Hello world!",
+              "public_metrics": {
+                "retweet_count": 5,
+                "like_count": 42
+              }
+            }
           },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
+          "outputDescription": "data.id: The tweet ID. data.text: Tweet text. data.public_metrics: Engagement counts (likes, retweets, replies).",
           "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into get.",
+            "scenario": "Fetch engagement metrics for a specific tweet to track campaign performance",
             "inputValues": {
-              "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
+              "tweetId": "{{$json.tweetId}}"
             },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
+            "expectedOutput": "Returns the tweet with `{{$json.data.public_metrics.like_count}}` likes and `{{$json.data.public_metrics.retweet_count}}` retweets."
           },
           "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
         },
         {
-          "name": "Search Recent",
-          "value": "searchRecent",
-          "description": "Search Recent with the Twitter/X node using the configured input fields.",
+          "name": "GetMe",
+          "value": "getMe",
+          "description": "GetMe using the Twitter/X node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Twitter resource",
+              "example": "tweet",
+              "placeholder": "tweet",
+              "defaultValue": "tweet"
+            },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Tweet text (max 280 characters)",
               "example": "{{$json.tweet}}",
               "placeholder": "{{$json.tweet}}"
@@ -245,142 +239,62 @@ export const twitterDoc: NodeDoc = {
               "name": "Tweet Id",
               "internalKey": "tweetId",
               "type": "string",
-              "required": false,
               "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
+              "type": "textarea",
+              "description": "Search query (for search operations)"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
               "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
+              "placeholder": "your-twitter-oauth-token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": "Operation completed successfully.",
+            "text": ""
           },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
+          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into search recent.",
+            "scenario": "Use Twitter/X to getme in a workflow.",
             "inputValues": {
+              "Resource": "tweet",
               "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
+              "Tweet Id": "abc123",
+              "Query": "",
+              "Access Token": "your-twitter-oauth-token"
             },
-            "expectedOutput": "The node runs search recent and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
-        }
-      ]
-    },
-    {
-      "name": "User",
-      "description": "User is a Twitter/X resource available in this node.",
-      "operations": [
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Twitter/X node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Tweet text (max 280 characters)",
-              "example": "{{$json.tweet}}",
-              "placeholder": "{{$json.tweet}}"
-            },
-            {
-              "name": "Tweet Id",
-              "internalKey": "tweetId",
-              "type": "string",
-              "required": false,
-              "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
-            },
-            {
-              "name": "Query",
-              "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
-              "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
-          "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes getme and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
         },
         {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Twitter/X node using the configured input fields.",
+          "name": "Recent",
+          "value": "recent",
+          "description": "Recent using the Twitter/X node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "Twitter resource",
+              "example": "tweet",
+              "placeholder": "tweet",
+              "defaultValue": "tweet"
+            },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Tweet text (max 280 characters)",
               "example": "{{$json.tweet}}",
               "placeholder": "{{$json.tweet}}"
@@ -389,474 +303,40 @@ export const twitterDoc: NodeDoc = {
               "name": "Tweet Id",
               "internalKey": "tweetId",
               "type": "string",
-              "required": false,
               "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
+              "type": "textarea",
+              "description": "Search query (for search operations)"
             },
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
               "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
+              "placeholder": "your-twitter-oauth-token"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": "Operation completed successfully.",
+            "text": ""
           },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
+          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into delete.",
+            "scenario": "Use Twitter/X to recent in a workflow.",
             "inputValues": {
+              "Resource": "tweet",
               "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
+              "Tweet Id": "abc123",
+              "Query": "",
+              "Access Token": "your-twitter-oauth-token"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
-        },
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Twitter/X node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Tweet text (max 280 characters)",
-              "example": "{{$json.tweet}}",
-              "placeholder": "{{$json.tweet}}"
-            },
-            {
-              "name": "Tweet Id",
-              "internalKey": "tweetId",
-              "type": "string",
-              "required": false,
-              "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
-            },
-            {
-              "name": "Query",
-              "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
-              "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
-          "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
-        },
-        {
-          "name": "Search Recent",
-          "value": "searchRecent",
-          "description": "Search Recent with the Twitter/X node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Tweet text (max 280 characters)",
-              "example": "{{$json.tweet}}",
-              "placeholder": "{{$json.tweet}}"
-            },
-            {
-              "name": "Tweet Id",
-              "internalKey": "tweetId",
-              "type": "string",
-              "required": false,
-              "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
-            },
-            {
-              "name": "Query",
-              "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
-              "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
-          "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into search recent.",
-            "inputValues": {
-              "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
-            },
-            "expectedOutput": "The node runs search recent and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
-        }
-      ]
-    },
-    {
-      "name": "Search",
-      "description": "Search is a Twitter/X resource available in this node.",
-      "operations": [
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Twitter/X node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Tweet text (max 280 characters)",
-              "example": "{{$json.tweet}}",
-              "placeholder": "{{$json.tweet}}"
-            },
-            {
-              "name": "Tweet Id",
-              "internalKey": "tweetId",
-              "type": "string",
-              "required": false,
-              "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
-            },
-            {
-              "name": "Query",
-              "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
-              "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
-          "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Twitter/X node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Tweet text (max 280 characters)",
-              "example": "{{$json.tweet}}",
-              "placeholder": "{{$json.tweet}}"
-            },
-            {
-              "name": "Tweet Id",
-              "internalKey": "tweetId",
-              "type": "string",
-              "required": false,
-              "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
-            },
-            {
-              "name": "Query",
-              "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
-              "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
-          "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
-        },
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Twitter/X node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Tweet text (max 280 characters)",
-              "example": "{{$json.tweet}}",
-              "placeholder": "{{$json.tweet}}"
-            },
-            {
-              "name": "Tweet Id",
-              "internalKey": "tweetId",
-              "type": "string",
-              "required": false,
-              "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
-            },
-            {
-              "name": "Query",
-              "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
-              "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
-          "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
-        },
-        {
-          "name": "Search Recent",
-          "value": "searchRecent",
-          "description": "Search Recent with the Twitter/X node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Tweet text (max 280 characters)",
-              "example": "{{$json.tweet}}",
-              "placeholder": "{{$json.tweet}}"
-            },
-            {
-              "name": "Tweet Id",
-              "internalKey": "tweetId",
-              "type": "string",
-              "required": false,
-              "description": "Tweet ID (for get/delete/like/etc.)",
-              "example": "{{ $json.tweetId }}"
-            },
-            {
-              "name": "Query",
-              "internalKey": "query",
-              "type": "string",
-              "required": false,
-              "description": "Search query (for search operations)",
-              "example": "status:open"
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth2 Access Token for Twitter (if using OAuth authentication)",
-              "example": "your-twitter-oauth-token",
-              "placeholder": "your-twitter-oauth-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "ID of the stored credential to use",
-              "example": "twitter_oauth_123",
-              "placeholder": "twitter_oauth_123"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Twitter/X node.\nconvertible: Value returned by the Twitter/X node.\ndefaultValue: Value returned by the Twitter/X node.",
-          "usageExample": {
-            "scenario": "Use Twitter/X in a workflow and pass upstream data into search recent.",
-            "inputValues": {
-              "Text": "{{$json.tweet}}",
-              "Tweet Id": "{{ $json.tweetId }}",
-              "Query": "status:open",
-              "Access Token": "your-twitter-oauth-token",
-              "Credential Id": "twitter_oauth_123"
-            },
-            "expectedOutput": "The node runs search recent and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes recent and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.x.com/en/docs/x-api"
         }
@@ -866,25 +346,19 @@ export const twitterDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Twitter/X node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "google_gmail",
-    "outlook",
-    "slack_message",
-    "email",
-    "log_output"
-  ]
+  "relatedNodes": []
 };

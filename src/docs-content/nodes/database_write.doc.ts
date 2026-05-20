@@ -5,66 +5,59 @@ export const databaseWriteDoc: NodeDoc = {
   "displayName": "Database Write",
   "category": "Data",
   "logoUrl": "/icons/nodes/database_write.svg",
-  "description": "Execute SQL queries on database (INSERT, UPDATE, DELETE) Use this node when a workflow needs database write behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Postgresql Credential",
+  "description": "Execute SQL queries on database (INSERT, UPDATE, DELETE)",
+  "credentialType": "None",
   "credentialSetupSteps": [
-    "Open the Database Write developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Postgresql Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Database Write is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Database Write is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Database Write node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute an INSERT, UPDATE, or DELETE query on the configured database.",
           "fields": [
+            {
+              "name": "Connection String",
+              "internalKey": "connectionString",
+              "type": "string",
+              "description": "Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment.",
+              "example": "postgresql://user:pass@host:5432/dbname",
+              "placeholder": "postgresql://user:pass@host:5432/dbname"
+            },
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "SQL query to execute",
               "example": "INSERT INTO users (name, email) VALUES ($1, $2)",
               "placeholder": "INSERT INTO users (name, email) VALUES ($1, $2)"
             },
             {
-              "name": "Connection String",
-              "internalKey": "connectionString",
-              "type": "string",
-              "required": false,
-              "description": "Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment.",
-              "example": "postgresql://user:pass@host:5432/dbname",
-              "placeholder": "postgresql://user:pass@host:5432/dbname"
-            },
-            {
               "name": "Parameters",
               "internalKey": "parameters",
               "type": "json",
-              "required": false,
               "description": "Query parameters",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
+            "rowCount": 1
           },
-          "outputDescription": "type: Value returned by the Database Write node.\nstructure: Value returned by the Database Write node.",
+          "outputDescription": "rowCount: Number of rows affected by the query.",
           "usageExample": {
-            "scenario": "Use Database Write in a workflow and pass upstream data into configure.",
+            "scenario": "Insert a new record into any SQL database",
             "inputValues": {
-              "Query": "INSERT INTO users (name, email) VALUES ($1, $2)",
-              "Connection String": "postgresql://user:pass@host:5432/dbname",
-              "Parameters": "[\"value\"]"
+              "query": "INSERT INTO logs (message, created_at) VALUES ($1, NOW())",
+              "parameters": "[\"{{$json.message}}\"]"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "`rowCount: 1` confirms the row was inserted."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -73,26 +66,15 @@ export const databaseWriteDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
-      "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
-    },
-    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "google_sheets",
-    "google_doc"
-  ]
+  "relatedNodes": []
 };

@@ -5,222 +5,180 @@ export const calendlyDoc: NodeDoc = {
   "displayName": "Calendly",
   "category": "Data",
   "logoUrl": "/icons/nodes/calendly.svg",
-  "description": "Fetch events, event types, scheduled meetings, and user info from Calendly. Use this node when a workflow needs calendly behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Access Token Credential",
+  "description": "Fetch events, event types, scheduled meetings, and user info from Calendly.",
+  "credentialType": "Calendly API Key",
   "credentialSetupSteps": [
-    "Open the Calendly developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Access Token Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Log in to Calendly → Integrations → API & Webhooks → Personal Access Tokens.",
+    "Click \"Generate new token\", give it a name, and copy it.",
+    "In CtrlChecks, open Connections → Add Connection → Calendly → paste the token → Save."
   ],
-  "credentialDocsUrl": "https://developer.calendly.com/api-docs",
+  "credentialDocsUrl": "https://developer.calendly.com/api-docs/ZG9jOjExMjM0NzU2-calendly-developer-portal",
   "resources": [
     {
       "name": "Operations",
       "description": "Calendly exposes operation choices directly.",
       "operations": [
         {
-          "name": "Get Events",
+          "name": "Get events",
           "value": "get_events",
-          "description": "Get Events with the Calendly node using the configured input fields.",
+          "description": "Get events using the Calendly node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Calendly personal access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Calendly personal access token"
             },
             {
               "name": "User Uri",
               "internalKey": "userUri",
               "type": "string",
-              "required": false,
-              "description": "Calendly user URI",
-              "example": "{{ $json.userUri }}",
-              "defaultValue": ""
+              "description": "Calendly user URI"
             },
             {
               "name": "Event Type Uri",
               "internalKey": "eventTypeUri",
               "type": "string",
-              "required": false,
-              "description": "Calendly event type URI",
-              "example": "{{ $json.eventTypeUri }}",
-              "defaultValue": ""
+              "description": "Calendly event type URI"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "calendly"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Calendly node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Calendly in a workflow and pass upstream data into get events.",
+            "scenario": "Use Calendly to get events in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "User Uri": "{{ $json.userUri }}",
-              "Event Type Uri": "{{ $json.eventTypeUri }}"
+              "Access Token": "",
+              "User Uri": "",
+              "Event Type Uri": ""
             },
-            "expectedOutput": "The node runs get events and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get events and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.calendly.com/api-docs"
         },
         {
-          "name": "Get Event Types",
+          "name": "Get event types",
           "value": "get_event_types",
-          "description": "Get Event Types with the Calendly node using the configured input fields.",
+          "description": "Get event types using the Calendly node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Calendly personal access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Calendly personal access token"
             },
             {
               "name": "User Uri",
               "internalKey": "userUri",
               "type": "string",
-              "required": false,
-              "description": "Calendly user URI",
-              "example": "{{ $json.userUri }}",
-              "defaultValue": ""
+              "description": "Calendly user URI"
             },
             {
               "name": "Event Type Uri",
               "internalKey": "eventTypeUri",
               "type": "string",
-              "required": false,
-              "description": "Calendly event type URI",
-              "example": "{{ $json.eventTypeUri }}",
-              "defaultValue": ""
+              "description": "Calendly event type URI"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "calendly"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Calendly node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Calendly in a workflow and pass upstream data into get event types.",
+            "scenario": "Use Calendly to get event types in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "User Uri": "{{ $json.userUri }}",
-              "Event Type Uri": "{{ $json.eventTypeUri }}"
+              "Access Token": "",
+              "User Uri": "",
+              "Event Type Uri": ""
             },
-            "expectedOutput": "The node runs get event types and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get event types and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.calendly.com/api-docs"
         },
         {
-          "name": "Get Scheduled Events",
+          "name": "Get scheduled events",
           "value": "get_scheduled_events",
-          "description": "Get Scheduled Events with the Calendly node using the configured input fields.",
+          "description": "Get scheduled events using the Calendly node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Calendly personal access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Calendly personal access token"
             },
             {
               "name": "User Uri",
               "internalKey": "userUri",
               "type": "string",
-              "required": false,
-              "description": "Calendly user URI",
-              "example": "{{ $json.userUri }}",
-              "defaultValue": ""
+              "description": "Calendly user URI"
             },
             {
               "name": "Event Type Uri",
               "internalKey": "eventTypeUri",
               "type": "string",
-              "required": false,
-              "description": "Calendly event type URI",
-              "example": "{{ $json.eventTypeUri }}",
-              "defaultValue": ""
+              "description": "Calendly event type URI"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "calendly"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Calendly node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Calendly in a workflow and pass upstream data into get scheduled events.",
+            "scenario": "Use Calendly to get scheduled events in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "User Uri": "{{ $json.userUri }}",
-              "Event Type Uri": "{{ $json.eventTypeUri }}"
+              "Access Token": "",
+              "User Uri": "",
+              "Event Type Uri": ""
             },
-            "expectedOutput": "The node runs get scheduled events and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get scheduled events and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.calendly.com/api-docs"
         },
         {
-          "name": "Get User",
+          "name": "Get user",
           "value": "get_user",
-          "description": "Get User with the Calendly node using the configured input fields.",
+          "description": "Get user using the Calendly node.",
           "fields": [
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
+              "type": "string",
               "required": true,
-              "description": "Calendly personal access token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "description": "Calendly personal access token"
             },
             {
               "name": "User Uri",
               "internalKey": "userUri",
               "type": "string",
-              "required": false,
-              "description": "Calendly user URI",
-              "example": "{{ $json.userUri }}",
-              "defaultValue": ""
+              "description": "Calendly user URI"
             },
             {
               "name": "Event Type Uri",
               "internalKey": "eventTypeUri",
               "type": "string",
-              "required": false,
-              "description": "Calendly event type URI",
-              "example": "{{ $json.eventTypeUri }}",
-              "defaultValue": ""
+              "description": "Calendly event type URI"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "calendly"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Calendly node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Calendly in a workflow and pass upstream data into get user.",
+            "scenario": "Use Calendly to get user in a workflow.",
             "inputValues": {
-              "Access Token": "{{ $json.accessToken }}",
-              "User Uri": "{{ $json.userUri }}",
-              "Event Type Uri": "{{ $json.eventTypeUri }}"
+              "Access Token": "",
+              "User Uri": "",
+              "Event Type Uri": ""
             },
-            "expectedOutput": "The node runs get user and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get user and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.calendly.com/api-docs"
         }
@@ -230,25 +188,19 @@ export const calendlyDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Calendly node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

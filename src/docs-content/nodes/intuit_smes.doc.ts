@@ -5,31 +5,29 @@ export const intuitSmesDoc: NodeDoc = {
   "displayName": "Intuit - SME'S",
   "category": "Data",
   "logoUrl": "/icons/nodes/intuit_smes.svg",
-  "description": "Intuit SME integration for managing customer data and financial operations via Intuit APIs Use this node when a workflow needs intuit - sme's behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Intuit Credential, Intuit Token, Intuit Credential",
+  "description": "Intuit SME integration for managing customer data and financial operations via Intuit APIs",
+  "credentialType": "Intuit Credential",
   "credentialSetupSteps": [
-    "Open the Intuit - SME'S developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Intuit Credential, Intuit Token, Intuit Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to https://developer.intuit.com → Dashboard → Create an app → \"QuickBooks Online and Payments\".",
+    "Under \"Keys & OAuth\", note the Client ID and Client Secret.",
+    "Add http://localhost:3001/api/oauth/intuit/callback as a Redirect URI.",
+    "In CtrlChecks, open Connections → Add Connection → Intuit/QuickBooks → click \"Connect with Intuit\" → authorize."
   ],
-  "credentialDocsUrl": "https://developer.intuit.com/app/developer/qbo/docs/api/accounting/all-entities/account",
+  "credentialDocsUrl": "https://developer.intuit.com/app/developer/qbo/docs/get-started",
   "resources": [
     {
       "name": "Operations",
       "description": "Intuit - SME'S exposes operation choices directly.",
       "operations": [
         {
-          "name": "Get Customers",
+          "name": "GetCustomers",
           "value": "getCustomers",
-          "description": "Get Customers with the Intuit - SME'S node using the configured input fields.",
+          "description": "GetCustomers using the Intuit - SME'S node.",
           "fields": [
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Intuit API Key or Access Token (required for authentication)",
               "example": "your-intuit-api-key",
               "placeholder": "your-intuit-api-key",
@@ -38,27 +36,15 @@ export const intuitSmesDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Intuit OAuth2 Access Token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Intuit credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Customer Id",
               "internalKey": "customerId",
               "type": "string",
-              "required": false,
               "description": "Customer ID (required for customer-specific operations)",
               "example": "CUST-123",
               "placeholder": "CUST-123"
@@ -67,7 +53,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Name",
               "internalKey": "name",
               "type": "string",
-              "required": false,
               "description": "Customer name (for createCustomer operation)",
               "example": "Acme Corp",
               "placeholder": "Acme Corp"
@@ -76,7 +61,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
-              "required": false,
               "description": "Customer email (for createCustomer operation)",
               "example": "contact@acme.com",
               "placeholder": "contact@acme.com"
@@ -85,7 +69,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Amount",
               "internalKey": "amount",
               "type": "number",
-              "required": false,
               "description": "Invoice amount (for createInvoice operation)",
               "example": "1000",
               "placeholder": "1000"
@@ -94,45 +77,44 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Additional data for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}",
+              "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Intuit - SME'S node.\nstructure: Value returned by the Intuit - SME'S node.\nconvertible: Value returned by the Intuit - SME'S node.\ndefaultValue: Value returned by the Intuit - SME'S node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Intuit - SME'S in a workflow and pass upstream data into get customers.",
+            "scenario": "Use Intuit - SME'S to getcustomers in a workflow.",
             "inputValues": {
               "Api Key": "your-intuit-api-key",
               "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
               "Customer Id": "CUST-123",
               "Name": "Acme Corp",
-              "Email": "contact@acme.com",
-              "Amount": "1000",
-              "Data": "[object Object]"
+              "Email": "contact@acme.com"
             },
-            "expectedOutput": "The node runs get customers and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes getcustomers and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.intuit.com/app/developer/qbo/docs/api/accounting/all-entities/account"
         },
         {
-          "name": "Create Invoice",
+          "name": "CreateInvoice",
           "value": "createInvoice",
-          "description": "Create Invoice with the Intuit - SME'S node using the configured input fields.",
+          "description": "CreateInvoice using the Intuit - SME'S node.",
           "fields": [
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Intuit API Key or Access Token (required for authentication)",
               "example": "your-intuit-api-key",
               "placeholder": "your-intuit-api-key",
@@ -141,27 +123,15 @@ export const intuitSmesDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Intuit OAuth2 Access Token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Intuit credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Customer Id",
               "internalKey": "customerId",
               "type": "string",
-              "required": false,
               "description": "Customer ID (required for customer-specific operations)",
               "example": "CUST-123",
               "placeholder": "CUST-123"
@@ -170,7 +140,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Name",
               "internalKey": "name",
               "type": "string",
-              "required": false,
               "description": "Customer name (for createCustomer operation)",
               "example": "Acme Corp",
               "placeholder": "Acme Corp"
@@ -179,7 +148,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
-              "required": false,
               "description": "Customer email (for createCustomer operation)",
               "example": "contact@acme.com",
               "placeholder": "contact@acme.com"
@@ -188,7 +156,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Amount",
               "internalKey": "amount",
               "type": "number",
-              "required": false,
               "description": "Invoice amount (for createInvoice operation)",
               "example": "1000",
               "placeholder": "1000"
@@ -197,45 +164,44 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Additional data for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}",
+              "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Intuit - SME'S node.\nstructure: Value returned by the Intuit - SME'S node.\nconvertible: Value returned by the Intuit - SME'S node.\ndefaultValue: Value returned by the Intuit - SME'S node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Intuit - SME'S in a workflow and pass upstream data into create invoice.",
+            "scenario": "Use Intuit - SME'S to createinvoice in a workflow.",
             "inputValues": {
               "Api Key": "your-intuit-api-key",
               "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
               "Customer Id": "CUST-123",
               "Name": "Acme Corp",
-              "Email": "contact@acme.com",
-              "Amount": "1000",
-              "Data": "[object Object]"
+              "Email": "contact@acme.com"
             },
-            "expectedOutput": "The node runs create invoice and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes createinvoice and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.intuit.com/app/developer/qbo/docs/api/accounting/all-entities/account"
         },
         {
-          "name": "Get Invoices",
+          "name": "GetInvoices",
           "value": "getInvoices",
-          "description": "Get Invoices with the Intuit - SME'S node using the configured input fields.",
+          "description": "GetInvoices using the Intuit - SME'S node.",
           "fields": [
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Intuit API Key or Access Token (required for authentication)",
               "example": "your-intuit-api-key",
               "placeholder": "your-intuit-api-key",
@@ -244,27 +210,15 @@ export const intuitSmesDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Intuit OAuth2 Access Token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Intuit credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Customer Id",
               "internalKey": "customerId",
               "type": "string",
-              "required": false,
               "description": "Customer ID (required for customer-specific operations)",
               "example": "CUST-123",
               "placeholder": "CUST-123"
@@ -273,7 +227,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Name",
               "internalKey": "name",
               "type": "string",
-              "required": false,
               "description": "Customer name (for createCustomer operation)",
               "example": "Acme Corp",
               "placeholder": "Acme Corp"
@@ -282,7 +235,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
-              "required": false,
               "description": "Customer email (for createCustomer operation)",
               "example": "contact@acme.com",
               "placeholder": "contact@acme.com"
@@ -291,7 +243,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Amount",
               "internalKey": "amount",
               "type": "number",
-              "required": false,
               "description": "Invoice amount (for createInvoice operation)",
               "example": "1000",
               "placeholder": "1000"
@@ -300,45 +251,44 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Additional data for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}",
+              "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Intuit - SME'S node.\nstructure: Value returned by the Intuit - SME'S node.\nconvertible: Value returned by the Intuit - SME'S node.\ndefaultValue: Value returned by the Intuit - SME'S node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Intuit - SME'S in a workflow and pass upstream data into get invoices.",
+            "scenario": "Use Intuit - SME'S to getinvoices in a workflow.",
             "inputValues": {
               "Api Key": "your-intuit-api-key",
               "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
               "Customer Id": "CUST-123",
               "Name": "Acme Corp",
-              "Email": "contact@acme.com",
-              "Amount": "1000",
-              "Data": "[object Object]"
+              "Email": "contact@acme.com"
             },
-            "expectedOutput": "The node runs get invoices and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes getinvoices and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.intuit.com/app/developer/qbo/docs/api/accounting/all-entities/account"
         },
         {
-          "name": "Create Customer",
+          "name": "CreateCustomer",
           "value": "createCustomer",
-          "description": "Create Customer with the Intuit - SME'S node using the configured input fields.",
+          "description": "CreateCustomer using the Intuit - SME'S node.",
           "fields": [
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Intuit API Key or Access Token (required for authentication)",
               "example": "your-intuit-api-key",
               "placeholder": "your-intuit-api-key",
@@ -347,27 +297,15 @@ export const intuitSmesDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Intuit OAuth2 Access Token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Intuit credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Customer Id",
               "internalKey": "customerId",
               "type": "string",
-              "required": false,
               "description": "Customer ID (required for customer-specific operations)",
               "example": "CUST-123",
               "placeholder": "CUST-123"
@@ -376,7 +314,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Name",
               "internalKey": "name",
               "type": "string",
-              "required": false,
               "description": "Customer name (for createCustomer operation)",
               "example": "Acme Corp",
               "placeholder": "Acme Corp"
@@ -385,7 +322,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
-              "required": false,
               "description": "Customer email (for createCustomer operation)",
               "example": "contact@acme.com",
               "placeholder": "contact@acme.com"
@@ -394,7 +330,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Amount",
               "internalKey": "amount",
               "type": "number",
-              "required": false,
               "description": "Invoice amount (for createInvoice operation)",
               "example": "1000",
               "placeholder": "1000"
@@ -403,45 +338,44 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Additional data for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}",
+              "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Intuit - SME'S node.\nstructure: Value returned by the Intuit - SME'S node.\nconvertible: Value returned by the Intuit - SME'S node.\ndefaultValue: Value returned by the Intuit - SME'S node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Intuit - SME'S in a workflow and pass upstream data into create customer.",
+            "scenario": "Use Intuit - SME'S to createcustomer in a workflow.",
             "inputValues": {
               "Api Key": "your-intuit-api-key",
               "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
               "Customer Id": "CUST-123",
               "Name": "Acme Corp",
-              "Email": "contact@acme.com",
-              "Amount": "1000",
-              "Data": "[object Object]"
+              "Email": "contact@acme.com"
             },
-            "expectedOutput": "The node runs create customer and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes createcustomer and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.intuit.com/app/developer/qbo/docs/api/accounting/all-entities/account"
         },
         {
-          "name": "Update Customer",
+          "name": "UpdateCustomer",
           "value": "updateCustomer",
-          "description": "Update Customer with the Intuit - SME'S node using the configured input fields.",
+          "description": "UpdateCustomer using the Intuit - SME'S node.",
           "fields": [
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Intuit API Key or Access Token (required for authentication)",
               "example": "your-intuit-api-key",
               "placeholder": "your-intuit-api-key",
@@ -450,27 +384,15 @@ export const intuitSmesDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
+              "type": "string",
               "description": "Intuit OAuth2 Access Token (alternative to API key)",
               "example": "your-oauth-access-token",
-              "placeholder": "your-oauth-access-token",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Credential ID reference to stored Intuit credentials",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "placeholder": "your-oauth-access-token"
             },
             {
               "name": "Customer Id",
               "internalKey": "customerId",
               "type": "string",
-              "required": false,
               "description": "Customer ID (required for customer-specific operations)",
               "example": "CUST-123",
               "placeholder": "CUST-123"
@@ -479,7 +401,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Name",
               "internalKey": "name",
               "type": "string",
-              "required": false,
               "description": "Customer name (for createCustomer operation)",
               "example": "Acme Corp",
               "placeholder": "Acme Corp"
@@ -488,7 +409,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
-              "required": false,
               "description": "Customer email (for createCustomer operation)",
               "example": "contact@acme.com",
               "placeholder": "contact@acme.com"
@@ -497,7 +417,6 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Amount",
               "internalKey": "amount",
               "type": "number",
-              "required": false,
               "description": "Invoice amount (for createInvoice operation)",
               "example": "1000",
               "placeholder": "1000"
@@ -506,32 +425,32 @@ export const intuitSmesDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Additional data for create/update operations",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}",
+              "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Intuit - SME'S node.\nstructure: Value returned by the Intuit - SME'S node.\nconvertible: Value returned by the Intuit - SME'S node.\ndefaultValue: Value returned by the Intuit - SME'S node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Intuit - SME'S in a workflow and pass upstream data into update customer.",
+            "scenario": "Use Intuit - SME'S to updatecustomer in a workflow.",
             "inputValues": {
               "Api Key": "your-intuit-api-key",
               "Access Token": "your-oauth-access-token",
-              "Credential Id": "cred_123",
               "Customer Id": "CUST-123",
               "Name": "Acme Corp",
-              "Email": "contact@acme.com",
-              "Amount": "1000",
-              "Data": "[object Object]"
+              "Email": "contact@acme.com"
             },
-            "expectedOutput": "The node runs update customer and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes updatecustomer and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developer.intuit.com/app/developer/qbo/docs/api/accounting/all-entities/account"
         }
@@ -541,25 +460,19 @@ export const intuitSmesDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Intuit - SME'S node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

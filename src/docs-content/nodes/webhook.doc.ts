@@ -5,25 +5,21 @@ export const webhookDoc: NodeDoc = {
   "displayName": "Webhook Trigger",
   "category": "Triggers",
   "logoUrl": "/icons/nodes/webhook.svg",
-  "description": "Executes workflow when HTTP request is received Use this node when a workflow needs webhook trigger behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Webhook Token",
+  "description": "Executes workflow when HTTP request is received",
+  "credentialType": "None",
   "credentialSetupSteps": [
-    "Open the Webhook Trigger developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Webhook Token value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Webhook Trigger is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Webhook Trigger is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Webhook Trigger node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Start the workflow when an HTTP request hits the generated webhook URL.",
           "fields": [
             {
               "name": "Path",
@@ -38,7 +34,6 @@ export const webhookDoc: NodeDoc = {
               "name": "Http Method",
               "internalKey": "httpMethod",
               "type": "string",
-              "required": false,
               "description": "HTTP method to accept",
               "example": "GET",
               "placeholder": "GET",
@@ -48,7 +43,6 @@ export const webhookDoc: NodeDoc = {
               "name": "Response Mode",
               "internalKey": "responseMode",
               "type": "string",
-              "required": false,
               "description": "How to respond to webhook caller",
               "example": "responseNode",
               "placeholder": "responseNode",
@@ -58,7 +52,6 @@ export const webhookDoc: NodeDoc = {
               "name": "Verify Signature",
               "internalKey": "verifySignature",
               "type": "boolean",
-              "required": false,
               "description": "Whether to verify webhook signatures (if supported by the sender)",
               "example": "true",
               "placeholder": "true",
@@ -68,7 +61,6 @@ export const webhookDoc: NodeDoc = {
               "name": "Secret Token",
               "internalKey": "secretToken",
               "type": "password",
-              "required": false,
               "description": "Secret token used for signature verification (if verifySignature is enabled)",
               "example": "{{ENV.WEBHOOK_SECRET}}",
               "placeholder": "{{ENV.WEBHOOK_SECRET}}",
@@ -76,20 +68,25 @@ export const webhookDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
-          },
-          "outputDescription": "type: Value returned by the Webhook Trigger node.\nstructure: Value returned by the Webhook Trigger node.",
-          "usageExample": {
-            "scenario": "Use Webhook Trigger in a workflow and pass upstream data into configure.",
-            "inputValues": {
-              "Path": "/webhook",
-              "Http Method": "GET",
-              "Response Mode": "responseNode",
-              "Verify Signature": "true",
-              "Secret Token": "{{ENV.WEBHOOK_SECRET}}"
+            "body": {
+              "event": "user.created",
+              "userId": "u_123",
+              "email": "alice@example.com"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "headers": {
+              "content-type": "application/json"
+            },
+            "method": "POST",
+            "query": {}
+          },
+          "outputDescription": "body: The parsed request body sent by the caller. headers: HTTP headers from the request. method: HTTP method used (POST, GET, etc.). query: URL query parameters.",
+          "usageExample": {
+            "scenario": "Receive a Stripe payment webhook and store the order in a database",
+            "inputValues": {
+              "method": "POST",
+              "path": "/webhooks/stripe-payment"
+            },
+            "expectedOutput": "The workflow receives `{{$json.body.type}}` (e.g. payment_intent.succeeded) and `{{$json.body.data.object.amount}}` from Stripe."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -98,26 +95,15 @@ export const webhookDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
-      "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
-    },
-    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "schedule",
-    "manual_trigger",
-    "interval",
-    "chat_trigger",
-    "form"
-  ]
+  "relatedNodes": []
 };

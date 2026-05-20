@@ -5,24 +5,26 @@ export const mysqlDoc: NodeDoc = {
   "displayName": "MySQL",
   "category": "Data",
   "logoUrl": "/icons/nodes/mysql.svg",
-  "description": "MySQL database operations Use this node when a workflow needs mysql behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "MySQL database operations",
+  "credentialType": "MySQL Credential",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://dev.mysql.com/doc/",
   "resources": [
     {
       "name": "Configuration",
-      "description": "MySQL is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "MySQL is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the MySQL node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the MySQL node.",
           "fields": [
             {
               "name": "Query",
               "internalKey": "query",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "SQL query",
               "example": "SELECT * FROM users WHERE id = ?",
@@ -32,26 +34,29 @@ export const mysqlDoc: NodeDoc = {
               "name": "Parameters",
               "internalKey": "parameters",
               "type": "json",
-              "required": false,
               "description": "Query parameters",
-              "example": "1,value",
-              "placeholder": "1,value"
+              "example": "[1,\"value\"]",
+              "placeholder": "[1,\"value\"]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the MySQL node.\nstructure: Value returned by the MySQL node.\nconvertible: Value returned by the MySQL node.\ndefaultValue: Value returned by the MySQL node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use MySQL in a workflow and pass upstream data into configure.",
+            "scenario": "Use MySQL to execute in a workflow.",
             "inputValues": {
               "Query": "SELECT * FROM users WHERE id = ?",
-              "Parameters": "1,value"
+              "Parameters": "[1,\"value\"]"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://dev.mysql.com/doc/"
         }
@@ -60,21 +65,20 @@ export const mysqlDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the MySQL node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

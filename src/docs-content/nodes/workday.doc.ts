@@ -5,51 +5,47 @@ export const workdayDoc: NodeDoc = {
   "displayName": "Workday",
   "category": "Utility",
   "logoUrl": "/icons/nodes/workday.svg",
-  "description": "Read and manage Workday HR, staffing, and organizational data through the Workday REST APIs. Use this node when a workflow needs workday behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Access Token Credential",
+  "description": "Read and manage Workday HR, staffing, and organizational data through the Workday REST APIs.",
+  "credentialType": "Workday Credential",
   "credentialSetupSteps": [
-    "Open the Workday developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Access Token Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "In Workday, go to Setup → System → API Clients → Register API Client.",
+    "Set Redirect URI to http://localhost:3001/api/oauth/workday/callback.",
+    "Select the required scopes (e.g. Staffing, Human Resources).",
+    "Copy the Client ID and Client Secret.",
+    "In CtrlChecks, open Connections → Add Connection → Workday → enter Client ID, Secret, Tenant, and Instance URL → authorize."
   ],
-  "credentialDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html",
+  "credentialDocsUrl": "https://community.workday.com/articles/1084547",
   "resources": [
     {
-      "name": "Workers",
-      "description": "Workers is a Workday resource available in this node.",
+      "name": "Operations",
+      "description": "Workday exposes operation choices directly.",
       "operations": [
         {
-          "name": "Get Many",
+          "name": "Get many",
           "value": "get_many",
-          "description": "Get Many with the Workday node using the configured input fields.",
+          "description": "Get many using the Workday node.",
           "fields": [
             {
               "name": "Base Url",
               "internalKey": "baseUrl",
               "type": "url",
-              "required": false,
               "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Tenant",
               "internalKey": "tenant",
               "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
+              "description": "Workday tenant identifier"
             },
             {
               "name": "Auth Type",
               "internalKey": "authType",
               "type": "select",
-              "required": false,
               "description": "Auth method: oauth2 or basic",
               "example": "oauth2",
+              "placeholder": "oauth2",
               "defaultValue": "oauth2",
               "options": [
                 "OAuth 2.0",
@@ -59,123 +55,119 @@ export const workdayDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "OAuth 2.0 Bearer token"
             },
             {
               "name": "Username",
               "internalKey": "username",
               "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
+              "description": "Basic auth username"
             },
             {
               "name": "Password",
               "internalKey": "password",
               "type": "password",
-              "required": false,
               "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Workday resource",
+              "example": "workers",
+              "placeholder": "workers",
+              "defaultValue": "workers",
+              "options": [
+                "Workers",
+                "Jobs",
+                "Organizations",
+                "Supervisory Organizations",
+                "Positions"
+              ]
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create/update",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max records",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             },
             {
               "name": "Offset",
               "internalKey": "offset",
               "type": "number",
-              "required": false,
               "description": "Records to skip",
               "example": "0",
+              "placeholder": "0",
               "defaultValue": "0"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "workday"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into get many.",
+            "scenario": "Use Workday to get many in a workflow.",
             "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
+              "Base Url": "https://api.example.com",
+              "Tenant": "",
               "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
+              "Access Token": "",
+              "Username": ""
             },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get many and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
         },
         {
-          "name": "Get By ID",
+          "name": "Get by id",
           "value": "get_by_id",
-          "description": "Get By ID with the Workday node using the configured input fields.",
+          "description": "Get by id using the Workday node.",
           "fields": [
             {
               "name": "Base Url",
               "internalKey": "baseUrl",
               "type": "url",
-              "required": false,
               "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Tenant",
               "internalKey": "tenant",
               "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
+              "description": "Workday tenant identifier"
             },
             {
               "name": "Auth Type",
               "internalKey": "authType",
               "type": "select",
-              "required": false,
               "description": "Auth method: oauth2 or basic",
               "example": "oauth2",
+              "placeholder": "oauth2",
               "defaultValue": "oauth2",
               "options": [
                 "OAuth 2.0",
@@ -185,123 +177,119 @@ export const workdayDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "OAuth 2.0 Bearer token"
             },
             {
               "name": "Username",
               "internalKey": "username",
               "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
+              "description": "Basic auth username"
             },
             {
               "name": "Password",
               "internalKey": "password",
               "type": "password",
-              "required": false,
               "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Workday resource",
+              "example": "workers",
+              "placeholder": "workers",
+              "defaultValue": "workers",
+              "options": [
+                "Workers",
+                "Jobs",
+                "Organizations",
+                "Supervisory Organizations",
+                "Positions"
+              ]
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create/update",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max records",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             },
             {
               "name": "Offset",
               "internalKey": "offset",
               "type": "number",
-              "required": false,
               "description": "Records to skip",
               "example": "0",
+              "placeholder": "0",
               "defaultValue": "0"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "workday"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into get by id.",
+            "scenario": "Use Workday to get by id in a workflow.",
             "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
+              "Base Url": "https://api.example.com",
+              "Tenant": "",
               "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
+              "Access Token": "",
+              "Username": ""
             },
-            "expectedOutput": "The node runs get by id and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get by id and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
         },
         {
           "name": "Create",
           "value": "create",
-          "description": "Create with the Workday node using the configured input fields.",
+          "description": "Create using the Workday node.",
           "fields": [
             {
               "name": "Base Url",
               "internalKey": "baseUrl",
               "type": "url",
-              "required": false,
               "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Tenant",
               "internalKey": "tenant",
               "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
+              "description": "Workday tenant identifier"
             },
             {
               "name": "Auth Type",
               "internalKey": "authType",
               "type": "select",
-              "required": false,
               "description": "Auth method: oauth2 or basic",
               "example": "oauth2",
+              "placeholder": "oauth2",
               "defaultValue": "oauth2",
               "options": [
                 "OAuth 2.0",
@@ -311,123 +299,119 @@ export const workdayDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "OAuth 2.0 Bearer token"
             },
             {
               "name": "Username",
               "internalKey": "username",
               "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
+              "description": "Basic auth username"
             },
             {
               "name": "Password",
               "internalKey": "password",
               "type": "password",
-              "required": false,
               "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
+            },
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "select",
+              "required": true,
+              "description": "Workday resource",
+              "example": "workers",
+              "placeholder": "workers",
+              "defaultValue": "workers",
+              "options": [
+                "Workers",
+                "Jobs",
+                "Organizations",
+                "Supervisory Organizations",
+                "Positions"
+              ]
             },
             {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create/update",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max records",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             },
             {
               "name": "Offset",
               "internalKey": "offset",
               "type": "number",
-              "required": false,
               "description": "Records to skip",
               "example": "0",
+              "placeholder": "0",
               "defaultValue": "0"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "workday"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into create.",
+            "scenario": "Use Workday to create in a workflow.",
             "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
+              "Base Url": "https://api.example.com",
+              "Tenant": "",
               "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
+              "Access Token": "",
+              "Username": ""
             },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes create and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the Workday node using the configured input fields.",
+          "description": "Update using the Workday node.",
           "fields": [
             {
               "name": "Base Url",
               "internalKey": "baseUrl",
               "type": "url",
-              "required": false,
               "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Tenant",
               "internalKey": "tenant",
               "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
+              "description": "Workday tenant identifier"
             },
             {
               "name": "Auth Type",
               "internalKey": "authType",
               "type": "select",
-              "required": false,
               "description": "Auth method: oauth2 or basic",
               "example": "oauth2",
+              "placeholder": "oauth2",
               "defaultValue": "oauth2",
               "options": [
                 "OAuth 2.0",
@@ -437,2130 +421,90 @@ export const workdayDoc: NodeDoc = {
             {
               "name": "Access Token",
               "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
+              "type": "string",
+              "description": "OAuth 2.0 Bearer token"
             },
             {
               "name": "Username",
               "internalKey": "username",
               "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
+              "description": "Basic auth username"
             },
             {
               "name": "Password",
               "internalKey": "password",
               "type": "password",
-              "required": false,
               "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        }
-      ]
-    },
-    {
-      "name": "Jobs",
-      "description": "Jobs is a Workday resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Many",
-          "value": "get_many",
-          "description": "Get Many with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
+              "required": true,
+              "description": "Workday resource",
+              "example": "workers",
+              "placeholder": "workers",
+              "defaultValue": "workers",
               "options": [
-                "OAuth 2.0",
-                "Basic Auth"
+                "Workers",
+                "Jobs",
+                "Organizations",
+                "Supervisory Organizations",
+                "Positions"
               ]
             },
             {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
               "name": "Record Id",
               "internalKey": "recordId",
               "type": "string",
-              "required": false,
               "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Payload",
               "internalKey": "payload",
               "type": "json",
-              "required": false,
               "description": "Request body for create/update",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Max records",
               "example": "50",
+              "placeholder": "50",
               "defaultValue": "50"
             },
             {
               "name": "Offset",
               "internalKey": "offset",
               "type": "number",
-              "required": false,
               "description": "Records to skip",
               "example": "0",
+              "placeholder": "0",
               "defaultValue": "0"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "workday"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into get many.",
+            "scenario": "Use Workday to update in a workflow.",
             "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
+              "Base Url": "https://api.example.com",
+              "Tenant": "",
               "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
+              "Access Token": "",
+              "Username": ""
             },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Get By ID",
-          "value": "get_by_id",
-          "description": "Get By ID with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into get by id.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs get by id and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        }
-      ]
-    },
-    {
-      "name": "Organizations",
-      "description": "Organizations is a Workday resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Many",
-          "value": "get_many",
-          "description": "Get Many with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into get many.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Get By ID",
-          "value": "get_by_id",
-          "description": "Get By ID with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into get by id.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs get by id and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        }
-      ]
-    },
-    {
-      "name": "Supervisory Organizations",
-      "description": "Supervisory Organizations is a Workday resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Many",
-          "value": "get_many",
-          "description": "Get Many with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into get many.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Get By ID",
-          "value": "get_by_id",
-          "description": "Get By ID with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into get by id.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs get by id and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        }
-      ]
-    },
-    {
-      "name": "Positions",
-      "description": "Positions is a Workday resource available in this node.",
-      "operations": [
-        {
-          "name": "Get Many",
-          "value": "get_many",
-          "description": "Get Many with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into get many.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs get many and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Get By ID",
-          "value": "get_by_id",
-          "description": "Get By ID with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into get by id.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs get by id and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Workday node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Base Url",
-              "internalKey": "baseUrl",
-              "type": "url",
-              "required": false,
-              "description": "Workday REST API base URL",
-              "example": "https://api.example.com/resource",
-              "defaultValue": ""
-            },
-            {
-              "name": "Tenant",
-              "internalKey": "tenant",
-              "type": "string",
-              "required": false,
-              "description": "Workday tenant identifier",
-              "example": "{{ $json.tenant }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Auth Type",
-              "internalKey": "authType",
-              "type": "select",
-              "required": false,
-              "description": "Auth method: oauth2 or basic",
-              "example": "oauth2",
-              "defaultValue": "oauth2",
-              "options": [
-                "OAuth 2.0",
-                "Basic Auth"
-              ]
-            },
-            {
-              "name": "Access Token",
-              "internalKey": "accessToken",
-              "type": "password",
-              "required": false,
-              "description": "OAuth 2.0 Bearer token",
-              "example": "{{ $json.accessToken }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Username",
-              "internalKey": "username",
-              "type": "string",
-              "required": false,
-              "description": "Basic auth username",
-              "example": "{{ $json.username }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Password",
-              "internalKey": "password",
-              "type": "password",
-              "required": false,
-              "description": "Basic auth password",
-              "example": "{{ $json.password }}",
-              "defaultValue": "",
-              "notes": "Stored and displayed as a masked credential value."
-            },
-            {
-              "name": "Record Id",
-              "internalKey": "recordId",
-              "type": "string",
-              "required": false,
-              "description": "Record ID",
-              "example": "{{ $json.recordId }}",
-              "defaultValue": ""
-            },
-            {
-              "name": "Payload",
-              "internalKey": "payload",
-              "type": "json",
-              "required": false,
-              "description": "Request body for create/update",
-              "example": "{}",
-              "defaultValue": "{}"
-            },
-            {
-              "name": "Limit",
-              "internalKey": "limit",
-              "type": "number",
-              "required": false,
-              "description": "Max records",
-              "example": "50",
-              "defaultValue": "50"
-            },
-            {
-              "name": "Offset",
-              "internalKey": "offset",
-              "type": "number",
-              "required": false,
-              "description": "Records to skip",
-              "example": "0",
-              "defaultValue": "0"
-            }
-          ],
-          "outputExample": {
-            "success": true,
-            "data": {},
-            "nodeType": "workday"
-          },
-          "outputDescription": "success: Indicates that the Workday node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
-          "usageExample": {
-            "scenario": "Use Workday in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Base Url": "https://api.example.com/resource",
-              "Tenant": "{{ $json.tenant }}",
-              "Auth Type": "oauth2",
-              "Access Token": "{{ $json.accessToken }}",
-              "Username": "{{ $json.username }}",
-              "Password": "{{ $json.password }}",
-              "Record Id": "{{ $json.recordId }}",
-              "Payload": "{}",
-              "Limit": "50",
-              "Offset": "0"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes update and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://community.workday.com/sites/default/files/file-hosting/restapi/index.html"
         }
@@ -2570,25 +514,19 @@ export const workdayDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Workday node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "http_request",
-    "respond_to_webhook",
-    "clickup",
-    "delay",
-    "queue_push"
-  ]
+  "relatedNodes": []
 };

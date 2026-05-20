@@ -5,14 +5,10 @@ export const langchainDoc: NodeDoc = {
   "displayName": "LangChain",
   "category": "AI",
   "logoUrl": "/icons/nodes/langchain.svg",
-  "description": "Orchestrate AI chains and agents using LangChain with configurable LLM providers and tools. Use this node when a workflow needs langchain behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Api Key Credential",
+  "description": "Orchestrate AI chains and agents using LangChain with configurable LLM providers and tools.",
+  "credentialType": "None",
   "credentialSetupSteps": [
-    "Open the LangChain developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Api Key Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "No credential required."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -21,26 +17,17 @@ export const langchainDoc: NodeDoc = {
       "description": "LangChain exposes operation choices directly.",
       "operations": [
         {
-          "name": "Run Chain",
+          "name": "Run chain",
           "value": "run_chain",
-          "description": "Run Chain with the LangChain node using the configured input fields.",
+          "description": "Run chain using the LangChain node.",
           "fields": [
-            {
-              "name": "Prompt",
-              "internalKey": "prompt",
-              "type": "string",
-              "required": true,
-              "description": "Input prompt or task description",
-              "example": "{{ $json.prompt }}",
-              "defaultValue": ""
-            },
             {
               "name": "Provider",
               "internalKey": "provider",
               "type": "select",
-              "required": false,
               "description": "LLM provider",
               "example": "openai",
+              "placeholder": "openai",
               "defaultValue": "openai",
               "options": [
                 "OpenAI",
@@ -48,74 +35,68 @@ export const langchainDoc: NodeDoc = {
               ]
             },
             {
+              "name": "Prompt",
+              "internalKey": "prompt",
+              "type": "textarea",
+              "required": true,
+              "description": "Input prompt or task description"
+            },
+            {
               "name": "Tools",
               "internalKey": "tools",
               "type": "json",
-              "required": false,
               "description": "Tool definitions for agent mode",
               "example": "[]",
+              "placeholder": "[]",
               "defaultValue": "[]"
             },
             {
               "name": "Memory",
               "internalKey": "memory",
               "type": "boolean",
-              "required": false,
               "description": "Enable conversation memory",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "API key for LLM provider",
-              "example": "{{ $json.apiKey }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "langchain"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the LangChain node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use LangChain in a workflow and pass upstream data into run chain.",
+            "scenario": "Use LangChain to run chain in a workflow.",
             "inputValues": {
-              "Prompt": "{{ $json.prompt }}",
               "Provider": "openai",
+              "Prompt": "",
               "Tools": "[]",
               "Memory": "false",
-              "Api Key": "{{ $json.apiKey }}"
+              "Api Key": ""
             },
-            "expectedOutput": "The node runs run chain and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes run chain and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
-          "name": "Run Agent",
+          "name": "Run agent",
           "value": "run_agent",
-          "description": "Run Agent with the LangChain node using the configured input fields.",
+          "description": "Run agent using the LangChain node.",
           "fields": [
-            {
-              "name": "Prompt",
-              "internalKey": "prompt",
-              "type": "string",
-              "required": true,
-              "description": "Input prompt or task description",
-              "example": "{{ $json.prompt }}",
-              "defaultValue": ""
-            },
             {
               "name": "Provider",
               "internalKey": "provider",
               "type": "select",
-              "required": false,
               "description": "LLM provider",
               "example": "openai",
+              "placeholder": "openai",
               "defaultValue": "openai",
               "options": [
                 "OpenAI",
@@ -123,50 +104,53 @@ export const langchainDoc: NodeDoc = {
               ]
             },
             {
+              "name": "Prompt",
+              "internalKey": "prompt",
+              "type": "textarea",
+              "required": true,
+              "description": "Input prompt or task description"
+            },
+            {
               "name": "Tools",
               "internalKey": "tools",
               "type": "json",
-              "required": false,
               "description": "Tool definitions for agent mode",
               "example": "[]",
+              "placeholder": "[]",
               "defaultValue": "[]"
             },
             {
               "name": "Memory",
               "internalKey": "memory",
               "type": "boolean",
-              "required": false,
               "description": "Enable conversation memory",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "API key for LLM provider",
-              "example": "{{ $json.apiKey }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "langchain"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the LangChain node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use LangChain in a workflow and pass upstream data into run agent.",
+            "scenario": "Use LangChain to run agent in a workflow.",
             "inputValues": {
-              "Prompt": "{{ $json.prompt }}",
               "Provider": "openai",
+              "Prompt": "",
               "Tools": "[]",
               "Memory": "false",
-              "Api Key": "{{ $json.apiKey }}"
+              "Api Key": ""
             },
-            "expectedOutput": "The node runs run agent and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes run agent and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -175,26 +159,15 @@ export const langchainDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
-      "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
-    },
-    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "ai_agent",
-    "ai_chat_model",
-    "openai_gpt",
-    "anthropic_claude",
-    "google_gemini"
-  ]
+  "relatedNodes": []
 };

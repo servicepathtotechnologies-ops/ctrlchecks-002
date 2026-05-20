@@ -5,16 +5,14 @@ export const pineconeDoc: NodeDoc = {
   "displayName": "Pinecone",
   "category": "Data",
   "logoUrl": "/icons/nodes/pinecone.svg",
-  "description": "Upsert, query, and delete vectors in a Pinecone vector database index. Use this node when a workflow needs pinecone behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "Api Key Credential",
+  "description": "Upsert, query, and delete vectors in a Pinecone vector database index.",
+  "credentialType": "Pinecone API Key",
   "credentialSetupSteps": [
-    "Open the Pinecone developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Api Key Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Log in to https://app.pinecone.io → API Keys → \"Create API Key\".",
+    "Give it a name and copy the key.",
+    "In CtrlChecks, open Connections → Add Connection → Pinecone → paste the key and enter your environment (e.g. us-east-1-aws) → Save."
   ],
-  "credentialDocsUrl": "https://docs.pinecone.io/reference/api/introduction",
+  "credentialDocsUrl": "https://docs.pinecone.io/guides/getting-started/quickstart",
   "resources": [
     {
       "name": "Operations",
@@ -23,273 +21,237 @@ export const pineconeDoc: NodeDoc = {
         {
           "name": "Upsert",
           "value": "upsert",
-          "description": "Upsert with the Pinecone node using the configured input fields.",
+          "description": "Upsert using the Pinecone node.",
           "fields": [
             {
               "name": "Index",
               "internalKey": "index",
               "type": "string",
               "required": true,
-              "description": "Pinecone index name or host URL",
-              "example": "{{ $json.index }}",
-              "defaultValue": ""
+              "description": "Pinecone index name or host URL"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Pinecone API key",
-              "example": "{{ $json.apiKey }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Vector",
               "internalKey": "vector",
               "type": "json",
-              "required": false,
               "description": "Embedding array of floats",
               "example": "[]",
+              "placeholder": "[]",
               "defaultValue": "[]"
             },
             {
               "name": "Top K",
               "internalKey": "topK",
               "type": "number",
-              "required": false,
               "description": "Nearest-neighbor results count",
               "example": "5",
+              "placeholder": "5",
               "defaultValue": "5"
             },
             {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Vector ID",
-              "example": "{{ $json.id }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Metadata",
               "internalKey": "metadata",
               "type": "json",
-              "required": false,
               "description": "Key-value metadata for upsert",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Namespace",
               "internalKey": "namespace",
               "type": "string",
-              "required": false,
-              "description": "Pinecone namespace",
-              "example": "{{ $json.namespace }}",
-              "defaultValue": ""
+              "description": "Pinecone namespace"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "pinecone"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Pinecone node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Pinecone in a workflow and pass upstream data into upsert.",
+            "scenario": "Use Pinecone to upsert in a workflow.",
             "inputValues": {
-              "Index": "{{ $json.index }}",
-              "Api Key": "{{ $json.apiKey }}",
+              "Index": "",
+              "Api Key": "",
               "Vector": "[]",
               "Top K": "5",
-              "Id": "{{ $json.id }}",
-              "Metadata": "{}",
-              "Namespace": "{{ $json.namespace }}"
+              "Id": "abc123"
             },
-            "expectedOutput": "The node runs upsert and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes upsert and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.pinecone.io/reference/api/introduction"
         },
         {
           "name": "Query",
           "value": "query",
-          "description": "Query with the Pinecone node using the configured input fields.",
+          "description": "Query using the Pinecone node.",
           "fields": [
             {
               "name": "Index",
               "internalKey": "index",
               "type": "string",
               "required": true,
-              "description": "Pinecone index name or host URL",
-              "example": "{{ $json.index }}",
-              "defaultValue": ""
+              "description": "Pinecone index name or host URL"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Pinecone API key",
-              "example": "{{ $json.apiKey }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Vector",
               "internalKey": "vector",
               "type": "json",
-              "required": false,
               "description": "Embedding array of floats",
               "example": "[]",
+              "placeholder": "[]",
               "defaultValue": "[]"
             },
             {
               "name": "Top K",
               "internalKey": "topK",
               "type": "number",
-              "required": false,
               "description": "Nearest-neighbor results count",
               "example": "5",
+              "placeholder": "5",
               "defaultValue": "5"
             },
             {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Vector ID",
-              "example": "{{ $json.id }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Metadata",
               "internalKey": "metadata",
               "type": "json",
-              "required": false,
               "description": "Key-value metadata for upsert",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Namespace",
               "internalKey": "namespace",
               "type": "string",
-              "required": false,
-              "description": "Pinecone namespace",
-              "example": "{{ $json.namespace }}",
-              "defaultValue": ""
+              "description": "Pinecone namespace"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "pinecone"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Pinecone node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Pinecone in a workflow and pass upstream data into query.",
+            "scenario": "Use Pinecone to query in a workflow.",
             "inputValues": {
-              "Index": "{{ $json.index }}",
-              "Api Key": "{{ $json.apiKey }}",
+              "Index": "",
+              "Api Key": "",
               "Vector": "[]",
               "Top K": "5",
-              "Id": "{{ $json.id }}",
-              "Metadata": "{}",
-              "Namespace": "{{ $json.namespace }}"
+              "Id": "abc123"
             },
-            "expectedOutput": "The node runs query and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes query and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.pinecone.io/reference/api/introduction"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the Pinecone node using the configured input fields.",
+          "description": "Delete using the Pinecone node.",
           "fields": [
             {
               "name": "Index",
               "internalKey": "index",
               "type": "string",
               "required": true,
-              "description": "Pinecone index name or host URL",
-              "example": "{{ $json.index }}",
-              "defaultValue": ""
+              "description": "Pinecone index name or host URL"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
-              "required": false,
               "description": "Pinecone API key",
-              "example": "{{ $json.apiKey }}",
-              "defaultValue": "",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
               "name": "Vector",
               "internalKey": "vector",
               "type": "json",
-              "required": false,
               "description": "Embedding array of floats",
               "example": "[]",
+              "placeholder": "[]",
               "defaultValue": "[]"
             },
             {
               "name": "Top K",
               "internalKey": "topK",
               "type": "number",
-              "required": false,
               "description": "Nearest-neighbor results count",
               "example": "5",
+              "placeholder": "5",
               "defaultValue": "5"
             },
             {
               "name": "Id",
               "internalKey": "id",
               "type": "string",
-              "required": false,
               "description": "Vector ID",
-              "example": "{{ $json.id }}",
-              "defaultValue": ""
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Metadata",
               "internalKey": "metadata",
               "type": "json",
-              "required": false,
               "description": "Key-value metadata for upsert",
               "example": "{}",
+              "placeholder": "{}",
               "defaultValue": "{}"
             },
             {
               "name": "Namespace",
               "internalKey": "namespace",
               "type": "string",
-              "required": false,
-              "description": "Pinecone namespace",
-              "example": "{{ $json.namespace }}",
-              "defaultValue": ""
+              "description": "Pinecone namespace"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {},
-            "nodeType": "pinecone"
+            "data": {}
           },
-          "outputDescription": "success: Indicates that the Pinecone node completed successfully.\ndata: Contains the service response or transformed payload returned at runtime.\nnodeType: The CtrlChecks node type that produced this output.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Pinecone in a workflow and pass upstream data into delete.",
+            "scenario": "Use Pinecone to delete in a workflow.",
             "inputValues": {
-              "Index": "{{ $json.index }}",
-              "Api Key": "{{ $json.apiKey }}",
+              "Index": "",
+              "Api Key": "",
               "Vector": "[]",
               "Top K": "5",
-              "Id": "{{ $json.id }}",
-              "Metadata": "{}",
-              "Namespace": "{{ $json.namespace }}"
+              "Id": "abc123"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.pinecone.io/reference/api/introduction"
         }
@@ -299,25 +261,19 @@ export const pineconeDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Pinecone node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

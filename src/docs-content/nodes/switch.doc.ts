@@ -5,19 +5,21 @@ export const switchDoc: NodeDoc = {
   "displayName": "Switch",
   "category": "Logic",
   "logoUrl": "/icons/nodes/switch.svg",
-  "description": "Multi-path conditional logic based on value matching Use this node when a workflow needs switch behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Multi-path conditional logic based on value matching",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Switch is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Switch is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Switch node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Branch the workflow into multiple paths based on a value match.",
           "fields": [
             {
               "name": "Expression",
@@ -34,14 +36,13 @@ export const switchDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Case definitions; each value becomes an outgoing port name. Example: [{ value: \"active\", label: \"Active\" }]",
-              "example": "[object Object],[object Object]",
-              "placeholder": "[object Object],[object Object]"
+              "example": "[{\"value\":\"active\",\"label\":\"Active\"},{\"value\":\"pending\",\"label\":\"Pending\"}]",
+              "placeholder": "[{\"value\":\"active\",\"label\":\"Active\"},{\"value\":\"pending\",\"label\":\"Pending\"}]"
             },
             {
               "name": "Routing Type",
               "internalKey": "routingType",
               "type": "string",
-              "required": false,
               "description": "Optional hint: how expression is interpreted (e.g. expression, string, number)",
               "example": "expression",
               "placeholder": "expression"
@@ -50,25 +51,24 @@ export const switchDoc: NodeDoc = {
               "name": "Rules",
               "internalKey": "rules",
               "type": "json",
-              "required": false,
               "description": "Deprecated alias for cases; migrated automatically to cases",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible"
+            "matched": "billing",
+            "value": "billing",
+            "branch": 1
           },
-          "outputDescription": "type: Value returned by the Switch node.\nconvertible: Value returned by the Switch node.",
+          "outputDescription": "matched: The case that was matched. value: The actual value evaluated. branch: The index of the matched case (1-based).",
           "usageExample": {
-            "scenario": "Use Switch in a workflow and pass upstream data into configure.",
+            "scenario": "Route a support ticket to the right team based on the category",
             "inputValues": {
-              "Expression": "{{$json.status}}",
-              "Cases": "[object Object],[object Object]",
-              "Routing Type": "expression",
-              "Rules": "[\"value\"]"
+              "value": "{{$json.category}}",
+              "cases": "[\"billing\", \"technical\", \"general\"]"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Connect different downstream nodes to the \"billing\", \"technical\", and \"general\" output ports."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -78,20 +78,14 @@ export const switchDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "function",
-    "function_item",
-    "if_else",
-    "merge",
-    "error_handler"
-  ]
+  "relatedNodes": []
 };

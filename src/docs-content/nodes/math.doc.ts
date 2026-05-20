@@ -5,10 +5,12 @@ export const mathDoc: NodeDoc = {
   "displayName": "Math",
   "category": "Data",
   "logoUrl": "/icons/nodes/math.svg",
-  "description": "Mathematical operations and calculations Use this node when a workflow needs math behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Mathematical operations and calculations",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Operations",
@@ -17,13 +19,12 @@ export const mathDoc: NodeDoc = {
         {
           "name": "Add",
           "value": "add",
-          "description": "Add with the Math node using the configured input fields.",
+          "description": "Perform mathematical calculations on numbers.",
           "fields": [
             {
               "name": "A",
               "internalKey": "a",
               "type": "number",
-              "required": false,
               "description": "First number",
               "example": "10",
               "placeholder": "10"
@@ -32,38 +33,38 @@ export const mathDoc: NodeDoc = {
               "name": "B",
               "internalKey": "b",
               "type": "number",
-              "required": false,
               "description": "Second number",
               "example": "5",
               "placeholder": "5"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": 127.5,
+            "expression": "(100 + 50) * 0.85",
+            "inputs": {
+              "a": 150,
+              "b": 0.85
+            }
           },
-          "outputDescription": "type: Value returned by the Math node.\nconvertible: Value returned by the Math node.\ndefaultValue: Value returned by the Math node.",
+          "outputDescription": "result: The computed result. expression: The math expression that was evaluated.",
           "usageExample": {
-            "scenario": "Use Math in a workflow and pass upstream data into add.",
+            "scenario": "Calculate the discounted price of a product",
             "inputValues": {
-              "A": "10",
-              "B": "5"
+              "expression": "{{$json.price}} * (1 - {{$json.discountRate}})"
             },
-            "expectedOutput": "The node runs add and exposes its result in the output panel for the next node."
+            "expectedOutput": "Discounted price in `{{$json.result}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Subtract",
           "value": "subtract",
-          "description": "Subtract with the Math node using the configured input fields.",
+          "description": "Perform mathematical calculations on numbers.",
           "fields": [
             {
               "name": "A",
               "internalKey": "a",
               "type": "number",
-              "required": false,
               "description": "First number",
               "example": "10",
               "placeholder": "10"
@@ -72,38 +73,38 @@ export const mathDoc: NodeDoc = {
               "name": "B",
               "internalKey": "b",
               "type": "number",
-              "required": false,
               "description": "Second number",
               "example": "5",
               "placeholder": "5"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": 127.5,
+            "expression": "(100 + 50) * 0.85",
+            "inputs": {
+              "a": 150,
+              "b": 0.85
+            }
           },
-          "outputDescription": "type: Value returned by the Math node.\nconvertible: Value returned by the Math node.\ndefaultValue: Value returned by the Math node.",
+          "outputDescription": "result: The computed result. expression: The math expression that was evaluated.",
           "usageExample": {
-            "scenario": "Use Math in a workflow and pass upstream data into subtract.",
+            "scenario": "Calculate the discounted price of a product",
             "inputValues": {
-              "A": "10",
-              "B": "5"
+              "expression": "{{$json.price}} * (1 - {{$json.discountRate}})"
             },
-            "expectedOutput": "The node runs subtract and exposes its result in the output panel for the next node."
+            "expectedOutput": "Discounted price in `{{$json.result}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Multiply",
           "value": "multiply",
-          "description": "Multiply with the Math node using the configured input fields.",
+          "description": "Perform mathematical calculations on numbers.",
           "fields": [
             {
               "name": "A",
               "internalKey": "a",
               "type": "number",
-              "required": false,
               "description": "First number",
               "example": "10",
               "placeholder": "10"
@@ -112,38 +113,38 @@ export const mathDoc: NodeDoc = {
               "name": "B",
               "internalKey": "b",
               "type": "number",
-              "required": false,
               "description": "Second number",
               "example": "5",
               "placeholder": "5"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": 127.5,
+            "expression": "(100 + 50) * 0.85",
+            "inputs": {
+              "a": 150,
+              "b": 0.85
+            }
           },
-          "outputDescription": "type: Value returned by the Math node.\nconvertible: Value returned by the Math node.\ndefaultValue: Value returned by the Math node.",
+          "outputDescription": "result: The computed result. expression: The math expression that was evaluated.",
           "usageExample": {
-            "scenario": "Use Math in a workflow and pass upstream data into multiply.",
+            "scenario": "Calculate the discounted price of a product",
             "inputValues": {
-              "A": "10",
-              "B": "5"
+              "expression": "{{$json.price}} * (1 - {{$json.discountRate}})"
             },
-            "expectedOutput": "The node runs multiply and exposes its result in the output panel for the next node."
+            "expectedOutput": "Discounted price in `{{$json.result}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Divide",
           "value": "divide",
-          "description": "Divide with the Math node using the configured input fields.",
+          "description": "Perform mathematical calculations on numbers.",
           "fields": [
             {
               "name": "A",
               "internalKey": "a",
               "type": "number",
-              "required": false,
               "description": "First number",
               "example": "10",
               "placeholder": "10"
@@ -152,25 +153,26 @@ export const mathDoc: NodeDoc = {
               "name": "B",
               "internalKey": "b",
               "type": "number",
-              "required": false,
               "description": "Second number",
               "example": "5",
               "placeholder": "5"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": 127.5,
+            "expression": "(100 + 50) * 0.85",
+            "inputs": {
+              "a": 150,
+              "b": 0.85
+            }
           },
-          "outputDescription": "type: Value returned by the Math node.\nconvertible: Value returned by the Math node.\ndefaultValue: Value returned by the Math node.",
+          "outputDescription": "result: The computed result. expression: The math expression that was evaluated.",
           "usageExample": {
-            "scenario": "Use Math in a workflow and pass upstream data into divide.",
+            "scenario": "Calculate the discounted price of a product",
             "inputValues": {
-              "A": "10",
-              "B": "5"
+              "expression": "{{$json.price}} * (1 - {{$json.discountRate}})"
             },
-            "expectedOutput": "The node runs divide and exposes its result in the output panel for the next node."
+            "expectedOutput": "Discounted price in `{{$json.result}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -180,20 +182,14 @@ export const mathDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

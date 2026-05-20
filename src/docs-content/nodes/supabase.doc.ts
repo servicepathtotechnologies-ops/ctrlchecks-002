@@ -6,203 +6,33 @@ export const supabaseDoc: NodeDoc = {
   "category": "Data",
   "logoUrl": "/icons/nodes/supabase.svg",
   "description": "Interact with Supabase (PostgreSQL + realtime + storage) Use this node when a workflow needs supabase behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialType": "Supabase Credential",
+  "credentialSetupSteps": [
+    "Go to your Supabase project → Settings → API.",
+    "Copy the Project URL and the anon/service_role API key.",
+    "In CtrlChecks, open Connections → Add Connection → Supabase.",
+    "Paste the Project URL and API key → Save."
+  ],
+  "credentialDocsUrl": "https://supabase.com/docs/guides/getting-started/quickstarts",
   "resources": [
     {
-      "name": "Operations",
-      "description": "Supabase exposes operation choices directly.",
+      "name": "Configuration",
+      "description": "Supabase is configured directly with input fields.",
       "operations": [
         {
-          "name": "Select",
-          "value": "select",
-          "description": "Select with the Supabase node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Table",
-              "internalKey": "table",
-              "type": "string",
-              "required": true,
-              "description": "Table name",
-              "example": "{{ $json.table }}"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Data for insert/update",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Filters",
-              "internalKey": "filters",
-              "type": "json",
-              "required": false,
-              "description": "Filter conditions",
-              "example": "{\"key\":\"value\"}"
-            }
-          ],
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the Supabase node.",
+          "fields": [],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "data": {}
           },
-          "outputDescription": "type: Value returned by the Supabase node.\nitemType: Value returned by the Supabase node.\nconvertible: Value returned by the Supabase node.\ndefaultValue: Value returned by the Supabase node.",
+          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Supabase in a workflow and pass upstream data into select.",
-            "inputValues": {
-              "Table": "{{ $json.table }}",
-              "Data": "{\"key\":\"value\"}",
-              "Filters": "{\"key\":\"value\"}"
-            },
-            "expectedOutput": "The node runs select and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://supabase.com/docs/reference/javascript/introduction"
-        },
-        {
-          "name": "Insert",
-          "value": "insert",
-          "description": "Insert with the Supabase node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Table",
-              "internalKey": "table",
-              "type": "string",
-              "required": true,
-              "description": "Table name",
-              "example": "{{ $json.table }}"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Data for insert/update",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Filters",
-              "internalKey": "filters",
-              "type": "json",
-              "required": false,
-              "description": "Filter conditions",
-              "example": "{\"key\":\"value\"}"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Supabase node.\nitemType: Value returned by the Supabase node.\nconvertible: Value returned by the Supabase node.\ndefaultValue: Value returned by the Supabase node.",
-          "usageExample": {
-            "scenario": "Use Supabase in a workflow and pass upstream data into insert.",
-            "inputValues": {
-              "Table": "{{ $json.table }}",
-              "Data": "{\"key\":\"value\"}",
-              "Filters": "{\"key\":\"value\"}"
-            },
-            "expectedOutput": "The node runs insert and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://supabase.com/docs/reference/javascript/introduction"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Supabase node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Table",
-              "internalKey": "table",
-              "type": "string",
-              "required": true,
-              "description": "Table name",
-              "example": "{{ $json.table }}"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Data for insert/update",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Filters",
-              "internalKey": "filters",
-              "type": "json",
-              "required": false,
-              "description": "Filter conditions",
-              "example": "{\"key\":\"value\"}"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Supabase node.\nitemType: Value returned by the Supabase node.\nconvertible: Value returned by the Supabase node.\ndefaultValue: Value returned by the Supabase node.",
-          "usageExample": {
-            "scenario": "Use Supabase in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Table": "{{ $json.table }}",
-              "Data": "{\"key\":\"value\"}",
-              "Filters": "{\"key\":\"value\"}"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://supabase.com/docs/reference/javascript/introduction"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Supabase node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Table",
-              "internalKey": "table",
-              "type": "string",
-              "required": true,
-              "description": "Table name",
-              "example": "{{ $json.table }}"
-            },
-            {
-              "name": "Data",
-              "internalKey": "data",
-              "type": "json",
-              "required": false,
-              "description": "Data for insert/update",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Filters",
-              "internalKey": "filters",
-              "type": "json",
-              "required": false,
-              "description": "Filter conditions",
-              "example": "{\"key\":\"value\"}"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
-          },
-          "outputDescription": "type: Value returned by the Supabase node.\nitemType: Value returned by the Supabase node.\nconvertible: Value returned by the Supabase node.\ndefaultValue: Value returned by the Supabase node.",
-          "usageExample": {
-            "scenario": "Use Supabase in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Table": "{{ $json.table }}",
-              "Data": "{\"key\":\"value\"}",
-              "Filters": "{\"key\":\"value\"}"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "scenario": "Use Supabase to execute in a workflow.",
+            "inputValues": {},
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://supabase.com/docs/reference/javascript/introduction"
         }
@@ -211,21 +41,20 @@ export const supabaseDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Supabase node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "database_read",
-    "database_write",
-    "google_sheets",
-    "google_doc"
-  ]
+  "relatedNodes": []
 };

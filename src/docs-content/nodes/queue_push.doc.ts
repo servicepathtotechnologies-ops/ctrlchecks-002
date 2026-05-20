@@ -5,19 +5,21 @@ export const queuePushDoc: NodeDoc = {
   "displayName": "Queue Push",
   "category": "Utility",
   "logoUrl": "/icons/nodes/queue_push.svg",
-  "description": "Push a message to a queue Use this node when a workflow needs queue push behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Push a message to a queue",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Queue Push is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Queue Push is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Queue Push node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Push a message onto a Redis-backed queue for asynchronous processing.",
           "fields": [
             {
               "name": "Queue Name",
@@ -31,7 +33,7 @@ export const queuePushDoc: NodeDoc = {
             {
               "name": "Message",
               "internalKey": "message",
-              "type": "json",
+              "type": "textarea",
               "required": true,
               "description": "Message to push (can be any JSON-serializable value)",
               "example": "{{$json}}",
@@ -41,24 +43,25 @@ export const queuePushDoc: NodeDoc = {
               "name": "Options",
               "internalKey": "options",
               "type": "json",
-              "required": false,
               "description": "Additional Bull options (delay, priority, etc.)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "success": true,
-            "jobId": "jobId"
+            "pushed": true,
+            "queueName": "email_notifications",
+            "position": 42,
+            "messageId": "msg_abc123"
           },
-          "outputDescription": "success: Value returned by the Queue Push node.\njobId: Value returned by the Queue Push node.",
+          "outputDescription": "pushed: true if the message was added. queueName: The queue it was sent to. position: Position in the queue. messageId: Unique message ID.",
           "usageExample": {
-            "scenario": "Use Queue Push in a workflow and pass upstream data into configure.",
+            "scenario": "Queue an email notification for background processing instead of blocking the webhook",
             "inputValues": {
-              "Queue Name": "tasks",
-              "Message": "{{$json}}",
-              "Options": "{\"key\":\"value\"}"
+              "queue": "email_notifications",
+              "message": "{\"to\": \"{{$json.email}}\", \"subject\": \"Welcome!\"}"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "Message is queued. A Queue Consume worker processes it asynchronously."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -68,20 +71,14 @@ export const queuePushDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "http_request",
-    "respond_to_webhook",
-    "clickup",
-    "delay",
-    "queue_consume"
-  ]
+  "relatedNodes": []
 };

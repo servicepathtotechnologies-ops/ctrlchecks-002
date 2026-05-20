@@ -5,24 +5,26 @@ export const textFormatterDoc: NodeDoc = {
   "displayName": "Text Formatter",
   "category": "Data",
   "logoUrl": "/icons/nodes/text_formatter.svg",
-  "description": "Format text strings with templates and placeholders Use this node when a workflow needs text formatter behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Format text strings with templates and placeholders",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Text Formatter is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Text Formatter is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Text Formatter node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Transform text using operations like uppercase, trim, replace, slug, etc.",
           "fields": [
             {
               "name": "Template",
               "internalKey": "template",
-              "type": "string",
+              "type": "textarea",
               "required": true,
               "description": "Text template with placeholders (e.g., \"Hello {{name}}\")",
               "example": "Hello {{$json.name}}",
@@ -32,25 +34,24 @@ export const textFormatterDoc: NodeDoc = {
               "name": "Values",
               "internalKey": "values",
               "type": "json",
-              "required": false,
               "description": "Values to substitute in template (optional if using $json syntax)",
-              "example": "[object Object]",
-              "placeholder": "[object Object]"
+              "example": "{\"name\":\"John\",\"orderId\":\"12345\"}",
+              "placeholder": "{\"name\":\"John\",\"orderId\":\"12345\"}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "result": "hello-world-welcome-to-ctrlchecks",
+            "operation": "slug",
+            "original": "Hello World! Welcome to CtrlChecks"
           },
-          "outputDescription": "type: Value returned by the Text Formatter node.\nconvertible: Value returned by the Text Formatter node.\ndefaultValue: Value returned by the Text Formatter node.",
+          "outputDescription": "result: The transformed text. operation: The transformation applied. original: The input text.",
           "usageExample": {
-            "scenario": "Use Text Formatter in a workflow and pass upstream data into configure.",
+            "scenario": "Create a URL-safe slug from a blog post title",
             "inputValues": {
-              "Template": "Hello {{$json.name}}",
-              "Values": "[object Object]"
+              "text": "{{$json.title}}",
+              "operation": "slug"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "URL-friendly slug in `{{$json.result}}`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -60,20 +61,14 @@ export const textFormatterDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

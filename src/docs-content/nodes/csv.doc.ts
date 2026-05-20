@@ -5,10 +5,12 @@ export const csvDoc: NodeDoc = {
   "displayName": "CSV",
   "category": "Data",
   "logoUrl": "/icons/nodes/csv.svg",
-  "description": "Parse and generate CSV data Use this node when a workflow needs csv behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Parse and generate CSV data",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Operations",
@@ -17,13 +19,12 @@ export const csvDoc: NodeDoc = {
         {
           "name": "Parse",
           "value": "parse",
-          "description": "Parse with the CSV node using the configured input fields.",
+          "description": "Parse a CSV string into an array of objects.",
           "fields": [
             {
               "name": "Csv",
               "internalKey": "csv",
               "type": "string",
-              "required": false,
               "description": "CSV content (for parse)",
               "example": "{{$json.csv}}",
               "placeholder": "{{$json.csv}}"
@@ -32,39 +33,51 @@ export const csvDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Data array (for generate)",
               "example": "{{$json.data}}",
               "placeholder": "{{$json.data}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "rows": [
+              {
+                "Name": "Alice",
+                "Email": "alice@example.com",
+                "Plan": "Pro"
+              },
+              {
+                "Name": "Bob",
+                "Email": "bob@example.com",
+                "Plan": "Free"
+              }
+            ],
+            "headers": [
+              "Name",
+              "Email",
+              "Plan"
+            ],
+            "rowCount": 2
           },
-          "outputDescription": "type: Value returned by the CSV node.\nitemType: Value returned by the CSV node.\nconvertible: Value returned by the CSV node.\ndefaultValue: Value returned by the CSV node.",
+          "outputDescription": "rows: Array of objects where keys are column headers. headers: Column names. rowCount: Number of data rows.",
           "usageExample": {
-            "scenario": "Use CSV in a workflow and pass upstream data into parse.",
+            "scenario": "Parse a CSV file downloaded from Google Drive into structured data",
             "inputValues": {
-              "Csv": "{{$json.csv}}",
-              "Data": "{{$json.data}}"
+              "csv": "{{$json.content}}",
+              "hasHeaders": "true"
             },
-            "expectedOutput": "The node runs parse and exposes its result in the output panel for the next node."
+            "expectedOutput": "Each row becomes an object. Loop over `{{$json.rows}}` to process each."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
         {
           "name": "Generate",
           "value": "generate",
-          "description": "Generate with the CSV node using the configured input fields.",
+          "description": "Convert an array of objects into a CSV string.",
           "fields": [
             {
               "name": "Csv",
               "internalKey": "csv",
               "type": "string",
-              "required": false,
               "description": "CSV content (for parse)",
               "example": "{{$json.csv}}",
               "placeholder": "{{$json.csv}}"
@@ -73,26 +86,23 @@ export const csvDoc: NodeDoc = {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
-              "required": false,
               "description": "Data array (for generate)",
               "example": "{{$json.data}}",
               "placeholder": "{{$json.data}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "itemType": "itemType",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "csv": "Name,Email,Status\nAlice,alice@example.com,Active\nBob,bob@example.com,Inactive\n",
+            "rowCount": 2
           },
-          "outputDescription": "type: Value returned by the CSV node.\nitemType: Value returned by the CSV node.\nconvertible: Value returned by the CSV node.\ndefaultValue: Value returned by the CSV node.",
+          "outputDescription": "csv: The generated CSV string. rowCount: Number of data rows in the output.",
           "usageExample": {
-            "scenario": "Use CSV in a workflow and pass upstream data into generate.",
+            "scenario": "Export a list of users as a CSV to upload to Google Drive",
             "inputValues": {
-              "Csv": "{{$json.csv}}",
-              "Data": "{{$json.data}}"
+              "data": "{{$json.users}}",
+              "headers": "[\"Name\", \"Email\", \"Status\"]"
             },
-            "expectedOutput": "The node runs generate and exposes its result in the output panel for the next node."
+            "expectedOutput": "CSV string in `{{$json.csv}}`. Pass to a Google Drive upload node."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -102,20 +112,14 @@ export const csvDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

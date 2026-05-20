@@ -5,10 +5,12 @@ export const redisDoc: NodeDoc = {
   "displayName": "Redis",
   "category": "Data",
   "logoUrl": "/icons/nodes/redis.svg",
-  "description": "Redis cache operations Use this node when a workflow needs redis behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "Redis cache operations",
+  "credentialType": "Redis Credential",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://redis.io/docs/latest/commands/",
   "resources": [
     {
       "name": "Operations",
@@ -17,7 +19,7 @@ export const redisDoc: NodeDoc = {
         {
           "name": "Get",
           "value": "get",
-          "description": "Get with the Redis node using the configured input fields.",
+          "description": "Get using the Redis node.",
           "fields": [
             {
               "name": "Key",
@@ -32,33 +34,36 @@ export const redisDoc: NodeDoc = {
               "name": "Value",
               "internalKey": "value",
               "type": "string",
-              "required": false,
               "description": "Value (for set)",
               "example": "{{$json.value}}",
               "placeholder": "{{$json.value}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Redis node.\nstructure: Value returned by the Redis node.\nconvertible: Value returned by the Redis node.\ndefaultValue: Value returned by the Redis node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Redis in a workflow and pass upstream data into get.",
+            "scenario": "Use Redis to get in a workflow.",
             "inputValues": {
               "Key": "user:123",
               "Value": "{{$json.value}}"
             },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://redis.io/docs/latest/commands/"
         },
         {
           "name": "Set",
           "value": "set",
-          "description": "Set with the Redis node using the configured input fields.",
+          "description": "Set using the Redis node.",
           "fields": [
             {
               "name": "Key",
@@ -73,33 +78,36 @@ export const redisDoc: NodeDoc = {
               "name": "Value",
               "internalKey": "value",
               "type": "string",
-              "required": false,
               "description": "Value (for set)",
               "example": "{{$json.value}}",
               "placeholder": "{{$json.value}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Redis node.\nstructure: Value returned by the Redis node.\nconvertible: Value returned by the Redis node.\ndefaultValue: Value returned by the Redis node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Redis in a workflow and pass upstream data into set.",
+            "scenario": "Use Redis to set in a workflow.",
             "inputValues": {
               "Key": "user:123",
               "Value": "{{$json.value}}"
             },
-            "expectedOutput": "The node runs set and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes set and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://redis.io/docs/latest/commands/"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the Redis node using the configured input fields.",
+          "description": "Delete using the Redis node.",
           "fields": [
             {
               "name": "Key",
@@ -114,26 +122,29 @@ export const redisDoc: NodeDoc = {
               "name": "Value",
               "internalKey": "value",
               "type": "string",
-              "required": false,
               "description": "Value (for set)",
               "example": "{{$json.value}}",
               "placeholder": "{{$json.value}}"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
+            "data": {},
+            "result": {},
+            "output": {},
+            "error": {}
           },
-          "outputDescription": "type: Value returned by the Redis node.\nstructure: Value returned by the Redis node.\nconvertible: Value returned by the Redis node.\ndefaultValue: Value returned by the Redis node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Redis in a workflow and pass upstream data into delete.",
+            "scenario": "Use Redis to delete in a workflow.",
             "inputValues": {
               "Key": "user:123",
               "Value": "{{$json.value}}"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://redis.io/docs/latest/commands/"
         }
@@ -142,21 +153,20 @@ export const redisDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Redis node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };

@@ -5,19 +5,21 @@ export const retryDoc: NodeDoc = {
   "displayName": "Retry",
   "category": "Logic",
   "logoUrl": "/icons/nodes/retry.svg",
-  "description": "Retries a branch on failure up to a maximum number of attempts Use this node when a workflow needs retry behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Retries a branch on failure up to a maximum number of attempts",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "Retry is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "Retry is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the Retry node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Automatically retry a failing branch up to N times with optional back-off.",
           "fields": [
             {
               "name": "Max Attempts",
@@ -33,18 +35,18 @@ export const retryDoc: NodeDoc = {
               "name": "Delay Between",
               "internalKey": "delayBetween",
               "type": "number",
-              "required": false,
               "description": "Delay between retries (in milliseconds)",
               "example": "1000",
+              "placeholder": "1000",
               "defaultValue": "1000"
             },
             {
               "name": "Backoff",
               "internalKey": "backoff",
               "type": "select",
-              "required": false,
               "description": "Backoff strategy (none, linear, exponential)",
               "example": "none",
+              "placeholder": "none",
               "defaultValue": "none",
               "options": [
                 "None",
@@ -55,18 +57,21 @@ export const retryDoc: NodeDoc = {
           ],
           "outputExample": {
             "success": true,
-            "attempts": 1,
-            "lastError": "lastError"
+            "attempts": 2,
+            "lastError": null,
+            "output": {
+              "id": 42
+            }
           },
-          "outputDescription": "success: Value returned by the Retry node.\nattempts: Value returned by the Retry node.\nlastError: Value returned by the Retry node.",
+          "outputDescription": "success: true if any attempt succeeded. attempts: How many times the branch ran. lastError: The last error if all attempts failed. output: Result of the successful attempt.",
           "usageExample": {
-            "scenario": "Use Retry in a workflow and pass upstream data into configure.",
+            "scenario": "Retry a flaky third-party API call up to 3 times before giving up",
             "inputValues": {
-              "Max Attempts": "3",
-              "Delay Between": "1000",
-              "Backoff": "none"
+              "maxAttempts": "3",
+              "delayMs": "1000",
+              "backoffMultiplier": "2"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "If the 2nd attempt succeeds, `{{$json.attempts}} = 2` and `success: true`."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -76,20 +81,14 @@ export const retryDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "function",
-    "function_item",
-    "if_else",
-    "switch",
-    "merge"
-  ]
+  "relatedNodes": []
 };

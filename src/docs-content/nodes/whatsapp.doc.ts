@@ -5,66 +5,73 @@ export const whatsappDoc: NodeDoc = {
   "displayName": "WhatsApp",
   "category": "Communication",
   "logoUrl": "/icons/nodes/whatsapp.svg",
-  "description": "Send messages, manage contacts and conversations via WhatsApp Business API Use this node when a workflow needs whatsapp behavior with schema-driven inputs from the CtrlChecks node registry.",
-  "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "description": "Send messages, manage contacts and conversations via WhatsApp Business API",
+  "credentialType": "Meta App Credentials",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference",
   "resources": [
     {
       "name": "Operations",
       "description": "WhatsApp exposes operation choices directly.",
       "operations": [
         {
-          "name": "Send Text",
+          "name": "SendText",
           "value": "sendText",
-          "description": "Send Text with the WhatsApp node using the configured input fields.",
+          "description": "SendText using the WhatsApp node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "WhatsApp resource",
+              "example": "message",
+              "placeholder": "message",
+              "defaultValue": "message"
+            },
             {
               "name": "Phone Number Id",
               "internalKey": "phoneNumberId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Phone Number ID (auto-resolved if absent)",
-              "example": "{{ $json.phoneNumberId }}"
+              "description": "WhatsApp Phone Number ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Business Account Id",
               "internalKey": "businessAccountId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Business Account ID (auto-resolved if absent)",
-              "example": "{{ $json.businessAccountId }}"
+              "description": "WhatsApp Business Account ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
-              "description": "Recipient phone number in E.164 format",
-              "example": "{{ $json.to }}"
+              "description": "Recipient phone number"
             },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Message text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text"
             },
             {
               "name": "Preview Url",
               "internalKey": "previewUrl",
               "type": "url",
-              "required": false,
-              "description": "Enable URL preview in text messages",
+              "description": "Enable URL preview",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Media Type",
               "internalKey": "mediaType",
               "type": "string",
-              "required": false,
               "description": "Media type",
               "example": "image",
               "placeholder": "image"
@@ -73,95 +80,84 @@ export const whatsappDoc: NodeDoc = {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
-              "required": false,
               "description": "Media URL",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Media Id",
               "internalKey": "mediaId",
               "type": "string",
-              "required": false,
-              "description": "Media ID (alternative to mediaUrl)",
-              "example": "{{ $json.mediaId }}"
+              "description": "Media ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Caption",
               "internalKey": "caption",
               "type": "string",
-              "required": false,
-              "description": "Media caption",
-              "example": "{{ $json.caption }}"
+              "description": "Media caption"
             },
             {
               "name": "Latitude",
               "internalKey": "latitude",
               "type": "number",
-              "required": false,
               "description": "Location latitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Longitude",
               "internalKey": "longitude",
               "type": "number",
-              "required": false,
               "description": "Location longitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Location Name",
               "internalKey": "locationName",
               "type": "string",
-              "required": false,
-              "description": "Location name",
-              "example": "{{ $json.locationName }}"
+              "description": "Location name"
             },
             {
               "name": "Address",
               "internalKey": "address",
               "type": "string",
-              "required": false,
-              "description": "Location address",
-              "example": "{{ $json.address }}"
+              "description": "Location address"
             },
             {
               "name": "Contacts",
               "internalKey": "contacts",
               "type": "json",
-              "required": false,
-              "description": "Contact objects for sendContact",
-              "example": "[\"value\"]"
+              "description": "Contact objects",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Name",
               "internalKey": "templateName",
-              "type": "string",
-              "required": false,
-              "description": "Template name",
-              "example": "{{ $json.templateName }}"
+              "type": "textarea",
+              "description": "Template name"
             },
             {
               "name": "Language",
               "internalKey": "language",
               "type": "string",
-              "required": false,
-              "description": "Template language code (e.g. en_US)",
-              "example": "{{ $json.language }}"
+              "description": "Template language code"
             },
             {
               "name": "Template Components",
               "internalKey": "templateComponents",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Template components",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Category",
               "internalKey": "templateCategory",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Template category",
               "example": "MARKETING",
               "placeholder": "MARKETING"
@@ -169,233 +165,222 @@ export const whatsappDoc: NodeDoc = {
             {
               "name": "Template Status",
               "internalKey": "templateStatus",
-              "type": "string",
-              "required": false,
-              "description": "Template approval status (must be APPROVED to send)",
-              "example": "{{ $json.templateStatus }}"
+              "type": "textarea",
+              "description": "Template approval status"
             },
             {
               "name": "Body Text",
               "internalKey": "bodyText",
-              "type": "string",
-              "required": false,
-              "description": "Interactive message body text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Interactive message body text"
             },
             {
               "name": "Header Text",
               "internalKey": "headerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message header text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message header text"
             },
             {
               "name": "Footer Text",
               "internalKey": "footerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message footer text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message footer text"
             },
             {
               "name": "Buttons",
               "internalKey": "buttons",
               "type": "json",
-              "required": false,
               "description": "Interactive buttons",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Button Text",
               "internalKey": "buttonText",
               "type": "string",
-              "required": false,
-              "description": "List button text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "List button text"
             },
             {
               "name": "Sections",
               "internalKey": "sections",
               "type": "json",
-              "required": false,
               "description": "List sections",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Cta Url",
               "internalKey": "ctaUrl",
-              "type": "json",
-              "required": false,
-              "description": "CTA URL object { display_text, url }",
-              "example": "https://api.example.com/resource"
+              "type": "url",
+              "description": "CTA URL object",
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
-              "description": "Message ID (for markAsRead)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Message ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
-              "example": "{{ $json.contactId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Name",
               "internalKey": "contactName",
               "type": "string",
-              "required": false,
-              "description": "Contact name",
-              "example": "{{ $json.contactName }}"
+              "description": "Contact name"
             },
             {
               "name": "Contact Phone",
               "internalKey": "contactPhone",
               "type": "string",
-              "required": false,
-              "description": "Contact phone",
-              "example": "{{ $json.contactPhone }}"
+              "description": "Contact phone"
             },
             {
               "name": "Contact Email",
               "internalKey": "contactEmail",
               "type": "email",
-              "required": false,
               "description": "Contact email",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Contact labels",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
-              "required": false,
               "description": "Conversation ID",
-              "example": "{{ $json.conversationId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Recipients",
               "internalKey": "recipients",
               "type": "json",
-              "required": false,
-              "description": "Campaign recipients (array of phone numbers)",
-              "example": "[\"value\"]"
+              "description": "Campaign recipients",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Pagination limit",
               "example": "20",
+              "placeholder": "20",
               "defaultValue": "20"
             },
             {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
-              "description": "Pagination cursor",
-              "example": "{{ $json.after }}"
+              "description": "Pagination cursor"
             },
             {
               "name": "Return All",
               "internalKey": "returnAll",
               "type": "boolean",
-              "required": false,
-              "description": "Return all results (ignores limit)",
+              "description": "Return all results",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "messageId": "messageId",
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "messageId: Value returned by the WhatsApp node.\ndata: Value returned by the WhatsApp node.\nerror: Value returned by the WhatsApp node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WhatsApp in a workflow and pass upstream data into send text.",
+            "scenario": "Use WhatsApp to sendtext in a workflow.",
             "inputValues": {
-              "Phone Number Id": "{{ $json.phoneNumberId }}",
-              "Business Account Id": "{{ $json.businessAccountId }}",
-              "To": "{{ $json.to }}",
-              "Text": "Created from workflow data: {{ $json.summary }}",
-              "Preview Url": "false",
-              "Media Type": "image",
-              "Media Url": "https://api.example.com/resource",
-              "Media Id": "{{ $json.mediaId }}",
-              "Caption": "{{ $json.caption }}",
-              "Latitude": "25"
+              "Resource": "message",
+              "Phone Number Id": "abc123",
+              "Business Account Id": "abc123",
+              "To": "",
+              "Text": ""
             },
-            "expectedOutput": "The node runs send text and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes sendtext and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference"
         },
         {
-          "name": "Send Media",
+          "name": "SendMedia",
           "value": "sendMedia",
-          "description": "Send Media with the WhatsApp node using the configured input fields.",
+          "description": "SendMedia using the WhatsApp node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "WhatsApp resource",
+              "example": "message",
+              "placeholder": "message",
+              "defaultValue": "message"
+            },
             {
               "name": "Phone Number Id",
               "internalKey": "phoneNumberId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Phone Number ID (auto-resolved if absent)",
-              "example": "{{ $json.phoneNumberId }}"
+              "description": "WhatsApp Phone Number ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Business Account Id",
               "internalKey": "businessAccountId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Business Account ID (auto-resolved if absent)",
-              "example": "{{ $json.businessAccountId }}"
+              "description": "WhatsApp Business Account ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
-              "description": "Recipient phone number in E.164 format",
-              "example": "{{ $json.to }}"
+              "description": "Recipient phone number"
             },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Message text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text"
             },
             {
               "name": "Preview Url",
               "internalKey": "previewUrl",
               "type": "url",
-              "required": false,
-              "description": "Enable URL preview in text messages",
+              "description": "Enable URL preview",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Media Type",
               "internalKey": "mediaType",
               "type": "string",
-              "required": false,
               "description": "Media type",
               "example": "image",
               "placeholder": "image"
@@ -404,95 +389,84 @@ export const whatsappDoc: NodeDoc = {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
-              "required": false,
               "description": "Media URL",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Media Id",
               "internalKey": "mediaId",
               "type": "string",
-              "required": false,
-              "description": "Media ID (alternative to mediaUrl)",
-              "example": "{{ $json.mediaId }}"
+              "description": "Media ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Caption",
               "internalKey": "caption",
               "type": "string",
-              "required": false,
-              "description": "Media caption",
-              "example": "{{ $json.caption }}"
+              "description": "Media caption"
             },
             {
               "name": "Latitude",
               "internalKey": "latitude",
               "type": "number",
-              "required": false,
               "description": "Location latitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Longitude",
               "internalKey": "longitude",
               "type": "number",
-              "required": false,
               "description": "Location longitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Location Name",
               "internalKey": "locationName",
               "type": "string",
-              "required": false,
-              "description": "Location name",
-              "example": "{{ $json.locationName }}"
+              "description": "Location name"
             },
             {
               "name": "Address",
               "internalKey": "address",
               "type": "string",
-              "required": false,
-              "description": "Location address",
-              "example": "{{ $json.address }}"
+              "description": "Location address"
             },
             {
               "name": "Contacts",
               "internalKey": "contacts",
               "type": "json",
-              "required": false,
-              "description": "Contact objects for sendContact",
-              "example": "[\"value\"]"
+              "description": "Contact objects",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Name",
               "internalKey": "templateName",
-              "type": "string",
-              "required": false,
-              "description": "Template name",
-              "example": "{{ $json.templateName }}"
+              "type": "textarea",
+              "description": "Template name"
             },
             {
               "name": "Language",
               "internalKey": "language",
               "type": "string",
-              "required": false,
-              "description": "Template language code (e.g. en_US)",
-              "example": "{{ $json.language }}"
+              "description": "Template language code"
             },
             {
               "name": "Template Components",
               "internalKey": "templateComponents",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Template components",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Category",
               "internalKey": "templateCategory",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Template category",
               "example": "MARKETING",
               "placeholder": "MARKETING"
@@ -500,233 +474,222 @@ export const whatsappDoc: NodeDoc = {
             {
               "name": "Template Status",
               "internalKey": "templateStatus",
-              "type": "string",
-              "required": false,
-              "description": "Template approval status (must be APPROVED to send)",
-              "example": "{{ $json.templateStatus }}"
+              "type": "textarea",
+              "description": "Template approval status"
             },
             {
               "name": "Body Text",
               "internalKey": "bodyText",
-              "type": "string",
-              "required": false,
-              "description": "Interactive message body text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Interactive message body text"
             },
             {
               "name": "Header Text",
               "internalKey": "headerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message header text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message header text"
             },
             {
               "name": "Footer Text",
               "internalKey": "footerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message footer text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message footer text"
             },
             {
               "name": "Buttons",
               "internalKey": "buttons",
               "type": "json",
-              "required": false,
               "description": "Interactive buttons",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Button Text",
               "internalKey": "buttonText",
               "type": "string",
-              "required": false,
-              "description": "List button text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "List button text"
             },
             {
               "name": "Sections",
               "internalKey": "sections",
               "type": "json",
-              "required": false,
               "description": "List sections",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Cta Url",
               "internalKey": "ctaUrl",
-              "type": "json",
-              "required": false,
-              "description": "CTA URL object { display_text, url }",
-              "example": "https://api.example.com/resource"
+              "type": "url",
+              "description": "CTA URL object",
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
-              "description": "Message ID (for markAsRead)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Message ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
-              "example": "{{ $json.contactId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Name",
               "internalKey": "contactName",
               "type": "string",
-              "required": false,
-              "description": "Contact name",
-              "example": "{{ $json.contactName }}"
+              "description": "Contact name"
             },
             {
               "name": "Contact Phone",
               "internalKey": "contactPhone",
               "type": "string",
-              "required": false,
-              "description": "Contact phone",
-              "example": "{{ $json.contactPhone }}"
+              "description": "Contact phone"
             },
             {
               "name": "Contact Email",
               "internalKey": "contactEmail",
               "type": "email",
-              "required": false,
               "description": "Contact email",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Contact labels",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
-              "required": false,
               "description": "Conversation ID",
-              "example": "{{ $json.conversationId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Recipients",
               "internalKey": "recipients",
               "type": "json",
-              "required": false,
-              "description": "Campaign recipients (array of phone numbers)",
-              "example": "[\"value\"]"
+              "description": "Campaign recipients",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Pagination limit",
               "example": "20",
+              "placeholder": "20",
               "defaultValue": "20"
             },
             {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
-              "description": "Pagination cursor",
-              "example": "{{ $json.after }}"
+              "description": "Pagination cursor"
             },
             {
               "name": "Return All",
               "internalKey": "returnAll",
               "type": "boolean",
-              "required": false,
-              "description": "Return all results (ignores limit)",
+              "description": "Return all results",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "messageId": "messageId",
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "messageId: Value returned by the WhatsApp node.\ndata: Value returned by the WhatsApp node.\nerror: Value returned by the WhatsApp node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WhatsApp in a workflow and pass upstream data into send media.",
+            "scenario": "Use WhatsApp to sendmedia in a workflow.",
             "inputValues": {
-              "Phone Number Id": "{{ $json.phoneNumberId }}",
-              "Business Account Id": "{{ $json.businessAccountId }}",
-              "To": "{{ $json.to }}",
-              "Text": "Created from workflow data: {{ $json.summary }}",
-              "Preview Url": "false",
-              "Media Type": "image",
-              "Media Url": "https://api.example.com/resource",
-              "Media Id": "{{ $json.mediaId }}",
-              "Caption": "{{ $json.caption }}",
-              "Latitude": "25"
+              "Resource": "message",
+              "Phone Number Id": "abc123",
+              "Business Account Id": "abc123",
+              "To": "",
+              "Text": ""
             },
-            "expectedOutput": "The node runs send media and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes sendmedia and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference"
         },
         {
-          "name": "Send Location",
+          "name": "SendLocation",
           "value": "sendLocation",
-          "description": "Send Location with the WhatsApp node using the configured input fields.",
+          "description": "SendLocation using the WhatsApp node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "WhatsApp resource",
+              "example": "message",
+              "placeholder": "message",
+              "defaultValue": "message"
+            },
             {
               "name": "Phone Number Id",
               "internalKey": "phoneNumberId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Phone Number ID (auto-resolved if absent)",
-              "example": "{{ $json.phoneNumberId }}"
+              "description": "WhatsApp Phone Number ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Business Account Id",
               "internalKey": "businessAccountId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Business Account ID (auto-resolved if absent)",
-              "example": "{{ $json.businessAccountId }}"
+              "description": "WhatsApp Business Account ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
-              "description": "Recipient phone number in E.164 format",
-              "example": "{{ $json.to }}"
+              "description": "Recipient phone number"
             },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Message text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text"
             },
             {
               "name": "Preview Url",
               "internalKey": "previewUrl",
               "type": "url",
-              "required": false,
-              "description": "Enable URL preview in text messages",
+              "description": "Enable URL preview",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Media Type",
               "internalKey": "mediaType",
               "type": "string",
-              "required": false,
               "description": "Media type",
               "example": "image",
               "placeholder": "image"
@@ -735,95 +698,84 @@ export const whatsappDoc: NodeDoc = {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
-              "required": false,
               "description": "Media URL",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Media Id",
               "internalKey": "mediaId",
               "type": "string",
-              "required": false,
-              "description": "Media ID (alternative to mediaUrl)",
-              "example": "{{ $json.mediaId }}"
+              "description": "Media ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Caption",
               "internalKey": "caption",
               "type": "string",
-              "required": false,
-              "description": "Media caption",
-              "example": "{{ $json.caption }}"
+              "description": "Media caption"
             },
             {
               "name": "Latitude",
               "internalKey": "latitude",
               "type": "number",
-              "required": false,
               "description": "Location latitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Longitude",
               "internalKey": "longitude",
               "type": "number",
-              "required": false,
               "description": "Location longitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Location Name",
               "internalKey": "locationName",
               "type": "string",
-              "required": false,
-              "description": "Location name",
-              "example": "{{ $json.locationName }}"
+              "description": "Location name"
             },
             {
               "name": "Address",
               "internalKey": "address",
               "type": "string",
-              "required": false,
-              "description": "Location address",
-              "example": "{{ $json.address }}"
+              "description": "Location address"
             },
             {
               "name": "Contacts",
               "internalKey": "contacts",
               "type": "json",
-              "required": false,
-              "description": "Contact objects for sendContact",
-              "example": "[\"value\"]"
+              "description": "Contact objects",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Name",
               "internalKey": "templateName",
-              "type": "string",
-              "required": false,
-              "description": "Template name",
-              "example": "{{ $json.templateName }}"
+              "type": "textarea",
+              "description": "Template name"
             },
             {
               "name": "Language",
               "internalKey": "language",
               "type": "string",
-              "required": false,
-              "description": "Template language code (e.g. en_US)",
-              "example": "{{ $json.language }}"
+              "description": "Template language code"
             },
             {
               "name": "Template Components",
               "internalKey": "templateComponents",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Template components",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Category",
               "internalKey": "templateCategory",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Template category",
               "example": "MARKETING",
               "placeholder": "MARKETING"
@@ -831,233 +783,222 @@ export const whatsappDoc: NodeDoc = {
             {
               "name": "Template Status",
               "internalKey": "templateStatus",
-              "type": "string",
-              "required": false,
-              "description": "Template approval status (must be APPROVED to send)",
-              "example": "{{ $json.templateStatus }}"
+              "type": "textarea",
+              "description": "Template approval status"
             },
             {
               "name": "Body Text",
               "internalKey": "bodyText",
-              "type": "string",
-              "required": false,
-              "description": "Interactive message body text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Interactive message body text"
             },
             {
               "name": "Header Text",
               "internalKey": "headerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message header text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message header text"
             },
             {
               "name": "Footer Text",
               "internalKey": "footerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message footer text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message footer text"
             },
             {
               "name": "Buttons",
               "internalKey": "buttons",
               "type": "json",
-              "required": false,
               "description": "Interactive buttons",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Button Text",
               "internalKey": "buttonText",
               "type": "string",
-              "required": false,
-              "description": "List button text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "List button text"
             },
             {
               "name": "Sections",
               "internalKey": "sections",
               "type": "json",
-              "required": false,
               "description": "List sections",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Cta Url",
               "internalKey": "ctaUrl",
-              "type": "json",
-              "required": false,
-              "description": "CTA URL object { display_text, url }",
-              "example": "https://api.example.com/resource"
+              "type": "url",
+              "description": "CTA URL object",
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
-              "description": "Message ID (for markAsRead)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Message ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
-              "example": "{{ $json.contactId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Name",
               "internalKey": "contactName",
               "type": "string",
-              "required": false,
-              "description": "Contact name",
-              "example": "{{ $json.contactName }}"
+              "description": "Contact name"
             },
             {
               "name": "Contact Phone",
               "internalKey": "contactPhone",
               "type": "string",
-              "required": false,
-              "description": "Contact phone",
-              "example": "{{ $json.contactPhone }}"
+              "description": "Contact phone"
             },
             {
               "name": "Contact Email",
               "internalKey": "contactEmail",
               "type": "email",
-              "required": false,
               "description": "Contact email",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Contact labels",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
-              "required": false,
               "description": "Conversation ID",
-              "example": "{{ $json.conversationId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Recipients",
               "internalKey": "recipients",
               "type": "json",
-              "required": false,
-              "description": "Campaign recipients (array of phone numbers)",
-              "example": "[\"value\"]"
+              "description": "Campaign recipients",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Pagination limit",
               "example": "20",
+              "placeholder": "20",
               "defaultValue": "20"
             },
             {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
-              "description": "Pagination cursor",
-              "example": "{{ $json.after }}"
+              "description": "Pagination cursor"
             },
             {
               "name": "Return All",
               "internalKey": "returnAll",
               "type": "boolean",
-              "required": false,
-              "description": "Return all results (ignores limit)",
+              "description": "Return all results",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "messageId": "messageId",
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "messageId: Value returned by the WhatsApp node.\ndata: Value returned by the WhatsApp node.\nerror: Value returned by the WhatsApp node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WhatsApp in a workflow and pass upstream data into send location.",
+            "scenario": "Use WhatsApp to sendlocation in a workflow.",
             "inputValues": {
-              "Phone Number Id": "{{ $json.phoneNumberId }}",
-              "Business Account Id": "{{ $json.businessAccountId }}",
-              "To": "{{ $json.to }}",
-              "Text": "Created from workflow data: {{ $json.summary }}",
-              "Preview Url": "false",
-              "Media Type": "image",
-              "Media Url": "https://api.example.com/resource",
-              "Media Id": "{{ $json.mediaId }}",
-              "Caption": "{{ $json.caption }}",
-              "Latitude": "25"
+              "Resource": "message",
+              "Phone Number Id": "abc123",
+              "Business Account Id": "abc123",
+              "To": "",
+              "Text": ""
             },
-            "expectedOutput": "The node runs send location and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes sendlocation and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference"
         },
         {
-          "name": "Send Contact",
+          "name": "SendContact",
           "value": "sendContact",
-          "description": "Send Contact with the WhatsApp node using the configured input fields.",
+          "description": "SendContact using the WhatsApp node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "WhatsApp resource",
+              "example": "message",
+              "placeholder": "message",
+              "defaultValue": "message"
+            },
             {
               "name": "Phone Number Id",
               "internalKey": "phoneNumberId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Phone Number ID (auto-resolved if absent)",
-              "example": "{{ $json.phoneNumberId }}"
+              "description": "WhatsApp Phone Number ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Business Account Id",
               "internalKey": "businessAccountId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Business Account ID (auto-resolved if absent)",
-              "example": "{{ $json.businessAccountId }}"
+              "description": "WhatsApp Business Account ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
-              "description": "Recipient phone number in E.164 format",
-              "example": "{{ $json.to }}"
+              "description": "Recipient phone number"
             },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Message text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text"
             },
             {
               "name": "Preview Url",
               "internalKey": "previewUrl",
               "type": "url",
-              "required": false,
-              "description": "Enable URL preview in text messages",
+              "description": "Enable URL preview",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Media Type",
               "internalKey": "mediaType",
               "type": "string",
-              "required": false,
               "description": "Media type",
               "example": "image",
               "placeholder": "image"
@@ -1066,95 +1007,84 @@ export const whatsappDoc: NodeDoc = {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
-              "required": false,
               "description": "Media URL",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Media Id",
               "internalKey": "mediaId",
               "type": "string",
-              "required": false,
-              "description": "Media ID (alternative to mediaUrl)",
-              "example": "{{ $json.mediaId }}"
+              "description": "Media ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Caption",
               "internalKey": "caption",
               "type": "string",
-              "required": false,
-              "description": "Media caption",
-              "example": "{{ $json.caption }}"
+              "description": "Media caption"
             },
             {
               "name": "Latitude",
               "internalKey": "latitude",
               "type": "number",
-              "required": false,
               "description": "Location latitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Longitude",
               "internalKey": "longitude",
               "type": "number",
-              "required": false,
               "description": "Location longitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Location Name",
               "internalKey": "locationName",
               "type": "string",
-              "required": false,
-              "description": "Location name",
-              "example": "{{ $json.locationName }}"
+              "description": "Location name"
             },
             {
               "name": "Address",
               "internalKey": "address",
               "type": "string",
-              "required": false,
-              "description": "Location address",
-              "example": "{{ $json.address }}"
+              "description": "Location address"
             },
             {
               "name": "Contacts",
               "internalKey": "contacts",
               "type": "json",
-              "required": false,
-              "description": "Contact objects for sendContact",
-              "example": "[\"value\"]"
+              "description": "Contact objects",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Name",
               "internalKey": "templateName",
-              "type": "string",
-              "required": false,
-              "description": "Template name",
-              "example": "{{ $json.templateName }}"
+              "type": "textarea",
+              "description": "Template name"
             },
             {
               "name": "Language",
               "internalKey": "language",
               "type": "string",
-              "required": false,
-              "description": "Template language code (e.g. en_US)",
-              "example": "{{ $json.language }}"
+              "description": "Template language code"
             },
             {
               "name": "Template Components",
               "internalKey": "templateComponents",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Template components",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Category",
               "internalKey": "templateCategory",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Template category",
               "example": "MARKETING",
               "placeholder": "MARKETING"
@@ -1162,233 +1092,222 @@ export const whatsappDoc: NodeDoc = {
             {
               "name": "Template Status",
               "internalKey": "templateStatus",
-              "type": "string",
-              "required": false,
-              "description": "Template approval status (must be APPROVED to send)",
-              "example": "{{ $json.templateStatus }}"
+              "type": "textarea",
+              "description": "Template approval status"
             },
             {
               "name": "Body Text",
               "internalKey": "bodyText",
-              "type": "string",
-              "required": false,
-              "description": "Interactive message body text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Interactive message body text"
             },
             {
               "name": "Header Text",
               "internalKey": "headerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message header text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message header text"
             },
             {
               "name": "Footer Text",
               "internalKey": "footerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message footer text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message footer text"
             },
             {
               "name": "Buttons",
               "internalKey": "buttons",
               "type": "json",
-              "required": false,
               "description": "Interactive buttons",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Button Text",
               "internalKey": "buttonText",
               "type": "string",
-              "required": false,
-              "description": "List button text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "List button text"
             },
             {
               "name": "Sections",
               "internalKey": "sections",
               "type": "json",
-              "required": false,
               "description": "List sections",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Cta Url",
               "internalKey": "ctaUrl",
-              "type": "json",
-              "required": false,
-              "description": "CTA URL object { display_text, url }",
-              "example": "https://api.example.com/resource"
+              "type": "url",
+              "description": "CTA URL object",
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
-              "description": "Message ID (for markAsRead)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Message ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
-              "example": "{{ $json.contactId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Name",
               "internalKey": "contactName",
               "type": "string",
-              "required": false,
-              "description": "Contact name",
-              "example": "{{ $json.contactName }}"
+              "description": "Contact name"
             },
             {
               "name": "Contact Phone",
               "internalKey": "contactPhone",
               "type": "string",
-              "required": false,
-              "description": "Contact phone",
-              "example": "{{ $json.contactPhone }}"
+              "description": "Contact phone"
             },
             {
               "name": "Contact Email",
               "internalKey": "contactEmail",
               "type": "email",
-              "required": false,
               "description": "Contact email",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Contact labels",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
-              "required": false,
               "description": "Conversation ID",
-              "example": "{{ $json.conversationId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Recipients",
               "internalKey": "recipients",
               "type": "json",
-              "required": false,
-              "description": "Campaign recipients (array of phone numbers)",
-              "example": "[\"value\"]"
+              "description": "Campaign recipients",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Pagination limit",
               "example": "20",
+              "placeholder": "20",
               "defaultValue": "20"
             },
             {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
-              "description": "Pagination cursor",
-              "example": "{{ $json.after }}"
+              "description": "Pagination cursor"
             },
             {
               "name": "Return All",
               "internalKey": "returnAll",
               "type": "boolean",
-              "required": false,
-              "description": "Return all results (ignores limit)",
+              "description": "Return all results",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "messageId": "messageId",
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "messageId: Value returned by the WhatsApp node.\ndata: Value returned by the WhatsApp node.\nerror: Value returned by the WhatsApp node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WhatsApp in a workflow and pass upstream data into send contact.",
+            "scenario": "Use WhatsApp to sendcontact in a workflow.",
             "inputValues": {
-              "Phone Number Id": "{{ $json.phoneNumberId }}",
-              "Business Account Id": "{{ $json.businessAccountId }}",
-              "To": "{{ $json.to }}",
-              "Text": "Created from workflow data: {{ $json.summary }}",
-              "Preview Url": "false",
-              "Media Type": "image",
-              "Media Url": "https://api.example.com/resource",
-              "Media Id": "{{ $json.mediaId }}",
-              "Caption": "{{ $json.caption }}",
-              "Latitude": "25"
+              "Resource": "message",
+              "Phone Number Id": "abc123",
+              "Business Account Id": "abc123",
+              "To": "",
+              "Text": ""
             },
-            "expectedOutput": "The node runs send contact and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes sendcontact and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference"
         },
         {
-          "name": "Send Template",
+          "name": "SendTemplate",
           "value": "sendTemplate",
-          "description": "Send Template with the WhatsApp node using the configured input fields.",
+          "description": "SendTemplate using the WhatsApp node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "WhatsApp resource",
+              "example": "message",
+              "placeholder": "message",
+              "defaultValue": "message"
+            },
             {
               "name": "Phone Number Id",
               "internalKey": "phoneNumberId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Phone Number ID (auto-resolved if absent)",
-              "example": "{{ $json.phoneNumberId }}"
+              "description": "WhatsApp Phone Number ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Business Account Id",
               "internalKey": "businessAccountId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Business Account ID (auto-resolved if absent)",
-              "example": "{{ $json.businessAccountId }}"
+              "description": "WhatsApp Business Account ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
-              "description": "Recipient phone number in E.164 format",
-              "example": "{{ $json.to }}"
+              "description": "Recipient phone number"
             },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Message text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text"
             },
             {
               "name": "Preview Url",
               "internalKey": "previewUrl",
               "type": "url",
-              "required": false,
-              "description": "Enable URL preview in text messages",
+              "description": "Enable URL preview",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Media Type",
               "internalKey": "mediaType",
               "type": "string",
-              "required": false,
               "description": "Media type",
               "example": "image",
               "placeholder": "image"
@@ -1397,95 +1316,84 @@ export const whatsappDoc: NodeDoc = {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
-              "required": false,
               "description": "Media URL",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Media Id",
               "internalKey": "mediaId",
               "type": "string",
-              "required": false,
-              "description": "Media ID (alternative to mediaUrl)",
-              "example": "{{ $json.mediaId }}"
+              "description": "Media ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Caption",
               "internalKey": "caption",
               "type": "string",
-              "required": false,
-              "description": "Media caption",
-              "example": "{{ $json.caption }}"
+              "description": "Media caption"
             },
             {
               "name": "Latitude",
               "internalKey": "latitude",
               "type": "number",
-              "required": false,
               "description": "Location latitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Longitude",
               "internalKey": "longitude",
               "type": "number",
-              "required": false,
               "description": "Location longitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Location Name",
               "internalKey": "locationName",
               "type": "string",
-              "required": false,
-              "description": "Location name",
-              "example": "{{ $json.locationName }}"
+              "description": "Location name"
             },
             {
               "name": "Address",
               "internalKey": "address",
               "type": "string",
-              "required": false,
-              "description": "Location address",
-              "example": "{{ $json.address }}"
+              "description": "Location address"
             },
             {
               "name": "Contacts",
               "internalKey": "contacts",
               "type": "json",
-              "required": false,
-              "description": "Contact objects for sendContact",
-              "example": "[\"value\"]"
+              "description": "Contact objects",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Name",
               "internalKey": "templateName",
-              "type": "string",
-              "required": false,
-              "description": "Template name",
-              "example": "{{ $json.templateName }}"
+              "type": "textarea",
+              "description": "Template name"
             },
             {
               "name": "Language",
               "internalKey": "language",
               "type": "string",
-              "required": false,
-              "description": "Template language code (e.g. en_US)",
-              "example": "{{ $json.language }}"
+              "description": "Template language code"
             },
             {
               "name": "Template Components",
               "internalKey": "templateComponents",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Template components",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Category",
               "internalKey": "templateCategory",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Template category",
               "example": "MARKETING",
               "placeholder": "MARKETING"
@@ -1493,233 +1401,222 @@ export const whatsappDoc: NodeDoc = {
             {
               "name": "Template Status",
               "internalKey": "templateStatus",
-              "type": "string",
-              "required": false,
-              "description": "Template approval status (must be APPROVED to send)",
-              "example": "{{ $json.templateStatus }}"
+              "type": "textarea",
+              "description": "Template approval status"
             },
             {
               "name": "Body Text",
               "internalKey": "bodyText",
-              "type": "string",
-              "required": false,
-              "description": "Interactive message body text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Interactive message body text"
             },
             {
               "name": "Header Text",
               "internalKey": "headerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message header text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message header text"
             },
             {
               "name": "Footer Text",
               "internalKey": "footerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message footer text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message footer text"
             },
             {
               "name": "Buttons",
               "internalKey": "buttons",
               "type": "json",
-              "required": false,
               "description": "Interactive buttons",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Button Text",
               "internalKey": "buttonText",
               "type": "string",
-              "required": false,
-              "description": "List button text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "List button text"
             },
             {
               "name": "Sections",
               "internalKey": "sections",
               "type": "json",
-              "required": false,
               "description": "List sections",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Cta Url",
               "internalKey": "ctaUrl",
-              "type": "json",
-              "required": false,
-              "description": "CTA URL object { display_text, url }",
-              "example": "https://api.example.com/resource"
+              "type": "url",
+              "description": "CTA URL object",
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
-              "description": "Message ID (for markAsRead)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Message ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
-              "example": "{{ $json.contactId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Name",
               "internalKey": "contactName",
               "type": "string",
-              "required": false,
-              "description": "Contact name",
-              "example": "{{ $json.contactName }}"
+              "description": "Contact name"
             },
             {
               "name": "Contact Phone",
               "internalKey": "contactPhone",
               "type": "string",
-              "required": false,
-              "description": "Contact phone",
-              "example": "{{ $json.contactPhone }}"
+              "description": "Contact phone"
             },
             {
               "name": "Contact Email",
               "internalKey": "contactEmail",
               "type": "email",
-              "required": false,
               "description": "Contact email",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Contact labels",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
-              "required": false,
               "description": "Conversation ID",
-              "example": "{{ $json.conversationId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Recipients",
               "internalKey": "recipients",
               "type": "json",
-              "required": false,
-              "description": "Campaign recipients (array of phone numbers)",
-              "example": "[\"value\"]"
+              "description": "Campaign recipients",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Pagination limit",
               "example": "20",
+              "placeholder": "20",
               "defaultValue": "20"
             },
             {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
-              "description": "Pagination cursor",
-              "example": "{{ $json.after }}"
+              "description": "Pagination cursor"
             },
             {
               "name": "Return All",
               "internalKey": "returnAll",
               "type": "boolean",
-              "required": false,
-              "description": "Return all results (ignores limit)",
+              "description": "Return all results",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "messageId": "messageId",
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "messageId: Value returned by the WhatsApp node.\ndata: Value returned by the WhatsApp node.\nerror: Value returned by the WhatsApp node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WhatsApp in a workflow and pass upstream data into send template.",
+            "scenario": "Use WhatsApp to sendtemplate in a workflow.",
             "inputValues": {
-              "Phone Number Id": "{{ $json.phoneNumberId }}",
-              "Business Account Id": "{{ $json.businessAccountId }}",
-              "To": "{{ $json.to }}",
-              "Text": "Created from workflow data: {{ $json.summary }}",
-              "Preview Url": "false",
-              "Media Type": "image",
-              "Media Url": "https://api.example.com/resource",
-              "Media Id": "{{ $json.mediaId }}",
-              "Caption": "{{ $json.caption }}",
-              "Latitude": "25"
+              "Resource": "message",
+              "Phone Number Id": "abc123",
+              "Business Account Id": "abc123",
+              "To": "",
+              "Text": ""
             },
-            "expectedOutput": "The node runs send template and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes sendtemplate and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference"
         },
         {
-          "name": "Send Interactive Buttons",
+          "name": "SendInteractiveButtons",
           "value": "sendInteractiveButtons",
-          "description": "Send Interactive Buttons with the WhatsApp node using the configured input fields.",
+          "description": "SendInteractiveButtons using the WhatsApp node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "WhatsApp resource",
+              "example": "message",
+              "placeholder": "message",
+              "defaultValue": "message"
+            },
             {
               "name": "Phone Number Id",
               "internalKey": "phoneNumberId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Phone Number ID (auto-resolved if absent)",
-              "example": "{{ $json.phoneNumberId }}"
+              "description": "WhatsApp Phone Number ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Business Account Id",
               "internalKey": "businessAccountId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Business Account ID (auto-resolved if absent)",
-              "example": "{{ $json.businessAccountId }}"
+              "description": "WhatsApp Business Account ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
-              "description": "Recipient phone number in E.164 format",
-              "example": "{{ $json.to }}"
+              "description": "Recipient phone number"
             },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Message text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text"
             },
             {
               "name": "Preview Url",
               "internalKey": "previewUrl",
               "type": "url",
-              "required": false,
-              "description": "Enable URL preview in text messages",
+              "description": "Enable URL preview",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Media Type",
               "internalKey": "mediaType",
               "type": "string",
-              "required": false,
               "description": "Media type",
               "example": "image",
               "placeholder": "image"
@@ -1728,95 +1625,84 @@ export const whatsappDoc: NodeDoc = {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
-              "required": false,
               "description": "Media URL",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Media Id",
               "internalKey": "mediaId",
               "type": "string",
-              "required": false,
-              "description": "Media ID (alternative to mediaUrl)",
-              "example": "{{ $json.mediaId }}"
+              "description": "Media ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Caption",
               "internalKey": "caption",
               "type": "string",
-              "required": false,
-              "description": "Media caption",
-              "example": "{{ $json.caption }}"
+              "description": "Media caption"
             },
             {
               "name": "Latitude",
               "internalKey": "latitude",
               "type": "number",
-              "required": false,
               "description": "Location latitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Longitude",
               "internalKey": "longitude",
               "type": "number",
-              "required": false,
               "description": "Location longitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Location Name",
               "internalKey": "locationName",
               "type": "string",
-              "required": false,
-              "description": "Location name",
-              "example": "{{ $json.locationName }}"
+              "description": "Location name"
             },
             {
               "name": "Address",
               "internalKey": "address",
               "type": "string",
-              "required": false,
-              "description": "Location address",
-              "example": "{{ $json.address }}"
+              "description": "Location address"
             },
             {
               "name": "Contacts",
               "internalKey": "contacts",
               "type": "json",
-              "required": false,
-              "description": "Contact objects for sendContact",
-              "example": "[\"value\"]"
+              "description": "Contact objects",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Name",
               "internalKey": "templateName",
-              "type": "string",
-              "required": false,
-              "description": "Template name",
-              "example": "{{ $json.templateName }}"
+              "type": "textarea",
+              "description": "Template name"
             },
             {
               "name": "Language",
               "internalKey": "language",
               "type": "string",
-              "required": false,
-              "description": "Template language code (e.g. en_US)",
-              "example": "{{ $json.language }}"
+              "description": "Template language code"
             },
             {
               "name": "Template Components",
               "internalKey": "templateComponents",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Template components",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Category",
               "internalKey": "templateCategory",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Template category",
               "example": "MARKETING",
               "placeholder": "MARKETING"
@@ -1824,233 +1710,222 @@ export const whatsappDoc: NodeDoc = {
             {
               "name": "Template Status",
               "internalKey": "templateStatus",
-              "type": "string",
-              "required": false,
-              "description": "Template approval status (must be APPROVED to send)",
-              "example": "{{ $json.templateStatus }}"
+              "type": "textarea",
+              "description": "Template approval status"
             },
             {
               "name": "Body Text",
               "internalKey": "bodyText",
-              "type": "string",
-              "required": false,
-              "description": "Interactive message body text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Interactive message body text"
             },
             {
               "name": "Header Text",
               "internalKey": "headerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message header text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message header text"
             },
             {
               "name": "Footer Text",
               "internalKey": "footerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message footer text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message footer text"
             },
             {
               "name": "Buttons",
               "internalKey": "buttons",
               "type": "json",
-              "required": false,
               "description": "Interactive buttons",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Button Text",
               "internalKey": "buttonText",
               "type": "string",
-              "required": false,
-              "description": "List button text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "List button text"
             },
             {
               "name": "Sections",
               "internalKey": "sections",
               "type": "json",
-              "required": false,
               "description": "List sections",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Cta Url",
               "internalKey": "ctaUrl",
-              "type": "json",
-              "required": false,
-              "description": "CTA URL object { display_text, url }",
-              "example": "https://api.example.com/resource"
+              "type": "url",
+              "description": "CTA URL object",
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
-              "description": "Message ID (for markAsRead)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Message ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
-              "example": "{{ $json.contactId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Name",
               "internalKey": "contactName",
               "type": "string",
-              "required": false,
-              "description": "Contact name",
-              "example": "{{ $json.contactName }}"
+              "description": "Contact name"
             },
             {
               "name": "Contact Phone",
               "internalKey": "contactPhone",
               "type": "string",
-              "required": false,
-              "description": "Contact phone",
-              "example": "{{ $json.contactPhone }}"
+              "description": "Contact phone"
             },
             {
               "name": "Contact Email",
               "internalKey": "contactEmail",
               "type": "email",
-              "required": false,
               "description": "Contact email",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Contact labels",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
-              "required": false,
               "description": "Conversation ID",
-              "example": "{{ $json.conversationId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Recipients",
               "internalKey": "recipients",
               "type": "json",
-              "required": false,
-              "description": "Campaign recipients (array of phone numbers)",
-              "example": "[\"value\"]"
+              "description": "Campaign recipients",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Pagination limit",
               "example": "20",
+              "placeholder": "20",
               "defaultValue": "20"
             },
             {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
-              "description": "Pagination cursor",
-              "example": "{{ $json.after }}"
+              "description": "Pagination cursor"
             },
             {
               "name": "Return All",
               "internalKey": "returnAll",
               "type": "boolean",
-              "required": false,
-              "description": "Return all results (ignores limit)",
+              "description": "Return all results",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "messageId": "messageId",
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "messageId: Value returned by the WhatsApp node.\ndata: Value returned by the WhatsApp node.\nerror: Value returned by the WhatsApp node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WhatsApp in a workflow and pass upstream data into send interactive buttons.",
+            "scenario": "Use WhatsApp to sendinteractivebuttons in a workflow.",
             "inputValues": {
-              "Phone Number Id": "{{ $json.phoneNumberId }}",
-              "Business Account Id": "{{ $json.businessAccountId }}",
-              "To": "{{ $json.to }}",
-              "Text": "Created from workflow data: {{ $json.summary }}",
-              "Preview Url": "false",
-              "Media Type": "image",
-              "Media Url": "https://api.example.com/resource",
-              "Media Id": "{{ $json.mediaId }}",
-              "Caption": "{{ $json.caption }}",
-              "Latitude": "25"
+              "Resource": "message",
+              "Phone Number Id": "abc123",
+              "Business Account Id": "abc123",
+              "To": "",
+              "Text": ""
             },
-            "expectedOutput": "The node runs send interactive buttons and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes sendinteractivebuttons and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference"
         },
         {
-          "name": "Send Interactive List",
+          "name": "SendInteractiveList",
           "value": "sendInteractiveList",
-          "description": "Send Interactive List with the WhatsApp node using the configured input fields.",
+          "description": "SendInteractiveList using the WhatsApp node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "WhatsApp resource",
+              "example": "message",
+              "placeholder": "message",
+              "defaultValue": "message"
+            },
             {
               "name": "Phone Number Id",
               "internalKey": "phoneNumberId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Phone Number ID (auto-resolved if absent)",
-              "example": "{{ $json.phoneNumberId }}"
+              "description": "WhatsApp Phone Number ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Business Account Id",
               "internalKey": "businessAccountId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Business Account ID (auto-resolved if absent)",
-              "example": "{{ $json.businessAccountId }}"
+              "description": "WhatsApp Business Account ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
-              "description": "Recipient phone number in E.164 format",
-              "example": "{{ $json.to }}"
+              "description": "Recipient phone number"
             },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Message text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text"
             },
             {
               "name": "Preview Url",
               "internalKey": "previewUrl",
               "type": "url",
-              "required": false,
-              "description": "Enable URL preview in text messages",
+              "description": "Enable URL preview",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Media Type",
               "internalKey": "mediaType",
               "type": "string",
-              "required": false,
               "description": "Media type",
               "example": "image",
               "placeholder": "image"
@@ -2059,95 +1934,84 @@ export const whatsappDoc: NodeDoc = {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
-              "required": false,
               "description": "Media URL",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Media Id",
               "internalKey": "mediaId",
               "type": "string",
-              "required": false,
-              "description": "Media ID (alternative to mediaUrl)",
-              "example": "{{ $json.mediaId }}"
+              "description": "Media ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Caption",
               "internalKey": "caption",
               "type": "string",
-              "required": false,
-              "description": "Media caption",
-              "example": "{{ $json.caption }}"
+              "description": "Media caption"
             },
             {
               "name": "Latitude",
               "internalKey": "latitude",
               "type": "number",
-              "required": false,
               "description": "Location latitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Longitude",
               "internalKey": "longitude",
               "type": "number",
-              "required": false,
               "description": "Location longitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Location Name",
               "internalKey": "locationName",
               "type": "string",
-              "required": false,
-              "description": "Location name",
-              "example": "{{ $json.locationName }}"
+              "description": "Location name"
             },
             {
               "name": "Address",
               "internalKey": "address",
               "type": "string",
-              "required": false,
-              "description": "Location address",
-              "example": "{{ $json.address }}"
+              "description": "Location address"
             },
             {
               "name": "Contacts",
               "internalKey": "contacts",
               "type": "json",
-              "required": false,
-              "description": "Contact objects for sendContact",
-              "example": "[\"value\"]"
+              "description": "Contact objects",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Name",
               "internalKey": "templateName",
-              "type": "string",
-              "required": false,
-              "description": "Template name",
-              "example": "{{ $json.templateName }}"
+              "type": "textarea",
+              "description": "Template name"
             },
             {
               "name": "Language",
               "internalKey": "language",
               "type": "string",
-              "required": false,
-              "description": "Template language code (e.g. en_US)",
-              "example": "{{ $json.language }}"
+              "description": "Template language code"
             },
             {
               "name": "Template Components",
               "internalKey": "templateComponents",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Template components",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Category",
               "internalKey": "templateCategory",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Template category",
               "example": "MARKETING",
               "placeholder": "MARKETING"
@@ -2155,233 +2019,222 @@ export const whatsappDoc: NodeDoc = {
             {
               "name": "Template Status",
               "internalKey": "templateStatus",
-              "type": "string",
-              "required": false,
-              "description": "Template approval status (must be APPROVED to send)",
-              "example": "{{ $json.templateStatus }}"
+              "type": "textarea",
+              "description": "Template approval status"
             },
             {
               "name": "Body Text",
               "internalKey": "bodyText",
-              "type": "string",
-              "required": false,
-              "description": "Interactive message body text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Interactive message body text"
             },
             {
               "name": "Header Text",
               "internalKey": "headerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message header text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message header text"
             },
             {
               "name": "Footer Text",
               "internalKey": "footerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message footer text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message footer text"
             },
             {
               "name": "Buttons",
               "internalKey": "buttons",
               "type": "json",
-              "required": false,
               "description": "Interactive buttons",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Button Text",
               "internalKey": "buttonText",
               "type": "string",
-              "required": false,
-              "description": "List button text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "List button text"
             },
             {
               "name": "Sections",
               "internalKey": "sections",
               "type": "json",
-              "required": false,
               "description": "List sections",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Cta Url",
               "internalKey": "ctaUrl",
-              "type": "json",
-              "required": false,
-              "description": "CTA URL object { display_text, url }",
-              "example": "https://api.example.com/resource"
+              "type": "url",
+              "description": "CTA URL object",
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
-              "description": "Message ID (for markAsRead)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Message ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
-              "example": "{{ $json.contactId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Name",
               "internalKey": "contactName",
               "type": "string",
-              "required": false,
-              "description": "Contact name",
-              "example": "{{ $json.contactName }}"
+              "description": "Contact name"
             },
             {
               "name": "Contact Phone",
               "internalKey": "contactPhone",
               "type": "string",
-              "required": false,
-              "description": "Contact phone",
-              "example": "{{ $json.contactPhone }}"
+              "description": "Contact phone"
             },
             {
               "name": "Contact Email",
               "internalKey": "contactEmail",
               "type": "email",
-              "required": false,
               "description": "Contact email",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Contact labels",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
-              "required": false,
               "description": "Conversation ID",
-              "example": "{{ $json.conversationId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Recipients",
               "internalKey": "recipients",
               "type": "json",
-              "required": false,
-              "description": "Campaign recipients (array of phone numbers)",
-              "example": "[\"value\"]"
+              "description": "Campaign recipients",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Pagination limit",
               "example": "20",
+              "placeholder": "20",
               "defaultValue": "20"
             },
             {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
-              "description": "Pagination cursor",
-              "example": "{{ $json.after }}"
+              "description": "Pagination cursor"
             },
             {
               "name": "Return All",
               "internalKey": "returnAll",
               "type": "boolean",
-              "required": false,
-              "description": "Return all results (ignores limit)",
+              "description": "Return all results",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "messageId": "messageId",
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "messageId: Value returned by the WhatsApp node.\ndata: Value returned by the WhatsApp node.\nerror: Value returned by the WhatsApp node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WhatsApp in a workflow and pass upstream data into send interactive list.",
+            "scenario": "Use WhatsApp to sendinteractivelist in a workflow.",
             "inputValues": {
-              "Phone Number Id": "{{ $json.phoneNumberId }}",
-              "Business Account Id": "{{ $json.businessAccountId }}",
-              "To": "{{ $json.to }}",
-              "Text": "Created from workflow data: {{ $json.summary }}",
-              "Preview Url": "false",
-              "Media Type": "image",
-              "Media Url": "https://api.example.com/resource",
-              "Media Id": "{{ $json.mediaId }}",
-              "Caption": "{{ $json.caption }}",
-              "Latitude": "25"
+              "Resource": "message",
+              "Phone Number Id": "abc123",
+              "Business Account Id": "abc123",
+              "To": "",
+              "Text": ""
             },
-            "expectedOutput": "The node runs send interactive list and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes sendinteractivelist and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference"
         },
         {
-          "name": "Send Interactive C T A",
+          "name": "SendInteractiveCTA",
           "value": "sendInteractiveCTA",
-          "description": "Send Interactive C T A with the WhatsApp node using the configured input fields.",
+          "description": "SendInteractiveCTA using the WhatsApp node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "WhatsApp resource",
+              "example": "message",
+              "placeholder": "message",
+              "defaultValue": "message"
+            },
             {
               "name": "Phone Number Id",
               "internalKey": "phoneNumberId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Phone Number ID (auto-resolved if absent)",
-              "example": "{{ $json.phoneNumberId }}"
+              "description": "WhatsApp Phone Number ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Business Account Id",
               "internalKey": "businessAccountId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Business Account ID (auto-resolved if absent)",
-              "example": "{{ $json.businessAccountId }}"
+              "description": "WhatsApp Business Account ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
-              "description": "Recipient phone number in E.164 format",
-              "example": "{{ $json.to }}"
+              "description": "Recipient phone number"
             },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Message text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text"
             },
             {
               "name": "Preview Url",
               "internalKey": "previewUrl",
               "type": "url",
-              "required": false,
-              "description": "Enable URL preview in text messages",
+              "description": "Enable URL preview",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Media Type",
               "internalKey": "mediaType",
               "type": "string",
-              "required": false,
               "description": "Media type",
               "example": "image",
               "placeholder": "image"
@@ -2390,95 +2243,84 @@ export const whatsappDoc: NodeDoc = {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
-              "required": false,
               "description": "Media URL",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Media Id",
               "internalKey": "mediaId",
               "type": "string",
-              "required": false,
-              "description": "Media ID (alternative to mediaUrl)",
-              "example": "{{ $json.mediaId }}"
+              "description": "Media ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Caption",
               "internalKey": "caption",
               "type": "string",
-              "required": false,
-              "description": "Media caption",
-              "example": "{{ $json.caption }}"
+              "description": "Media caption"
             },
             {
               "name": "Latitude",
               "internalKey": "latitude",
               "type": "number",
-              "required": false,
               "description": "Location latitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Longitude",
               "internalKey": "longitude",
               "type": "number",
-              "required": false,
               "description": "Location longitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Location Name",
               "internalKey": "locationName",
               "type": "string",
-              "required": false,
-              "description": "Location name",
-              "example": "{{ $json.locationName }}"
+              "description": "Location name"
             },
             {
               "name": "Address",
               "internalKey": "address",
               "type": "string",
-              "required": false,
-              "description": "Location address",
-              "example": "{{ $json.address }}"
+              "description": "Location address"
             },
             {
               "name": "Contacts",
               "internalKey": "contacts",
               "type": "json",
-              "required": false,
-              "description": "Contact objects for sendContact",
-              "example": "[\"value\"]"
+              "description": "Contact objects",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Name",
               "internalKey": "templateName",
-              "type": "string",
-              "required": false,
-              "description": "Template name",
-              "example": "{{ $json.templateName }}"
+              "type": "textarea",
+              "description": "Template name"
             },
             {
               "name": "Language",
               "internalKey": "language",
               "type": "string",
-              "required": false,
-              "description": "Template language code (e.g. en_US)",
-              "example": "{{ $json.language }}"
+              "description": "Template language code"
             },
             {
               "name": "Template Components",
               "internalKey": "templateComponents",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Template components",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Category",
               "internalKey": "templateCategory",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Template category",
               "example": "MARKETING",
               "placeholder": "MARKETING"
@@ -2486,233 +2328,222 @@ export const whatsappDoc: NodeDoc = {
             {
               "name": "Template Status",
               "internalKey": "templateStatus",
-              "type": "string",
-              "required": false,
-              "description": "Template approval status (must be APPROVED to send)",
-              "example": "{{ $json.templateStatus }}"
+              "type": "textarea",
+              "description": "Template approval status"
             },
             {
               "name": "Body Text",
               "internalKey": "bodyText",
-              "type": "string",
-              "required": false,
-              "description": "Interactive message body text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Interactive message body text"
             },
             {
               "name": "Header Text",
               "internalKey": "headerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message header text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message header text"
             },
             {
               "name": "Footer Text",
               "internalKey": "footerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message footer text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message footer text"
             },
             {
               "name": "Buttons",
               "internalKey": "buttons",
               "type": "json",
-              "required": false,
               "description": "Interactive buttons",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Button Text",
               "internalKey": "buttonText",
               "type": "string",
-              "required": false,
-              "description": "List button text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "List button text"
             },
             {
               "name": "Sections",
               "internalKey": "sections",
               "type": "json",
-              "required": false,
               "description": "List sections",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Cta Url",
               "internalKey": "ctaUrl",
-              "type": "json",
-              "required": false,
-              "description": "CTA URL object { display_text, url }",
-              "example": "https://api.example.com/resource"
+              "type": "url",
+              "description": "CTA URL object",
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
-              "description": "Message ID (for markAsRead)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Message ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
-              "example": "{{ $json.contactId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Name",
               "internalKey": "contactName",
               "type": "string",
-              "required": false,
-              "description": "Contact name",
-              "example": "{{ $json.contactName }}"
+              "description": "Contact name"
             },
             {
               "name": "Contact Phone",
               "internalKey": "contactPhone",
               "type": "string",
-              "required": false,
-              "description": "Contact phone",
-              "example": "{{ $json.contactPhone }}"
+              "description": "Contact phone"
             },
             {
               "name": "Contact Email",
               "internalKey": "contactEmail",
               "type": "email",
-              "required": false,
               "description": "Contact email",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Contact labels",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
-              "required": false,
               "description": "Conversation ID",
-              "example": "{{ $json.conversationId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Recipients",
               "internalKey": "recipients",
               "type": "json",
-              "required": false,
-              "description": "Campaign recipients (array of phone numbers)",
-              "example": "[\"value\"]"
+              "description": "Campaign recipients",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Pagination limit",
               "example": "20",
+              "placeholder": "20",
               "defaultValue": "20"
             },
             {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
-              "description": "Pagination cursor",
-              "example": "{{ $json.after }}"
+              "description": "Pagination cursor"
             },
             {
               "name": "Return All",
               "internalKey": "returnAll",
               "type": "boolean",
-              "required": false,
-              "description": "Return all results (ignores limit)",
+              "description": "Return all results",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "messageId": "messageId",
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "messageId: Value returned by the WhatsApp node.\ndata: Value returned by the WhatsApp node.\nerror: Value returned by the WhatsApp node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WhatsApp in a workflow and pass upstream data into send interactive c t a.",
+            "scenario": "Use WhatsApp to sendinteractivecta in a workflow.",
             "inputValues": {
-              "Phone Number Id": "{{ $json.phoneNumberId }}",
-              "Business Account Id": "{{ $json.businessAccountId }}",
-              "To": "{{ $json.to }}",
-              "Text": "Created from workflow data: {{ $json.summary }}",
-              "Preview Url": "false",
-              "Media Type": "image",
-              "Media Url": "https://api.example.com/resource",
-              "Media Id": "{{ $json.mediaId }}",
-              "Caption": "{{ $json.caption }}",
-              "Latitude": "25"
+              "Resource": "message",
+              "Phone Number Id": "abc123",
+              "Business Account Id": "abc123",
+              "To": "",
+              "Text": ""
             },
-            "expectedOutput": "The node runs send interactive c t a and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes sendinteractivecta and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference"
         },
         {
-          "name": "Mark As Read",
+          "name": "MarkAsRead",
           "value": "markAsRead",
-          "description": "Mark As Read with the WhatsApp node using the configured input fields.",
+          "description": "MarkAsRead using the WhatsApp node.",
           "fields": [
+            {
+              "name": "Resource",
+              "internalKey": "resource",
+              "type": "string",
+              "required": true,
+              "description": "WhatsApp resource",
+              "example": "message",
+              "placeholder": "message",
+              "defaultValue": "message"
+            },
             {
               "name": "Phone Number Id",
               "internalKey": "phoneNumberId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Phone Number ID (auto-resolved if absent)",
-              "example": "{{ $json.phoneNumberId }}"
+              "description": "WhatsApp Phone Number ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Business Account Id",
               "internalKey": "businessAccountId",
               "type": "string",
-              "required": false,
-              "description": "WhatsApp Business Account ID (auto-resolved if absent)",
-              "example": "{{ $json.businessAccountId }}"
+              "description": "WhatsApp Business Account ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "To",
               "internalKey": "to",
               "type": "string",
-              "required": false,
-              "description": "Recipient phone number in E.164 format",
-              "example": "{{ $json.to }}"
+              "description": "Recipient phone number"
             },
             {
               "name": "Text",
               "internalKey": "text",
-              "type": "string",
-              "required": false,
-              "description": "Message text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Message text"
             },
             {
               "name": "Preview Url",
               "internalKey": "previewUrl",
               "type": "url",
-              "required": false,
-              "description": "Enable URL preview in text messages",
+              "description": "Enable URL preview",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             },
             {
               "name": "Media Type",
               "internalKey": "mediaType",
               "type": "string",
-              "required": false,
               "description": "Media type",
               "example": "image",
               "placeholder": "image"
@@ -2721,95 +2552,84 @@ export const whatsappDoc: NodeDoc = {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
-              "required": false,
               "description": "Media URL",
-              "example": "https://api.example.com/resource"
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Media Id",
               "internalKey": "mediaId",
               "type": "string",
-              "required": false,
-              "description": "Media ID (alternative to mediaUrl)",
-              "example": "{{ $json.mediaId }}"
+              "description": "Media ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Caption",
               "internalKey": "caption",
               "type": "string",
-              "required": false,
-              "description": "Media caption",
-              "example": "{{ $json.caption }}"
+              "description": "Media caption"
             },
             {
               "name": "Latitude",
               "internalKey": "latitude",
               "type": "number",
-              "required": false,
               "description": "Location latitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Longitude",
               "internalKey": "longitude",
               "type": "number",
-              "required": false,
               "description": "Location longitude",
-              "example": "25"
+              "example": "10",
+              "placeholder": "10"
             },
             {
               "name": "Location Name",
               "internalKey": "locationName",
               "type": "string",
-              "required": false,
-              "description": "Location name",
-              "example": "{{ $json.locationName }}"
+              "description": "Location name"
             },
             {
               "name": "Address",
               "internalKey": "address",
               "type": "string",
-              "required": false,
-              "description": "Location address",
-              "example": "{{ $json.address }}"
+              "description": "Location address"
             },
             {
               "name": "Contacts",
               "internalKey": "contacts",
               "type": "json",
-              "required": false,
-              "description": "Contact objects for sendContact",
-              "example": "[\"value\"]"
+              "description": "Contact objects",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Name",
               "internalKey": "templateName",
-              "type": "string",
-              "required": false,
-              "description": "Template name",
-              "example": "{{ $json.templateName }}"
+              "type": "textarea",
+              "description": "Template name"
             },
             {
               "name": "Language",
               "internalKey": "language",
               "type": "string",
-              "required": false,
-              "description": "Template language code (e.g. en_US)",
-              "example": "{{ $json.language }}"
+              "description": "Template language code"
             },
             {
               "name": "Template Components",
               "internalKey": "templateComponents",
-              "type": "json",
-              "required": false,
+              "type": "textarea",
               "description": "Template components",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Template Category",
               "internalKey": "templateCategory",
-              "type": "string",
-              "required": false,
+              "type": "textarea",
               "description": "Template category",
               "example": "MARKETING",
               "placeholder": "MARKETING"
@@ -2817,179 +2637,163 @@ export const whatsappDoc: NodeDoc = {
             {
               "name": "Template Status",
               "internalKey": "templateStatus",
-              "type": "string",
-              "required": false,
-              "description": "Template approval status (must be APPROVED to send)",
-              "example": "{{ $json.templateStatus }}"
+              "type": "textarea",
+              "description": "Template approval status"
             },
             {
               "name": "Body Text",
               "internalKey": "bodyText",
-              "type": "string",
-              "required": false,
-              "description": "Interactive message body text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "type": "textarea",
+              "description": "Interactive message body text"
             },
             {
               "name": "Header Text",
               "internalKey": "headerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message header text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message header text"
             },
             {
               "name": "Footer Text",
               "internalKey": "footerText",
               "type": "string",
-              "required": false,
-              "description": "Interactive message footer text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Interactive message footer text"
             },
             {
               "name": "Buttons",
               "internalKey": "buttons",
               "type": "json",
-              "required": false,
               "description": "Interactive buttons",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Button Text",
               "internalKey": "buttonText",
               "type": "string",
-              "required": false,
-              "description": "List button text",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "List button text"
             },
             {
               "name": "Sections",
               "internalKey": "sections",
               "type": "json",
-              "required": false,
               "description": "List sections",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Cta Url",
               "internalKey": "ctaUrl",
-              "type": "json",
-              "required": false,
-              "description": "CTA URL object { display_text, url }",
-              "example": "https://api.example.com/resource"
+              "type": "url",
+              "description": "CTA URL object",
+              "example": "https://api.example.com",
+              "placeholder": "https://api.example.com"
             },
             {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
-              "required": false,
-              "description": "Message ID (for markAsRead)",
-              "example": "Created from workflow data: {{ $json.summary }}"
+              "description": "Message ID",
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
-              "required": false,
               "description": "Contact ID",
-              "example": "{{ $json.contactId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Contact Name",
               "internalKey": "contactName",
               "type": "string",
-              "required": false,
-              "description": "Contact name",
-              "example": "{{ $json.contactName }}"
+              "description": "Contact name"
             },
             {
               "name": "Contact Phone",
               "internalKey": "contactPhone",
               "type": "string",
-              "required": false,
-              "description": "Contact phone",
-              "example": "{{ $json.contactPhone }}"
+              "description": "Contact phone"
             },
             {
               "name": "Contact Email",
               "internalKey": "contactEmail",
               "type": "email",
-              "required": false,
               "description": "Contact email",
-              "example": "{{ $json.email }}"
+              "example": "user@example.com",
+              "placeholder": "user@example.com"
             },
             {
               "name": "Labels",
               "internalKey": "labels",
               "type": "json",
-              "required": false,
               "description": "Contact labels",
-              "example": "[\"value\"]"
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
-              "required": false,
               "description": "Conversation ID",
-              "example": "{{ $json.conversationId }}"
+              "example": "abc123",
+              "placeholder": "abc123"
             },
             {
               "name": "Recipients",
               "internalKey": "recipients",
               "type": "json",
-              "required": false,
-              "description": "Campaign recipients (array of phone numbers)",
-              "example": "[\"value\"]"
+              "description": "Campaign recipients",
+              "example": "[\"item\"]",
+              "placeholder": "[\"item\"]"
             },
             {
               "name": "Limit",
               "internalKey": "limit",
               "type": "number",
-              "required": false,
               "description": "Pagination limit",
               "example": "20",
+              "placeholder": "20",
               "defaultValue": "20"
             },
             {
               "name": "After",
               "internalKey": "after",
               "type": "string",
-              "required": false,
-              "description": "Pagination cursor",
-              "example": "{{ $json.after }}"
+              "description": "Pagination cursor"
             },
             {
               "name": "Return All",
               "internalKey": "returnAll",
               "type": "boolean",
-              "required": false,
-              "description": "Return all results (ignores limit)",
+              "description": "Return all results",
               "example": "false",
+              "placeholder": "false",
               "defaultValue": "false"
             }
           ],
           "outputExample": {
-            "messageId": "messageId",
+            "success": true,
+            "operation": "",
+            "id": "abc123",
+            "message": "",
             "data": {},
+            "result": {},
+            "output": {},
             "error": {}
           },
-          "outputDescription": "messageId: Value returned by the WhatsApp node.\ndata: Value returned by the WhatsApp node.\nerror: Value returned by the WhatsApp node.",
+          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use WhatsApp in a workflow and pass upstream data into mark as read.",
+            "scenario": "Use WhatsApp to markasread in a workflow.",
             "inputValues": {
-              "Phone Number Id": "{{ $json.phoneNumberId }}",
-              "Business Account Id": "{{ $json.businessAccountId }}",
-              "To": "{{ $json.to }}",
-              "Text": "Created from workflow data: {{ $json.summary }}",
-              "Preview Url": "false",
-              "Media Type": "image",
-              "Media Url": "https://api.example.com/resource",
-              "Media Id": "{{ $json.mediaId }}",
-              "Caption": "{{ $json.caption }}",
-              "Latitude": "25"
+              "Resource": "message",
+              "Phone Number Id": "abc123",
+              "Business Account Id": "abc123",
+              "To": "",
+              "Text": ""
             },
-            "expectedOutput": "The node runs mark as read and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes markasread and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference"
         }
@@ -2998,21 +2802,20 @@ export const whatsappDoc: NodeDoc = {
   ],
   "commonErrors": [
     {
+      "error": "Authentication failed",
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the WhatsApp node."
+    },
+    {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "google_gmail",
-    "outlook",
-    "slack_message",
-    "email",
-    "log_output"
-  ]
+  "relatedNodes": []
 };

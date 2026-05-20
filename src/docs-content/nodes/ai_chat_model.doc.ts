@@ -5,44 +5,44 @@ export const aiChatModelDoc: NodeDoc = {
   "displayName": "AI Chat Model",
   "category": "AI",
   "logoUrl": "/icons/nodes/ai_chat_model.svg",
-  "description": "Call Gemini 1.5 Flash directly to generate a response (uses GEMINI_API_KEY) Use this node when a workflow needs ai chat model behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Call Gemini 1.5 Flash directly to generate a response (uses GEMINI_API_KEY)",
   "credentialType": "None",
-  "credentialSetupSteps": [],
-  "credentialDocsUrl": "",
+  "credentialSetupSteps": [
+    "No credential required."
+  ],
+  "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
     {
       "name": "Configuration",
-      "description": "AI Chat Model is configured directly with input fields and does not use a resource or operation selector.",
+      "description": "AI Chat Model is configured directly with input fields.",
       "operations": [
         {
-          "name": "Configure",
-          "value": "configure",
-          "description": "Configure with the AI Chat Model node using the configured input fields.",
+          "name": "Execute",
+          "value": "default",
+          "description": "Execute using the AI Chat Model node.",
           "fields": [
-            {
-              "name": "Prompt",
-              "internalKey": "prompt",
-              "type": "string",
-              "required": true,
-              "description": "User prompt to send to the model",
-              "example": "{{$json.prompt}}",
-              "placeholder": "{{$json.prompt}}"
-            },
             {
               "name": "Temperature",
               "internalKey": "temperature",
               "type": "number",
-              "required": false,
               "description": "Creativity (0.0 - 1.0)",
               "example": "0.2",
               "placeholder": "0.2",
               "defaultValue": "0.7"
             },
             {
+              "name": "Prompt",
+              "internalKey": "prompt",
+              "type": "textarea",
+              "required": true,
+              "description": "User prompt to send to the model",
+              "example": "{{$json.prompt}}",
+              "placeholder": "{{$json.prompt}}"
+            },
+            {
               "name": "System Prompt",
               "internalKey": "systemPrompt",
               "type": "string",
-              "required": false,
               "description": "System prompt (optional)",
               "example": "You are a helpful assistant.",
               "placeholder": "You are a helpful assistant."
@@ -51,7 +51,6 @@ export const aiChatModelDoc: NodeDoc = {
               "name": "Response Format",
               "internalKey": "responseFormat",
               "type": "string",
-              "required": false,
               "description": "Preferred response format",
               "example": "text",
               "placeholder": "text",
@@ -59,21 +58,22 @@ export const aiChatModelDoc: NodeDoc = {
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure",
-            "convertible": "convertible",
-            "defaultValue": "defaultValue"
+            "response": "",
+            "text": "",
+            "output": {},
+            "provider": "abc123",
+            "model": ""
           },
-          "outputDescription": "type: Value returned by the AI Chat Model node.\nstructure: Value returned by the AI Chat Model node.\nconvertible: Value returned by the AI Chat Model node.\ndefaultValue: Value returned by the AI Chat Model node.",
+          "outputDescription": "response: Value returned by this node.\ntext: Value returned by this node.\noutput: Value returned by this node.\nprovider: Value returned by this node.\nmodel: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use AI Chat Model in a workflow and pass upstream data into configure.",
+            "scenario": "Use AI Chat Model to execute in a workflow.",
             "inputValues": {
-              "Prompt": "{{$json.prompt}}",
               "Temperature": "0.2",
+              "Prompt": "{{$json.prompt}}",
               "System Prompt": "You are a helpful assistant.",
               "Response Format": "text"
             },
-            "expectedOutput": "The node runs configure and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }
@@ -83,20 +83,14 @@ export const aiChatModelDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "ai_agent",
-    "openai_gpt",
-    "anthropic_claude",
-    "google_gemini",
-    "ollama"
-  ]
+  "relatedNodes": []
 };

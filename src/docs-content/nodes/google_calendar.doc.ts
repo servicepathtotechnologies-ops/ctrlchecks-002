@@ -5,40 +5,41 @@ export const googleCalendarDoc: NodeDoc = {
   "displayName": "Google Calendar",
   "category": "Data",
   "logoUrl": "/icons/nodes/google_calendar.svg",
-  "description": "Create, read, update calendar events Use this node when a workflow needs google calendar behavior with schema-driven inputs from the CtrlChecks node registry.",
+  "description": "Create, read, update calendar events",
   "credentialType": "Google Credential",
   "credentialSetupSteps": [
-    "Open the Google Calendar developer console or account settings.",
-    "Create or locate the required API key, token, OAuth client, webhook URL, or connection value.",
-    "In CtrlChecks, open Connections or the node configuration panel for this service.",
-    "Add the Google Credential value and save the connection.",
-    "Test the connection before running the workflow."
+    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
+    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
+    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
+    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
+    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
+    "Sign in and grant the required scopes. The connection saves automatically."
   ],
-  "credentialDocsUrl": "https://developers.google.com/calendar/api/v3/reference",
+  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
   "resources": [
     {
-      "name": "Event",
-      "description": "Event is a Google Calendar resource available in this node.",
+      "name": "Operations",
+      "description": "Google Calendar exposes operation choices directly.",
       "operations": [
         {
           "name": "List",
           "value": "list",
-          "description": "List with the Google Calendar node using the configured input fields.",
+          "description": "List events from a Google Calendar within a time range.",
           "fields": [
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Resource type (event, calendar, etc.)",
+              "example": "event",
+              "placeholder": "event",
+              "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
-              "required": false,
               "description": "Calendar ID",
               "example": "primary",
               "placeholder": "primary"
@@ -47,7 +48,6 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
-              "required": false,
               "description": "Event ID (for update/delete)",
               "example": "event-id",
               "placeholder": "event-id"
@@ -56,118 +56,118 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
+              "description": "Event summary/title"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
-              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
-              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
-              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
+              "type": "textarea",
+              "description": "Event description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
+              "type": "string",
+              "description": "Lower bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
+              "type": "string",
+              "description": "Upper bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
-              "required": false,
               "description": "Max results for list/search",
               "example": "250",
+              "placeholder": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
+              "description": "Free text search query (for events.list)"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
+            "items": [
+              {
+                "id": "event1",
+                "summary": "Team Standup",
+                "start": {
+                  "dateTime": "2025-01-15T09:00:00Z"
+                },
+                "end": {
+                  "dateTime": "2025-01-15T09:30:00Z"
+                },
+                "attendees": [
+                  {
+                    "email": "alice@example.com"
+                  }
+                ]
+              }
+            ],
+            "nextPageToken": null
           },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
+          "outputDescription": "items: Array of calendar event objects. Each has id, summary, start, end, and attendees. nextPageToken: For paginating more events.",
           "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into list.",
+            "scenario": "Get today's meetings and post them as a morning summary to Slack",
             "inputValues": {
-              "Credential Id": "cred_123",
-              "Calendar Id": "primary",
-              "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
+              "calendarId": "primary",
+              "timeMin": "{{$now}}T00:00:00Z",
+              "timeMax": "{{$now}}T23:59:59Z",
+              "maxResults": "20"
             },
-            "expectedOutput": "The node runs list and exposes its result in the output panel for the next node."
+            "expectedOutput": "Returns all events today. Format `{{$json.items}}` into a Slack message with event summaries and times."
           },
           "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
         },
         {
           "name": "Get",
           "value": "get",
-          "description": "Get with the Google Calendar node using the configured input fields.",
+          "description": "Get using the Google Calendar node.",
           "fields": [
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Resource type (event, calendar, etc.)",
+              "example": "event",
+              "placeholder": "event",
+              "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
-              "required": false,
               "description": "Calendar ID",
               "example": "primary",
               "placeholder": "primary"
@@ -176,7 +176,6 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
-              "required": false,
               "description": "Event ID (for update/delete)",
               "example": "event-id",
               "placeholder": "event-id"
@@ -185,118 +184,103 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
+              "description": "Event summary/title"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
-              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
-              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
-              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
+              "type": "textarea",
+              "description": "Event description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
+              "type": "string",
+              "description": "Lower bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
+              "type": "string",
+              "description": "Upper bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
-              "required": false,
               "description": "Max results for list/search",
               "example": "250",
+              "placeholder": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
+              "description": "Free text search query (for events.list)"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
+            "eventId": "abc123",
+            "success": true
           },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
+          "outputDescription": "eventId: Value returned by this node.\nsuccess: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into get.",
+            "scenario": "Use Google Calendar to get in a workflow.",
             "inputValues": {
-              "Credential Id": "cred_123",
+              "Resource": "event",
               "Calendar Id": "primary",
               "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
+              "Summary": "",
+              "Start": "{\"key\":\"value\"}"
             },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes get and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
         },
         {
           "name": "Create",
           "value": "create",
-          "description": "Create with the Google Calendar node using the configured input fields.",
+          "description": "Create a new event on a Google Calendar.",
           "fields": [
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Resource type (event, calendar, etc.)",
+              "example": "event",
+              "placeholder": "event",
+              "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
-              "required": false,
               "description": "Calendar ID",
               "example": "primary",
               "placeholder": "primary"
@@ -305,7 +289,6 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
-              "required": false,
               "description": "Event ID (for update/delete)",
               "example": "event-id",
               "placeholder": "event-id"
@@ -314,118 +297,110 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
+              "description": "Event summary/title"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
-              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
-              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
-              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
+              "type": "textarea",
+              "description": "Event description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
+              "type": "string",
+              "description": "Lower bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
+              "type": "string",
+              "description": "Upper bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
-              "required": false,
               "description": "Max results for list/search",
               "example": "250",
+              "placeholder": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
+              "description": "Free text search query (for events.list)"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
-          },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
-          "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Credential Id": "cred_123",
-              "Calendar Id": "primary",
-              "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
+            "id": "newEvent789",
+            "summary": "Product Demo",
+            "start": {
+              "dateTime": "2025-01-20T14:00:00Z"
             },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
+            "end": {
+              "dateTime": "2025-01-20T15:00:00Z"
+            },
+            "htmlLink": "https://calendar.google.com/event?eid=..."
+          },
+          "outputDescription": "id: The new calendar event ID. summary: Event title. start/end: Event timestamps. htmlLink: URL to view the event in Google Calendar.",
+          "usageExample": {
+            "scenario": "Create a Google Calendar event when a Calendly booking is confirmed",
+            "inputValues": {
+              "calendarId": "primary",
+              "summary": "{{$json.eventType}} with {{$json.inviteeName}}",
+              "startDateTime": "{{$json.startTime}}",
+              "endDateTime": "{{$json.endTime}}",
+              "description": "Booked via Calendly"
+            },
+            "expectedOutput": "Event is created. Share `{{$json.htmlLink}}` as a calendar invite link."
           },
           "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
         },
         {
           "name": "Update",
           "value": "update",
-          "description": "Update with the Google Calendar node using the configured input fields.",
+          "description": "Update an existing Google Calendar event.",
           "fields": [
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Resource type (event, calendar, etc.)",
+              "example": "event",
+              "placeholder": "event",
+              "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
-              "required": false,
               "description": "Calendar ID",
               "example": "primary",
               "placeholder": "primary"
@@ -434,7 +409,6 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
-              "required": false,
               "description": "Event ID (for update/delete)",
               "example": "event-id",
               "placeholder": "event-id"
@@ -443,118 +417,106 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
+              "description": "Event summary/title"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
-              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
-              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
-              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
+              "type": "textarea",
+              "description": "Event description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
+              "type": "string",
+              "description": "Lower bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
+              "type": "string",
+              "description": "Upper bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
-              "required": false,
               "description": "Max results for list/search",
               "example": "250",
+              "placeholder": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
+              "description": "Free text search query (for events.list)"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
-          },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
-          "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Credential Id": "cred_123",
-              "Calendar Id": "primary",
-              "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
+            "id": "event1",
+            "summary": "Rescheduled: Team Standup",
+            "start": {
+              "dateTime": "2025-01-16T10:00:00Z"
             },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
+            "updated": "2025-01-15T12:00:00Z"
+          },
+          "outputDescription": "id: The updated event ID. summary: Updated event title. updated: ISO timestamp of the last update.",
+          "usageExample": {
+            "scenario": "Reschedule an event when a Typeform rescheduling request comes in",
+            "inputValues": {
+              "calendarId": "primary",
+              "eventId": "{{$json.eventId}}",
+              "summary": "{{$json.newTitle}}",
+              "startDateTime": "{{$json.newStartTime}}"
+            },
+            "expectedOutput": "Event is updated. `{{$json.updated}}` confirms the time of the change."
           },
           "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
         },
         {
           "name": "Delete",
           "value": "delete",
-          "description": "Delete with the Google Calendar node using the configured input fields.",
+          "description": "Delete using the Google Calendar node.",
           "fields": [
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Resource type (event, calendar, etc.)",
+              "example": "event",
+              "placeholder": "event",
+              "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
-              "required": false,
               "description": "Calendar ID",
               "example": "primary",
               "placeholder": "primary"
@@ -563,7 +525,6 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
-              "required": false,
               "description": "Event ID (for update/delete)",
               "example": "event-id",
               "placeholder": "event-id"
@@ -572,118 +533,103 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
+              "description": "Event summary/title"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
-              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
-              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
-              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
+              "type": "textarea",
+              "description": "Event description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
+              "type": "string",
+              "description": "Lower bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
+              "type": "string",
+              "description": "Upper bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
-              "required": false,
               "description": "Max results for list/search",
               "example": "250",
+              "placeholder": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
+              "description": "Free text search query (for events.list)"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
+            "eventId": "abc123",
+            "success": true
           },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
+          "outputDescription": "eventId: Value returned by this node.\nsuccess: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into delete.",
+            "scenario": "Use Google Calendar to delete in a workflow.",
             "inputValues": {
-              "Credential Id": "cred_123",
+              "Resource": "event",
               "Calendar Id": "primary",
               "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
+              "Summary": "",
+              "Start": "{\"key\":\"value\"}"
             },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
         },
         {
           "name": "Search",
           "value": "search",
-          "description": "Search with the Google Calendar node using the configured input fields.",
+          "description": "Search using the Google Calendar node.",
           "fields": [
             {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
+              "name": "Resource",
+              "internalKey": "resource",
               "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
+              "required": true,
+              "description": "Resource type (event, calendar, etc.)",
+              "example": "event",
+              "placeholder": "event",
+              "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
-              "required": false,
               "description": "Calendar ID",
               "example": "primary",
               "placeholder": "primary"
@@ -692,7 +638,6 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
-              "required": false,
               "description": "Event ID (for update/delete)",
               "example": "event-id",
               "placeholder": "event-id"
@@ -701,876 +646,81 @@ export const googleCalendarDoc: NodeDoc = {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
+              "description": "Event summary/title"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
-              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
-              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
-              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
+              "example": "{\"key\":\"value\"}",
+              "placeholder": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
+              "type": "textarea",
+              "description": "Event description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
+              "type": "string",
+              "description": "Lower bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
+              "type": "string",
+              "description": "Upper bound for list/search (RFC3339 timestamp)"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
-              "required": false,
               "description": "Max results for list/search",
               "example": "250",
+              "placeholder": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
+              "description": "Free text search query (for events.list)"
             }
           ],
           "outputExample": {
-            "type": "type",
-            "structure": "structure"
+            "eventId": "abc123",
+            "success": true
           },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
+          "outputDescription": "eventId: Value returned by this node.\nsuccess: Value returned by this node.",
           "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into search.",
+            "scenario": "Use Google Calendar to search in a workflow.",
             "inputValues": {
-              "Credential Id": "cred_123",
+              "Resource": "event",
               "Calendar Id": "primary",
               "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
+              "Summary": "",
+              "Start": "{\"key\":\"value\"}"
             },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
-        }
-      ]
-    },
-    {
-      "name": "Calendar",
-      "description": "Calendar is a Google Calendar resource available in this node.",
-      "operations": [
-        {
-          "name": "List",
-          "value": "list",
-          "description": "List with the Google Calendar node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Calendar Id",
-              "internalKey": "calendarId",
-              "type": "string",
-              "required": false,
-              "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
-            },
-            {
-              "name": "Event Id",
-              "internalKey": "eventId",
-              "type": "string",
-              "required": false,
-              "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
-            },
-            {
-              "name": "Summary",
-              "internalKey": "summary",
-              "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
-            },
-            {
-              "name": "Start",
-              "internalKey": "start",
-              "type": "json",
-              "required": false,
-              "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "End",
-              "internalKey": "end",
-              "type": "json",
-              "required": false,
-              "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Event Data",
-              "internalKey": "eventData",
-              "type": "json",
-              "required": false,
-              "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Description",
-              "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
-            },
-            {
-              "name": "Time Min",
-              "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
-            },
-            {
-              "name": "Time Max",
-              "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
-            },
-            {
-              "name": "Max Results",
-              "internalKey": "maxResults",
-              "type": "number",
-              "required": false,
-              "description": "Max results for list/search",
-              "example": "250",
-              "defaultValue": "250"
-            },
-            {
-              "name": "Q",
-              "internalKey": "q",
-              "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure"
-          },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
-          "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into list.",
-            "inputValues": {
-              "Credential Id": "cred_123",
-              "Calendar Id": "primary",
-              "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
-            },
-            "expectedOutput": "The node runs list and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
-        },
-        {
-          "name": "Get",
-          "value": "get",
-          "description": "Get with the Google Calendar node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Calendar Id",
-              "internalKey": "calendarId",
-              "type": "string",
-              "required": false,
-              "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
-            },
-            {
-              "name": "Event Id",
-              "internalKey": "eventId",
-              "type": "string",
-              "required": false,
-              "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
-            },
-            {
-              "name": "Summary",
-              "internalKey": "summary",
-              "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
-            },
-            {
-              "name": "Start",
-              "internalKey": "start",
-              "type": "json",
-              "required": false,
-              "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "End",
-              "internalKey": "end",
-              "type": "json",
-              "required": false,
-              "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Event Data",
-              "internalKey": "eventData",
-              "type": "json",
-              "required": false,
-              "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Description",
-              "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
-            },
-            {
-              "name": "Time Min",
-              "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
-            },
-            {
-              "name": "Time Max",
-              "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
-            },
-            {
-              "name": "Max Results",
-              "internalKey": "maxResults",
-              "type": "number",
-              "required": false,
-              "description": "Max results for list/search",
-              "example": "250",
-              "defaultValue": "250"
-            },
-            {
-              "name": "Q",
-              "internalKey": "q",
-              "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure"
-          },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
-          "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into get.",
-            "inputValues": {
-              "Credential Id": "cred_123",
-              "Calendar Id": "primary",
-              "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
-            },
-            "expectedOutput": "The node runs get and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
-        },
-        {
-          "name": "Create",
-          "value": "create",
-          "description": "Create with the Google Calendar node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Calendar Id",
-              "internalKey": "calendarId",
-              "type": "string",
-              "required": false,
-              "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
-            },
-            {
-              "name": "Event Id",
-              "internalKey": "eventId",
-              "type": "string",
-              "required": false,
-              "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
-            },
-            {
-              "name": "Summary",
-              "internalKey": "summary",
-              "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
-            },
-            {
-              "name": "Start",
-              "internalKey": "start",
-              "type": "json",
-              "required": false,
-              "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "End",
-              "internalKey": "end",
-              "type": "json",
-              "required": false,
-              "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Event Data",
-              "internalKey": "eventData",
-              "type": "json",
-              "required": false,
-              "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Description",
-              "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
-            },
-            {
-              "name": "Time Min",
-              "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
-            },
-            {
-              "name": "Time Max",
-              "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
-            },
-            {
-              "name": "Max Results",
-              "internalKey": "maxResults",
-              "type": "number",
-              "required": false,
-              "description": "Max results for list/search",
-              "example": "250",
-              "defaultValue": "250"
-            },
-            {
-              "name": "Q",
-              "internalKey": "q",
-              "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure"
-          },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
-          "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into create.",
-            "inputValues": {
-              "Credential Id": "cred_123",
-              "Calendar Id": "primary",
-              "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
-            },
-            "expectedOutput": "The node runs create and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
-        },
-        {
-          "name": "Update",
-          "value": "update",
-          "description": "Update with the Google Calendar node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Calendar Id",
-              "internalKey": "calendarId",
-              "type": "string",
-              "required": false,
-              "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
-            },
-            {
-              "name": "Event Id",
-              "internalKey": "eventId",
-              "type": "string",
-              "required": false,
-              "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
-            },
-            {
-              "name": "Summary",
-              "internalKey": "summary",
-              "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
-            },
-            {
-              "name": "Start",
-              "internalKey": "start",
-              "type": "json",
-              "required": false,
-              "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "End",
-              "internalKey": "end",
-              "type": "json",
-              "required": false,
-              "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Event Data",
-              "internalKey": "eventData",
-              "type": "json",
-              "required": false,
-              "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Description",
-              "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
-            },
-            {
-              "name": "Time Min",
-              "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
-            },
-            {
-              "name": "Time Max",
-              "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
-            },
-            {
-              "name": "Max Results",
-              "internalKey": "maxResults",
-              "type": "number",
-              "required": false,
-              "description": "Max results for list/search",
-              "example": "250",
-              "defaultValue": "250"
-            },
-            {
-              "name": "Q",
-              "internalKey": "q",
-              "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure"
-          },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
-          "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into update.",
-            "inputValues": {
-              "Credential Id": "cred_123",
-              "Calendar Id": "primary",
-              "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
-            },
-            "expectedOutput": "The node runs update and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
-        },
-        {
-          "name": "Delete",
-          "value": "delete",
-          "description": "Delete with the Google Calendar node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Calendar Id",
-              "internalKey": "calendarId",
-              "type": "string",
-              "required": false,
-              "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
-            },
-            {
-              "name": "Event Id",
-              "internalKey": "eventId",
-              "type": "string",
-              "required": false,
-              "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
-            },
-            {
-              "name": "Summary",
-              "internalKey": "summary",
-              "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
-            },
-            {
-              "name": "Start",
-              "internalKey": "start",
-              "type": "json",
-              "required": false,
-              "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "End",
-              "internalKey": "end",
-              "type": "json",
-              "required": false,
-              "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Event Data",
-              "internalKey": "eventData",
-              "type": "json",
-              "required": false,
-              "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Description",
-              "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
-            },
-            {
-              "name": "Time Min",
-              "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
-            },
-            {
-              "name": "Time Max",
-              "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
-            },
-            {
-              "name": "Max Results",
-              "internalKey": "maxResults",
-              "type": "number",
-              "required": false,
-              "description": "Max results for list/search",
-              "example": "250",
-              "defaultValue": "250"
-            },
-            {
-              "name": "Q",
-              "internalKey": "q",
-              "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure"
-          },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
-          "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into delete.",
-            "inputValues": {
-              "Credential Id": "cred_123",
-              "Calendar Id": "primary",
-              "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
-            },
-            "expectedOutput": "The node runs delete and exposes its result in the output panel for the next node."
-          },
-          "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
-        },
-        {
-          "name": "Search",
-          "value": "search",
-          "description": "Search with the Google Calendar node using the configured input fields.",
-          "fields": [
-            {
-              "name": "Credential Id",
-              "internalKey": "credentialId",
-              "type": "string",
-              "required": false,
-              "description": "Stored credential reference (optional; OAuth handled via Connections)",
-              "example": "cred_123",
-              "placeholder": "cred_123"
-            },
-            {
-              "name": "Calendar Id",
-              "internalKey": "calendarId",
-              "type": "string",
-              "required": false,
-              "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
-            },
-            {
-              "name": "Event Id",
-              "internalKey": "eventId",
-              "type": "string",
-              "required": false,
-              "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
-            },
-            {
-              "name": "Summary",
-              "internalKey": "summary",
-              "type": "string",
-              "required": false,
-              "description": "Event summary/title",
-              "example": "{{ $json.summary }}"
-            },
-            {
-              "name": "Start",
-              "internalKey": "start",
-              "type": "json",
-              "required": false,
-              "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "End",
-              "internalKey": "end",
-              "type": "json",
-              "required": false,
-              "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Event Data",
-              "internalKey": "eventData",
-              "type": "json",
-              "required": false,
-              "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}"
-            },
-            {
-              "name": "Description",
-              "internalKey": "description",
-              "type": "string",
-              "required": false,
-              "description": "Event description",
-              "example": "{{ $json.description }}"
-            },
-            {
-              "name": "Time Min",
-              "internalKey": "timeMin",
-              "type": "date",
-              "required": false,
-              "description": "Lower bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMin }}"
-            },
-            {
-              "name": "Time Max",
-              "internalKey": "timeMax",
-              "type": "date",
-              "required": false,
-              "description": "Upper bound for list/search (RFC3339 timestamp)",
-              "example": "{{ $json.timeMax }}"
-            },
-            {
-              "name": "Max Results",
-              "internalKey": "maxResults",
-              "type": "number",
-              "required": false,
-              "description": "Max results for list/search",
-              "example": "250",
-              "defaultValue": "250"
-            },
-            {
-              "name": "Q",
-              "internalKey": "q",
-              "type": "string",
-              "required": false,
-              "description": "Free text search query (for events.list)",
-              "example": "{{ $json.q }}"
-            }
-          ],
-          "outputExample": {
-            "type": "type",
-            "structure": "structure"
-          },
-          "outputDescription": "type: Value returned by the Google Calendar node.\nstructure: Value returned by the Google Calendar node.",
-          "usageExample": {
-            "scenario": "Use Google Calendar in a workflow and pass upstream data into search.",
-            "inputValues": {
-              "Credential Id": "cred_123",
-              "Calendar Id": "primary",
-              "Event Id": "event-id",
-              "Summary": "{{ $json.summary }}",
-              "Start": "{\"key\":\"value\"}",
-              "End": "{\"key\":\"value\"}",
-              "Event Data": "{\"key\":\"value\"}",
-              "Description": "{{ $json.description }}",
-              "Time Min": "{{ $json.timeMin }}",
-              "Time Max": "{{ $json.timeMax }}"
-            },
-            "expectedOutput": "The node runs search and exposes its result in the output panel for the next node."
+            "expectedOutput": "The node executes search and exposes its result for downstream nodes."
           },
           "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
         }
@@ -1580,25 +730,19 @@ export const googleCalendarDoc: NodeDoc = {
   "commonErrors": [
     {
       "error": "Authentication failed",
-      "cause": "The saved connection, token, API key, or OAuth grant is missing, expired, or lacks permission.",
-      "fix": "Reconnect the service in CtrlChecks Connections, then run the node again."
+      "cause": "The saved credential, token, API key, or OAuth grant is missing, expired, or lacks the required scope.",
+      "fix": "Reconnect the service in CtrlChecks → Connections, then re-run the Google Calendar node."
     },
     {
       "error": "Required field missing",
-      "cause": "A required input is empty or an expression resolved to an empty value.",
-      "fix": "Open the node, fill the required field, and inspect upstream output before running again."
+      "cause": "A required input is empty or an upstream expression resolved to an empty value.",
+      "fix": "Open the node, fill every required field, and verify the upstream node output before running."
     },
     {
       "error": "Invalid input format",
       "cause": "A field value does not match the format expected by the node or service API.",
-      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node."
+      "fix": "Check JSON, date, URL, email, and ID fields against the examples shown in the node documentation."
     }
   ],
-  "relatedNodes": [
-    "postgresql",
-    "supabase",
-    "database_read",
-    "database_write",
-    "google_sheets"
-  ]
+  "relatedNodes": []
 };
