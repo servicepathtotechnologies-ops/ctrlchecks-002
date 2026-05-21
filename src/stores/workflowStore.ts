@@ -31,6 +31,7 @@ interface WorkflowState {
   selectedNode: WorkflowNode | null;
   selectedEdge: Edge | null;
   workflowId: string | null;
+  workflowPhase: string | null;
   workflowName: string;
   isDirty: boolean;
   copiedNode: WorkflowNode | null;
@@ -72,6 +73,7 @@ interface WorkflowState {
   deleteSelectedNode: () => void;
   deleteSelectedEdge: () => void;
   setWorkflowId: (id: string | null) => void;
+  setWorkflowPhase: (phase: string | null) => void;
   setWorkflowName: (name: string) => void;
   setIsDirty: (dirty: boolean) => void;
   resetWorkflow: () => void;
@@ -98,6 +100,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   selectedNode: null,
   selectedEdge: null,
   workflowId: null,
+  workflowPhase: null,
   workflowName: 'Untitled Workflow',
   isDirty: false,
   copiedNode: null,
@@ -540,6 +543,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   setWorkflowId: (id) => set({ workflowId: id }),
+  setWorkflowPhase: (phase) => set({ workflowPhase: phase }),
   setWorkflowName: (name) => set({ workflowName: name, isDirty: true }),
   setIsDirty: (dirty) => set({ isDirty: dirty }),
 

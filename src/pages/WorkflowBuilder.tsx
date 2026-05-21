@@ -83,6 +83,7 @@ export default function WorkflowBuilder() {
     setNodes,
     setEdges,
     setWorkflowId,
+    setWorkflowPhase,
     setWorkflowName,
     setIsDirty,
     resetWorkflow,
@@ -142,6 +143,7 @@ export default function WorkflowBuilder() {
         }
 
         setWorkflowId(data.id);
+        setWorkflowPhase((data as any).phase ?? null);
         setWorkflowName(data.name);
 
         // Step 1: Normalize backend format to frontend format (handle schema differences)
@@ -258,7 +260,7 @@ export default function WorkflowBuilder() {
     } finally {
       setIsLoading(false);
     }
-  }, [setWorkflowId, setWorkflowName, setNodes, setEdges, setIsDirty, resetWorkflow]);
+  }, [setWorkflowId, setWorkflowPhase, setWorkflowName, setNodes, setEdges, setIsDirty, resetWorkflow]);
 
   const loadLastResolvedInputs = useCallback(async (workflowId: string) => {
     try {

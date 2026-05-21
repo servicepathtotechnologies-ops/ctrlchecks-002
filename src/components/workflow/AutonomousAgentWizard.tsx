@@ -5469,6 +5469,13 @@ export function AutonomousAgentWizard() {
                 setFillModeValues((prev) => ({ ...prev, ...updates }));
             }
         }
+        if (blockingOAuthCredentials.length > 0) {
+            toast({
+                title: 'Credentials not yet connected',
+                description: 'Some required credentials are still missing. You can connect them on the next step.',
+            });
+        }
+
         // Bug A fix: user has submitted answers ? set questionsAnswered = true.
         // Now that pipelineReady is also true, it is safe to advance past the questions gate.
         setQuestionsAnswered(true);

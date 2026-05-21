@@ -171,6 +171,7 @@ export default function PropertiesPanel({
     setIsDirty,
     setAiEditedNodeIds,
     clearAiEditedNodeHighlight,
+    workflowPhase,
   } = useWorkflowStore();
   const { role: appRole } = useRole();
   const queryClient = useQueryClient();
@@ -1387,6 +1388,8 @@ export default function PropertiesPanel({
         const nodeDef = cachedSchemas?.find((s) => s.type === nodeType);
         const inputSchema = nodeDef?.inputSchema ?? {};
 
+        const isReadyForExecution = workflowPhase === 'ready_for_execution';
+
         const extracted = extractNodeConfigForAttachInputs(nodeConfig as Record<string, unknown>);
         const nodeInputs: Record<string, any> = {};
         const credentialInputs: Record<string, any> = {};
@@ -1403,6 +1406,16 @@ export default function PropertiesPanel({
             nodeInputs[key] = value;
           }
         });
+
+        // When the workflow is fully committed, only allow mode/unlock keys through — never
+        // re-run structural normalization against already-settled field values.
+        if (isReadyForExecution) {
+          const allowed = Object.fromEntries(
+            Object.entries(nodeInputs).filter(([k]) => k.startsWith('mode_') || k.startsWith('unlock_'))
+          );
+          Object.keys(nodeInputs).forEach((k) => delete nodeInputs[k]);
+          Object.assign(nodeInputs, allowed);
+        }
 
         const token = sessionData.session.access_token;
         const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
@@ -1493,7 +1506,7 @@ export default function PropertiesPanel({
       if (autoPersistTimerRef.current) clearTimeout(autoPersistTimerRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debugMode, selectedNodeConfigKey, selectedNode?.id, workflowId]);
+  }, [debugMode, selectedNodeConfigKey, selectedNode?.id, workflowId, workflowPhase]);
 
   // Memoize available fields for condition builder – safe when no node is selected
   const availableFieldsForConditions = useMemo(() => {

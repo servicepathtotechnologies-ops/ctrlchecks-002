@@ -270,7 +270,7 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
                         <FormGuideLabel htmlFor={`name-${fieldKey}`} label="Internal Name" fieldKey="internalName" helpText={formHelp.internalName} className="text-xs" />
                         <Input
                         id={`name-${fieldKey}`}
-                        value={field.name}
+                        value={field.name ?? field.key ?? field.id ?? ''}
                         onChange={(e) => handleFieldChange(fieldKey, 'name', e.target.value)}
                         placeholder="field_name"
                         className="h-8 text-sm font-mono"
