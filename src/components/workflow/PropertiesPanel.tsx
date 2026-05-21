@@ -1326,6 +1326,7 @@ export default function PropertiesPanel({
   /** Per-node hash of last successful attach-inputs payload (non-credential keys only). */
   const lastSuccessfulAttachInputsRef = useRef<Map<string, string>>(new Map());
   const executionActiveRef = useRef(false);
+  const autoPersistInFlightRef = useRef(false);
 
   useEffect(() => {
     if (!workflowId) return;
@@ -1368,7 +1369,10 @@ export default function PropertiesPanel({
       try {
         if (Date.now() < suppressAutoPersistUntilRef.current) return;
         if (executionActiveRef.current) return;
+        if (autoPersistInFlightRef.current) return;
 
+        autoPersistInFlightRef.current = true;
+        try {
         const { awsClient } = await import('@/integrations/aws/client');
         const { data: sessionData } = await awsClient.auth.getSession();
         if (!sessionData?.session?.access_token) return;
@@ -1477,7 +1481,11 @@ export default function PropertiesPanel({
             setGuidedStatus(null);
           }
         }
+        } finally {
+          autoPersistInFlightRef.current = false;
+        }
       } catch {
+        autoPersistInFlightRef.current = false;
         // Non-fatal — user can still manually save
       }
     }, 1500);
