@@ -34,6 +34,36 @@ interface FormNodeSettingsProps {
   onConfigChange: (config: FormConfig) => void;
 }
 
+function FormGuideLabel({
+  htmlFor,
+  label,
+  fieldKey,
+  fieldType = 'text',
+  helpText,
+  className,
+}: {
+  htmlFor?: string;
+  label: string;
+  fieldKey: string;
+  fieldType?: string;
+  helpText: string;
+  className?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <Label htmlFor={htmlFor} className={className}>{label}</Label>
+      <InputGuideLink
+        fieldKey={fieldKey}
+        fieldLabel={label}
+        fieldType={fieldType}
+        nodeType="form"
+        helpText={helpText}
+        className="mt-0"
+      />
+    </div>
+  );
+}
+
 export default function FormNodeSettings({ config, onConfigChange }: FormNodeSettingsProps) {
   const labelToName = (label: string): string => {
     return label
@@ -127,11 +157,26 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
     { value: 'file', label: 'File' },
   ];
 
+  const formHelp = {
+    formTitle: 'What this field is: The title shown at the top of the public form.\nHow to fill it: Use a short name that tells users what they are submitting.\nExample: Customer Feedback Form.',
+    formDescription: 'What this field is: Optional helper text shown below the form title.\nHow to fill it: Explain what the form is for or what users should prepare.\nExample: Tell us what happened and we will contact you within one business day.',
+    fields: 'What this section is: These are the questions users will answer on the form.\nHow to fill it: Add one field per question, choose the right type, and mark only truly necessary questions as required.\nExample: Name, Email, Phone, Message.',
+    fieldLabel: 'What this field is: The question or label shown to the person filling the form.\nHow to fill it: Write it in plain language.\nExample: Email Address.',
+    fieldType: 'What this field is: The kind of answer the form should collect.\nHow to choose it: Use Email for email addresses, Phone for phone numbers, Select/Radio for fixed choices, and Textarea for long answers.',
+    internalName: 'What this field is: The machine-friendly key used in workflow output after the form is submitted.\nHow to fill it: Use lowercase letters, numbers, and underscores.\nExample: customer_email. Later nodes can use {{$json.customer_email}}.',
+    placeholder: 'What this field is: Light example text shown inside the empty form field.\nHow to fill it: Show users the expected format without putting real data there.\nExample: alice@example.com.',
+    options: 'What this field is: The allowed choices for a Select or Radio field.\nHow to fill it: Type choices separated by commas.\nExample: New, In Progress, Done.',
+    required: 'What this field is: Controls whether the user must answer this question before submitting.\nHow to choose it: Turn it on only for information the workflow cannot run without.',
+    submitButtonText: 'What this field is: The text on the button users click to submit the form.\nHow to fill it: Use a clear action.\nExample: Send Request or Submit.',
+    successMessage: 'What this field is: The message shown after the form is submitted successfully.\nHow to fill it: Confirm what happened and what comes next.\nExample: Thank you. We received your request.',
+    redirectUrl: 'What this field is: Optional web page users are sent to after submitting.\nHow to fill it: Paste a full HTTPS URL, or leave empty to show the success message on the same page.\nExample: https://example.com/thank-you.',
+  };
+
   return (
     <div className="space-y-6">
       {/* Form Title */}
       <div className="space-y-2">
-        <Label htmlFor="formTitle">Form Title</Label>
+        <FormGuideLabel htmlFor="formTitle" label="Form Title" fieldKey="formTitle" helpText={formHelp.formTitle} />
         <Input
           id="formTitle"
           value={config.formTitle}
@@ -142,7 +187,7 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
 
       {/* Form Description */}
       <div className="space-y-2">
-        <Label htmlFor="formDescription">Description (Optional)</Label>
+        <FormGuideLabel htmlFor="formDescription" label="Description (Optional)" fieldKey="formDescription" fieldType="textarea" helpText={formHelp.formDescription} />
         <Textarea
           id="formDescription"
           value={config.formDescription}
@@ -155,7 +200,17 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
       {/* Form Fields */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Label>Form Fields</Label>
+          <div className="flex items-center gap-2">
+            <Label>Form Fields</Label>
+            <InputGuideLink
+              fieldKey="fields"
+              fieldLabel="Form Fields"
+              fieldType="json"
+              nodeType="form"
+              helpText={formHelp.fields}
+              className="mt-0"
+            />
+          </div>
           <Button
             type="button"
             variant="outline"
@@ -182,7 +237,7 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
                   <div className="flex-1 space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label htmlFor={`label-${fieldKey}`} className="text-xs">Label</Label>
+                        <FormGuideLabel htmlFor={`label-${fieldKey}`} label="Label" fieldKey="fieldLabel" helpText={formHelp.fieldLabel} className="text-xs" />
                         <Input
                           id={`label-${fieldKey}`}
                           value={field.label}
@@ -192,7 +247,7 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor={`type-${fieldKey}`} className="text-xs">Type</Label>
+                        <FormGuideLabel htmlFor={`type-${fieldKey}`} label="Type" fieldKey="fieldType" fieldType="select" helpText={formHelp.fieldType} className="text-xs" />
                         <Select
                           value={field.type}
                           onValueChange={(value) => handleFieldChange(fieldKey, 'type', value)}
@@ -212,7 +267,7 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
                     </div>
 
                     <div className="space-y-1">
-<Label htmlFor={`name-${fieldKey}`} className="text-xs">Internal Name</Label>
+                        <FormGuideLabel htmlFor={`name-${fieldKey}`} label="Internal Name" fieldKey="internalName" helpText={formHelp.internalName} className="text-xs" />
                         <Input
                         id={`name-${fieldKey}`}
                         value={field.name}
@@ -224,7 +279,7 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
 
                     {(field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'textarea') && (
                       <div className="space-y-1">
-                        <Label htmlFor={`placeholder-${fieldKey}`} className="text-xs">Placeholder</Label>
+                        <FormGuideLabel htmlFor={`placeholder-${fieldKey}`} label="Placeholder" fieldKey="placeholder" helpText={formHelp.placeholder} className="text-xs" />
                         <Input
                           id={`placeholder-${fieldKey}`}
                           value={field.placeholder || ''}
@@ -237,7 +292,7 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
 
                     {(field.type === 'select' || field.type === 'radio') && (
                       <div className="space-y-1">
-                        <Label htmlFor={`options-${field.id}`} className="text-xs">Options (comma-separated)</Label>
+                        <FormGuideLabel htmlFor={`options-${field.id}`} label="Options (comma-separated)" fieldKey="options" helpText={formHelp.options} className="text-xs" />
                         <Input
                           id={`options-${field.id}`}
                           value={field.options?.map(opt => typeof opt === 'string' ? opt : `${opt.label}:${opt.value}`).join(', ') || ''}
@@ -267,6 +322,14 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
                       <Label htmlFor={`required-${fieldKey}`} className="text-xs cursor-pointer">
                         Required
                       </Label>
+                      <InputGuideLink
+                        fieldKey="required"
+                        fieldLabel="Required"
+                        fieldType="boolean"
+                        nodeType="form"
+                        helpText={formHelp.required}
+                        className="mt-0"
+                      />
                     </div>
                   </div>
 
@@ -289,7 +352,7 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
 
       {/* Submit Button Text */}
       <div className="space-y-2">
-        <Label htmlFor="submitButtonText">Submit Button Text</Label>
+        <FormGuideLabel htmlFor="submitButtonText" label="Submit Button Text" fieldKey="submitButtonText" helpText={formHelp.submitButtonText} />
         <Input
           id="submitButtonText"
           value={config.submitButtonText}
@@ -300,7 +363,7 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
 
       {/* Success Message */}
       <div className="space-y-2">
-        <Label htmlFor="successMessage">Success Message</Label>
+        <FormGuideLabel htmlFor="successMessage" label="Success Message" fieldKey="successMessage" fieldType="textarea" helpText={formHelp.successMessage} />
         <Textarea
           id="successMessage"
           value={config.successMessage}
@@ -312,7 +375,17 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
 
       {/* Redirect URL */}
       <div className="space-y-2">
-        <Label htmlFor="redirectUrl">Redirect URL (Optional)</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="redirectUrl">Redirect URL (Optional)</Label>
+          <InputGuideLink
+            fieldKey="redirectUrl"
+            fieldLabel="Redirect URL"
+            fieldType="url"
+            nodeType="form"
+            helpText={formHelp.redirectUrl}
+            className="mt-0"
+          />
+        </div>
         <Input
           id="redirectUrl"
           value={config.redirectUrl}
@@ -323,12 +396,6 @@ export default function FormNodeSettings({ config, onConfigChange }: FormNodeSet
           <p className="text-xs text-muted-foreground">
             Leave empty to show success message on the same page
           </p>
-          <InputGuideLink
-            fieldKey="redirectUrl"
-            fieldLabel="Redirect URL"
-            fieldType="url"
-            nodeType="form"
-          />
         </div>
       </div>
     </div>

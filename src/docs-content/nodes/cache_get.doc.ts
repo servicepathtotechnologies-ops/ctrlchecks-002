@@ -8,7 +8,9 @@ export const cacheGetDoc: NodeDoc = {
   "description": "Retrieve a value from cache by key",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,16 +29,19 @@ export const cacheGetDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Cache key",
-              "example": "user:123",
-              "placeholder": "user:123"
+              "helpText": "What this field is: The exact name of the cached value to retrieve.\nMust match the key used when the value was stored.\nExample: user:{{$json.userId}}:preferences\nTip: Use the same key pattern you used in the Cache Set node.",
+              "placeholder": "user:123",
+              "example": "user:123"
             },
             {
               "name": "Default Value",
               "internalKey": "defaultValue",
               "type": "json",
+              "required": false,
               "description": "Value to return if key not found",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Value to return if key not found for Cache Get / Execute.\nHow to fill it: Enter valid JSON in the format Cache Get expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.defaultValue}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {

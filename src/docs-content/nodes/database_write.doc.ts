@@ -8,7 +8,9 @@ export const databaseWriteDoc: NodeDoc = {
   "description": "Execute SQL queries on database (INSERT, UPDATE, DELETE)",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,9 +27,11 @@ export const databaseWriteDoc: NodeDoc = {
               "name": "Connection String",
               "internalKey": "connectionString",
               "type": "string",
+              "required": false,
               "description": "Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment.",
-              "example": "postgresql://user:pass@host:5432/dbname",
-              "placeholder": "postgresql://user:pass@host:5432/dbname"
+              "helpText": "What this field is: Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment. for Database Write / Execute.\nHow to fill it: Enter the connection string value requested by Database Write, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "placeholder": "postgresql://user:pass@host:5432/dbname",
+              "example": "postgresql://user:pass@host:5432/dbname"
             },
             {
               "name": "Query",
@@ -35,16 +39,19 @@ export const databaseWriteDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query to execute",
-              "example": "INSERT INTO users (name, email) VALUES ($1, $2)",
-              "placeholder": "INSERT INTO users (name, email) VALUES ($1, $2)"
+              "helpText": "What this field is: SQL query to execute for Database Write / Execute.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Database Write which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "placeholder": "INSERT INTO users (name, email) VALUES ($1, $2)",
+              "example": "INSERT INTO users (name, email) VALUES ($1, $2)"
             },
             {
               "name": "Parameters",
               "internalKey": "parameters",
               "type": "json",
+              "required": false,
               "description": "Query parameters",
-              "example": "[\"item\"]",
-              "placeholder": "[\"item\"]"
+              "helpText": "What this field is: Query parameters for Database Write / Execute.\nHow to fill it: Enter valid JSON in the format Database Write expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.parameters}} or pick the value from the data picker.",
+              "placeholder": "[\"item\"]",
+              "example": "[\"item\"]"
             }
           ],
           "outputExample": {

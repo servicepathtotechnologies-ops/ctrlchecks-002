@@ -8,7 +8,9 @@ export const logOutputDoc: NodeDoc = {
   "description": "Log data to console or file",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,16 +27,21 @@ export const logOutputDoc: NodeDoc = {
               "name": "Level",
               "internalKey": "level",
               "type": "string",
+              "required": false,
               "description": "Log level",
-              "example": "info",
+              "helpText": "What this field is: Log level for Log Output / Execute.\nHow to fill it: Enter the level value requested by Log Output, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.level}} or pick the value from the data picker.",
               "placeholder": "info",
+              "example": "info",
               "defaultValue": "info"
             },
             {
               "name": "Message",
               "internalKey": "message",
               "type": "textarea",
-              "description": "Log message"
+              "required": true,
+              "description": "Log message",
+              "helpText": "What this field is: Log message for Log Output / Execute.\nHow to fill it: Type the message, prompt, or content you want Log Output to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Hello {{$json.name}}"
             }
           ],
           "outputExample": {

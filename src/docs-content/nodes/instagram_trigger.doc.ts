@@ -8,9 +8,18 @@ export const instagramTriggerDoc: NodeDoc = {
   "description": "Trigger workflows on Instagram events: new DM, comment, mention, postback",
   "credentialType": "Meta App Credentials",
   "credentialSetupSteps": [
-    "No credential required."
+    "What this is: Meta Apps uses an OAuth connection so CtrlChecks can safely access your Meta Apps account.",
+    "Go to developers.facebook.com/apps and sign in with your Facebook account.",
+    "Click \"Create App\" -> select \"Business\" type -> Next -> give it a name -> Create App.",
+    "Under \"Add Products to Your App\", click \"Set Up\" on Facebook Login.",
+    "Go to Facebook Login -> Settings -> add this URL to \"Valid OAuth Redirect URIs\": http://localhost:3001/api/oauth/facebook/callback -> Save Changes.",
+    "Copy the App ID and App Secret from Settings -> Basic.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Facebook -> click \"Connect with Facebook\" -> sign in and authorize.",
+    "Run a test step to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Meta Apps node and select the saved connection."
   ],
-  "credentialDocsUrl": "https://docs.ctrlchecks.com",
+  "credentialDocsUrl": "https://developers.facebook.com/docs/facebook-login/web",
   "resources": [
     {
       "name": "Configuration",
@@ -27,17 +36,20 @@ export const instagramTriggerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Instagram event type",
-              "example": "message.received",
+              "helpText": "What this field is: Instagram event type for Instagram Trigger / Execute.\nHow to fill it: Enter the event value requested by Instagram Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.event}} or pick the value from the data picker.",
               "placeholder": "message.received",
+              "example": "message.received",
               "defaultValue": "message.received"
             },
             {
               "name": "Instagram Business Account Id",
               "internalKey": "instagramBusinessAccountId",
               "type": "string",
+              "required": false,
               "description": "Instagram Business Account ID to listen on",
-              "example": "abc123",
-              "placeholder": "abc123"
+              "helpText": "What this field is: Instagram Business Account ID to listen on for Instagram Trigger / Execute.\nWhere to find it: Open the item in Instagram Trigger and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.instagramBusinessAccountId}} or pick the value from the data picker.",
+              "placeholder": "abc123",
+              "example": "abc123"
             }
           ],
           "outputExample": {
@@ -50,14 +62,14 @@ export const instagramTriggerDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Instagram Trigger to execute in a workflow.",
+            "scenario": "Process incoming Instagram Trigger data with execute after a related upstream event is received",
             "inputValues": {
               "Event": "message.received",
               "Instagram Business Account Id": "abc123"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Instagram Trigger returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

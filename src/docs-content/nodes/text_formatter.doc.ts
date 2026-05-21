@@ -8,7 +8,9 @@ export const textFormatterDoc: NodeDoc = {
   "description": "Format text strings with templates and placeholders",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,16 +29,19 @@ export const textFormatterDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Text template with placeholders (e.g., \"Hello {{name}}\")",
-              "example": "Hello {{$json.name}}",
-              "placeholder": "Hello {{$json.name}}"
+              "helpText": "What this field is: Text template with placeholders (e.g., \"Hello {{name}}\") for Text Formatter / Execute.\nHow to fill it: Type the message, prompt, or content you want Text Formatter to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Hello {{$json.name}}",
+              "example": "Hello {{$json.name}}"
             },
             {
               "name": "Values",
               "internalKey": "values",
               "type": "json",
+              "required": true,
               "description": "Values to substitute in template (optional if using $json syntax)",
-              "example": "{\"name\":\"John\",\"orderId\":\"12345\"}",
-              "placeholder": "{\"name\":\"John\",\"orderId\":\"12345\"}"
+              "helpText": "What this field is: Values to substitute in template (optional if using $json syntax) for Text Formatter / Execute.\nHow to fill it: Enter valid JSON in the format Text Formatter expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.values}} or pick the value from the data picker.",
+              "placeholder": "{\"name\":\"John\",\"orderId\":\"12345\"}",
+              "example": "{\"name\":\"John\",\"orderId\":\"12345\"}"
             }
           ],
           "outputExample": {

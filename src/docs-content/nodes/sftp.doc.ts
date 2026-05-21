@@ -8,7 +8,13 @@ export const sftpDoc: NodeDoc = {
   "description": "SFTP file operations",
   "credentialType": "SFTP Credential",
   "credentialSetupSteps": [
-    "No credential required."
+    "What this is: SFTP uses an OAuth connection so CtrlChecks can safely access your SFTP account.",
+    "Get SFTP connection details from your server administrator: Host (server address or IP), Port (usually 22), Username, and either Password or SSH private key.",
+    "Make sure the server firewall allows SSH/SFTP connections (port 22) from CtrlChecks.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> SFTP -> enter Host, Port, Username, and your authentication (password or private key).",
+    "If using a private key: paste the full key content including the -----BEGIN and -----END lines.",
+    "Click Test Connection -> Save. Run a test step to confirm file transfer works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields."
   ],
   "credentialDocsUrl": "https://en.wikipedia.org/wiki/SSH_File_Transfer_Protocol",
   "resources": [
@@ -27,16 +33,19 @@ export const sftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SFTP host",
-              "example": "sftp.example.com",
-              "placeholder": "sftp.example.com"
+              "helpText": "What this field is: The SFTP server hostname or IP address.\nExample: sftp.yourcompany.com or 192.168.1.100",
+              "placeholder": "sftp.example.com",
+              "example": "sftp.example.com"
             },
             {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
+              "required": false,
               "description": "File path",
-              "example": "/path/to/file.pdf",
-              "placeholder": "/path/to/file.pdf"
+              "helpText": "What this field is: The file path on the SFTP server.\nExample: /home/user/uploads/report.pdf",
+              "placeholder": "/path/to/file.pdf",
+              "example": "/path/to/file.pdf"
             }
           ],
           "outputExample": {
@@ -49,14 +58,14 @@ export const sftpDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use SFTP to upload in a workflow.",
+            "scenario": "Process incoming SFTP data with upload after a related upstream event is received",
             "inputValues": {
               "Host": "sftp.example.com",
               "Path": "/path/to/file.pdf"
             },
-            "expectedOutput": "The node executes upload and exposes its result for downstream nodes."
+            "expectedOutput": "SFTP returns structured upload data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://en.wikipedia.org/wiki/SSH_File_Transfer_Protocol"
         },
@@ -71,16 +80,19 @@ export const sftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SFTP host",
-              "example": "sftp.example.com",
-              "placeholder": "sftp.example.com"
+              "helpText": "What this field is: The SFTP server hostname or IP address.\nExample: sftp.yourcompany.com or 192.168.1.100",
+              "placeholder": "sftp.example.com",
+              "example": "sftp.example.com"
             },
             {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
+              "required": false,
               "description": "File path",
-              "example": "/path/to/file.pdf",
-              "placeholder": "/path/to/file.pdf"
+              "helpText": "What this field is: The file path on the SFTP server.\nExample: /home/user/uploads/report.pdf",
+              "placeholder": "/path/to/file.pdf",
+              "example": "/path/to/file.pdf"
             }
           ],
           "outputExample": {
@@ -93,14 +105,14 @@ export const sftpDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use SFTP to download in a workflow.",
+            "scenario": "Process incoming SFTP data with download after a related upstream event is received",
             "inputValues": {
               "Host": "sftp.example.com",
               "Path": "/path/to/file.pdf"
             },
-            "expectedOutput": "The node executes download and exposes its result for downstream nodes."
+            "expectedOutput": "SFTP returns structured download data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://en.wikipedia.org/wiki/SSH_File_Transfer_Protocol"
         },
@@ -115,16 +127,19 @@ export const sftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SFTP host",
-              "example": "sftp.example.com",
-              "placeholder": "sftp.example.com"
+              "helpText": "What this field is: The SFTP server hostname or IP address.\nExample: sftp.yourcompany.com or 192.168.1.100",
+              "placeholder": "sftp.example.com",
+              "example": "sftp.example.com"
             },
             {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
+              "required": false,
               "description": "File path",
-              "example": "/path/to/file.pdf",
-              "placeholder": "/path/to/file.pdf"
+              "helpText": "What this field is: The file path on the SFTP server.\nExample: /home/user/uploads/report.pdf",
+              "placeholder": "/path/to/file.pdf",
+              "example": "/path/to/file.pdf"
             }
           ],
           "outputExample": {
@@ -137,14 +152,14 @@ export const sftpDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use SFTP to list in a workflow.",
+            "scenario": "Process incoming SFTP data with list after a related upstream event is received",
             "inputValues": {
               "Host": "sftp.example.com",
               "Path": "/path/to/file.pdf"
             },
-            "expectedOutput": "The node executes list and exposes its result for downstream nodes."
+            "expectedOutput": "SFTP returns structured list data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://en.wikipedia.org/wiki/SSH_File_Transfer_Protocol"
         }

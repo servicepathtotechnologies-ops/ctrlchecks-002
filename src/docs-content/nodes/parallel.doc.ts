@@ -8,7 +8,9 @@ export const parallelDoc: NodeDoc = {
   "description": "Runs multiple branches concurrently and waits for all to complete",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,9 +27,11 @@ export const parallelDoc: NodeDoc = {
               "name": "Mode",
               "internalKey": "mode",
               "type": "select",
+              "required": false,
               "description": "Execution mode (all, race)",
-              "example": "all",
+              "helpText": "What this field is: A list of allowed choices for mode in Parallel / Execute.\nHow to fill it: Pick the option that matches what Parallel should do. Do not type a custom value unless the UI allows it.\nAvailable choices: Wait for all (all), Race (first completes) (race).",
               "placeholder": "all",
+              "example": "all",
               "defaultValue": "all",
               "options": [
                 "Wait for all",
@@ -45,13 +49,13 @@ export const parallelDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Parallel to execute in a workflow.",
+            "scenario": "Process incoming Parallel data with execute after a related upstream event is received",
             "inputValues": {
               "Mode": "all"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Parallel returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

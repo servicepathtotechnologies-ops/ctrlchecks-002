@@ -8,7 +8,9 @@ export const aiAgentDoc: NodeDoc = {
   "description": "AI service node for prompt-based text generation and reasoning",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,50 +27,58 @@ export const aiAgentDoc: NodeDoc = {
               "name": "User Input",
               "internalKey": "userInput",
               "type": "string",
+              "required": false,
               "description": "User input or prompt for the AI node",
-              "example": "Process this data",
-              "placeholder": "Process this data"
+              "helpText": "What this field is: User input or prompt for the AI node for AI Agent / Execute.\nHow to fill it: Enter the user input value requested by AI Agent, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.userInput}} or pick the value from the data picker.",
+              "placeholder": "Process this data",
+              "example": "Process this data"
             },
             {
               "name": "Model",
               "internalKey": "model",
               "type": "string",
+              "required": false,
               "description": "LLM model selection",
-              "example": "gemini-2.5-flash",
+              "helpText": "What this field is: LLM model selection for AI Agent / Execute.\nHow to fill it: Enter the model value requested by AI Agent, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.model}} or pick the value from the data picker.",
               "placeholder": "gemini-2.5-flash",
+              "example": "gemini-2.5-flash",
               "defaultValue": "gemini-2.5-flash"
             },
             {
               "name": "Memory",
               "internalKey": "memory",
               "type": "json",
+              "required": false,
               "description": "Optional memory configuration (disabled by default)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Optional memory configuration (disabled by default) for AI Agent / Execute.\nHow to fill it: Enter valid JSON in the format AI Agent expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.memory}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Tool",
               "internalKey": "tool",
               "type": "json",
+              "required": false,
               "description": "Optional tool configuration (disabled by default)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Optional tool configuration (disabled by default) for AI Agent / Execute.\nHow to fill it: Enter valid JSON in the format AI Agent expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.tool}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {
-            "result": "Operation completed successfully.",
-            "text": ""
+            "text": "The order is ready to ship and the customer has been notified.",
+            "length": 62
           },
-          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
+          "outputDescription": "text: Value returned by this operation.\nlength: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use AI Agent to execute in a workflow.",
+            "scenario": "Process incoming AI Agent data with execute after a related upstream event is received",
             "inputValues": {
               "User Input": "Process this data",
               "Model": "gemini-2.5-flash",
               "Memory": "{\"key\":\"value\"}",
               "Tool": "{\"key\":\"value\"}"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "AI Agent returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

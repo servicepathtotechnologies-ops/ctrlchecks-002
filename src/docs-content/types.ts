@@ -7,6 +7,7 @@ export interface FieldDoc {
     | 'url' | 'email' | 'textarea';
   required: boolean;
   description: string;
+  helpText?: string;
   placeholder?: string;
   defaultValue?: string;
   options?: string[];

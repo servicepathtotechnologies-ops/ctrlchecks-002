@@ -127,6 +127,153 @@ function detectArrayWidget(
   return 'json';
 }
 
+function guideText(parts: Array<string | null | undefined>): string {
+  return parts.filter(Boolean).join('\n');
+}
+
+function dynamicTip(fieldKey: string, frontendType: ConfigField['type']): string | null {
+  if (frontendType === 'boolean' || frontendType === 'select') return null;
+  return `Tip: To use data from an earlier node, type {{$json.${fieldKey}}} or pick the value from the data picker.`;
+}
+
+function deriveInputHelpText(fieldKey: string, fieldSchema: InputFieldSchema, frontendType: ConfigField['type'], nodeType?: string): string {
+  const lower = fieldKey.toLowerCase();
+  const label = fieldKey
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const plainLabel = label.toLowerCase();
+  const description = fieldSchema.description || `${label} for this node.`;
+  const serviceName = nodeType
+    ? nodeType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : 'this node';
+
+  if (lower === 'operation') {
+    return guideText([
+      `What this field is: This chooses the exact action ${serviceName} will perform.`,
+      `How to fill it: Pick the action that matches your goal for this ${serviceName} step. Use the choices shown in this node.`,
+      `Example: Choose Create when you want ${serviceName} to add a new record, or Search/Get Many when you want it to find existing records.`,
+    ]);
+  }
+  if (lower === 'resource') {
+    return guideText([
+      `What this field is: Resource chooses the kind of item ${serviceName} works with.`,
+      `How to fill it: Pick the object you want this step to work on, such as contact, company, deal, message, file, or another option shown in the dropdown.`,
+      `Example: In HubSpot, choose Contact for a person and Deal for a sales opportunity.`,
+    ]);
+  }
+  if (nodeType === 'hubspot' && lower === 'properties') {
+    return guideText([
+      'What this field is: HubSpot properties are the fields sent when creating or updating a HubSpot record.',
+      'Where to find property names: In HubSpot, open Settings -> Properties, choose the object type, and copy the internal property name.',
+      'Contact example: {"email":"alice@example.com","firstname":"Alice","lastname":"Kumar","phone":"+919876543210"}',
+      'Deal example: {"dealname":"Website redesign","amount":"25000","pipeline":"default","dealstage":"appointmentscheduled"}',
+      'Common mistake: Use HubSpot internal names such as firstname, not only the visible label such as First name.',
+    ]);
+  }
+  if ((nodeType === 'whatsapp' || nodeType === 'whatsapp_cloud') && lower === 'contacts') {
+    return guideText([
+      'What this field is: Contact data that WhatsApp sends as a contact card.',
+      'How to fill it: Provide a JSON array of contact objects with name and phone information.',
+      'Example: [{"name":{"formatted_name":"Alice Kumar","first_name":"Alice"},"phones":[{"phone":"+919876543210","type":"MOBILE"}]}]',
+      'What the user sees: The recipient receives a WhatsApp contact card they can save on their phone.',
+    ]);
+  }
+  if (lower.includes('spreadsheetid') || lower.includes('sheetid')) {
+    return guideText([
+      'What this field is: This is the unique ID of the Google Sheet file.',
+      'Where to find it: Open the Google Sheet and copy the long text between /d/ and /edit in the browser URL.',
+      'Format: https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit',
+      'Example: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
+    ]);
+  }
+  if (lower.includes('url') || lower.includes('endpoint') || lower.includes('webhook')) {
+    return guideText([
+      `What this field is: ${description}`,
+      'How to fill it: Paste the full web address, starting with https:// whenever possible.',
+      'Example: https://api.example.com/customers',
+      dynamicTip(fieldKey, frontendType),
+    ]);
+  }
+  if (lower.includes('email') || lower.includes('recipient') || lower === 'to') {
+    return guideText([
+      `What this field is: The email address that this node should use for ${plainLabel}.`,
+      'How to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.',
+      'Example: alice@example.com',
+      'Dynamic example: {{$json.email}} uses the email value from an earlier node.',
+    ]);
+  }
+  if (lower.includes('channel')) {
+    return guideText([
+      'What this field is: The Slack channel or conversation where the message should go.',
+      'Where to find it: Open Slack, choose the channel, and use its name with #, or copy the channel ID from channel details.',
+      'Example: #alerts or C01234567',
+    ]);
+  }
+  if (lower.includes('token') || lower.includes('apikey') || lower.includes('api_key') || lower.includes('secret')) {
+    return guideText([
+      `What this field is: A private key or token that lets CtrlChecks access ${label.replace(/Api/gi, 'API')}.`,
+      'Where to get it: Open the service dashboard, go to API Keys, Developers, or Settings, then create or copy a secret key.',
+      'Important: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.',
+      'Example format: sk_live_..., xoxb-..., or token_...',
+    ]);
+  }
+  if (lower.includes('query') || lower.includes('filter')) {
+    return guideText([
+      `What this field is: ${description}`,
+      'How to fill it: Enter the search, filter, SQL, or API query that tells the service which records to return.',
+      'Leave it blank only when you really want all available records and the node allows it.',
+      'Example: status = active or from:billing@example.com',
+      dynamicTip(fieldKey, frontendType),
+    ]);
+  }
+  if (lower.includes('body') || lower.includes('text') || lower.includes('message') ||
+      lower.includes('content') || lower === 'prompt' || frontendType === 'textarea') {
+    return guideText([
+      `What this field is: ${description}`,
+      'How to fill it: Type the message, prompt, or content you want this node to send or process.',
+      'Example: Hello {{$json.name}}, your report is ready.',
+      'Tip: Anything inside {{ }} can come from an earlier workflow step.',
+    ]);
+  }
+  if (lower.endsWith('id') || lower.includes('id')) {
+    return guideText([
+      `What this field is: ${description}`,
+      'Where to find it: Open the item in the service dashboard and copy its ID from the URL, details page, or API response.',
+      'Example: abc123, cus_123, msg_123, or C01234567',
+      dynamicTip(fieldKey, frontendType),
+    ]);
+  }
+  if (frontendType === 'json' || frontendType === 'keyValue') {
+    return guideText([
+      `What this field is: ${description}`,
+      'How to fill it: Enter valid JSON or key-value pairs. Use { } for one object, or [ ] for a list.',
+      'Example object: {"name":"Alice","email":"alice@example.com"}',
+      'Example list: [{"name":"Alice"},{"name":"Bob"}]',
+      dynamicTip(fieldKey, frontendType),
+    ]);
+  }
+  if (frontendType === 'select') {
+    return guideText([
+      `What this field is: A list of allowed choices for ${plainLabel}.`,
+      'How to fill it: Pick one option from the dropdown. Do not type a custom value unless the UI allows it.',
+      'Example: Choose "public" for a public post, or "private" for a private item.',
+    ]);
+  }
+  if (frontendType === 'boolean') {
+    return guideText([
+      `What this field is: An on/off choice for ${plainLabel}.`,
+      'How to fill it: Turn it on for Yes/True, or off for No/False.',
+      'Example: Turn Retry On Fail on when you want CtrlChecks to try again after a temporary error.',
+    ]);
+  }
+  return guideText([
+    `What this field is: ${description}`,
+    `How to fill it: Enter the ${plainLabel} value requested by the service or by the previous workflow step.`,
+    dynamicTip(fieldKey, frontendType),
+  ]);
+}
+
 /**
  * Convert backend InputFieldSchema to frontend ConfigField
  */
@@ -334,13 +481,14 @@ export function convertSchemaToConfigField(
     required: isRequired,
     defaultValue: fieldSchema.default,
     placeholder: placeholderText,
-    helpText: fieldSchema.description || undefined,
+    helpText: deriveInputHelpText(fieldKey, fieldSchema, frontendType, nodeType),
     options,
     helpCategory: fieldSchema.helpCategory,
     docsUrl: fieldSchema.docsUrl,
     exampleValue: fieldSchema.exampleValue,
     contextHints: fieldSchema.ui?.contextHints,
     visibleIf: fieldSchema.ui?.visibleIf,
+    requiredIf: fieldSchema.ui?.requiredIf,
     addButtonLabel,
   };
 

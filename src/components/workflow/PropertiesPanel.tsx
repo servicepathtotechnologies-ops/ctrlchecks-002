@@ -14,8 +14,6 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import NodeUsageCard from './NodeUsageCard';
-import GoogleSheetsSettings from './GoogleSheetsSettings';
-import ScheduleWiseSettings from './ScheduleWiseSettings';
 import FormNodeSettings from './FormNodeSettings';
 import ScheduleTrigger from './ScheduleTrigger';
 import FacebookConnectionStatus from '@/components/FacebookConnectionStatus';
@@ -73,6 +71,7 @@ import { collectUpstreamFieldHints } from '@/lib/upstreamFieldHints';
 import { normalizeIfElseConfig, normalizeIfElseConditions } from '@/lib/ifElseConditions';
 import { FieldOwnershipToggle } from '@/components/FieldOwnershipToggle';
 import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
+import { buildContextualFieldHelp, shouldShowFieldForContext } from '@/lib/contextualFieldGuides';
 import { NodeCredentialSelector } from '@/components/nodes/NodeCredentialSelector';
 
 // Droppable field wrapper component - MUST be outside PropertiesPanel to avoid hook violations
@@ -1110,6 +1109,13 @@ export default function PropertiesPanel({
     return actual === expected;
   }, []);
 
+  const conditionObjectMatches = useCallback((actual: unknown, condition?: { equals?: unknown; notEquals?: unknown }) => {
+    if (!condition) return false;
+    if ('equals' in condition) return conditionMatches(actual, condition.equals);
+    if ('notEquals' in condition) return !conditionMatches(actual, condition.notEquals);
+    return false;
+  }, [conditionMatches]);
+
   // Config change handler – safe when no node is selected
   const handleConfigChange = useCallback(
     (key: string, value: unknown) => {
@@ -1780,6 +1786,19 @@ export default function PropertiesPanel({
     }
 
     return steps.length > 0 ? { title, steps } : null;
+  };
+
+  const buildReadableHelpSteps = (helpText: string, placeholder?: string): string[] => {
+    const steps = helpText
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (placeholder && !steps.some((step) => step.toLowerCase().startsWith('example'))) {
+      steps.push(`Example: ${placeholder}`);
+    }
+
+    return steps.length > 0 ? steps : [helpText];
   };
 
   const renderField = (field: ConfigField) => {
@@ -2534,34 +2553,8 @@ export default function PropertiesPanel({
                     </div>
                   ) : selectedNode.data.type !== 'form' && (
                     <>
-                      {/* Custom Google Sheets Settings */}
-                      {selectedNode.data.type === 'google_sheets' ? (
-                        <div className="space-y-4">
-                          <h3 className="text-xs font-medium uppercase text-muted-foreground/70 tracking-wide">
-                            Configuration
-                          </h3>
-                          <GoogleSheetsSettings
-                            config={selectedNode.data.config}
-                            onConfigChange={(newConfig) => {
-                              updateNodeConfig(selectedNode.id, newConfig);
-                            }}
-                          />
-                        </div>
-                      ) : selectedNode.data.type === 'schedulewise' ? (
-                        <div className="space-y-4">
-                          <h3 className="text-xs font-medium uppercase text-muted-foreground/70 tracking-wide">
-                            Configuration
-                          </h3>
-                          <ScheduleWiseSettings
-                            config={selectedNode.data.config}
-                            onConfigChange={(newConfig) => {
-                              updateNodeConfig(selectedNode.id, newConfig);
-                            }}
-                            nodeId={selectedNode.id}
-                            workflowId={workflowId}
-                          />
-                        </div>
-                      ) : selectedNode.data.type === 'schedule' ? (
+                      {/* Schema-driven nodes use the universal field card renderer. */}
+                      {selectedNode.data.type === 'schedule' ? (
                         <div className="space-y-4">
                           <h3 className="text-xs font-medium uppercase text-muted-foreground/70 tracking-wide">
                             Configuration
@@ -2750,6 +2743,8 @@ export default function PropertiesPanel({
                             // Skip credential-ownership fields — managed via the connection picker, not raw inputs
                             const backendFieldDef = (backendSchema?.inputSchema as any)?.[field.key];
                             if (backendFieldDef?.ownership === 'credential') return null;
+                            const contextualNodeConfig = (selectedNode.data.config || {}) as Record<string, unknown>;
+                            if (!shouldShowFieldForContext(selectedNode.data.type, field.key, contextualNodeConfig)) return null;
 
                             // ✅ Systematic UI: visibleIf (optional), then requiredIf (hide + required when true)
                             let effectiveRequired = field.required;
@@ -2768,18 +2763,32 @@ export default function PropertiesPanel({
                                 fieldConditionActive = visOk;
                               }
                               const requiredIf =
-                                (ui?.requiredIf as { field: string; equals: any } | undefined) ||
-                                (field.requiredIf as { field: string; equals: any } | undefined);
+                                (ui?.requiredIf as { field: string; equals?: any; notEquals?: any } | undefined) ||
+                                (field.requiredIf as { field: string; equals?: any; notEquals?: any } | undefined);
                               if (requiredIf) {
-                                const conditionMet = conditionMatches((currentConfig as any)?.[requiredIf.field], requiredIf.equals);
+                                const conditionMet = conditionObjectMatches((currentConfig as any)?.[requiredIf.field], requiredIf);
                                 // Always show — required only when condition met, optional otherwise
                                 fieldConditionActive = conditionMet;
                                 effectiveRequired = conditionMet;
                               }
                             }
 
+                            const backendFieldDescription = String((backendSchema?.inputSchema as Record<string, any> | undefined)?.[field.key]?.description || '');
+                            const contextualHelpText = buildContextualFieldHelp({
+                              nodeType: selectedNode.data.type,
+                              nodeLabel: canonicalTypeDisplayName,
+                              fieldKey: field.key,
+                              fieldLabel: field.label,
+                              fieldType: field.type,
+                              fieldDescription: backendFieldDescription,
+                              placeholder: field.placeholder,
+                              options: field.options,
+                              config: selectedNode.data.config || {},
+                              fallbackHelpText: field.helpText,
+                            });
+
                             // Get dynamic helpText for Instagram operation field
-                            let effectiveHelpText = field.helpText;
+                            let effectiveHelpText = contextualHelpText || field.helpText;
                             if (selectedNode.data.type === 'instagram' && field.key === 'operation') {
                               const operationValue = (selectedNode.data.config || {})[field.key] ?? field.defaultValue ?? 'create_image_post';
                               effectiveHelpText = getInstagramOperationHelpText(String(operationValue));
@@ -2787,7 +2796,8 @@ export default function PropertiesPanel({
                             
                             const helpInfo = effectiveHelpText ? parseHelpText(effectiveHelpText) : null;
                             const hasHelpLink = helpInfo !== null;
-                            const hasDescription = effectiveHelpText && !hasHelpLink;
+                            const helpVerb = field.type === 'select' ? 'choose' : 'set';
+                            const fieldHelpTitle = `How to ${helpVerb} ${field.label}?`;
 
                             // ✅ SCHEMA-DRIVEN UI: Get validation error for this field
                             const fieldError = validationErrors[field.key];
@@ -2842,6 +2852,24 @@ export default function PropertiesPanel({
                                           <span className="text-[10px] text-muted-foreground/50 shrink-0" title="Rendered from backend schema">🎯</span>
                                         )}
                                       </Label>
+                                    )}
+                                    {effectiveHelpText && (
+                                      <button
+                                        type="button"
+                                        title={effectiveHelpText}
+                                        onClick={(event) => {
+                                          event.preventDefault();
+                                          event.stopPropagation();
+                                          setSelectedHelp({
+                                            title: fieldHelpTitle,
+                                            steps: buildReadableHelpSteps(effectiveHelpText, field.placeholder),
+                                          });
+                                        }}
+                                        className="flex min-w-0 shrink-0 items-center gap-1 text-[10px] font-medium text-muted-foreground/70 transition-colors hover:text-primary"
+                                      >
+                                        <HelpCircle className="h-3 w-3" />
+                                        <span className="max-w-[140px] truncate">{fieldHelpTitle}</span>
+                                      </button>
                                     )}
                                     {hasAiValue && !fieldEnabled && (
                                       <span className="text-[10px] text-sky-500/80 font-medium shrink-0">AI prefilled</span>
@@ -2923,11 +2951,6 @@ export default function PropertiesPanel({
                                         <XCircle className="h-3 w-3" />
                                         {fieldError}
                                       </p>
-                                    )}
-
-                                    {/* Description */}
-                                    {hasDescription && (
-                                      <p className="text-xs text-muted-foreground/70 leading-relaxed">{effectiveHelpText}</p>
                                     )}
 
                                     {/* Input area — banner when runtime_ai, editable control otherwise */}
@@ -3019,7 +3042,7 @@ export default function PropertiesPanel({
                                         ) : (
                                           renderField(field)
                                         )}
-                                        {(['text', 'textarea', 'json', 'number', 'select', 'time', 'date', 'cron'].includes(field.type)) && (
+                                        {!effectiveHelpText && (['text', 'textarea', 'json', 'number', 'select', 'time', 'date', 'cron'].includes(field.type)) && (
                                           <div className="flex min-w-0 justify-end overflow-hidden">
                                             {hasHelpLink ? (
                                               <button
@@ -3028,7 +3051,7 @@ export default function PropertiesPanel({
                                                 className="flex min-w-0 max-w-full cursor-pointer items-center gap-1 overflow-hidden text-right text-xs text-muted-foreground/70 transition-colors duration-150 hover:text-foreground/80"
                                               >
                                                 <HelpCircle className="h-3 w-3 shrink-0" />
-                                                <span className="truncate">How to get {field.label}?</span>
+                                                <span className="truncate">{fieldHelpTitle}</span>
                                               </button>
                                             ) : (
                                               <InputGuideLink

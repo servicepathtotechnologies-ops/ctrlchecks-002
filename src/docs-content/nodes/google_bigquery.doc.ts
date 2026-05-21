@@ -6,16 +6,20 @@ export const googleBigqueryDoc: NodeDoc = {
   "category": "Data",
   "logoUrl": "/icons/nodes/google_bigquery.svg",
   "description": "Query Google BigQuery data warehouse",
-  "credentialType": "Google Credential",
+  "credentialType": "Google OAuth",
   "credentialSetupSteps": [
-    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
-    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
-    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
-    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
-    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
-    "Sign in and grant the required scopes. The connection saves automatically."
+    "What this is: Google uses an OAuth connection so CtrlChecks can safely access your Google account.",
+    "Open the Google Cloud developer page at: https://console.cloud.google.com/apis/credentials",
+    "Create a new app or project and give it a clear name such as \"CtrlChecks\".",
+    "Enable the required API or permission scope: Required Google Workspace API scopes.",
+    "Create OAuth credentials. The provider will show a Client ID and Client Secret - copy both.",
+    "Add this redirect URI exactly: http://localhost:3001/api/oauth/google/callback",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Google -> connect and approve access.",
+    "Run a test step to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Google node and select the saved connection."
   ],
-  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
+  "credentialDocsUrl": "https://console.cloud.google.com/apis/credentials",
   "resources": [
     {
       "name": "Configuration",
@@ -32,16 +36,19 @@ export const googleBigqueryDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "example": "SELECT * FROM dataset.table LIMIT 10",
-              "placeholder": "SELECT * FROM dataset.table LIMIT 10"
+              "helpText": "What this field is: SQL query for Google BigQuery / Execute.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Google BigQuery which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "placeholder": "SELECT * FROM dataset.table LIMIT 10",
+              "example": "SELECT * FROM dataset.table LIMIT 10"
             },
             {
               "name": "Project Id",
               "internalKey": "projectId",
               "type": "string",
+              "required": false,
               "description": "Project ID",
-              "example": "my-project",
-              "placeholder": "my-project"
+              "helpText": "What this field is: Project ID for Google BigQuery / Execute.\nWhere to find it: Open the item in Google BigQuery and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.projectId}} or pick the value from the data picker.",
+              "placeholder": "my-project",
+              "example": "my-project"
             }
           ],
           "outputExample": {
@@ -54,14 +61,14 @@ export const googleBigqueryDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Google BigQuery to execute in a workflow.",
+            "scenario": "Process incoming Google BigQuery data with execute after a related upstream event is received",
             "inputValues": {
               "Query": "SELECT * FROM dataset.table LIMIT 10",
               "Project Id": "my-project"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Google BigQuery returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://cloud.google.com/bigquery/docs/reference/rest"
         }

@@ -8,9 +8,18 @@ export const bitbucketDoc: NodeDoc = {
   "description": "Bitbucket repository operations",
   "credentialType": "Atlassian API Key",
   "credentialSetupSteps": [
-    "No credential required."
+    "What this is: Atlassian uses an API key or account connection so CtrlChecks can safely access your Atlassian account.",
+    "Go to id.atlassian.com and sign in with your Atlassian account.",
+    "Click \"Security\" tab -> scroll to \"API tokens\" -> Create API token.",
+    "Give it a label (e.g. CtrlChecks) and click Create. Copy the token shown.",
+    "Your Jira base URL is: https://yourcompany.atlassian.net (replace \"yourcompany\" with your organization name shown in your Jira URL).",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Jira -> enter your Jira URL (https://yourcompany.atlassian.net), your email address, and the API token -> Save.",
+    "To find your project key: open any Jira project - the key is shown in brackets next to the project name (e.g. PROJ).",
+    "Run a test step (e.g. create a test issue) to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Atlassian node and select the saved connection."
   ],
-  "credentialDocsUrl": "https://developer.atlassian.com/cloud/bitbucket/rest/intro/",
+  "credentialDocsUrl": "https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/",
   "resources": [
     {
       "name": "Operations",
@@ -25,9 +34,11 @@ export const bitbucketDoc: NodeDoc = {
               "name": "Repo",
               "internalKey": "repo",
               "type": "string",
+              "required": false,
               "description": "Repository name",
-              "example": "owner/repo",
-              "placeholder": "owner/repo"
+              "helpText": "What this field is: Repository name for Bitbucket / Create.\nHow to fill it: Enter the repo value requested by Bitbucket, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "placeholder": "owner/repo",
+              "example": "owner/repo"
             }
           ],
           "outputExample": {
@@ -40,13 +51,13 @@ export const bitbucketDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Bitbucket to create in a workflow.",
+            "scenario": "Process incoming Bitbucket data with create after a related upstream event is received",
             "inputValues": {
               "Repo": "owner/repo"
             },
-            "expectedOutput": "The node executes create and exposes its result for downstream nodes."
+            "expectedOutput": "Bitbucket returns structured create data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developer.atlassian.com/cloud/bitbucket/rest/intro/"
         },
@@ -59,9 +70,11 @@ export const bitbucketDoc: NodeDoc = {
               "name": "Repo",
               "internalKey": "repo",
               "type": "string",
+              "required": false,
               "description": "Repository name",
-              "example": "owner/repo",
-              "placeholder": "owner/repo"
+              "helpText": "What this field is: Repository name for Bitbucket / Read.\nHow to fill it: Enter the repo value requested by Bitbucket, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "placeholder": "owner/repo",
+              "example": "owner/repo"
             }
           ],
           "outputExample": {
@@ -74,13 +87,13 @@ export const bitbucketDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Bitbucket to read in a workflow.",
+            "scenario": "Process incoming Bitbucket data with read after a related upstream event is received",
             "inputValues": {
               "Repo": "owner/repo"
             },
-            "expectedOutput": "The node executes read and exposes its result for downstream nodes."
+            "expectedOutput": "Bitbucket returns structured read data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developer.atlassian.com/cloud/bitbucket/rest/intro/"
         },
@@ -93,9 +106,11 @@ export const bitbucketDoc: NodeDoc = {
               "name": "Repo",
               "internalKey": "repo",
               "type": "string",
+              "required": false,
               "description": "Repository name",
-              "example": "owner/repo",
-              "placeholder": "owner/repo"
+              "helpText": "What this field is: Repository name for Bitbucket / Update.\nHow to fill it: Enter the repo value requested by Bitbucket, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "placeholder": "owner/repo",
+              "example": "owner/repo"
             }
           ],
           "outputExample": {
@@ -108,13 +123,13 @@ export const bitbucketDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Bitbucket to update in a workflow.",
+            "scenario": "Process incoming Bitbucket data with update after a related upstream event is received",
             "inputValues": {
               "Repo": "owner/repo"
             },
-            "expectedOutput": "The node executes update and exposes its result for downstream nodes."
+            "expectedOutput": "Bitbucket returns structured update data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developer.atlassian.com/cloud/bitbucket/rest/intro/"
         },
@@ -127,9 +142,11 @@ export const bitbucketDoc: NodeDoc = {
               "name": "Repo",
               "internalKey": "repo",
               "type": "string",
+              "required": false,
               "description": "Repository name",
-              "example": "owner/repo",
-              "placeholder": "owner/repo"
+              "helpText": "What this field is: Repository name for Bitbucket / Delete.\nHow to fill it: Enter the repo value requested by Bitbucket, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "placeholder": "owner/repo",
+              "example": "owner/repo"
             }
           ],
           "outputExample": {
@@ -142,13 +159,13 @@ export const bitbucketDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Bitbucket to delete in a workflow.",
+            "scenario": "Process incoming Bitbucket data with delete after a related upstream event is received",
             "inputValues": {
               "Repo": "owner/repo"
             },
-            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
+            "expectedOutput": "Bitbucket returns structured delete data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developer.atlassian.com/cloud/bitbucket/rest/intro/"
         }

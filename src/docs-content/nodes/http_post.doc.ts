@@ -8,7 +8,9 @@ export const httpPostDoc: NodeDoc = {
   "description": "Send POST requests with JSON data",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const httpPostDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "URL to POST to",
-              "example": "https://api.example.com/data",
-              "placeholder": "https://api.example.com/data"
+              "helpText": "What this field is: The API endpoint URL to POST data to.\nExample: https://api.example.com/webhook or https://api.example.com/v1/events",
+              "placeholder": "https://api.example.com/data",
+              "example": "https://api.example.com/data"
             },
             {
               "name": "Body",
@@ -36,16 +39,19 @@ export const httpPostDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "POST body data",
-              "example": "{{$json.data}}",
-              "placeholder": "{{$json.data}}"
+              "helpText": "What this field is: The data to send in the request body.\nFormat: JSON object.\nExample: {\"event\":\"user_signup\",\"userId\":\"{{$json.userId}}\",\"email\":\"{{$json.email}}\",\"timestamp\":\"{{$json.createdAt}}\"}",
+              "placeholder": "{{$json.data}}",
+              "example": "{{$json.data}}"
             },
             {
               "name": "Headers",
               "internalKey": "headers",
               "type": "json",
+              "required": false,
               "description": "HTTP headers",
-              "example": "{\"Content-Type\":\"application/json\"}",
-              "placeholder": "{\"Content-Type\":\"application/json\"}"
+              "helpText": "What this field is: HTTP headers for HTTP POST / Execute.\nHow to fill it: Enter valid JSON in the format HTTP POST expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.headers}} or pick the value from the data picker.",
+              "placeholder": "{\"Content-Type\":\"application/json\"}",
+              "example": "{\"Content-Type\":\"application/json\"}"
             }
           ],
           "outputExample": {

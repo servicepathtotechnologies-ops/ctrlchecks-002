@@ -8,7 +8,9 @@ export const webhookResponseDoc: NodeDoc = {
   "description": "Send response to webhook request",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -19,7 +21,7 @@ export const webhookResponseDoc: NodeDoc = {
         {
           "name": "Execute",
           "value": "default",
-          "description": "Execute using the Webhook Response node.",
+          "description": "Send a final HTTP response back to the app or service that called the webhook.",
           "fields": [
             {
               "name": "Response Code",
@@ -27,28 +29,38 @@ export const webhookResponseDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "HTTP response code",
-              "example": "200",
+              "helpText": "What this field is: A number used for response code in Webhook Response / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.responseCode}} or pick the value from the data picker.",
               "placeholder": "200",
+              "example": "200",
               "defaultValue": "200"
             },
             {
               "name": "Body",
               "internalKey": "body",
               "type": "textarea",
+              "required": true,
               "description": "Response body",
-              "example": "{{$json.result}}",
-              "placeholder": "{{$json.result}}"
+              "helpText": "What this field is: Response body for Webhook Response / Execute.\nHow to fill it: Type the message, prompt, or content you want Webhook Response to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "{{$json.result}}",
+              "example": "{{$json.result}}"
             }
           ],
-          "outputExample": {},
-          "outputDescription": "",
-          "usageExample": {
-            "scenario": "Use Webhook Response to execute in a workflow.",
-            "inputValues": {
-              "Response Code": "200",
-              "Body": "{{$json.result}}"
+          "outputExample": {
+            "responseCode": 200,
+            "body": {
+              "ok": true,
+              "orderId": "ord_123"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "sent": true
+          },
+          "outputDescription": "responseCode: HTTP status returned to the caller. body: The response payload sent back. sent: True when CtrlChecks sent the response.",
+          "usageExample": {
+            "scenario": "Return a success message to a checkout form after creating an order",
+            "inputValues": {
+              "responseCode": "200",
+              "body": "{\"ok\":true,\"orderId\":\"{{$json.orderId}}\"}"
+            },
+            "expectedOutput": "The caller receives HTTP 200 with the order ID in the response body."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

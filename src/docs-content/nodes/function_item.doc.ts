@@ -8,7 +8,9 @@ export const functionItemDoc: NodeDoc = {
   "description": "Execute a function for each item in an array",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,16 +29,19 @@ export const functionItemDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Description of what should be done for each item",
-              "example": "Process each contact",
-              "placeholder": "Process each contact"
+              "helpText": "What this field is: Description of what should be done for each item for Function Item / Execute.\nHow to fill it: Type the message, prompt, or content you want Function Item to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Process each contact",
+              "example": "Process each contact"
             },
             {
               "name": "Items",
               "internalKey": "items",
               "type": "json",
+              "required": false,
               "description": "Array of items to process",
-              "example": "{{$json.items}}",
-              "placeholder": "{{$json.items}}"
+              "helpText": "What this field is: Array of items to process for Function Item / Execute.\nHow to fill it: Enter valid JSON in the format Function Item expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.items}} or pick the value from the data picker.",
+              "placeholder": "{{$json.items}}",
+              "example": "{{$json.items}}"
             }
           ],
           "outputExample": [
@@ -48,12 +53,12 @@ export const functionItemDoc: NodeDoc = {
           ],
           "outputDescription": "Returns an array of result objects. Access individual fields via {{$json.fieldName}} in downstream nodes.",
           "usageExample": {
-            "scenario": "Use Function Item to execute in a workflow.",
+            "scenario": "Process incoming Function Item data with execute after a related upstream event is received",
             "inputValues": {
               "Description": "Process each contact",
               "Items": "{{$json.items}}"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Function Item returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

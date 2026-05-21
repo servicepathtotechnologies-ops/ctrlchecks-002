@@ -6,16 +6,20 @@ export const googleCalendarDoc: NodeDoc = {
   "category": "Data",
   "logoUrl": "/icons/nodes/google_calendar.svg",
   "description": "Create, read, update calendar events",
-  "credentialType": "Google Credential",
+  "credentialType": "Google Calendar OAuth",
   "credentialSetupSteps": [
-    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
-    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
-    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
-    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
-    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
-    "Sign in and grant the required scopes. The connection saves automatically."
+    "What this is: Google Calendar uses an OAuth connection so CtrlChecks can safely access your Google Calendar account.",
+    "Open the Google Cloud developer page at: https://console.cloud.google.com/apis/credentials",
+    "Create a new app or project and give it a clear name such as \"CtrlChecks\".",
+    "Enable the required API or permission scope: Google Calendar API: calendar.events.",
+    "Create OAuth credentials. The provider will show a Client ID and Client Secret - copy both.",
+    "Add this redirect URI exactly: http://localhost:3001/api/oauth/google/callback",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Google Calendar -> connect and approve access.",
+    "Run a test step to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Google Calendar node and select the saved connection."
   ],
-  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
+  "credentialDocsUrl": "https://console.cloud.google.com/apis/credentials",
   "resources": [
     {
       "name": "Operations",
@@ -32,88 +36,116 @@ export const googleCalendarDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource type (event, calendar, etc.)",
-              "example": "event",
+              "helpText": "What this field is: Resource chooses the kind of Google Calendar item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Google Calendar.\nExample: In Google Calendar, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
               "placeholder": "event",
+              "example": "event",
               "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
+              "required": false,
               "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
+              "helpText": "What this field is: Calendar ID for Google Calendar / List.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.calendarId}} or pick the value from the data picker.",
+              "placeholder": "primary",
+              "example": "primary"
             },
             {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
+              "required": false,
               "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
+              "helpText": "What this field is: Event ID (for update/delete) for Google Calendar / List.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.eventId}} or pick the value from the data picker.",
+              "placeholder": "event-id",
+              "example": "event-id"
             },
             {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "description": "Event summary/title"
+              "required": false,
+              "description": "Event summary/title",
+              "helpText": "What this field is: Event summary/title for Google Calendar / List.\nHow to fill it: Enter the summary value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "placeholder": "Enter Summary"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
+              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Start datetime object (Google Calendar format) for Google Calendar / List.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.start}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
+              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: End datetime object (Google Calendar format) for Google Calendar / List.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.end}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
+              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Full event payload for create/update (optional) for Google Calendar / List.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.eventData}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
               "type": "textarea",
-              "description": "Event description"
+              "required": false,
+              "description": "Event description",
+              "helpText": "What this field is: Event description for Google Calendar / List.\nHow to fill it: Type the message, prompt, or content you want Google Calendar to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Enter Description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
               "type": "string",
-              "description": "Lower bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Lower bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Lower bound for list/search (RFC3339 timestamp) for Google Calendar / List.\nHow to fill it: Enter the time min value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMin}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Min"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
               "type": "string",
-              "description": "Upper bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Upper bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Upper bound for list/search (RFC3339 timestamp) for Google Calendar / List.\nHow to fill it: Enter the time max value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMax}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Max"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
+              "required": false,
               "description": "Max results for list/search",
-              "example": "250",
+              "helpText": "What this field is: A number used for max results in Google Calendar / List.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
               "placeholder": "250",
+              "example": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "description": "Free text search query (for events.list)"
+              "required": false,
+              "description": "Free text search query (for events.list)",
+              "helpText": "What this field is: Free text search query (for events.list) for Google Calendar / List.\nHow to fill it: Enter the q value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.q}} or pick the value from the data picker.",
+              "placeholder": "Enter Q"
             }
           ],
           "outputExample": {
@@ -160,97 +192,125 @@ export const googleCalendarDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource type (event, calendar, etc.)",
-              "example": "event",
+              "helpText": "What this field is: Resource chooses the kind of Google Calendar item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Google Calendar.\nExample: In Google Calendar, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
               "placeholder": "event",
+              "example": "event",
               "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
+              "required": false,
               "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
+              "helpText": "What this field is: Calendar ID for Google Calendar / Get.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.calendarId}} or pick the value from the data picker.",
+              "placeholder": "primary",
+              "example": "primary"
             },
             {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
+              "required": false,
               "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
+              "helpText": "What this field is: Event ID (for update/delete) for Google Calendar / Get.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.eventId}} or pick the value from the data picker.",
+              "placeholder": "event-id",
+              "example": "event-id"
             },
             {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "description": "Event summary/title"
+              "required": false,
+              "description": "Event summary/title",
+              "helpText": "What this field is: Event summary/title for Google Calendar / Get.\nHow to fill it: Enter the summary value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "placeholder": "Enter Summary"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
+              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Start datetime object (Google Calendar format) for Google Calendar / Get.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.start}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
+              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: End datetime object (Google Calendar format) for Google Calendar / Get.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.end}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
+              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Full event payload for create/update (optional) for Google Calendar / Get.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.eventData}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
               "type": "textarea",
-              "description": "Event description"
+              "required": false,
+              "description": "Event description",
+              "helpText": "What this field is: Event description for Google Calendar / Get.\nHow to fill it: Type the message, prompt, or content you want Google Calendar to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Enter Description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
               "type": "string",
-              "description": "Lower bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Lower bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Lower bound for list/search (RFC3339 timestamp) for Google Calendar / Get.\nHow to fill it: Enter the time min value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMin}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Min"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
               "type": "string",
-              "description": "Upper bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Upper bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Upper bound for list/search (RFC3339 timestamp) for Google Calendar / Get.\nHow to fill it: Enter the time max value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMax}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Max"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
+              "required": false,
               "description": "Max results for list/search",
-              "example": "250",
+              "helpText": "What this field is: A number used for max results in Google Calendar / Get.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
               "placeholder": "250",
+              "example": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "description": "Free text search query (for events.list)"
+              "required": false,
+              "description": "Free text search query (for events.list)",
+              "helpText": "What this field is: Free text search query (for events.list) for Google Calendar / Get.\nHow to fill it: Enter the q value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.q}} or pick the value from the data picker.",
+              "placeholder": "Enter Q"
             }
           ],
           "outputExample": {
             "eventId": "abc123",
             "success": true
           },
-          "outputDescription": "eventId: Value returned by this node.\nsuccess: Value returned by this node.",
+          "outputDescription": "eventId: Unique identifier returned by the service.\nsuccess: Whether the service accepted the request.",
           "usageExample": {
-            "scenario": "Use Google Calendar to get in a workflow.",
+            "scenario": "Process incoming Google Calendar data with get after a related upstream event is received",
             "inputValues": {
               "Resource": "event",
               "Calendar Id": "primary",
@@ -258,7 +318,7 @@ export const googleCalendarDoc: NodeDoc = {
               "Summary": "",
               "Start": "{\"key\":\"value\"}"
             },
-            "expectedOutput": "The node executes get and exposes its result for downstream nodes."
+            "expectedOutput": "Google Calendar returns structured get data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
         },
@@ -273,88 +333,116 @@ export const googleCalendarDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource type (event, calendar, etc.)",
-              "example": "event",
+              "helpText": "What this field is: Resource chooses the kind of Google Calendar item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Google Calendar.\nExample: In Google Calendar, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
               "placeholder": "event",
+              "example": "event",
               "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
+              "required": false,
               "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
+              "helpText": "What this field is: Calendar ID for Google Calendar / Create.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.calendarId}} or pick the value from the data picker.",
+              "placeholder": "primary",
+              "example": "primary"
             },
             {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
+              "required": false,
               "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
+              "helpText": "What this field is: Event ID (for update/delete) for Google Calendar / Create.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.eventId}} or pick the value from the data picker.",
+              "placeholder": "event-id",
+              "example": "event-id"
             },
             {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "description": "Event summary/title"
+              "required": false,
+              "description": "Event summary/title",
+              "helpText": "What this field is: Event summary/title for Google Calendar / Create.\nHow to fill it: Enter the summary value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "placeholder": "Enter Summary"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
+              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Start datetime object (Google Calendar format) for Google Calendar / Create.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.start}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
+              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: End datetime object (Google Calendar format) for Google Calendar / Create.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.end}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
+              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Full event payload for create/update (optional) for Google Calendar / Create.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.eventData}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
               "type": "textarea",
-              "description": "Event description"
+              "required": false,
+              "description": "Event description",
+              "helpText": "What this field is: Event description for Google Calendar / Create.\nHow to fill it: Type the message, prompt, or content you want Google Calendar to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Enter Description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
               "type": "string",
-              "description": "Lower bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Lower bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Lower bound for list/search (RFC3339 timestamp) for Google Calendar / Create.\nHow to fill it: Enter the time min value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMin}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Min"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
               "type": "string",
-              "description": "Upper bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Upper bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Upper bound for list/search (RFC3339 timestamp) for Google Calendar / Create.\nHow to fill it: Enter the time max value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMax}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Max"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
+              "required": false,
               "description": "Max results for list/search",
-              "example": "250",
+              "helpText": "What this field is: A number used for max results in Google Calendar / Create.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
               "placeholder": "250",
+              "example": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "description": "Free text search query (for events.list)"
+              "required": false,
+              "description": "Free text search query (for events.list)",
+              "helpText": "What this field is: Free text search query (for events.list) for Google Calendar / Create.\nHow to fill it: Enter the q value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.q}} or pick the value from the data picker.",
+              "placeholder": "Enter Q"
             }
           ],
           "outputExample": {
@@ -393,88 +481,116 @@ export const googleCalendarDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource type (event, calendar, etc.)",
-              "example": "event",
+              "helpText": "What this field is: Resource chooses the kind of Google Calendar item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Google Calendar.\nExample: In Google Calendar, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
               "placeholder": "event",
+              "example": "event",
               "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
+              "required": false,
               "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
+              "helpText": "What this field is: Calendar ID for Google Calendar / Update.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.calendarId}} or pick the value from the data picker.",
+              "placeholder": "primary",
+              "example": "primary"
             },
             {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
+              "required": false,
               "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
+              "helpText": "What this field is: Event ID (for update/delete) for Google Calendar / Update.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.eventId}} or pick the value from the data picker.",
+              "placeholder": "event-id",
+              "example": "event-id"
             },
             {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "description": "Event summary/title"
+              "required": false,
+              "description": "Event summary/title",
+              "helpText": "What this field is: Event summary/title for Google Calendar / Update.\nHow to fill it: Enter the summary value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "placeholder": "Enter Summary"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
+              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Start datetime object (Google Calendar format) for Google Calendar / Update.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.start}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
+              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: End datetime object (Google Calendar format) for Google Calendar / Update.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.end}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
+              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Full event payload for create/update (optional) for Google Calendar / Update.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.eventData}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
               "type": "textarea",
-              "description": "Event description"
+              "required": false,
+              "description": "Event description",
+              "helpText": "What this field is: Event description for Google Calendar / Update.\nHow to fill it: Type the message, prompt, or content you want Google Calendar to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Enter Description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
               "type": "string",
-              "description": "Lower bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Lower bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Lower bound for list/search (RFC3339 timestamp) for Google Calendar / Update.\nHow to fill it: Enter the time min value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMin}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Min"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
               "type": "string",
-              "description": "Upper bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Upper bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Upper bound for list/search (RFC3339 timestamp) for Google Calendar / Update.\nHow to fill it: Enter the time max value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMax}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Max"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
+              "required": false,
               "description": "Max results for list/search",
-              "example": "250",
+              "helpText": "What this field is: A number used for max results in Google Calendar / Update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
               "placeholder": "250",
+              "example": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "description": "Free text search query (for events.list)"
+              "required": false,
+              "description": "Free text search query (for events.list)",
+              "helpText": "What this field is: Free text search query (for events.list) for Google Calendar / Update.\nHow to fill it: Enter the q value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.q}} or pick the value from the data picker.",
+              "placeholder": "Enter Q"
             }
           ],
           "outputExample": {
@@ -509,97 +625,125 @@ export const googleCalendarDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource type (event, calendar, etc.)",
-              "example": "event",
+              "helpText": "What this field is: Resource chooses the kind of Google Calendar item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Google Calendar.\nExample: In Google Calendar, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
               "placeholder": "event",
+              "example": "event",
               "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
+              "required": false,
               "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
+              "helpText": "What this field is: Calendar ID for Google Calendar / Delete.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.calendarId}} or pick the value from the data picker.",
+              "placeholder": "primary",
+              "example": "primary"
             },
             {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
+              "required": false,
               "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
+              "helpText": "What this field is: Event ID (for update/delete) for Google Calendar / Delete.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.eventId}} or pick the value from the data picker.",
+              "placeholder": "event-id",
+              "example": "event-id"
             },
             {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "description": "Event summary/title"
+              "required": false,
+              "description": "Event summary/title",
+              "helpText": "What this field is: Event summary/title for Google Calendar / Delete.\nHow to fill it: Enter the summary value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "placeholder": "Enter Summary"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
+              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Start datetime object (Google Calendar format) for Google Calendar / Delete.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.start}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
+              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: End datetime object (Google Calendar format) for Google Calendar / Delete.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.end}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
+              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Full event payload for create/update (optional) for Google Calendar / Delete.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.eventData}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
               "type": "textarea",
-              "description": "Event description"
+              "required": false,
+              "description": "Event description",
+              "helpText": "What this field is: Event description for Google Calendar / Delete.\nHow to fill it: Type the message, prompt, or content you want Google Calendar to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Enter Description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
               "type": "string",
-              "description": "Lower bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Lower bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Lower bound for list/search (RFC3339 timestamp) for Google Calendar / Delete.\nHow to fill it: Enter the time min value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMin}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Min"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
               "type": "string",
-              "description": "Upper bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Upper bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Upper bound for list/search (RFC3339 timestamp) for Google Calendar / Delete.\nHow to fill it: Enter the time max value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMax}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Max"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
+              "required": false,
               "description": "Max results for list/search",
-              "example": "250",
+              "helpText": "What this field is: A number used for max results in Google Calendar / Delete.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
               "placeholder": "250",
+              "example": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "description": "Free text search query (for events.list)"
+              "required": false,
+              "description": "Free text search query (for events.list)",
+              "helpText": "What this field is: Free text search query (for events.list) for Google Calendar / Delete.\nHow to fill it: Enter the q value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.q}} or pick the value from the data picker.",
+              "placeholder": "Enter Q"
             }
           ],
           "outputExample": {
             "eventId": "abc123",
             "success": true
           },
-          "outputDescription": "eventId: Value returned by this node.\nsuccess: Value returned by this node.",
+          "outputDescription": "eventId: Unique identifier returned by the service.\nsuccess: Whether the service accepted the request.",
           "usageExample": {
-            "scenario": "Use Google Calendar to delete in a workflow.",
+            "scenario": "Process incoming Google Calendar data with delete after a related upstream event is received",
             "inputValues": {
               "Resource": "event",
               "Calendar Id": "primary",
@@ -607,7 +751,7 @@ export const googleCalendarDoc: NodeDoc = {
               "Summary": "",
               "Start": "{\"key\":\"value\"}"
             },
-            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
+            "expectedOutput": "Google Calendar returns structured delete data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
         },
@@ -622,97 +766,125 @@ export const googleCalendarDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource type (event, calendar, etc.)",
-              "example": "event",
+              "helpText": "What this field is: Resource chooses the kind of Google Calendar item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Google Calendar.\nExample: In Google Calendar, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
               "placeholder": "event",
+              "example": "event",
               "defaultValue": "event"
             },
             {
               "name": "Calendar Id",
               "internalKey": "calendarId",
               "type": "string",
+              "required": false,
               "description": "Calendar ID",
-              "example": "primary",
-              "placeholder": "primary"
+              "helpText": "What this field is: Calendar ID for Google Calendar / Search.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.calendarId}} or pick the value from the data picker.",
+              "placeholder": "primary",
+              "example": "primary"
             },
             {
               "name": "Event Id",
               "internalKey": "eventId",
               "type": "string",
+              "required": false,
               "description": "Event ID (for update/delete)",
-              "example": "event-id",
-              "placeholder": "event-id"
+              "helpText": "What this field is: Event ID (for update/delete) for Google Calendar / Search.\nWhere to find it: Open the item in Google Calendar and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.eventId}} or pick the value from the data picker.",
+              "placeholder": "event-id",
+              "example": "event-id"
             },
             {
               "name": "Summary",
               "internalKey": "summary",
               "type": "string",
-              "description": "Event summary/title"
+              "required": false,
+              "description": "Event summary/title",
+              "helpText": "What this field is: Event summary/title for Google Calendar / Search.\nHow to fill it: Enter the summary value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "placeholder": "Enter Summary"
             },
             {
               "name": "Start",
               "internalKey": "start",
               "type": "json",
+              "required": false,
               "description": "Start datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Start datetime object (Google Calendar format) for Google Calendar / Search.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.start}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "End",
               "internalKey": "end",
               "type": "json",
+              "required": false,
               "description": "End datetime object (Google Calendar format)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: End datetime object (Google Calendar format) for Google Calendar / Search.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.end}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Event Data",
               "internalKey": "eventData",
               "type": "json",
+              "required": false,
               "description": "Full event payload for create/update (optional)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Full event payload for create/update (optional) for Google Calendar / Search.\nHow to fill it: Enter valid JSON in the format Google Calendar expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.eventData}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             },
             {
               "name": "Description",
               "internalKey": "description",
               "type": "textarea",
-              "description": "Event description"
+              "required": false,
+              "description": "Event description",
+              "helpText": "What this field is: Event description for Google Calendar / Search.\nHow to fill it: Type the message, prompt, or content you want Google Calendar to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Enter Description"
             },
             {
               "name": "Time Min",
               "internalKey": "timeMin",
               "type": "string",
-              "description": "Lower bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Lower bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Lower bound for list/search (RFC3339 timestamp) for Google Calendar / Search.\nHow to fill it: Enter the time min value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMin}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Min"
             },
             {
               "name": "Time Max",
               "internalKey": "timeMax",
               "type": "string",
-              "description": "Upper bound for list/search (RFC3339 timestamp)"
+              "required": false,
+              "description": "Upper bound for list/search (RFC3339 timestamp)",
+              "helpText": "What this field is: Upper bound for list/search (RFC3339 timestamp) for Google Calendar / Search.\nHow to fill it: Enter the time max value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeMax}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Max"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
+              "required": false,
               "description": "Max results for list/search",
-              "example": "250",
+              "helpText": "What this field is: A number used for max results in Google Calendar / Search.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
               "placeholder": "250",
+              "example": "250",
               "defaultValue": "250"
             },
             {
               "name": "Q",
               "internalKey": "q",
               "type": "string",
-              "description": "Free text search query (for events.list)"
+              "required": false,
+              "description": "Free text search query (for events.list)",
+              "helpText": "What this field is: Free text search query (for events.list) for Google Calendar / Search.\nHow to fill it: Enter the q value requested by Google Calendar, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.q}} or pick the value from the data picker.",
+              "placeholder": "Enter Q"
             }
           ],
           "outputExample": {
             "eventId": "abc123",
             "success": true
           },
-          "outputDescription": "eventId: Value returned by this node.\nsuccess: Value returned by this node.",
+          "outputDescription": "eventId: Unique identifier returned by the service.\nsuccess: Whether the service accepted the request.",
           "usageExample": {
-            "scenario": "Use Google Calendar to search in a workflow.",
+            "scenario": "Process incoming Google Calendar data with search after a related upstream event is received",
             "inputValues": {
               "Resource": "event",
               "Calendar Id": "primary",
@@ -720,7 +892,7 @@ export const googleCalendarDoc: NodeDoc = {
               "Summary": "",
               "Start": "{\"key\":\"value\"}"
             },
-            "expectedOutput": "The node executes search and exposes its result for downstream nodes."
+            "expectedOutput": "Google Calendar returns structured search data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developers.google.com/calendar/api/v3/reference"
         }

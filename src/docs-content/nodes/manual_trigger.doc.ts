@@ -8,7 +8,9 @@ export const manualTriggerDoc: NodeDoc = {
   "description": "Workflow executes when user manually triggers it",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,9 +27,11 @@ export const manualTriggerDoc: NodeDoc = {
               "name": "Input Data",
               "internalKey": "inputData",
               "type": "json",
+              "required": false,
               "description": "Optional input data when triggered manually",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Optional input data when triggered manually for Manual Trigger / Execute.\nHow to fill it: Enter valid JSON in the format Manual Trigger expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.inputData}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {

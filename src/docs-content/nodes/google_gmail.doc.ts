@@ -6,16 +6,20 @@ export const googleGmailDoc: NodeDoc = {
   "category": "Communication",
   "logoUrl": "/icons/nodes/google_gmail.svg",
   "description": "Send/receive emails via Gmail API (OAuth)",
-  "credentialType": "Google Credential",
+  "credentialType": "Gmail OAuth",
   "credentialSetupSteps": [
-    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
-    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
-    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
-    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
-    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
-    "Sign in and grant the required scopes. The connection saves automatically."
+    "What this is: Gmail uses an OAuth connection so CtrlChecks can safely access your Gmail account.",
+    "Open the Google Cloud developer page at: https://console.cloud.google.com/apis/credentials",
+    "Create a new app or project and give it a clear name such as \"CtrlChecks\".",
+    "Enable the required API or permission scope: Gmail API: gmail.send, gmail.readonly, gmail.modify.",
+    "Create OAuth credentials. The provider will show a Client ID and Client Secret - copy both.",
+    "Add this redirect URI exactly: http://localhost:3001/api/oauth/google/callback",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Gmail -> connect and approve access.",
+    "Run a test step to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Gmail node and select the saved connection."
   ],
-  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
+  "credentialDocsUrl": "https://console.cloud.google.com/apis/credentials",
   "resources": [
     {
       "name": "Operations",
@@ -27,61 +31,14 @@ export const googleGmailDoc: NodeDoc = {
           "description": "Send an email to one or more recipients via Gmail.",
           "fields": [
             {
-              "name": "Recipient Source",
-              "internalKey": "recipientSource",
-              "type": "select",
-              "description": "How recipients are chosen when sending. Manual: type addresses in Recipient emails. Extract from sheet: runtime uses upstream row data first (typically from a Google Sheets node before Gmail). If upstream has no usable emails, optional inline spreadsheet ID + sheet/range on this node fetches via Google Sheets API (same Google account as Gmail). Precedence: upstream wins; inline fetch is only a fallback.",
-              "example": "manual_entry",
-              "placeholder": "manual_entry",
-              "defaultValue": "manual_entry",
-              "options": [
-                "Manually enter recipient email(s)",
-                "Extract recipient email(s) from Google Sheets output"
-              ]
-            },
-            {
               "name": "Recipient Emails",
               "internalKey": "recipientEmails",
               "type": "email",
-              "required": false,
+              "required": true,
               "description": "Recipient email address(es), comma- or newline-separated (e.g. a@x.com, b@y.com). Active when Recipient source is Manual entry. If Extract from sheet is selected, this field is optional — the workflow supplies emails from upstream nodes.",
-              "example": "john@example.com",
+              "helpText": "What this field is: The email address(es) of who will receive this email.\nHow to fill it: Type one email address. For multiple recipients, separate with commas.\nExample (one): alice@example.com\nExample (multiple): alice@example.com, bob@example.com, carol@example.com\nTip: Use {{$json.email}} to pull the email address from a previous step (like a form or database node).",
               "placeholder": "john@example.com",
-              "notes": "Required when recipientSource is \"manual_entry\"."
-            },
-            {
-              "name": "Spreadsheet Id",
-              "internalKey": "spreadsheetId",
-              "type": "string",
-              "description": "Optional fallback Spreadsheet ID — active when Recipient source is Extract from sheet and upstream data has no usable recipient rows. Leave empty if a Google Sheets node upstream already supplies rows.",
-              "example": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-              "placeholder": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-            },
-            {
-              "name": "Sheet Name",
-              "internalKey": "sheetName",
-              "type": "string",
-              "description": "Sheet tab name for optional inline fallback read (default Sheet1). Ignored unless Spreadsheet ID is set.",
-              "example": "Sheet1",
-              "placeholder": "Sheet1",
-              "defaultValue": "Sheet1"
-            },
-            {
-              "name": "Range",
-              "internalKey": "range",
-              "type": "string",
-              "description": "Optional A1 range within the sheet for inline fallback (e.g. A2:D500). Empty reads the whole tab. Same format as the Google Sheets node.",
-              "example": "A2:D100",
-              "placeholder": "A2:D100"
-            },
-            {
-              "name": "Use Ai Recipient Mapping",
-              "internalKey": "useAiRecipientMapping",
-              "type": "boolean",
-              "description": "When enabled, scan every cell in row objects for email addresses (not only columns named like \"email\"). Use when column headers are messy; still applies after upstream data or inline sheet fetch.",
-              "example": "false",
-              "placeholder": "false",
-              "defaultValue": "false"
+              "example": "john@example.com"
             },
             {
               "name": "Subject",
@@ -89,8 +46,9 @@ export const googleGmailDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Email subject (required for send operation)",
-              "example": "Hello",
-              "placeholder": "Hello"
+              "helpText": "What this field is: The subject line — the bold text the recipient sees in their inbox before opening the email.\nHow to fill it: Write a short, clear subject.\nExample: Your order #12345 has shipped!\nTip: Use {{$json.orderNumber}} to include data from an earlier step. Example: Your order #{{$json.orderId}} has been confirmed.",
+              "placeholder": "Hello",
+              "example": "Hello"
             },
             {
               "name": "Body",
@@ -98,25 +56,19 @@ export const googleGmailDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Email body content (required for send operation)",
-              "example": "Email content",
-              "placeholder": "Email content"
+              "helpText": "What this field is: The full email content — everything the recipient reads after opening.\nHow to fill it: Type the email text. You can use HTML for formatting (bold, links, etc.).\nExample: Hi {{$json.name}}, thank you for your purchase! Your order will arrive in 3–5 business days.\nTip: Anything inside {{ }} is replaced with real data from an earlier step. Example: {{$json.name}} becomes \"Alice\".",
+              "placeholder": "Email content",
+              "example": "Email content"
             },
             {
               "name": "From",
               "internalKey": "from",
               "type": "string",
+              "required": false,
               "description": "Sender email address (optional - uses OAuth account if not provided)",
-              "example": "your-email@gmail.com",
-              "placeholder": "your-email@gmail.com"
-            },
-            {
-              "name": "Max Results",
-              "internalKey": "maxResults",
-              "type": "number",
-              "description": "Maximum number of results (for list/search)",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
+              "helpText": "What this field is: The email address that will appear as the sender.\nHow to fill it: Use your Gmail address or a Gmail alias you have set up.\nExample: alice@gmail.com or orders@yourcompany.com\nLeave blank to use your primary Gmail address automatically.",
+              "placeholder": "your-email@gmail.com",
+              "example": "your-email@gmail.com"
             }
           ],
           "outputExample": {
@@ -144,77 +96,14 @@ export const googleGmailDoc: NodeDoc = {
           "description": "List email messages from the connected Gmail inbox, optionally filtered by a query.",
           "fields": [
             {
-              "name": "Recipient Source",
-              "internalKey": "recipientSource",
-              "type": "select",
-              "description": "How recipients are chosen when sending. Manual: type addresses in Recipient emails. Extract from sheet: runtime uses upstream row data first (typically from a Google Sheets node before Gmail). If upstream has no usable emails, optional inline spreadsheet ID + sheet/range on this node fetches via Google Sheets API (same Google account as Gmail). Precedence: upstream wins; inline fetch is only a fallback.",
-              "example": "manual_entry",
-              "placeholder": "manual_entry",
-              "defaultValue": "manual_entry",
-              "options": [
-                "Manually enter recipient email(s)",
-                "Extract recipient email(s) from Google Sheets output"
-              ]
-            },
-            {
-              "name": "Recipient Emails",
-              "internalKey": "recipientEmails",
-              "type": "email",
-              "required": false,
-              "description": "Recipient email address(es), comma- or newline-separated (e.g. a@x.com, b@y.com). Active when Recipient source is Manual entry. If Extract from sheet is selected, this field is optional — the workflow supplies emails from upstream nodes.",
-              "example": "john@example.com",
-              "placeholder": "john@example.com",
-              "notes": "Required when recipientSource is \"manual_entry\"."
-            },
-            {
-              "name": "Spreadsheet Id",
-              "internalKey": "spreadsheetId",
-              "type": "string",
-              "description": "Optional fallback Spreadsheet ID — active when Recipient source is Extract from sheet and upstream data has no usable recipient rows. Leave empty if a Google Sheets node upstream already supplies rows.",
-              "example": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-              "placeholder": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-            },
-            {
-              "name": "Sheet Name",
-              "internalKey": "sheetName",
-              "type": "string",
-              "description": "Sheet tab name for optional inline fallback read (default Sheet1). Ignored unless Spreadsheet ID is set.",
-              "example": "Sheet1",
-              "placeholder": "Sheet1",
-              "defaultValue": "Sheet1"
-            },
-            {
-              "name": "Range",
-              "internalKey": "range",
-              "type": "string",
-              "description": "Optional A1 range within the sheet for inline fallback (e.g. A2:D500). Empty reads the whole tab. Same format as the Google Sheets node.",
-              "example": "A2:D100",
-              "placeholder": "A2:D100"
-            },
-            {
-              "name": "Use Ai Recipient Mapping",
-              "internalKey": "useAiRecipientMapping",
-              "type": "boolean",
-              "description": "When enabled, scan every cell in row objects for email addresses (not only columns named like \"email\"). Use when column headers are messy; still applies after upstream data or inline sheet fetch.",
-              "example": "false",
-              "placeholder": "false",
-              "defaultValue": "false"
-            },
-            {
-              "name": "From",
-              "internalKey": "from",
-              "type": "string",
-              "description": "Sender email address (optional - uses OAuth account if not provided)",
-              "example": "your-email@gmail.com",
-              "placeholder": "your-email@gmail.com"
-            },
-            {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
+              "required": false,
               "description": "Maximum number of results (for list/search)",
-              "example": "10",
+              "helpText": "What this field is: The maximum number of emails to return.\nExample: 10 returns the 10 most recent matching emails. 50 returns up to 50.\nLeave blank for the default (up to 100 emails).",
               "placeholder": "10",
+              "example": "10",
               "defaultValue": "10"
             }
           ],
@@ -250,87 +139,14 @@ export const googleGmailDoc: NodeDoc = {
           "description": "Fetch the full content of a specific Gmail message by its ID.",
           "fields": [
             {
-              "name": "Recipient Source",
-              "internalKey": "recipientSource",
-              "type": "select",
-              "description": "How recipients are chosen when sending. Manual: type addresses in Recipient emails. Extract from sheet: runtime uses upstream row data first (typically from a Google Sheets node before Gmail). If upstream has no usable emails, optional inline spreadsheet ID + sheet/range on this node fetches via Google Sheets API (same Google account as Gmail). Precedence: upstream wins; inline fetch is only a fallback.",
-              "example": "manual_entry",
-              "placeholder": "manual_entry",
-              "defaultValue": "manual_entry",
-              "options": [
-                "Manually enter recipient email(s)",
-                "Extract recipient email(s) from Google Sheets output"
-              ]
-            },
-            {
-              "name": "Recipient Emails",
-              "internalKey": "recipientEmails",
-              "type": "email",
-              "required": false,
-              "description": "Recipient email address(es), comma- or newline-separated (e.g. a@x.com, b@y.com). Active when Recipient source is Manual entry. If Extract from sheet is selected, this field is optional — the workflow supplies emails from upstream nodes.",
-              "example": "john@example.com",
-              "placeholder": "john@example.com",
-              "notes": "Required when recipientSource is \"manual_entry\"."
-            },
-            {
-              "name": "Spreadsheet Id",
-              "internalKey": "spreadsheetId",
-              "type": "string",
-              "description": "Optional fallback Spreadsheet ID — active when Recipient source is Extract from sheet and upstream data has no usable recipient rows. Leave empty if a Google Sheets node upstream already supplies rows.",
-              "example": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-              "placeholder": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-            },
-            {
-              "name": "Sheet Name",
-              "internalKey": "sheetName",
-              "type": "string",
-              "description": "Sheet tab name for optional inline fallback read (default Sheet1). Ignored unless Spreadsheet ID is set.",
-              "example": "Sheet1",
-              "placeholder": "Sheet1",
-              "defaultValue": "Sheet1"
-            },
-            {
-              "name": "Range",
-              "internalKey": "range",
-              "type": "string",
-              "description": "Optional A1 range within the sheet for inline fallback (e.g. A2:D500). Empty reads the whole tab. Same format as the Google Sheets node.",
-              "example": "A2:D100",
-              "placeholder": "A2:D100"
-            },
-            {
-              "name": "Use Ai Recipient Mapping",
-              "internalKey": "useAiRecipientMapping",
-              "type": "boolean",
-              "description": "When enabled, scan every cell in row objects for email addresses (not only columns named like \"email\"). Use when column headers are messy; still applies after upstream data or inline sheet fetch.",
-              "example": "false",
-              "placeholder": "false",
-              "defaultValue": "false"
-            },
-            {
-              "name": "From",
-              "internalKey": "from",
-              "type": "string",
-              "description": "Sender email address (optional - uses OAuth account if not provided)",
-              "example": "your-email@gmail.com",
-              "placeholder": "your-email@gmail.com"
-            },
-            {
               "name": "Message Id",
               "internalKey": "messageId",
               "type": "string",
               "required": true,
               "description": "Gmail message ID (required ONLY for get operation, not for send)",
-              "example": "abc123def456",
-              "placeholder": "abc123def456"
-            },
-            {
-              "name": "Max Results",
-              "internalKey": "maxResults",
-              "type": "number",
-              "description": "Maximum number of results (for list/search)",
-              "example": "10",
-              "placeholder": "10",
-              "defaultValue": "10"
+              "helpText": "What this field is: The unique ID of a specific Gmail email you want to fetch.\nWhere to find it: First run a Gmail List or Search operation — the output will include a messageId field for each email. Copy that value.\nExample: 18abc123def456\nTip: Use {{$json.messageId}} to pass it automatically from the previous List or Search step.",
+              "placeholder": "abc123def456",
+              "example": "abc123def456"
             }
           ],
           "outputExample": {
@@ -357,86 +173,24 @@ export const googleGmailDoc: NodeDoc = {
           "description": "Search Gmail messages using Gmail search syntax (same as the Gmail search bar).",
           "fields": [
             {
-              "name": "Recipient Source",
-              "internalKey": "recipientSource",
-              "type": "select",
-              "description": "How recipients are chosen when sending. Manual: type addresses in Recipient emails. Extract from sheet: runtime uses upstream row data first (typically from a Google Sheets node before Gmail). If upstream has no usable emails, optional inline spreadsheet ID + sheet/range on this node fetches via Google Sheets API (same Google account as Gmail). Precedence: upstream wins; inline fetch is only a fallback.",
-              "example": "manual_entry",
-              "placeholder": "manual_entry",
-              "defaultValue": "manual_entry",
-              "options": [
-                "Manually enter recipient email(s)",
-                "Extract recipient email(s) from Google Sheets output"
-              ]
-            },
-            {
-              "name": "Recipient Emails",
-              "internalKey": "recipientEmails",
-              "type": "email",
-              "required": false,
-              "description": "Recipient email address(es), comma- or newline-separated (e.g. a@x.com, b@y.com). Active when Recipient source is Manual entry. If Extract from sheet is selected, this field is optional — the workflow supplies emails from upstream nodes.",
-              "example": "john@example.com",
-              "placeholder": "john@example.com",
-              "notes": "Required when recipientSource is \"manual_entry\"."
-            },
-            {
-              "name": "Spreadsheet Id",
-              "internalKey": "spreadsheetId",
-              "type": "string",
-              "description": "Optional fallback Spreadsheet ID — active when Recipient source is Extract from sheet and upstream data has no usable recipient rows. Leave empty if a Google Sheets node upstream already supplies rows.",
-              "example": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-              "placeholder": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-            },
-            {
-              "name": "Sheet Name",
-              "internalKey": "sheetName",
-              "type": "string",
-              "description": "Sheet tab name for optional inline fallback read (default Sheet1). Ignored unless Spreadsheet ID is set.",
-              "example": "Sheet1",
-              "placeholder": "Sheet1",
-              "defaultValue": "Sheet1"
-            },
-            {
-              "name": "Range",
-              "internalKey": "range",
-              "type": "string",
-              "description": "Optional A1 range within the sheet for inline fallback (e.g. A2:D500). Empty reads the whole tab. Same format as the Google Sheets node.",
-              "example": "A2:D100",
-              "placeholder": "A2:D100"
-            },
-            {
-              "name": "Use Ai Recipient Mapping",
-              "internalKey": "useAiRecipientMapping",
-              "type": "boolean",
-              "description": "When enabled, scan every cell in row objects for email addresses (not only columns named like \"email\"). Use when column headers are messy; still applies after upstream data or inline sheet fetch.",
-              "example": "false",
-              "placeholder": "false",
-              "defaultValue": "false"
-            },
-            {
-              "name": "From",
-              "internalKey": "from",
-              "type": "string",
-              "description": "Sender email address (optional - uses OAuth account if not provided)",
-              "example": "your-email@gmail.com",
-              "placeholder": "your-email@gmail.com"
-            },
-            {
               "name": "Query",
               "internalKey": "query",
               "type": "textarea",
               "required": true,
               "description": "Gmail search query (for list/search operations)",
-              "example": "from:example@gmail.com",
-              "placeholder": "from:example@gmail.com"
+              "helpText": "What this field is: A search filter to find specific emails.\nHow to fill it: Use Gmail search syntax.\nExamples: from:billing@stripe.com or subject:\"payment failed\" or is:unread after:2025/01/01",
+              "placeholder": "from:example@gmail.com",
+              "example": "from:example@gmail.com"
             },
             {
               "name": "Max Results",
               "internalKey": "maxResults",
               "type": "number",
+              "required": false,
               "description": "Maximum number of results (for list/search)",
-              "example": "10",
+              "helpText": "What this field is: The maximum number of emails to return.\nExample: 10 for the first 10 results. Leave blank for up to 100.",
               "placeholder": "10",
+              "example": "10",
               "defaultValue": "10"
             }
           ],

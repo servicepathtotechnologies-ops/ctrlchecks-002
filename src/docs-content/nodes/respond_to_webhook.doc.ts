@@ -8,7 +8,9 @@ export const respondToWebhookDoc: NodeDoc = {
   "description": "Sends HTTP response back to webhook caller",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,27 +27,33 @@ export const respondToWebhookDoc: NodeDoc = {
               "name": "Response Code",
               "internalKey": "responseCode",
               "type": "number",
+              "required": false,
               "description": "HTTP status code",
-              "example": "200",
+              "helpText": "What this field is: A number used for response code in Respond to Webhook / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.responseCode}} or pick the value from the data picker.",
               "placeholder": "200",
+              "example": "200",
               "defaultValue": "200"
             },
             {
               "name": "Headers",
               "internalKey": "headers",
               "type": "json",
+              "required": false,
               "description": "Response headers",
-              "example": "{\"Content-Type\":\"application/json\"}",
+              "helpText": "What this field is: Response headers for Respond to Webhook / Execute.\nHow to fill it: Enter valid JSON in the format Respond to Webhook expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.headers}} or pick the value from the data picker.",
               "placeholder": "{\"Content-Type\":\"application/json\"}",
+              "example": "{\"Content-Type\":\"application/json\"}",
               "defaultValue": "{\"Content-Type\":\"application/json\"}"
             },
             {
               "name": "Body",
               "internalKey": "body",
               "type": "textarea",
+              "required": true,
               "description": "Response body data",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: The data to send back as the webhook response — what the calling service receives.\nFormat: JSON object or a simple value.\nExample: {\"success\":true,\"message\":\"Order received\",\"orderId\":\"{{$json.orderId}}\"}",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {

@@ -8,7 +8,9 @@ export const waitDoc: NodeDoc = {
   "description": "Pause workflow execution",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,16 +29,19 @@ export const waitDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Wait duration value",
-              "example": "1000",
-              "placeholder": "1000"
+              "helpText": "What this field is: How long to pause the workflow.\nExample: 60 seconds = 1 minute pause before continuing.",
+              "placeholder": "1000",
+              "example": "1000"
             },
             {
               "name": "Unit",
               "internalKey": "unit",
               "type": "string",
+              "required": false,
               "description": "Duration unit",
-              "example": "milliseconds",
+              "helpText": "What this field is: Duration unit for Wait / Execute.\nHow to fill it: Enter the unit value requested by Wait, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.unit}} or pick the value from the data picker.",
               "placeholder": "milliseconds",
+              "example": "milliseconds",
               "defaultValue": "milliseconds"
             }
           ],

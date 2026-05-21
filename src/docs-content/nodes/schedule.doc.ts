@@ -8,7 +8,9 @@ export const scheduleDoc: NodeDoc = {
   "description": "Executes workflow on a time-based schedule using cron expressions",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,16 +29,19 @@ export const scheduleDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Cron expression (e.g., \"0 9 * * *\" for daily at 9 AM)",
-              "example": "0 9 * * *",
-              "placeholder": "0 9 * * *"
+              "helpText": "What this field is: Cron expression (e.g., \"0 9 * * *\" for daily at 9 AM) for Schedule Trigger / Execute.\nHow to fill it: Enter the cron value requested by Schedule Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.cron}} or pick the value from the data picker.",
+              "placeholder": "0 9 * * *",
+              "example": "0 9 * * *"
             },
             {
               "name": "Timezone",
               "internalKey": "timezone",
               "type": "string",
+              "required": false,
               "description": "Timezone for schedule",
-              "example": "UTC",
+              "helpText": "What this field is: Timezone for schedule for Schedule Trigger / Execute.\nHow to fill it: Enter the timezone value requested by Schedule Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timezone}} or pick the value from the data picker.",
               "placeholder": "UTC",
+              "example": "UTC",
               "defaultValue": "UTC"
             }
           ],

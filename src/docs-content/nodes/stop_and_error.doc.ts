@@ -8,7 +8,9 @@ export const stopAndErrorDoc: NodeDoc = {
   "description": "Stop workflow execution with error message",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -19,7 +21,7 @@ export const stopAndErrorDoc: NodeDoc = {
         {
           "name": "Execute",
           "value": "default",
-          "description": "Execute using the Stop And Error node.",
+          "description": "Stop the workflow intentionally and return a clear error message.",
           "fields": [
             {
               "name": "Error Message",
@@ -27,18 +29,23 @@ export const stopAndErrorDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Error message",
-              "example": "Validation failed",
-              "placeholder": "Validation failed"
+              "helpText": "What this field is: Error message for Stop And Error / Execute.\nHow to fill it: Type the message, prompt, or content you want Stop And Error to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Validation failed",
+              "example": "Validation failed"
             }
           ],
-          "outputExample": {},
-          "outputDescription": "",
+          "outputExample": {
+            "stopped": true,
+            "errorMessage": "Validation failed",
+            "stoppedAt": "2025-01-15T10:00:00.000Z"
+          },
+          "outputDescription": "stopped: Always true when this node stops execution. errorMessage: The message shown in the workflow run logs. stoppedAt: When execution was stopped.",
           "usageExample": {
-            "scenario": "Use Stop And Error to execute in a workflow.",
+            "scenario": "Stop an order workflow when the required customer email is missing",
             "inputValues": {
-              "Error Message": "Validation failed"
+              "errorMessage": "Customer email is missing. Cannot send confirmation."
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "The workflow stops before later nodes run, and the run log shows the exact error message."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

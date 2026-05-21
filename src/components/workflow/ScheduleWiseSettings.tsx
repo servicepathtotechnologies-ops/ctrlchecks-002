@@ -228,9 +228,19 @@ export default function ScheduleWiseSettings({
     <div className="space-y-4">
       {/* Credential Selector — first field */}
       <div className="space-y-2">
-        <Label htmlFor="credentialId">
-          ScheduleWise Credentials <span className="text-destructive">*</span>
-        </Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="credentialId">
+            ScheduleWise Credentials <span className="text-destructive">*</span>
+          </Label>
+          <InputGuideLink
+            fieldKey="credentialId"
+            fieldLabel="ScheduleWise Credentials"
+            fieldType="select"
+            nodeType="schedulewise"
+            helpCategory="credential_select"
+            className="mt-0"
+          />
+        </div>
         <Select
           value={config.credentialId || ''}
           onValueChange={(value) => updateConfig('credentialId', value)}
@@ -260,22 +270,23 @@ export default function ScheduleWiseSettings({
         {validationErrors.credentialId && (
           <p className="text-xs text-destructive">{validationErrors.credentialId}</p>
         )}
-        <div className="flex justify-end">
-          <InputGuideLink
-            fieldKey="credentialId"
-            fieldLabel="ScheduleWise Credentials"
-            fieldType="select"
-            nodeType="schedulewise"
-            helpCategory="credential_select"
-          />
-        </div>
       </div>
 
       {/* Operation */}
       <div className="space-y-2">
-        <Label htmlFor="operation">
-          Operation <span className="text-destructive">*</span>
-        </Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="operation">
+            Operation <span className="text-destructive">*</span>
+          </Label>
+          <InputGuideLink
+            fieldKey="operation"
+            fieldLabel="Operation"
+            fieldType="select"
+            nodeType="schedulewise"
+            helpCategory="operation_select"
+            className="mt-0"
+          />
+        </div>
         <Select
           value={operation}
           onValueChange={(value) => updateConfig('operation', value)}
@@ -296,15 +307,6 @@ export default function ScheduleWiseSettings({
         {validationErrors.operation && (
           <p className="text-xs text-destructive">{validationErrors.operation}</p>
         )}
-        <div className="flex justify-end">
-          <InputGuideLink
-            fieldKey="operation"
-            fieldLabel="Operation"
-            fieldType="select"
-            nodeType="schedulewise"
-            helpCategory="operation_select"
-          />
-        </div>
       </div>
 
       {/* getSchedules fields */}

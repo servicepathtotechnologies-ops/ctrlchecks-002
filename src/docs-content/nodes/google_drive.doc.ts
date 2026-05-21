@@ -6,16 +6,20 @@ export const googleDriveDoc: NodeDoc = {
   "category": "Data",
   "logoUrl": "/icons/nodes/google_drive.svg",
   "description": "Google Drive file operations (upload, download, list)",
-  "credentialType": "Google Credential",
+  "credentialType": "Google Drive OAuth",
   "credentialSetupSteps": [
-    "Go to https://console.cloud.google.com → APIs & Services → Credentials.",
-    "Click \"Create Credentials\" → \"OAuth 2.0 Client ID\" → Application type: Web Application.",
-    "Under Authorized redirect URIs, add: http://localhost:3001/api/oauth/google/callback",
-    "Copy the Client ID and Client Secret — paste them into your CtrlChecks .env (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
-    "In CtrlChecks, open Connections → Add Connection → select the Google service → click \"Connect with Google\".",
-    "Sign in and grant the required scopes. The connection saves automatically."
+    "What this is: Google Drive uses an OAuth connection so CtrlChecks can safely access your Google Drive account.",
+    "Open the Google Cloud developer page at: https://console.cloud.google.com/apis/credentials",
+    "Create a new app or project and give it a clear name such as \"CtrlChecks\".",
+    "Enable the required API or permission scope: Google Drive API: drive.file.",
+    "Create OAuth credentials. The provider will show a Client ID and Client Secret - copy both.",
+    "Add this redirect URI exactly: http://localhost:3001/api/oauth/google/callback",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Google Drive -> connect and approve access.",
+    "Run a test step to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Google Drive node and select the saved connection."
   ],
-  "credentialDocsUrl": "https://developers.google.com/identity/protocols/oauth2",
+  "credentialDocsUrl": "https://console.cloud.google.com/apis/credentials",
   "resources": [
     {
       "name": "Operations",
@@ -30,17 +34,21 @@ export const googleDriveDoc: NodeDoc = {
               "name": "File Id",
               "internalKey": "fileId",
               "type": "string",
+              "required": false,
               "description": "File ID (for download)",
-              "example": "file-id",
-              "placeholder": "file-id"
+              "helpText": "What this field is: File ID (for download) for Google Drive / Upload.\nWhere to find it: Open the item in Google Drive and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.fileId}} or pick the value from the data picker.",
+              "placeholder": "file-id",
+              "example": "file-id"
             },
             {
               "name": "File Name",
               "internalKey": "fileName",
               "type": "string",
+              "required": false,
               "description": "File name (for upload)",
-              "example": "document.pdf",
-              "placeholder": "document.pdf"
+              "helpText": "What this field is: File name (for upload) for Google Drive / Upload.\nHow to fill it: Enter the file name value requested by Google Drive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fileName}} or pick the value from the data picker.",
+              "placeholder": "document.pdf",
+              "example": "document.pdf"
             }
           ],
           "outputExample": {
@@ -71,17 +79,21 @@ export const googleDriveDoc: NodeDoc = {
               "name": "File Id",
               "internalKey": "fileId",
               "type": "string",
+              "required": false,
               "description": "File ID (for download)",
-              "example": "file-id",
-              "placeholder": "file-id"
+              "helpText": "What this field is: File ID (for download) for Google Drive / Download.\nWhere to find it: Open the item in Google Drive and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.fileId}} or pick the value from the data picker.",
+              "placeholder": "file-id",
+              "example": "file-id"
             },
             {
               "name": "File Name",
               "internalKey": "fileName",
               "type": "string",
+              "required": false,
               "description": "File name (for upload)",
-              "example": "document.pdf",
-              "placeholder": "document.pdf"
+              "helpText": "What this field is: File name (for upload) for Google Drive / Download.\nHow to fill it: Enter the file name value requested by Google Drive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fileName}} or pick the value from the data picker.",
+              "placeholder": "document.pdf",
+              "example": "document.pdf"
             }
           ],
           "outputExample": {
@@ -110,17 +122,21 @@ export const googleDriveDoc: NodeDoc = {
               "name": "File Id",
               "internalKey": "fileId",
               "type": "string",
+              "required": false,
               "description": "File ID (for download)",
-              "example": "file-id",
-              "placeholder": "file-id"
+              "helpText": "What this field is: File ID (for download) for Google Drive / List.\nWhere to find it: Open the item in Google Drive and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.fileId}} or pick the value from the data picker.",
+              "placeholder": "file-id",
+              "example": "file-id"
             },
             {
               "name": "File Name",
               "internalKey": "fileName",
               "type": "string",
+              "required": false,
               "description": "File name (for upload)",
-              "example": "document.pdf",
-              "placeholder": "document.pdf"
+              "helpText": "What this field is: File name (for upload) for Google Drive / List.\nHow to fill it: Enter the file name value requested by Google Drive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fileName}} or pick the value from the data picker.",
+              "placeholder": "document.pdf",
+              "example": "document.pdf"
             }
           ],
           "outputExample": {

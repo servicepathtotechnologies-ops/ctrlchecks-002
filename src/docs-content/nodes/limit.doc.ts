@@ -8,7 +8,9 @@ export const limitDoc: NodeDoc = {
   "description": "Limit array size",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,16 +29,19 @@ export const limitDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Maximum items",
-              "example": "10",
-              "placeholder": "10"
+              "helpText": "What this field is: A number used for limit in Limit / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "placeholder": "10",
+              "example": "10"
             },
             {
               "name": "Array",
               "internalKey": "array",
               "type": "json",
+              "required": false,
               "description": "Array to limit",
-              "example": "{{$json.items}}",
-              "placeholder": "{{$json.items}}"
+              "helpText": "What this field is: Array to limit for Limit / Execute.\nHow to fill it: Enter valid JSON in the format Limit expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.array}} or pick the value from the data picker.",
+              "placeholder": "{{$json.items}}",
+              "example": "{{$json.items}}"
             }
           ],
           "outputExample": {

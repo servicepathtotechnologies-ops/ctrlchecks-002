@@ -32,6 +32,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { InputGuideLink } from './InputGuideLink';
 
 export interface ScheduleTriggerProps {
   defaultCron?: string;
@@ -308,6 +309,12 @@ export const ScheduleTrigger: React.FC<ScheduleTriggerProps> = ({
   const [minute, setMinute] = useState<number>(0);
   const [cronError, setCronError] = useState<string | undefined>();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const scheduleHelp = {
+    timezone: 'What this field is: The timezone used to decide when the schedule runs.\nHow to choose it: Pick the timezone where the business process should happen, not necessarily your computer timezone.\nExample: Asia/Kolkata runs at Indian local time. America/New_York runs at New York local time.',
+    dailyTime: 'What this field is: The daily time picker updates the cron expression for a simple once-per-day schedule.\nHow to fill it: Use Hour from 0 to 23 and Minute from 0 to 59.\nExample: 09:30 means 9:30 AM in the selected timezone.',
+    hour: 'What this field is: The hour of the day for the schedule.\nFormat: Use 24-hour time from 0 to 23.\nExample: 9 means 9 AM, 14 means 2 PM.',
+    minute: 'What this field is: The minute within the selected hour.\nFormat: Use a number from 0 to 59.\nExample: 30 means half past the hour.',
+  };
   const [isTimezoneOpen, setIsTimezoneOpen] = useState(false);
   const [isManualCronEdit, setIsManualCronEdit] = useState(false);
 
@@ -684,9 +691,19 @@ export const ScheduleTrigger: React.FC<ScheduleTriggerProps> = ({
 
         {/* Timezone Dropdown */}
         <div className="space-y-2">
-          <Label htmlFor="timezone-select" className="text-sm font-medium">
-            Timezone
-          </Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="timezone-select" className="text-sm font-medium">
+              Timezone
+            </Label>
+            <InputGuideLink
+              fieldKey="timezone"
+              fieldLabel="Timezone"
+              fieldType="select"
+              nodeType="schedule"
+              helpText={scheduleHelp.timezone}
+              className="mt-0"
+            />
+          </div>
           <Popover open={isTimezoneOpen} onOpenChange={setIsTimezoneOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -754,13 +771,33 @@ export const ScheduleTrigger: React.FC<ScheduleTriggerProps> = ({
 
         {/* 24-Hour Digital Clock Picker */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Pick a time (daily schedule)</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label className="text-sm font-medium">Pick a time (daily schedule)</Label>
+            <InputGuideLink
+              fieldKey="dailyTime"
+              fieldLabel="Pick a time"
+              fieldType="time"
+              nodeType="schedule"
+              helpText={scheduleHelp.dailyTime}
+              className="mt-0"
+            />
+          </div>
           <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/30">
             {/* Hour Selector */}
             <div className="flex flex-col items-center gap-2">
-              <Label htmlFor="hour-input" className="text-xs text-muted-foreground">
-                Hour
-              </Label>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="hour-input" className="text-xs text-muted-foreground">
+                  Hour
+                </Label>
+                <InputGuideLink
+                  fieldKey="hour"
+                  fieldLabel="Hour"
+                  fieldType="number"
+                  nodeType="schedule"
+                  helpText={scheduleHelp.hour}
+                  className="mt-0"
+                />
+              </div>
               <div className="flex flex-col items-center gap-1">
                 <button
                   type="button"
@@ -803,9 +840,19 @@ export const ScheduleTrigger: React.FC<ScheduleTriggerProps> = ({
 
             {/* Minute Selector */}
             <div className="flex flex-col items-center gap-2">
-              <Label htmlFor="minute-input" className="text-xs text-muted-foreground">
-                Minute
-              </Label>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="minute-input" className="text-xs text-muted-foreground">
+                  Minute
+                </Label>
+                <InputGuideLink
+                  fieldKey="minute"
+                  fieldLabel="Minute"
+                  fieldType="number"
+                  nodeType="schedule"
+                  helpText={scheduleHelp.minute}
+                  className="mt-0"
+                />
+              </div>
               <div className="flex flex-col items-center gap-1">
                 <button
                   type="button"

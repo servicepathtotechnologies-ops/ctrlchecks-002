@@ -8,7 +8,9 @@ export const filterDoc: NodeDoc = {
   "description": "Filter array items by condition",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const filterDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Filter condition",
-              "example": "{{$json.age}} >= 18",
-              "placeholder": "{{$json.age}} >= 18"
+              "helpText": "What this field is: Filter condition for Filter / Execute.\nHow to fill it: Enter the condition value requested by Filter, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.condition}} or pick the value from the data picker.",
+              "placeholder": "{{$json.age}} >= 18",
+              "example": "{{$json.age}} >= 18"
             }
           ],
           "outputExample": {

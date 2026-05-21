@@ -8,7 +8,9 @@ export const textSummarizerDoc: NodeDoc = {
   "description": "Summarize long text into shorter versions",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,16 +29,19 @@ export const textSummarizerDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Text to summarize",
-              "example": "{{$json.text}}",
-              "placeholder": "{{$json.text}}"
+              "helpText": "What this field is: The text you want to summarize.\nExample: {{$json.articleContent}} or {{$json.emailBody}}\nTip: Connect this after a database read, HTTP request, or Gmail node — then use {{$json.body}} or the relevant field to pass the text.",
+              "placeholder": "{{$json.text}}",
+              "example": "{{$json.text}}"
             },
             {
               "name": "Max Length",
               "internalKey": "maxLength",
               "type": "number",
+              "required": false,
               "description": "Maximum summary length",
-              "example": "100",
-              "placeholder": "100"
+              "helpText": "What this field is: The maximum length of the summary in words or characters.\nExample: 100 (for a short 100-word summary) or 3 (for a 3-sentence summary).",
+              "placeholder": "100",
+              "example": "100"
             }
           ],
           "outputExample": {

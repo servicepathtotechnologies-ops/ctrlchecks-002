@@ -8,7 +8,9 @@ export const returnDoc: NodeDoc = {
   "description": "Stops workflow execution and returns the specified data",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,17 +27,21 @@ export const returnDoc: NodeDoc = {
               "name": "Value",
               "internalKey": "value",
               "type": "string",
+              "required": false,
               "description": "Value to return (can be a template or static value)",
-              "example": "{{$json}}",
-              "placeholder": "{{$json}}"
+              "helpText": "What this field is: Value to return (can be a template or static value) for Return / Execute.\nHow to fill it: Enter the value value requested by Return, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.value}} or pick the value from the data picker.",
+              "placeholder": "{{$json}}",
+              "example": "{{$json}}"
             },
             {
               "name": "Include Input",
               "internalKey": "includeInput",
               "type": "boolean",
+              "required": false,
               "description": "Include the input data in the return value",
-              "example": "false",
+              "helpText": "What this field is: An on/off choice for include input in Return / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Return to use this optional behavior.",
               "placeholder": "false",
+              "example": "false",
               "defaultValue": "false"
             }
           ],

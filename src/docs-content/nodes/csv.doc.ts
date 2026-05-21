@@ -8,7 +8,9 @@ export const csvDoc: NodeDoc = {
   "description": "Parse and generate CSV data",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,17 +27,21 @@ export const csvDoc: NodeDoc = {
               "name": "Csv",
               "internalKey": "csv",
               "type": "string",
+              "required": false,
               "description": "CSV content (for parse)",
-              "example": "{{$json.csv}}",
-              "placeholder": "{{$json.csv}}"
+              "helpText": "What this field is: CSV content (for parse) for CSV / Parse.\nHow to fill it: Enter the csv value requested by CSV, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.csv}} or pick the value from the data picker.",
+              "placeholder": "{{$json.csv}}",
+              "example": "{{$json.csv}}"
             },
             {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
+              "required": true,
               "description": "Data array (for generate)",
-              "example": "{{$json.data}}",
-              "placeholder": "{{$json.data}}"
+              "helpText": "What this field is: Data array (for generate) for CSV / Parse.\nHow to fill it: Enter valid JSON in the format CSV expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "placeholder": "{{$json.data}}",
+              "example": "{{$json.data}}"
             }
           ],
           "outputExample": {
@@ -78,17 +84,21 @@ export const csvDoc: NodeDoc = {
               "name": "Csv",
               "internalKey": "csv",
               "type": "string",
+              "required": false,
               "description": "CSV content (for parse)",
-              "example": "{{$json.csv}}",
-              "placeholder": "{{$json.csv}}"
+              "helpText": "What this field is: CSV content (for parse) for CSV / Generate.\nHow to fill it: Enter the csv value requested by CSV, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.csv}} or pick the value from the data picker.",
+              "placeholder": "{{$json.csv}}",
+              "example": "{{$json.csv}}"
             },
             {
               "name": "Data",
               "internalKey": "data",
               "type": "json",
+              "required": true,
               "description": "Data array (for generate)",
-              "example": "{{$json.data}}",
-              "placeholder": "{{$json.data}}"
+              "helpText": "What this field is: Data array (for generate) for CSV / Generate.\nHow to fill it: Enter valid JSON in the format CSV expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "placeholder": "{{$json.data}}",
+              "example": "{{$json.data}}"
             }
           ],
           "outputExample": {

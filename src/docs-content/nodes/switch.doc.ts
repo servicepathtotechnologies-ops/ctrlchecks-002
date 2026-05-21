@@ -8,7 +8,9 @@ export const switchDoc: NodeDoc = {
   "description": "Multi-path conditional logic based on value matching",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const switchDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Expression or template evaluated to a scalar (e.g. {{$json.status}}). Must match one of cases[].value.",
-              "example": "{{$json.status}}",
-              "placeholder": "{{$json.status}}"
+              "helpText": "What this field is: Expression or template evaluated to a scalar (e.g. {{$json.status}}). Must match one of cases[].value. for Switch / Execute.\nHow to fill it: Enter the expression value requested by Switch, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.expression}} or pick the value from the data picker.",
+              "placeholder": "{{$json.status}}",
+              "example": "{{$json.status}}"
             },
             {
               "name": "Cases",
@@ -36,24 +39,29 @@ export const switchDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Case definitions; each value becomes an outgoing port name. Example: [{ value: \"active\", label: \"Active\" }]",
-              "example": "[{\"value\":\"active\",\"label\":\"Active\"},{\"value\":\"pending\",\"label\":\"Pending\"}]",
-              "placeholder": "[{\"value\":\"active\",\"label\":\"Active\"},{\"value\":\"pending\",\"label\":\"Pending\"}]"
+              "helpText": "What this field is: The list of branches — each with a value to match and a label.\nFormat: JSON array of case objects with value and label.\nExample: [{\"value\":\"approved\",\"label\":\"Approved\"},{\"value\":\"rejected\",\"label\":\"Rejected\"},{\"value\":\"pending\",\"label\":\"Pending Review\"}]\nThe workflow takes the branch whose value matches the input. If no branch matches, it takes the \"default\" path.",
+              "placeholder": "[{\"value\":\"active\",\"label\":\"Active\"},{\"value\":\"pending\",\"label\":\"Pending\"}]",
+              "example": "[{\"value\":\"active\",\"label\":\"Active\"},{\"value\":\"pending\",\"label\":\"Pending\"}]"
             },
             {
               "name": "Routing Type",
               "internalKey": "routingType",
               "type": "string",
+              "required": false,
               "description": "Optional hint: how expression is interpreted (e.g. expression, string, number)",
-              "example": "expression",
-              "placeholder": "expression"
+              "helpText": "What this field is: Optional hint: how expression is interpreted (e.g. expression, string, number) for Switch / Execute.\nHow to fill it: Enter the routing type value requested by Switch, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.routingType}} or pick the value from the data picker.",
+              "placeholder": "expression",
+              "example": "expression"
             },
             {
               "name": "Rules",
               "internalKey": "rules",
               "type": "json",
+              "required": false,
               "description": "Deprecated alias for cases; migrated automatically to cases",
-              "example": "[\"item\"]",
-              "placeholder": "[\"item\"]"
+              "helpText": "What this field is: Deprecated alias for cases; migrated automatically to cases for Switch / Execute.\nHow to fill it: Enter valid JSON in the format Switch expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.rules}} or pick the value from the data picker.",
+              "placeholder": "[\"item\"]",
+              "example": "[\"item\"]"
             }
           ],
           "outputExample": {

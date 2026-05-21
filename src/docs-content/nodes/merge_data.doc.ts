@@ -8,7 +8,9 @@ export const mergeDataDoc: NodeDoc = {
   "description": "Merge data structures from multiple sources",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,17 +29,20 @@ export const mergeDataDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Merge mode: append, join, overwrite",
-              "example": "append",
+              "helpText": "What this field is: Merge mode: append, join, overwrite for Merge Data / Execute.\nHow to fill it: Enter the mode value requested by Merge Data, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.mode}} or pick the value from the data picker.",
               "placeholder": "append",
+              "example": "append",
               "defaultValue": "append"
             },
             {
               "name": "Join By",
               "internalKey": "joinBy",
               "type": "string",
+              "required": false,
               "description": "Field to join by (for join mode)",
-              "example": "id",
-              "placeholder": "id"
+              "helpText": "What this field is: Field to join by (for join mode) for Merge Data / Execute.\nHow to fill it: Enter the join by value requested by Merge Data, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.joinBy}} or pick the value from the data picker.",
+              "placeholder": "id",
+              "example": "id"
             }
           ],
           "outputExample": {
@@ -50,14 +55,14 @@ export const mergeDataDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Merge Data to execute in a workflow.",
+            "scenario": "Process incoming Merge Data data with execute after a related upstream event is received",
             "inputValues": {
               "Mode": "append",
               "Join By": "id"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Merge Data returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

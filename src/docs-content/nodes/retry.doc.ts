@@ -8,7 +8,9 @@ export const retryDoc: NodeDoc = {
   "description": "Retries a branch on failure up to a maximum number of attempts",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,26 +29,31 @@ export const retryDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Maximum number of retry attempts",
-              "example": "3",
+              "helpText": "What this field is: A number used for max attempts in Retry / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxAttempts}} or pick the value from the data picker.",
               "placeholder": "3",
+              "example": "3",
               "defaultValue": "3"
             },
             {
               "name": "Delay Between",
               "internalKey": "delayBetween",
               "type": "number",
+              "required": false,
               "description": "Delay between retries (in milliseconds)",
-              "example": "1000",
+              "helpText": "What this field is: A number used for delay between in Retry / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.delayBetween}} or pick the value from the data picker.",
               "placeholder": "1000",
+              "example": "1000",
               "defaultValue": "1000"
             },
             {
               "name": "Backoff",
               "internalKey": "backoff",
               "type": "select",
+              "required": false,
               "description": "Backoff strategy (none, linear, exponential)",
-              "example": "none",
+              "helpText": "What this field is: A list of allowed choices for backoff in Retry / Execute.\nHow to fill it: Pick the option that matches what Retry should do. Do not type a custom value unless the UI allows it.\nAvailable choices: None (none), Linear (linear), Exponential (exponential).",
               "placeholder": "none",
+              "example": "none",
               "defaultValue": "none",
               "options": [
                 "None",

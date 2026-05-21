@@ -8,10 +8,16 @@ export const sendgridDoc: NodeDoc = {
   "description": "Send transactional emails using the SendGrid API.",
   "credentialType": "SendGrid API Key",
   "credentialSetupSteps": [
-    "Log in to https://app.sendgrid.com → Settings → API Keys → Create API Key.",
-    "Select \"Restricted Access\" and enable Mail Send permission.",
-    "Copy the API key.",
-    "In CtrlChecks, open Connections → Add Connection → SendGrid → paste the API key → Save."
+    "What this is: SendGrid uses an API key or account connection so CtrlChecks can safely access your SendGrid account.",
+    "Go to app.sendgrid.com and sign in to your SendGrid account.",
+    "Click Settings in the left sidebar -> API Keys -> Create API Key.",
+    "Give it a name (e.g. CtrlChecks) -> choose \"Full Access\" or \"Restricted Access\" with \"Mail Send\" enabled -> Create & View.",
+    "Copy the API key - it starts with SG. and is shown only once.",
+    "Verify your sender identity: Settings -> Sender Authentication -> verify a single sender email or your entire domain.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> SendGrid -> paste the SG. key -> Save.",
+    "Run a test to send an email to yourself to confirm it works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the SendGrid node and select the saved connection."
   ],
   "credentialDocsUrl": "https://docs.sendgrid.com/api-reference/how-to-use-the-sendgrid-v3-api/authentication",
   "resources": [
@@ -30,8 +36,9 @@ export const sendgridDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "SendGrid API Key (must have Mail Send permission)",
-              "example": "SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "helpText": "What this field is: Your SendGrid API Key.\nWhere to find it: app.sendgrid.com → Settings → API Keys → Create API Key. Choose \"Full Access\" or \"Restricted Access\" with \"Mail Send\" enabled.\nIt starts with SG. — copy it immediately, it is only shown once.",
               "placeholder": "SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "example": "SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -40,8 +47,9 @@ export const sendgridDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Sender email address (must be a verified sender in SendGrid)",
-              "example": "noreply@yourdomain.com",
-              "placeholder": "noreply@yourdomain.com"
+              "helpText": "What this field is: The sender email address — must be verified in your SendGrid account.\nWhere to verify: SendGrid dashboard → Settings → Sender Authentication → verify a single sender or your domain.\nExample: hello@yourcompany.com",
+              "placeholder": "noreply@yourdomain.com",
+              "example": "noreply@yourdomain.com"
             },
             {
               "name": "To",
@@ -49,32 +57,39 @@ export const sendgridDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient email address(es), comma-separated",
-              "example": "user@example.com",
-              "placeholder": "user@example.com"
+              "helpText": "What this field is: The recipient's email address.\nExample: customer@example.com\nTip: Use {{$json.email}} from an earlier form or database step.",
+              "placeholder": "user@example.com",
+              "example": "user@example.com"
             },
             {
               "name": "Subject",
               "internalKey": "subject",
               "type": "string",
+              "required": true,
               "description": "Email subject line",
-              "example": "Hello!",
-              "placeholder": "Hello!"
+              "helpText": "What this field is: The email subject line.\nExample: Welcome to {{$json.productName}} — here's how to get started",
+              "placeholder": "Hello!",
+              "example": "Hello!"
             },
             {
               "name": "Text",
               "internalKey": "text",
               "type": "textarea",
+              "required": true,
               "description": "Plain text body of the email",
-              "example": "Your message here",
-              "placeholder": "Your message here"
+              "helpText": "What this field is: Plain text body of the email for SendGrid / Send email.\nHow to fill it: Type the message, prompt, or content you want SendGrid to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Your message here",
+              "example": "Your message here"
             },
             {
               "name": "Html",
               "internalKey": "html",
               "type": "textarea",
+              "required": false,
               "description": "HTML body of the email (overrides plain text for HTML clients)",
-              "example": "<p>Your message</p>",
-              "placeholder": "<p>Your message</p>"
+              "helpText": "What this field is: HTML body of the email (overrides plain text for HTML clients) for SendGrid / Send email.\nHow to fill it: Type the message, prompt, or content you want SendGrid to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "<p>Your message</p>",
+              "example": "<p>Your message</p>"
             }
           ],
           "outputExample": {

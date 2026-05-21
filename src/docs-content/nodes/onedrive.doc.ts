@@ -8,11 +8,16 @@ export const onedriveDoc: NodeDoc = {
   "description": "OneDrive file operations",
   "credentialType": "Microsoft Credential",
   "credentialSetupSteps": [
-    "Go to Azure Portal → App registrations → New registration.",
-    "Set redirect URI to http://localhost:3001/api/oauth/microsoft/callback.",
-    "Under API Permissions, add Microsoft Graph: Mail.ReadWrite, Mail.Send.",
-    "Create a client secret and copy it.",
-    "In CtrlChecks, open Connections → Add Connection → Outlook → enter Client ID, Secret, and Tenant ID → click \"Connect with Microsoft\" → authorize."
+    "What this is: Microsoft uses an OAuth connection so CtrlChecks can safely access your Microsoft account.",
+    "Go to portal.azure.com and sign in with your Microsoft account.",
+    "Go to Azure Active Directory -> App registrations -> New registration.",
+    "Give it a name (e.g. CtrlChecks Email) -> set Redirect URI to: http://localhost:3001/api/oauth/microsoft/callback -> Register.",
+    "Copy the Application (client) ID and Directory (tenant) ID.",
+    "Go to Certificates & Secrets -> New client secret -> Add. Copy the secret VALUE immediately.",
+    "Go to API permissions -> Add a permission -> Microsoft Graph -> Delegated -> add Mail.ReadWrite and Mail.Send.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Outlook -> enter Client ID, Secret, and Tenant ID -> Connect with Microsoft -> authorize.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Microsoft node and select the saved connection."
   ],
   "credentialDocsUrl": "https://docs.microsoft.com/en-us/graph/api/resources/mail-api-overview",
   "resources": [
@@ -29,25 +34,31 @@ export const onedriveDoc: NodeDoc = {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
+              "required": false,
               "description": "File path",
-              "example": "/path/to/file.pdf",
-              "placeholder": "/path/to/file.pdf"
+              "helpText": "What this field is: The destination folder path in OneDrive.\nExample: /Documents/Reports/2025",
+              "placeholder": "/path/to/file.pdf",
+              "example": "/path/to/file.pdf"
             },
             {
               "name": "Data Base64",
               "internalKey": "dataBase64",
               "type": "string",
+              "required": false,
               "description": "Base64 payload for upload (alternative to data)",
-              "example": "{{$json.dataBase64}}",
-              "placeholder": "{{$json.dataBase64}}"
+              "helpText": "What this field is: Base64 payload for upload (alternative to data) for OneDrive / Upload.\nHow to fill it: Enter the data base64 value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dataBase64}} or pick the value from the data picker.",
+              "placeholder": "{{$json.dataBase64}}",
+              "example": "{{$json.dataBase64}}"
             },
             {
               "name": "Data",
               "internalKey": "data",
               "type": "string",
+              "required": true,
               "description": "Base64 payload for upload",
-              "example": "{{$json.data}}",
-              "placeholder": "{{$json.data}}"
+              "helpText": "What this field is: Base64 payload for upload for OneDrive / Upload.\nHow to fill it: Enter the data value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "placeholder": "{{$json.data}}",
+              "example": "{{$json.data}}"
             }
           ],
           "outputExample": {
@@ -60,15 +71,15 @@ export const onedriveDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use OneDrive to upload in a workflow.",
+            "scenario": "Process incoming OneDrive data with upload after a related upstream event is received",
             "inputValues": {
               "Path": "/path/to/file.pdf",
               "Data Base64": "{{$json.dataBase64}}",
               "Data": "{{$json.data}}"
             },
-            "expectedOutput": "The node executes upload and exposes its result for downstream nodes."
+            "expectedOutput": "OneDrive returns structured upload data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/onedrive/developer/rest-api/"
         },
@@ -81,25 +92,31 @@ export const onedriveDoc: NodeDoc = {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
+              "required": false,
               "description": "File path",
-              "example": "/path/to/file.pdf",
-              "placeholder": "/path/to/file.pdf"
+              "helpText": "What this field is: File path for OneDrive / Download.\nHow to fill it: Enter the path value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.path}} or pick the value from the data picker.",
+              "placeholder": "/path/to/file.pdf",
+              "example": "/path/to/file.pdf"
             },
             {
               "name": "Data Base64",
               "internalKey": "dataBase64",
               "type": "string",
+              "required": false,
               "description": "Base64 payload for upload (alternative to data)",
-              "example": "{{$json.dataBase64}}",
-              "placeholder": "{{$json.dataBase64}}"
+              "helpText": "What this field is: Base64 payload for upload (alternative to data) for OneDrive / Download.\nHow to fill it: Enter the data base64 value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dataBase64}} or pick the value from the data picker.",
+              "placeholder": "{{$json.dataBase64}}",
+              "example": "{{$json.dataBase64}}"
             },
             {
               "name": "Data",
               "internalKey": "data",
               "type": "string",
+              "required": true,
               "description": "Base64 payload for upload",
-              "example": "{{$json.data}}",
-              "placeholder": "{{$json.data}}"
+              "helpText": "What this field is: Base64 payload for upload for OneDrive / Download.\nHow to fill it: Enter the data value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "placeholder": "{{$json.data}}",
+              "example": "{{$json.data}}"
             }
           ],
           "outputExample": {
@@ -112,15 +129,15 @@ export const onedriveDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use OneDrive to download in a workflow.",
+            "scenario": "Process incoming OneDrive data with download after a related upstream event is received",
             "inputValues": {
               "Path": "/path/to/file.pdf",
               "Data Base64": "{{$json.dataBase64}}",
               "Data": "{{$json.data}}"
             },
-            "expectedOutput": "The node executes download and exposes its result for downstream nodes."
+            "expectedOutput": "OneDrive returns structured download data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/onedrive/developer/rest-api/"
         },
@@ -133,25 +150,31 @@ export const onedriveDoc: NodeDoc = {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
+              "required": false,
               "description": "File path",
-              "example": "/path/to/file.pdf",
-              "placeholder": "/path/to/file.pdf"
+              "helpText": "What this field is: File path for OneDrive / List.\nHow to fill it: Enter the path value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.path}} or pick the value from the data picker.",
+              "placeholder": "/path/to/file.pdf",
+              "example": "/path/to/file.pdf"
             },
             {
               "name": "Data Base64",
               "internalKey": "dataBase64",
               "type": "string",
+              "required": false,
               "description": "Base64 payload for upload (alternative to data)",
-              "example": "{{$json.dataBase64}}",
-              "placeholder": "{{$json.dataBase64}}"
+              "helpText": "What this field is: Base64 payload for upload (alternative to data) for OneDrive / List.\nHow to fill it: Enter the data base64 value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dataBase64}} or pick the value from the data picker.",
+              "placeholder": "{{$json.dataBase64}}",
+              "example": "{{$json.dataBase64}}"
             },
             {
               "name": "Data",
               "internalKey": "data",
               "type": "string",
+              "required": true,
               "description": "Base64 payload for upload",
-              "example": "{{$json.data}}",
-              "placeholder": "{{$json.data}}"
+              "helpText": "What this field is: Base64 payload for upload for OneDrive / List.\nHow to fill it: Enter the data value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "placeholder": "{{$json.data}}",
+              "example": "{{$json.data}}"
             }
           ],
           "outputExample": {
@@ -164,15 +187,15 @@ export const onedriveDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use OneDrive to list in a workflow.",
+            "scenario": "Process incoming OneDrive data with list after a related upstream event is received",
             "inputValues": {
               "Path": "/path/to/file.pdf",
               "Data Base64": "{{$json.dataBase64}}",
               "Data": "{{$json.data}}"
             },
-            "expectedOutput": "The node executes list and exposes its result for downstream nodes."
+            "expectedOutput": "OneDrive returns structured list data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://learn.microsoft.com/en-us/onedrive/developer/rest-api/"
         }

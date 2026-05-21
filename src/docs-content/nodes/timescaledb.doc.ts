@@ -8,7 +8,9 @@ export const timescaledbDoc: NodeDoc = {
   "description": "Connect to and query TimescaleDB time-series databases (PostgreSQL extension).",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -26,15 +28,19 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "host",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB hostname"
+              "description": "TimescaleDB hostname",
+              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "placeholder": "Enter Host"
             },
             {
               "name": "Port",
               "internalKey": "port",
               "type": "number",
+              "required": false,
               "description": "TimescaleDB port",
-              "example": "5432",
+              "helpText": "What this field is: A number used for port in TimescaleDB / ExecuteQuery.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
               "placeholder": "5432",
+              "example": "5432",
               "defaultValue": "5432"
             },
             {
@@ -42,7 +48,9 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB username"
+              "description": "TimescaleDB username",
+              "helpText": "What this field is: TimescaleDB username for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "placeholder": "Enter Username"
             },
             {
               "name": "Password",
@@ -50,6 +58,8 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
+              "helpText": "What this field is: TimescaleDB password for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -57,55 +67,78 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "database",
               "type": "string",
               "required": true,
-              "description": "Database name"
+              "description": "Database name",
+              "helpText": "What this field is: Database name for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "placeholder": "Enter Database"
             },
             {
               "name": "Ssl",
               "internalKey": "ssl",
               "type": "boolean",
+              "required": false,
               "description": "Enable SSL",
-              "example": "false",
+              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / ExecuteQuery.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
               "placeholder": "false",
+              "example": "false",
               "defaultValue": "false"
             },
             {
               "name": "Query",
               "internalKey": "query",
               "type": "textarea",
-              "description": "SQL query"
+              "required": true,
+              "description": "SQL query",
+              "helpText": "What this field is: SQL query for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "placeholder": "status = active"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "description": "Table name"
+              "required": true,
+              "description": "Table name",
+              "helpText": "What this field is: Table name for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "placeholder": "customers"
             },
             {
               "name": "Time Column",
               "internalKey": "timeColumn",
               "type": "string",
-              "description": "Time column for timeBucket/first/last"
+              "required": false,
+              "description": "Time column for timeBucket/first/last",
+              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Column"
             },
             {
               "name": "Interval",
               "internalKey": "interval",
               "type": "string",
-              "description": "Time interval"
+              "required": false,
+              "description": "Time interval",
+              "helpText": "What this field is: Time interval for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "placeholder": "Enter Interval"
             },
             {
               "name": "Value Column",
               "internalKey": "valueColumn",
               "type": "string",
-              "description": "Value column for first/last"
+              "required": false,
+              "description": "Value column for first/last",
+              "helpText": "What this field is: Value column for first/last for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Value Column"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {}
+            "operation": "executeQuery",
+            "data": {
+              "id": "item_123",
+              "status": "completed"
+            }
           },
-          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\ndata: Returned records from the service.",
           "usageExample": {
-            "scenario": "Use TimescaleDB to executequery in a workflow.",
+            "scenario": "Process incoming TimescaleDB data with execute query after a related upstream event is received",
             "inputValues": {
               "Host": "",
               "Port": "5432",
@@ -113,7 +146,7 @@ export const timescaledbDoc: NodeDoc = {
               "Password": "",
               "Database": ""
             },
-            "expectedOutput": "The node executes executequery and exposes its result for downstream nodes."
+            "expectedOutput": "TimescaleDB returns structured execute query data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
@@ -127,15 +160,19 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "host",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB hostname"
+              "description": "TimescaleDB hostname",
+              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / Insert.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "placeholder": "Enter Host"
             },
             {
               "name": "Port",
               "internalKey": "port",
               "type": "number",
+              "required": false,
               "description": "TimescaleDB port",
-              "example": "5432",
+              "helpText": "What this field is: A number used for port in TimescaleDB / Insert.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
               "placeholder": "5432",
+              "example": "5432",
               "defaultValue": "5432"
             },
             {
@@ -143,7 +180,9 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB username"
+              "description": "TimescaleDB username",
+              "helpText": "What this field is: TimescaleDB username for TimescaleDB / Insert.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "placeholder": "Enter Username"
             },
             {
               "name": "Password",
@@ -151,6 +190,8 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
+              "helpText": "What this field is: TimescaleDB password for TimescaleDB / Insert.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -158,55 +199,78 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "database",
               "type": "string",
               "required": true,
-              "description": "Database name"
+              "description": "Database name",
+              "helpText": "What this field is: Database name for TimescaleDB / Insert.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "placeholder": "Enter Database"
             },
             {
               "name": "Ssl",
               "internalKey": "ssl",
               "type": "boolean",
+              "required": false,
               "description": "Enable SSL",
-              "example": "false",
+              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / Insert.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
               "placeholder": "false",
+              "example": "false",
               "defaultValue": "false"
             },
             {
               "name": "Query",
               "internalKey": "query",
               "type": "textarea",
-              "description": "SQL query"
+              "required": true,
+              "description": "SQL query",
+              "helpText": "What this field is: SQL query for TimescaleDB / Insert.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "placeholder": "status = active"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "description": "Table name"
+              "required": true,
+              "description": "Table name",
+              "helpText": "What this field is: Table name for TimescaleDB / Insert.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "placeholder": "customers"
             },
             {
               "name": "Time Column",
               "internalKey": "timeColumn",
               "type": "string",
-              "description": "Time column for timeBucket/first/last"
+              "required": false,
+              "description": "Time column for timeBucket/first/last",
+              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / Insert.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Column"
             },
             {
               "name": "Interval",
               "internalKey": "interval",
               "type": "string",
-              "description": "Time interval"
+              "required": false,
+              "description": "Time interval",
+              "helpText": "What this field is: Time interval for TimescaleDB / Insert.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "placeholder": "Enter Interval"
             },
             {
               "name": "Value Column",
               "internalKey": "valueColumn",
               "type": "string",
-              "description": "Value column for first/last"
+              "required": false,
+              "description": "Value column for first/last",
+              "helpText": "What this field is: Value column for first/last for TimescaleDB / Insert.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Value Column"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {}
+            "operation": "insert",
+            "data": {
+              "id": "item_123",
+              "status": "completed"
+            }
           },
-          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\ndata: Returned records from the service.",
           "usageExample": {
-            "scenario": "Use TimescaleDB to insert in a workflow.",
+            "scenario": "Process incoming TimescaleDB data with insert after a related upstream event is received",
             "inputValues": {
               "Host": "",
               "Port": "5432",
@@ -214,7 +278,7 @@ export const timescaledbDoc: NodeDoc = {
               "Password": "",
               "Database": ""
             },
-            "expectedOutput": "The node executes insert and exposes its result for downstream nodes."
+            "expectedOutput": "TimescaleDB returns structured insert data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
@@ -228,15 +292,19 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "host",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB hostname"
+              "description": "TimescaleDB hostname",
+              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / Update.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "placeholder": "Enter Host"
             },
             {
               "name": "Port",
               "internalKey": "port",
               "type": "number",
+              "required": false,
               "description": "TimescaleDB port",
-              "example": "5432",
+              "helpText": "What this field is: A number used for port in TimescaleDB / Update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
               "placeholder": "5432",
+              "example": "5432",
               "defaultValue": "5432"
             },
             {
@@ -244,7 +312,9 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB username"
+              "description": "TimescaleDB username",
+              "helpText": "What this field is: TimescaleDB username for TimescaleDB / Update.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "placeholder": "Enter Username"
             },
             {
               "name": "Password",
@@ -252,6 +322,8 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
+              "helpText": "What this field is: TimescaleDB password for TimescaleDB / Update.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -259,55 +331,78 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "database",
               "type": "string",
               "required": true,
-              "description": "Database name"
+              "description": "Database name",
+              "helpText": "What this field is: Database name for TimescaleDB / Update.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "placeholder": "Enter Database"
             },
             {
               "name": "Ssl",
               "internalKey": "ssl",
               "type": "boolean",
+              "required": false,
               "description": "Enable SSL",
-              "example": "false",
+              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / Update.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
               "placeholder": "false",
+              "example": "false",
               "defaultValue": "false"
             },
             {
               "name": "Query",
               "internalKey": "query",
               "type": "textarea",
-              "description": "SQL query"
+              "required": true,
+              "description": "SQL query",
+              "helpText": "What this field is: SQL query for TimescaleDB / Update.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "placeholder": "status = active"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "description": "Table name"
+              "required": true,
+              "description": "Table name",
+              "helpText": "What this field is: Table name for TimescaleDB / Update.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "placeholder": "customers"
             },
             {
               "name": "Time Column",
               "internalKey": "timeColumn",
               "type": "string",
-              "description": "Time column for timeBucket/first/last"
+              "required": false,
+              "description": "Time column for timeBucket/first/last",
+              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / Update.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Column"
             },
             {
               "name": "Interval",
               "internalKey": "interval",
               "type": "string",
-              "description": "Time interval"
+              "required": false,
+              "description": "Time interval",
+              "helpText": "What this field is: Time interval for TimescaleDB / Update.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "placeholder": "Enter Interval"
             },
             {
               "name": "Value Column",
               "internalKey": "valueColumn",
               "type": "string",
-              "description": "Value column for first/last"
+              "required": false,
+              "description": "Value column for first/last",
+              "helpText": "What this field is: Value column for first/last for TimescaleDB / Update.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Value Column"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {}
+            "operation": "update",
+            "data": {
+              "id": "item_123",
+              "status": "completed"
+            }
           },
-          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\ndata: Returned records from the service.",
           "usageExample": {
-            "scenario": "Use TimescaleDB to update in a workflow.",
+            "scenario": "Process incoming TimescaleDB data with update after a related upstream event is received",
             "inputValues": {
               "Host": "",
               "Port": "5432",
@@ -315,7 +410,7 @@ export const timescaledbDoc: NodeDoc = {
               "Password": "",
               "Database": ""
             },
-            "expectedOutput": "The node executes update and exposes its result for downstream nodes."
+            "expectedOutput": "TimescaleDB returns structured update data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
@@ -329,15 +424,19 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "host",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB hostname"
+              "description": "TimescaleDB hostname",
+              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / Delete.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "placeholder": "Enter Host"
             },
             {
               "name": "Port",
               "internalKey": "port",
               "type": "number",
+              "required": false,
               "description": "TimescaleDB port",
-              "example": "5432",
+              "helpText": "What this field is: A number used for port in TimescaleDB / Delete.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
               "placeholder": "5432",
+              "example": "5432",
               "defaultValue": "5432"
             },
             {
@@ -345,7 +444,9 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB username"
+              "description": "TimescaleDB username",
+              "helpText": "What this field is: TimescaleDB username for TimescaleDB / Delete.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "placeholder": "Enter Username"
             },
             {
               "name": "Password",
@@ -353,6 +454,8 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
+              "helpText": "What this field is: TimescaleDB password for TimescaleDB / Delete.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -360,55 +463,78 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "database",
               "type": "string",
               "required": true,
-              "description": "Database name"
+              "description": "Database name",
+              "helpText": "What this field is: Database name for TimescaleDB / Delete.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "placeholder": "Enter Database"
             },
             {
               "name": "Ssl",
               "internalKey": "ssl",
               "type": "boolean",
+              "required": false,
               "description": "Enable SSL",
-              "example": "false",
+              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / Delete.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
               "placeholder": "false",
+              "example": "false",
               "defaultValue": "false"
             },
             {
               "name": "Query",
               "internalKey": "query",
               "type": "textarea",
-              "description": "SQL query"
+              "required": true,
+              "description": "SQL query",
+              "helpText": "What this field is: SQL query for TimescaleDB / Delete.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "placeholder": "status = active"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "description": "Table name"
+              "required": true,
+              "description": "Table name",
+              "helpText": "What this field is: Table name for TimescaleDB / Delete.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "placeholder": "customers"
             },
             {
               "name": "Time Column",
               "internalKey": "timeColumn",
               "type": "string",
-              "description": "Time column for timeBucket/first/last"
+              "required": false,
+              "description": "Time column for timeBucket/first/last",
+              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / Delete.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Column"
             },
             {
               "name": "Interval",
               "internalKey": "interval",
               "type": "string",
-              "description": "Time interval"
+              "required": false,
+              "description": "Time interval",
+              "helpText": "What this field is: Time interval for TimescaleDB / Delete.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "placeholder": "Enter Interval"
             },
             {
               "name": "Value Column",
               "internalKey": "valueColumn",
               "type": "string",
-              "description": "Value column for first/last"
+              "required": false,
+              "description": "Value column for first/last",
+              "helpText": "What this field is: Value column for first/last for TimescaleDB / Delete.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Value Column"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {}
+            "operation": "delete",
+            "data": {
+              "id": "item_123",
+              "status": "completed"
+            }
           },
-          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\ndata: Returned records from the service.",
           "usageExample": {
-            "scenario": "Use TimescaleDB to delete in a workflow.",
+            "scenario": "Process incoming TimescaleDB data with delete after a related upstream event is received",
             "inputValues": {
               "Host": "",
               "Port": "5432",
@@ -416,7 +542,7 @@ export const timescaledbDoc: NodeDoc = {
               "Password": "",
               "Database": ""
             },
-            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
+            "expectedOutput": "TimescaleDB returns structured delete data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
@@ -430,15 +556,19 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "host",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB hostname"
+              "description": "TimescaleDB hostname",
+              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / TimeBucket.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "placeholder": "Enter Host"
             },
             {
               "name": "Port",
               "internalKey": "port",
               "type": "number",
+              "required": false,
               "description": "TimescaleDB port",
-              "example": "5432",
+              "helpText": "What this field is: A number used for port in TimescaleDB / TimeBucket.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
               "placeholder": "5432",
+              "example": "5432",
               "defaultValue": "5432"
             },
             {
@@ -446,7 +576,9 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB username"
+              "description": "TimescaleDB username",
+              "helpText": "What this field is: TimescaleDB username for TimescaleDB / TimeBucket.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "placeholder": "Enter Username"
             },
             {
               "name": "Password",
@@ -454,6 +586,8 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
+              "helpText": "What this field is: TimescaleDB password for TimescaleDB / TimeBucket.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -461,55 +595,78 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "database",
               "type": "string",
               "required": true,
-              "description": "Database name"
+              "description": "Database name",
+              "helpText": "What this field is: Database name for TimescaleDB / TimeBucket.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "placeholder": "Enter Database"
             },
             {
               "name": "Ssl",
               "internalKey": "ssl",
               "type": "boolean",
+              "required": false,
               "description": "Enable SSL",
-              "example": "false",
+              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / TimeBucket.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
               "placeholder": "false",
+              "example": "false",
               "defaultValue": "false"
             },
             {
               "name": "Query",
               "internalKey": "query",
               "type": "textarea",
-              "description": "SQL query"
+              "required": true,
+              "description": "SQL query",
+              "helpText": "What this field is: SQL query for TimescaleDB / TimeBucket.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "placeholder": "status = active"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "description": "Table name"
+              "required": true,
+              "description": "Table name",
+              "helpText": "What this field is: Table name for TimescaleDB / TimeBucket.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "placeholder": "customers"
             },
             {
               "name": "Time Column",
               "internalKey": "timeColumn",
               "type": "string",
-              "description": "Time column for timeBucket/first/last"
+              "required": false,
+              "description": "Time column for timeBucket/first/last",
+              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / TimeBucket.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Column"
             },
             {
               "name": "Interval",
               "internalKey": "interval",
               "type": "string",
-              "description": "Time interval"
+              "required": false,
+              "description": "Time interval",
+              "helpText": "What this field is: Time interval for TimescaleDB / TimeBucket.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "placeholder": "Enter Interval"
             },
             {
               "name": "Value Column",
               "internalKey": "valueColumn",
               "type": "string",
-              "description": "Value column for first/last"
+              "required": false,
+              "description": "Value column for first/last",
+              "helpText": "What this field is: Value column for first/last for TimescaleDB / TimeBucket.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Value Column"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {}
+            "operation": "timeBucket",
+            "data": {
+              "id": "item_123",
+              "status": "completed"
+            }
           },
-          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\ndata: Returned records from the service.",
           "usageExample": {
-            "scenario": "Use TimescaleDB to timebucket in a workflow.",
+            "scenario": "Process incoming TimescaleDB data with time bucket after a related upstream event is received",
             "inputValues": {
               "Host": "",
               "Port": "5432",
@@ -517,7 +674,7 @@ export const timescaledbDoc: NodeDoc = {
               "Password": "",
               "Database": ""
             },
-            "expectedOutput": "The node executes timebucket and exposes its result for downstream nodes."
+            "expectedOutput": "TimescaleDB returns structured time bucket data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
@@ -531,15 +688,19 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "host",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB hostname"
+              "description": "TimescaleDB hostname",
+              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / First.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "placeholder": "Enter Host"
             },
             {
               "name": "Port",
               "internalKey": "port",
               "type": "number",
+              "required": false,
               "description": "TimescaleDB port",
-              "example": "5432",
+              "helpText": "What this field is: A number used for port in TimescaleDB / First.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
               "placeholder": "5432",
+              "example": "5432",
               "defaultValue": "5432"
             },
             {
@@ -547,7 +708,9 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB username"
+              "description": "TimescaleDB username",
+              "helpText": "What this field is: TimescaleDB username for TimescaleDB / First.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "placeholder": "Enter Username"
             },
             {
               "name": "Password",
@@ -555,6 +718,8 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
+              "helpText": "What this field is: TimescaleDB password for TimescaleDB / First.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -562,55 +727,78 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "database",
               "type": "string",
               "required": true,
-              "description": "Database name"
+              "description": "Database name",
+              "helpText": "What this field is: Database name for TimescaleDB / First.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "placeholder": "Enter Database"
             },
             {
               "name": "Ssl",
               "internalKey": "ssl",
               "type": "boolean",
+              "required": false,
               "description": "Enable SSL",
-              "example": "false",
+              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / First.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
               "placeholder": "false",
+              "example": "false",
               "defaultValue": "false"
             },
             {
               "name": "Query",
               "internalKey": "query",
               "type": "textarea",
-              "description": "SQL query"
+              "required": true,
+              "description": "SQL query",
+              "helpText": "What this field is: SQL query for TimescaleDB / First.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "placeholder": "status = active"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "description": "Table name"
+              "required": true,
+              "description": "Table name",
+              "helpText": "What this field is: Table name for TimescaleDB / First.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "placeholder": "customers"
             },
             {
               "name": "Time Column",
               "internalKey": "timeColumn",
               "type": "string",
-              "description": "Time column for timeBucket/first/last"
+              "required": false,
+              "description": "Time column for timeBucket/first/last",
+              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / First.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Column"
             },
             {
               "name": "Interval",
               "internalKey": "interval",
               "type": "string",
-              "description": "Time interval"
+              "required": false,
+              "description": "Time interval",
+              "helpText": "What this field is: Time interval for TimescaleDB / First.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "placeholder": "Enter Interval"
             },
             {
               "name": "Value Column",
               "internalKey": "valueColumn",
               "type": "string",
-              "description": "Value column for first/last"
+              "required": false,
+              "description": "Value column for first/last",
+              "helpText": "What this field is: Value column for first/last for TimescaleDB / First.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Value Column"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {}
+            "operation": "first",
+            "data": {
+              "id": "item_123",
+              "status": "completed"
+            }
           },
-          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\ndata: Returned records from the service.",
           "usageExample": {
-            "scenario": "Use TimescaleDB to first in a workflow.",
+            "scenario": "Process incoming TimescaleDB data with first after a related upstream event is received",
             "inputValues": {
               "Host": "",
               "Port": "5432",
@@ -618,7 +806,7 @@ export const timescaledbDoc: NodeDoc = {
               "Password": "",
               "Database": ""
             },
-            "expectedOutput": "The node executes first and exposes its result for downstream nodes."
+            "expectedOutput": "TimescaleDB returns structured first data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
@@ -632,15 +820,19 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "host",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB hostname"
+              "description": "TimescaleDB hostname",
+              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / Last.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "placeholder": "Enter Host"
             },
             {
               "name": "Port",
               "internalKey": "port",
               "type": "number",
+              "required": false,
               "description": "TimescaleDB port",
-              "example": "5432",
+              "helpText": "What this field is: A number used for port in TimescaleDB / Last.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
               "placeholder": "5432",
+              "example": "5432",
               "defaultValue": "5432"
             },
             {
@@ -648,7 +840,9 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "username",
               "type": "string",
               "required": true,
-              "description": "TimescaleDB username"
+              "description": "TimescaleDB username",
+              "helpText": "What this field is: TimescaleDB username for TimescaleDB / Last.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "placeholder": "Enter Username"
             },
             {
               "name": "Password",
@@ -656,6 +850,8 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
+              "helpText": "What this field is: TimescaleDB password for TimescaleDB / Last.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -663,55 +859,78 @@ export const timescaledbDoc: NodeDoc = {
               "internalKey": "database",
               "type": "string",
               "required": true,
-              "description": "Database name"
+              "description": "Database name",
+              "helpText": "What this field is: Database name for TimescaleDB / Last.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "placeholder": "Enter Database"
             },
             {
               "name": "Ssl",
               "internalKey": "ssl",
               "type": "boolean",
+              "required": false,
               "description": "Enable SSL",
-              "example": "false",
+              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / Last.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
               "placeholder": "false",
+              "example": "false",
               "defaultValue": "false"
             },
             {
               "name": "Query",
               "internalKey": "query",
               "type": "textarea",
-              "description": "SQL query"
+              "required": true,
+              "description": "SQL query",
+              "helpText": "What this field is: SQL query for TimescaleDB / Last.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "placeholder": "status = active"
             },
             {
               "name": "Table",
               "internalKey": "table",
               "type": "string",
-              "description": "Table name"
+              "required": true,
+              "description": "Table name",
+              "helpText": "What this field is: Table name for TimescaleDB / Last.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "placeholder": "customers"
             },
             {
               "name": "Time Column",
               "internalKey": "timeColumn",
               "type": "string",
-              "description": "Time column for timeBucket/first/last"
+              "required": false,
+              "description": "Time column for timeBucket/first/last",
+              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / Last.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Time Column"
             },
             {
               "name": "Interval",
               "internalKey": "interval",
               "type": "string",
-              "description": "Time interval"
+              "required": false,
+              "description": "Time interval",
+              "helpText": "What this field is: Time interval for TimescaleDB / Last.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "placeholder": "Enter Interval"
             },
             {
               "name": "Value Column",
               "internalKey": "valueColumn",
               "type": "string",
-              "description": "Value column for first/last"
+              "required": false,
+              "description": "Value column for first/last",
+              "helpText": "What this field is: Value column for first/last for TimescaleDB / Last.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "placeholder": "Enter Value Column"
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {}
+            "operation": "last",
+            "data": {
+              "id": "item_123",
+              "status": "completed"
+            }
           },
-          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\ndata: Returned records from the service.",
           "usageExample": {
-            "scenario": "Use TimescaleDB to last in a workflow.",
+            "scenario": "Process incoming TimescaleDB data with last after a related upstream event is received",
             "inputValues": {
               "Host": "",
               "Port": "5432",
@@ -719,7 +938,7 @@ export const timescaledbDoc: NodeDoc = {
               "Password": "",
               "Database": ""
             },
-            "expectedOutput": "The node executes last and exposes its result for downstream nodes."
+            "expectedOutput": "TimescaleDB returns structured last data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

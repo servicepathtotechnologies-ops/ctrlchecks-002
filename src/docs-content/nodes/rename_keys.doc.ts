@@ -8,7 +8,9 @@ export const renameKeysDoc: NodeDoc = {
   "description": "Rename object keys",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const renameKeysDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Key mappings: { oldKey: \"newKey\" }",
-              "example": "{\"oldName\":\"newName\",\"oldEmail\":\"newEmail\"}",
-              "placeholder": "{\"oldName\":\"newName\",\"oldEmail\":\"newEmail\"}"
+              "helpText": "What this field is: Key mappings: { oldKey: \"newKey\" } for Rename Keys / Execute.\nHow to fill it: Enter valid JSON in the format Rename Keys expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.mappings}} or pick the value from the data picker.",
+              "placeholder": "{\"oldName\":\"newName\",\"oldEmail\":\"newEmail\"}",
+              "example": "{\"oldName\":\"newName\",\"oldEmail\":\"newEmail\"}"
             }
           ],
           "outputExample": {
@@ -41,13 +44,13 @@ export const renameKeysDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Rename Keys to execute in a workflow.",
+            "scenario": "Process incoming Rename Keys data with execute after a related upstream event is received",
             "inputValues": {
               "Mappings": "{\"oldName\":\"newName\",\"oldEmail\":\"newEmail\"}"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Rename Keys returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

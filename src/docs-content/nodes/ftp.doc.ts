@@ -8,7 +8,12 @@ export const ftpDoc: NodeDoc = {
   "description": "FTP file operations",
   "credentialType": "FTP Credential",
   "credentialSetupSteps": [
-    "No credential required."
+    "What this is: FTP uses an OAuth connection so CtrlChecks can safely access your FTP account.",
+    "Get FTP connection details from your hosting provider: Host (server address), Port (usually 21), Username, Password, and the remote directory path.",
+    "Confirm the FTP server allows connections from CtrlChecks on port 21.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> FTP -> enter Host, Port, Username, and Password -> Test Connection -> Save.",
+    "Tip: Use SFTP instead of FTP whenever your provider supports it - SFTP is encrypted and much more secure.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields."
   ],
   "credentialDocsUrl": "https://en.wikipedia.org/wiki/File_Transfer_Protocol",
   "resources": [
@@ -27,16 +32,19 @@ export const ftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "FTP host",
-              "example": "ftp.example.com",
-              "placeholder": "ftp.example.com"
+              "helpText": "What this field is: The FTP server address.\nExample: ftp.yourcompany.com or 192.168.1.100",
+              "placeholder": "ftp.example.com",
+              "example": "ftp.example.com"
             },
             {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
+              "required": false,
               "description": "File path",
-              "example": "/path/to/file.pdf",
-              "placeholder": "/path/to/file.pdf"
+              "helpText": "What this field is: The file path on the FTP server.\nExample: /public_html/uploads/report.pdf",
+              "placeholder": "/path/to/file.pdf",
+              "example": "/path/to/file.pdf"
             }
           ],
           "outputExample": {
@@ -49,14 +57,14 @@ export const ftpDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use FTP to upload in a workflow.",
+            "scenario": "Process incoming FTP data with upload after a related upstream event is received",
             "inputValues": {
               "Host": "ftp.example.com",
               "Path": "/path/to/file.pdf"
             },
-            "expectedOutput": "The node executes upload and exposes its result for downstream nodes."
+            "expectedOutput": "FTP returns structured upload data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://en.wikipedia.org/wiki/File_Transfer_Protocol"
         },
@@ -71,16 +79,19 @@ export const ftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "FTP host",
-              "example": "ftp.example.com",
-              "placeholder": "ftp.example.com"
+              "helpText": "What this field is: The FTP server address.\nExample: ftp.yourcompany.com or 192.168.1.100",
+              "placeholder": "ftp.example.com",
+              "example": "ftp.example.com"
             },
             {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
+              "required": false,
               "description": "File path",
-              "example": "/path/to/file.pdf",
-              "placeholder": "/path/to/file.pdf"
+              "helpText": "What this field is: The file path on the FTP server.\nExample: /public_html/uploads/report.pdf",
+              "placeholder": "/path/to/file.pdf",
+              "example": "/path/to/file.pdf"
             }
           ],
           "outputExample": {
@@ -93,14 +104,14 @@ export const ftpDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use FTP to download in a workflow.",
+            "scenario": "Process incoming FTP data with download after a related upstream event is received",
             "inputValues": {
               "Host": "ftp.example.com",
               "Path": "/path/to/file.pdf"
             },
-            "expectedOutput": "The node executes download and exposes its result for downstream nodes."
+            "expectedOutput": "FTP returns structured download data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://en.wikipedia.org/wiki/File_Transfer_Protocol"
         },
@@ -115,16 +126,19 @@ export const ftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "FTP host",
-              "example": "ftp.example.com",
-              "placeholder": "ftp.example.com"
+              "helpText": "What this field is: The FTP server address.\nExample: ftp.yourcompany.com or 192.168.1.100",
+              "placeholder": "ftp.example.com",
+              "example": "ftp.example.com"
             },
             {
               "name": "Path",
               "internalKey": "path",
               "type": "string",
+              "required": false,
               "description": "File path",
-              "example": "/path/to/file.pdf",
-              "placeholder": "/path/to/file.pdf"
+              "helpText": "What this field is: The file path on the FTP server.\nExample: /public_html/uploads/report.pdf",
+              "placeholder": "/path/to/file.pdf",
+              "example": "/path/to/file.pdf"
             }
           ],
           "outputExample": {
@@ -137,14 +151,14 @@ export const ftpDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use FTP to list in a workflow.",
+            "scenario": "Process incoming FTP data with list after a related upstream event is received",
             "inputValues": {
               "Host": "ftp.example.com",
               "Path": "/path/to/file.pdf"
             },
-            "expectedOutput": "The node executes list and exposes its result for downstream nodes."
+            "expectedOutput": "FTP returns structured list data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://en.wikipedia.org/wiki/File_Transfer_Protocol"
         }

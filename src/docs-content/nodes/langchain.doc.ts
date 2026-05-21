@@ -8,7 +8,9 @@ export const langchainDoc: NodeDoc = {
   "description": "Orchestrate AI chains and agents using LangChain with configurable LLM providers and tools.",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,9 +27,11 @@ export const langchainDoc: NodeDoc = {
               "name": "Provider",
               "internalKey": "provider",
               "type": "select",
+              "required": false,
               "description": "LLM provider",
-              "example": "openai",
+              "helpText": "What this field is: LLM provider for LangChain / Run chain.\nWhere to find it: Open the item in LangChain and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567",
               "placeholder": "openai",
+              "example": "openai",
               "defaultValue": "openai",
               "options": [
                 "OpenAI",
@@ -39,41 +43,54 @@ export const langchainDoc: NodeDoc = {
               "internalKey": "prompt",
               "type": "textarea",
               "required": true,
-              "description": "Input prompt or task description"
+              "description": "Input prompt or task description",
+              "helpText": "What this field is: Input prompt or task description for LangChain / Run chain.\nHow to fill it: Type the message, prompt, or content you want LangChain to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Summarize {{$json.text}}"
             },
             {
               "name": "Tools",
               "internalKey": "tools",
               "type": "json",
+              "required": false,
               "description": "Tool definitions for agent mode",
-              "example": "[]",
+              "helpText": "What this field is: Tool definitions for agent mode for LangChain / Run chain.\nHow to fill it: Enter valid JSON in the format LangChain expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.tools}} or pick the value from the data picker.",
               "placeholder": "[]",
+              "example": "[]",
               "defaultValue": "[]"
             },
             {
               "name": "Memory",
               "internalKey": "memory",
               "type": "boolean",
+              "required": false,
               "description": "Enable conversation memory",
-              "example": "false",
+              "helpText": "What this field is: An on/off choice for memory in LangChain / Run chain.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want LangChain to use this optional behavior.",
               "placeholder": "false",
+              "example": "false",
               "defaultValue": "false"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
+              "required": false,
               "description": "API key for LLM provider",
+              "helpText": "What this field is: A private key or token that lets CtrlChecks access LangChain.\nWhere to get it: Open the LangChain dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {}
+            "operation": "run_chain",
+            "data": {
+              "id": "item_123",
+              "status": "completed"
+            }
           },
-          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\ndata: Returned records from the service.",
           "usageExample": {
-            "scenario": "Use LangChain to run chain in a workflow.",
+            "scenario": "Process incoming LangChain data with run chain after a related upstream event is received",
             "inputValues": {
               "Provider": "openai",
               "Prompt": "",
@@ -81,7 +98,7 @@ export const langchainDoc: NodeDoc = {
               "Memory": "false",
               "Api Key": ""
             },
-            "expectedOutput": "The node executes run chain and exposes its result for downstream nodes."
+            "expectedOutput": "LangChain returns structured run chain data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
@@ -94,9 +111,11 @@ export const langchainDoc: NodeDoc = {
               "name": "Provider",
               "internalKey": "provider",
               "type": "select",
+              "required": false,
               "description": "LLM provider",
-              "example": "openai",
+              "helpText": "What this field is: LLM provider for LangChain / Run agent.\nWhere to find it: Open the item in LangChain and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567",
               "placeholder": "openai",
+              "example": "openai",
               "defaultValue": "openai",
               "options": [
                 "OpenAI",
@@ -108,41 +127,54 @@ export const langchainDoc: NodeDoc = {
               "internalKey": "prompt",
               "type": "textarea",
               "required": true,
-              "description": "Input prompt or task description"
+              "description": "Input prompt or task description",
+              "helpText": "What this field is: Input prompt or task description for LangChain / Run agent.\nHow to fill it: Type the message, prompt, or content you want LangChain to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Summarize {{$json.text}}"
             },
             {
               "name": "Tools",
               "internalKey": "tools",
               "type": "json",
+              "required": false,
               "description": "Tool definitions for agent mode",
-              "example": "[]",
+              "helpText": "What this field is: Tool definitions for agent mode for LangChain / Run agent.\nHow to fill it: Enter valid JSON in the format LangChain expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.tools}} or pick the value from the data picker.",
               "placeholder": "[]",
+              "example": "[]",
               "defaultValue": "[]"
             },
             {
               "name": "Memory",
               "internalKey": "memory",
               "type": "boolean",
+              "required": false,
               "description": "Enable conversation memory",
-              "example": "false",
+              "helpText": "What this field is: An on/off choice for memory in LangChain / Run agent.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want LangChain to use this optional behavior.",
               "placeholder": "false",
+              "example": "false",
               "defaultValue": "false"
             },
             {
               "name": "Api Key",
               "internalKey": "apiKey",
               "type": "password",
+              "required": false,
               "description": "API key for LLM provider",
+              "helpText": "What this field is: A private key or token that lets CtrlChecks access LangChain.\nWhere to get it: Open the LangChain dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             }
           ],
           "outputExample": {
             "success": true,
-            "data": {}
+            "operation": "run_agent",
+            "data": {
+              "id": "item_123",
+              "status": "completed"
+            }
           },
-          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\ndata: Returned records from the service.",
           "usageExample": {
-            "scenario": "Use LangChain to run agent in a workflow.",
+            "scenario": "Process incoming LangChain data with run agent after a related upstream event is received",
             "inputValues": {
               "Provider": "openai",
               "Prompt": "",
@@ -150,7 +182,7 @@ export const langchainDoc: NodeDoc = {
               "Memory": "false",
               "Api Key": ""
             },
-            "expectedOutput": "The node executes run agent and exposes its result for downstream nodes."
+            "expectedOutput": "LangChain returns structured run agent data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

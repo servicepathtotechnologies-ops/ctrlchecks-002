@@ -8,7 +8,9 @@ export const chatModelDoc: NodeDoc = {
   "description": "Chat model connector for AI Agent node (uses Gemini 1.5 Flash by default)",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,9 +27,11 @@ export const chatModelDoc: NodeDoc = {
               "name": "Temperature",
               "internalKey": "temperature",
               "type": "number",
+              "required": false,
               "description": "Creativity/temperature (0.0 - 1.0)",
-              "example": "0.2",
+              "helpText": "What this field is: A number used for temperature in Chat Model / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.temperature}} or pick the value from the data picker.",
               "placeholder": "0.2",
+              "example": "0.2",
               "defaultValue": "0.7"
             }
           ],
@@ -36,13 +40,13 @@ export const chatModelDoc: NodeDoc = {
             "model": "",
             "apiKey": ""
           },
-          "outputDescription": "provider: Value returned by this node.\nmodel: Value returned by this node.\napiKey: Value returned by this node.",
+          "outputDescription": "provider: Value returned by this operation.\nmodel: Value returned by this operation.\napiKey: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Chat Model to execute in a workflow.",
+            "scenario": "Process incoming Chat Model data with execute after a related upstream event is received",
             "inputValues": {
               "Temperature": "0.2"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Chat Model returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

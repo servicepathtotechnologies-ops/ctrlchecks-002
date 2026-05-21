@@ -13,6 +13,58 @@ interface GoogleSheetsSettingsProps {
 
 export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleSheetsSettingsProps) {
   const { isAdmin } = useRole();
+  const guides = {
+    operation: [
+      'What this field is: This chooses what Google Sheets will do in this workflow step.',
+      'How to fill it: Choose Read to get rows, Write to replace cells, Append to add new rows at the bottom, or Update to change existing cells.',
+      'Example: Choose Read when you want to fetch customer rows before sending emails.',
+    ].join('\n'),
+    spreadsheetId: [
+      'What this field is: This is the unique ID of the Google Sheet file.',
+      'Where to find it: Open the spreadsheet in your browser and copy the long text between /d/ and /edit in the URL.',
+      'Format: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit',
+      'Example: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
+    ].join('\n'),
+    sheetName: [
+      'What this field is: This is the tab name at the bottom of your spreadsheet.',
+      'How to fill it: Type the tab name exactly as it appears, including spaces and capitalization.',
+      'Example: FoodSales',
+      'Tip: Leave it empty only when you want CtrlChecks to use the first tab in the spreadsheet.',
+    ].join('\n'),
+    range: [
+      'What this field is: This tells CtrlChecks which cells to read or write.',
+      'Format: Use A1 notation. A1:D100 means columns A through D and rows 1 through 100.',
+      'With sheet name: FoodSales!A1:D100',
+      'Example: A1:D100',
+      'Tip: For reading, leave it empty to read all used cells. For writing or updating, enter the exact target range.',
+    ].join('\n'),
+    outputFormat: [
+      'What this field is: This controls the shape of the data that comes out of the Google Sheets Read operation.',
+      'Choose JSON Array when each row should become an object. This is best for most workflows, such as sending one email per row.',
+      'Choose Key-Value Pairs when you want a simple object of column names and values.',
+      'Choose Plain Text Table when you want the rows formatted as readable text for an email, Slack message, or AI prompt.',
+      'Example: If your sheet has Name and Email columns, JSON Array returns rows like [{"Name":"Alice","Email":"alice@example.com"}].',
+      'Recommended: Use JSON Array unless you specifically need text.',
+    ].join('\n'),
+    readDirection: [
+      'What this field is: This tells CtrlChecks whether your data is organized by rows or by columns.',
+      'Choose Row-wise when each row is one record, such as one customer, order, or lead. This is the normal spreadsheet format.',
+      'Choose Column-wise when each column is one record and values go downward.',
+      'Example: Use Row-wise for a sheet with columns Name, Email, and Status.',
+      'Recommended: Use Row-wise unless your sheet is intentionally built column-by-column.',
+    ].join('\n'),
+    data: [
+      'What this field is: This is the data that CtrlChecks will write into the sheet.',
+      'How to fill it: Enter JSON as rows. Each inner list is one spreadsheet row.',
+      'Example: [["Name","Email"],["Alice","alice@example.com"]]',
+      'Dynamic example: Use {{$json.rows}} when an earlier node already produced rows.',
+    ].join('\n'),
+    allowWrite: [
+      'What this field is: This controls whether this Google Sheets node is allowed to write or update sheet data.',
+      'How to fill it: Turn it on only when this workflow should change the spreadsheet.',
+      'Example: Turn it on for Append, Write, or Update operations. Leave it off for Read-only workflows.',
+    ].join('\n'),
+  };
 
   const updateConfig = (key: string, value: unknown) => {
     if (key === 'data') {
@@ -36,7 +88,19 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
 
       {/* Operation */}
       <div className="space-y-2">
-        <Label htmlFor="operation">Operation</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="operation">Operation</Label>
+          <InputGuideLink
+            fieldKey="operation"
+            fieldLabel="Operation"
+            fieldType="select"
+            nodeType="google_sheets"
+            helpCategory="operation_select"
+            helpText={guides.operation}
+            placeholder="read"
+            className="mt-0"
+          />
+        </div>
         <Select
           value={(config.operation as string) || 'read'}
           onValueChange={(value) => updateConfig('operation', value)}
@@ -51,22 +115,26 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
             <SelectItem value="update">Update</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex justify-end">
-          <InputGuideLink
-            fieldKey="operation"
-            fieldLabel="Operation"
-            fieldType="select"
-            nodeType="google_sheets"
-            helpCategory="operation_select"
-          />
-        </div>
       </div>
 
       {/* Spreadsheet ID */}
       <div className="space-y-2">
-        <Label htmlFor="spreadsheetId">
-          Spreadsheet ID <span className="text-destructive">*</span>
-        </Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="spreadsheetId">
+            Spreadsheet ID <span className="text-destructive">*</span>
+          </Label>
+          <InputGuideLink
+            fieldKey="spreadsheetId"
+            fieldLabel="Spreadsheet ID"
+            fieldType="text"
+            nodeType="google_sheets"
+            helpCategory="spreadsheet_id"
+            docsUrl="https://docs.google.com/spreadsheets"
+            helpText={guides.spreadsheetId}
+            placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+            className="mt-0"
+          />
+        </div>
         <Input
           id="spreadsheetId"
           value={(config.spreadsheetId as string) || ''}
@@ -77,20 +145,23 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
           <p className="text-xs text-muted-foreground">
             Get this from the Google Sheets URL: /d/SPREADSHEET_ID/edit
           </p>
-          <InputGuideLink
-            fieldKey="spreadsheetId"
-            fieldLabel="Spreadsheet ID"
-            fieldType="text"
-            nodeType="google_sheets"
-            helpCategory="spreadsheet_id"
-            docsUrl="https://docs.google.com/spreadsheets"
-          />
         </div>
       </div>
 
       {/* Sheet Name */}
       <div className="space-y-2">
-        <Label htmlFor="sheetName">Sheet Name (Tab)</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="sheetName">Sheet Name (Tab)</Label>
+          <InputGuideLink
+            fieldKey="sheetName"
+            fieldLabel="Sheet Name (Tab)"
+            fieldType="text"
+            nodeType="google_sheets"
+            helpText={guides.sheetName}
+            placeholder="FoodSales"
+            className="mt-0"
+          />
+        </div>
         <Input
           id="sheetName"
           value={(config.sheetName as string) || ''}
@@ -101,18 +172,23 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
           <p className="text-xs text-muted-foreground">
             Leave empty to use the first sheet
           </p>
-          <InputGuideLink
-            fieldKey="sheetName"
-            fieldLabel="Sheet Name (Tab)"
-            fieldType="text"
-            nodeType="google_sheets"
-          />
         </div>
       </div>
 
       {/* Range */}
       <div className="space-y-2">
-        <Label htmlFor="range">Range (e.g., A1:D100)</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="range">Range (e.g., A1:D100)</Label>
+          <InputGuideLink
+            fieldKey="range"
+            fieldLabel="Range (A1 notation)"
+            fieldType="text"
+            nodeType="google_sheets"
+            helpText={guides.range}
+            placeholder="A1:D100"
+            className="mt-0"
+          />
+        </div>
         <Input
           id="range"
           value={(config.range as string) || ''}
@@ -123,13 +199,6 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
           <p className="text-xs text-muted-foreground">
             Leave empty to read all used cells. For write/update, specify the target range.
           </p>
-          <InputGuideLink
-            fieldKey="range"
-            fieldLabel="Range (A1 notation)"
-            fieldType="text"
-            nodeType="google_sheets"
-            helpText={`How to get Range: Step 1) Open the sheet and click the top-left cell of the data you want (for example A1). Step 2) Hold Shift and click the bottom-right cell (for example D100) — the Name Box shows the range like A1:D100. Step 3) You can also type A1 notation directly: columns as letters, rows as numbers, use colon for a rectangle (A1:D100), or a single cell (B2). Step 4) Leave empty only if the node documentation says the whole used range will be read automatically. See Google Sheets A1 notation in API docs: https://developers.google.com/sheets/api/guides/concepts#a1_notation`}
-          />
         </div>
       </div>
 
@@ -137,7 +206,19 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
       {(config.operation === 'read' || !config.operation) && (
         <>
           <div className="space-y-2">
-            <Label htmlFor="outputFormat">Output Format</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="outputFormat">Output Format</Label>
+              <InputGuideLink
+                fieldKey="outputFormat"
+                fieldLabel="Output Format"
+                fieldType="select"
+                nodeType="google_sheets"
+                helpCategory="resource_select"
+                helpText={guides.outputFormat}
+                placeholder="JSON Array"
+                className="mt-0"
+              />
+            </div>
             <Select
               value={(config.outputFormat as string) || 'json'}
               onValueChange={(value) => updateConfig('outputFormat', value)}
@@ -151,19 +232,22 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
                 <SelectItem value="text">Plain Text Table</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex justify-end">
-              <InputGuideLink
-                fieldKey="outputFormat"
-                fieldLabel="Output Format"
-                fieldType="select"
-                nodeType="google_sheets"
-                helpCategory="resource_select"
-              />
-            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="readDirection">Read Direction</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="readDirection">Read Direction</Label>
+              <InputGuideLink
+                fieldKey="readDirection"
+                fieldLabel="Read Direction"
+                fieldType="select"
+                nodeType="google_sheets"
+                helpCategory="resource_select"
+                helpText={guides.readDirection}
+                placeholder="Row-wise (default)"
+                className="mt-0"
+              />
+            </div>
             <Select
               value={(config.readDirection as string) || 'rows'}
               onValueChange={(value) => updateConfig('readDirection', value)}
@@ -176,15 +260,6 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
                 <SelectItem value="columns">Column-wise</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex justify-end">
-              <InputGuideLink
-                fieldKey="readDirection"
-                fieldLabel="Read Direction"
-                fieldType="select"
-                nodeType="google_sheets"
-                helpCategory="resource_select"
-              />
-            </div>
           </div>
         </>
       )}
@@ -192,9 +267,21 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
       {/* Data to Write (for write operations) */}
       {(config.operation === 'write' || config.operation === 'append' || config.operation === 'update') && (
         <div className="space-y-2">
-          <Label htmlFor="data">
-            Data to Write (JSON) <span className="text-destructive">*</span>
-          </Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="data">
+              Data to Write (JSON) <span className="text-destructive">*</span>
+            </Label>
+            <InputGuideLink
+              fieldKey="data"
+              fieldLabel="Data to Write (JSON)"
+              fieldType="json"
+              nodeType="google_sheets"
+              helpCategory="json_payload"
+              helpText={guides.data}
+              placeholder={'[["Name","Email"],["Alice","alice@example.com"]]'}
+              className="mt-0"
+            />
+          </div>
           <Textarea
             id="data"
             value={typeof config.data === 'string' ? config.data : JSON.stringify(config.data || [], null, 2)}
@@ -220,13 +307,6 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
                 ? 'Enter values to append as new rows: [["val1", "val2"]]'
                 : 'Enter headers and values to overwrite: [["Header", "Header"], ["val1", "val2"]]'}
             </p>
-            <InputGuideLink
-              fieldKey="data"
-              fieldLabel="Data to Write (JSON)"
-              fieldType="json"
-              nodeType="google_sheets"
-              helpCategory="json_payload"
-            />
           </div>
         </div>
       )}
@@ -236,6 +316,15 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="allowWrite">Allow Write Access</Label>
+            <InputGuideLink
+              fieldKey="allowWrite"
+              fieldLabel="Allow Write Access"
+              fieldType="boolean"
+              nodeType="google_sheets"
+              helpText={guides.allowWrite}
+              placeholder="Off for read-only, on for writes"
+              className="mt-0"
+            />
             <Switch
               id="allowWrite"
               checked={(config.allowWrite as boolean) || false}
@@ -246,12 +335,6 @@ export default function GoogleSheetsSettings({ config, onConfigChange }: GoogleS
             <p className="text-xs text-muted-foreground">
               ⚠️ Admin only: Enable write/update operations for this node
             </p>
-            <InputGuideLink
-              fieldKey="allowWrite"
-              fieldLabel="Allow Write Access"
-              fieldType="boolean"
-              nodeType="google_sheets"
-            />
           </div>
         </div>
       )}

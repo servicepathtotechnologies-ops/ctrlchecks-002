@@ -49,19 +49,22 @@ function getGuideQuestion(key: string, label: string): string {
   const combined = `${lowerKey} ${lowerLabel}`;
 
   if (combined.includes('api key') || combined.includes('apikey')) {
-    return 'How to get API key?';
+    return 'How to set API key?';
   }
   if (combined.includes('url') || combined.includes('endpoint')) {
-    return 'How to get URL?';
+    return 'How to set URL?';
   }
   if (combined.includes('token')) {
-    return 'How to get Token?';
+    return 'How to set Token?';
   }
   if (combined.includes('credential') || combined.includes('password') || combined.includes('secret')) {
-    return 'How to get Credentials?';
+    return 'How to set Credentials?';
+  }
+  if (combined.includes('operation') || combined.includes('type') || combined.includes('mode')) {
+    return `How to choose ${label}?`;
   }
   
-  return 'How to get this value?';
+  return `How to set ${label}?`;
 }
 
 interface InputGuideLinkProps {
@@ -82,19 +85,7 @@ export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, clas
   
   // Try to get node-specific guide first
   const nodeGuide = nodeType ? getNodeGuide(nodeType, fieldKey) : null;
-  
-  // Check if helpText contains step-by-step instructions (starts with "How to get" or has numbered steps)
-  const hasHelpTextSteps = helpText && (
-    helpText.toLowerCase().includes('how to get') || 
-    helpText.includes('Step 1') || 
-    helpText.includes('1)') ||
-    helpText.includes('1.') ||
-    /\d+\)/.test(helpText) || // Matches "1)", "2)", etc.
-    /Step \d+/.test(helpText) // Matches "Step 1", "Step 2", etc.
-  );
-  
-  // Parse helpText into guide if it contains steps
-  const helpTextGuide = hasHelpTextSteps ? parseHelpTextToGuide(helpText, fieldLabel) : null;
+  const helpTextGuide = helpText ? parseHelpTextToGuide(helpText, fieldLabel, fieldType, placeholder) : null;
   
   // Generate field guide if no node-specific guide or helpText guide exists
   // ALWAYS generate guide for Slack Bot Token to ensure correct guide is shown
@@ -112,7 +103,7 @@ export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, clas
     helpCategory && helpCategory !== 'none'
       ? { helpCategory, docsUrl, exampleValue }
       : undefined;
-  const generatedGuide = !nodeGuide && !helpTextGuide ? generateFieldGuide(
+  const generatedGuide = !helpTextGuide && !nodeGuide ? generateFieldGuide(
     nodeType || '',
     fieldKey || '',
     fieldLabel || '',
@@ -123,12 +114,13 @@ export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, clas
   
   // Fallback to generic guide type detection
   const guideType = detectGuideType(fieldKey, fieldLabel, fieldType);
-  const guideQuestion = nodeGuide
-    ? (nodeGuide.title || `How to get ${fieldLabel}?`)
-    : helpTextGuide?.title || generatedGuide?.title || getGuideQuestion(fieldKey, fieldLabel);
+  const guideQuestion =
+    fieldType === 'select'
+      ? `How to choose ${fieldLabel}?`
+      : getGuideQuestion(fieldKey, fieldLabel);
   
-  // Determine which guide to use (priority: nodeGuide > helpTextGuide > generatedGuide)
-  const activeGuide = nodeGuide || helpTextGuide || generatedGuide;
+  // Prefer the field's explicit guide. Node-specific and generated guides are fallbacks.
+  const activeGuide = helpTextGuide || nodeGuide || generatedGuide;
 
   // Always show guide link (per requirements: ALL fields must have guides)
   // If no node-specific guide exists, we'll use generic guide based on field type
@@ -167,18 +159,31 @@ export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, clas
 }
 
 // Parse helpText into guide format
-function parseHelpTextToGuide(helpText: string, fieldLabel: string): { title: string; steps: string[]; url?: string; example?: string; securityWarning?: boolean } | null {
+function parseHelpTextToGuide(helpText: string, fieldLabel: string, fieldType?: string, placeholder?: string): { title: string; steps: string[]; url?: string; example?: string; securityWarning?: boolean } | null {
   if (!helpText) return null;
   
   // Check if helpText starts with "How to get"
   const titleMatch = helpText.match(/^How to get ([^:]+)/i);
-  const title = titleMatch ? `How to get ${titleMatch[1]}?` : `How to get ${fieldLabel}?`;
+  const title = titleMatch
+    ? `How to get ${titleMatch[1]}?`
+    : fieldType === 'select'
+      ? `How to choose ${fieldLabel}?`
+      : `How to set ${fieldLabel}?`;
   
   // Extract steps (numbered with 1), 2), etc. or Step 1, Step 2, etc.)
   const steps: string[] = [];
+
+  if (helpText.includes('\n')) {
+    steps.push(
+      ...helpText
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+    );
+  }
   
   // First try: Split by numbered steps pattern "1)", "2)", etc.
-  if (helpText.includes(')')) {
+  if (steps.length === 0 && helpText.includes(')')) {
     const stepParts = helpText.split(/(?=\d+\))/);
     for (const part of stepParts) {
       // Match pattern: "1) Text content"
@@ -247,7 +252,7 @@ function parseHelpTextToGuide(helpText: string, fieldLabel: string): { title: st
   
   // Extract example if present
   const exampleMatch = helpText.match(/Example[:\s]+([^\n]+)/i);
-  const example = exampleMatch ? exampleMatch[1].trim() : undefined;
+  const example = exampleMatch ? exampleMatch[1].trim() : placeholder;
   
   // Extract URL if present
   const urlMatch = helpText.match(/https?:\/\/[^\s]+/);
@@ -259,7 +264,9 @@ function parseHelpTextToGuide(helpText: string, fieldLabel: string): { title: st
                          helpText.toLowerCase().includes('token') ||
                          helpText.toLowerCase().includes('key');
   
-  if (steps.length === 0) return null;
+  if (steps.length === 0) {
+    steps.push(helpText);
+  }
   
   return {
     title,

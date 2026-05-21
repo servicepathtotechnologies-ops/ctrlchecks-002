@@ -8,7 +8,9 @@ export const editFieldsDoc: NodeDoc = {
   "description": "Edit, rename, or transform field values in data objects",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,9 +27,11 @@ export const editFieldsDoc: NodeDoc = {
               "name": "Fields",
               "internalKey": "fields",
               "type": "json",
+              "required": false,
               "description": "Field mappings and transformations",
-              "example": "{\"oldField\":\"{{$json.newField}}\",\"rename\":{\"old\":\"new\"}}",
-              "placeholder": "{\"oldField\":\"{{$json.newField}}\",\"rename\":{\"old\":\"new\"}}"
+              "helpText": "What this field is: Field mappings and transformations for Edit Fields / Execute.\nHow to fill it: Enter valid JSON in the format Edit Fields expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "placeholder": "{\"oldField\":\"{{$json.newField}}\",\"rename\":{\"old\":\"new\"}}",
+              "example": "{\"oldField\":\"{{$json.newField}}\",\"rename\":{\"old\":\"new\"}}"
             }
           ],
           "outputExample": {

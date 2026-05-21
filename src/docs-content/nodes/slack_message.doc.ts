@@ -6,13 +6,18 @@ export const slackMessageDoc: NodeDoc = {
   "category": "Communication",
   "logoUrl": "/icons/nodes/slack_message.svg",
   "description": "Send messages to Slack channels or users",
-  "credentialType": "Slack Credential",
+  "credentialType": "Slack OAuth",
   "credentialSetupSteps": [
-    "Go to https://api.slack.com/apps → click \"Create New App\" → \"From scratch\".",
-    "Under \"OAuth & Permissions\", add the Bot Token Scopes you need (e.g. chat:write, channels:read).",
-    "Click \"Install to Workspace\" and allow the permissions.",
-    "Copy the Bot User OAuth Token (starts with xoxb-).",
-    "In CtrlChecks, open Connections → Add Connection → Slack → paste the Bot Token → Save."
+    "What this is: Slack uses an OAuth connection so CtrlChecks can safely access your Slack account.",
+    "Go to api.slack.com/apps and sign in with your Slack account.",
+    "Click \"Create New App\" -> \"From scratch\" -> give it a name (e.g. CtrlChecks Bot) -> pick your workspace -> Create App.",
+    "In the left menu, click \"OAuth & Permissions\" -> scroll to \"Scopes\" -> \"Bot Token Scopes\" -> Add: chat:write (to post messages), channels:read (to list channels).",
+    "Scroll up and click \"Install to Workspace\" -> Allow.",
+    "Copy the \"Bot User OAuth Token\" - it starts with xoxb-. This is your Slack credential.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Slack -> paste the xoxb- token -> Save.",
+    "In your Slack workspace, open the channel you want to post to -> type /invite @YourBotName -> Enter. Then run a test step in CtrlChecks to confirm.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Slack node and select the saved connection."
   ],
   "credentialDocsUrl": "https://api.slack.com/authentication/basics",
   "resources": [
@@ -26,53 +31,51 @@ export const slackMessageDoc: NodeDoc = {
           "description": "Send a message to a Slack channel or direct message.",
           "fields": [
             {
-              "name": "Webhook Url",
-              "internalKey": "webhookUrl",
-              "type": "url",
-              "required": true,
-              "description": "Slack incoming webhook URL",
-              "example": "https://hooks.slack.com/services/...",
-              "placeholder": "https://hooks.slack.com/services/..."
-            },
-            {
               "name": "Channel",
               "internalKey": "channel",
               "type": "string",
+              "required": true,
               "description": "Slack channel or user ID",
-              "example": "#general",
-              "placeholder": "#general"
-            },
-            {
-              "name": "Message",
-              "internalKey": "message",
-              "type": "textarea",
-              "description": "Message text to send to Slack"
+              "helpText": "What this field is: The Slack channel where the message will be posted.\nHow to fill it: Use the channel name with # like #general, or the channel ID like C01234567.\nWhere to find the channel ID: Right-click the channel name in Slack → View channel details → scroll to the bottom — the ID is shown there. It is safer to use the ID in case the channel is renamed.\nExample: #notifications or C01234567",
+              "placeholder": "#general",
+              "example": "#general"
             },
             {
               "name": "Blocks",
               "internalKey": "blocks",
               "type": "string",
+              "required": false,
               "description": "Slack blocks JSON (optional)",
-              "example": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]",
-              "placeholder": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]"
+              "helpText": "What this field is: Slack blocks JSON (optional) for Slack / Execute.\nHow to fill it: Enter the blocks value requested by Slack, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.blocks}} or pick the value from the data picker.",
+              "placeholder": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]",
+              "example": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]"
             },
             {
               "name": "Text",
               "internalKey": "text",
               "type": "textarea",
-              "description": "Message text (alias for message)"
+              "required": true,
+              "description": "Message text (alias for message)",
+              "helpText": "What this field is: The message text that will appear in the Slack channel.\nExample: New lead from {{$json.name}} ({{$json.email}}) — signed up at {{$json.createdAt}}.\nFormatting tips: *bold text*, _italic text_, `code`, and line breaks work in Slack messages.",
+              "placeholder": "Hello {{$json.name}}"
             },
             {
               "name": "Username",
               "internalKey": "username",
               "type": "string",
-              "description": "Bot username"
+              "required": false,
+              "description": "Bot username",
+              "helpText": "What this field is: Bot username for Slack / Execute.\nHow to fill it: Enter the username value requested by Slack, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "placeholder": "Enter Username"
             },
             {
               "name": "Icon Emoji",
               "internalKey": "iconEmoji",
               "type": "string",
-              "description": "Icon emoji"
+              "required": false,
+              "description": "Icon emoji",
+              "helpText": "What this field is: Icon emoji for Slack / Execute.\nHow to fill it: Enter the icon emoji value requested by Slack, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.iconEmoji}} or pick the value from the data picker.",
+              "placeholder": "Enter Icon Emoji"
             }
           ],
           "outputExample": {

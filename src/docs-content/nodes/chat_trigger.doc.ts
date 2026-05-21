@@ -8,7 +8,9 @@ export const chatTriggerDoc: NodeDoc = {
   "description": "Trigger workflow from chat/AI interactions",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,23 +27,30 @@ export const chatTriggerDoc: NodeDoc = {
               "name": "Channel",
               "internalKey": "channel",
               "type": "string",
+              "required": false,
               "description": "Optional channel/context to filter incoming chat events",
-              "example": "#support",
-              "placeholder": "#support"
+              "helpText": "What this field is: The channel or conversation where Chat Trigger sends or reads data during Execute.\nWhere to find it: Open the service, choose the channel/conversation, and copy its visible name or ID from details.\nExample: #alerts or C01234567",
+              "placeholder": "#support",
+              "example": "#support"
             },
             {
               "name": "Allowed Senders",
               "internalKey": "allowedSenders",
               "type": "json",
+              "required": false,
               "description": "Optional allowlist of senders/usernames/IDs",
-              "example": "[\"user1\",\"user2\"]",
-              "placeholder": "[\"user1\",\"user2\"]"
+              "helpText": "What this field is: Optional allowlist of senders/usernames/IDs for Chat Trigger / Execute.\nHow to fill it: Enter valid JSON in the format Chat Trigger expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.allowedSenders}} or pick the value from the data picker.",
+              "placeholder": "[\"user1\",\"user2\"]",
+              "example": "[\"user1\",\"user2\"]"
             },
             {
               "name": "Message",
               "internalKey": "message",
               "type": "textarea",
-              "description": "Incoming chat message"
+              "required": true,
+              "description": "Incoming chat message",
+              "helpText": "What this field is: Incoming chat message for Chat Trigger / Execute.\nHow to fill it: Type the message, prompt, or content you want Chat Trigger to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Hello {{$json.name}}"
             }
           ],
           "outputExample": {

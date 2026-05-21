@@ -8,7 +8,9 @@ export const executeWorkflowDoc: NodeDoc = {
   "description": "Executes another workflow and returns its result",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,24 +29,29 @@ export const executeWorkflowDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "ID of the workflow to execute",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "placeholder": "123e4567-e89b-12d3-a456-426614174000"
+              "helpText": "What this field is: ID of the workflow to execute for Execute Workflow / Execute.\nWhere to find it: Open the item in Execute Workflow and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workflowId}} or pick the value from the data picker.",
+              "placeholder": "123e4567-e89b-12d3-a456-426614174000",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
             },
             {
               "name": "Input",
               "internalKey": "input",
               "type": "json",
+              "required": false,
               "description": "Input data to pass to the sub-workflow",
-              "example": "{{$json}}",
-              "placeholder": "{{$json}}"
+              "helpText": "What this field is: Input data to pass to the sub-workflow for Execute Workflow / Execute.\nHow to fill it: Enter valid JSON in the format Execute Workflow expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.input}} or pick the value from the data picker.",
+              "placeholder": "{{$json}}",
+              "example": "{{$json}}"
             },
             {
               "name": "Wait For Completion",
               "internalKey": "waitForCompletion",
               "type": "boolean",
+              "required": false,
               "description": "Wait for the sub-workflow to finish",
-              "example": "true",
+              "helpText": "What this field is: An on/off choice for wait for completion in Execute Workflow / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Execute Workflow to use this optional behavior.",
               "placeholder": "true",
+              "example": "true",
               "defaultValue": "true"
             }
           ],

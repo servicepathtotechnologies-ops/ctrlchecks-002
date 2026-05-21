@@ -8,7 +8,9 @@ export const ollamaDoc: NodeDoc = {
   "description": "AI chat completion using Gemini 1.5 Flash (default LLM)",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,31 +29,34 @@ export const ollamaDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Prompt text",
-              "example": "{{$json.prompt}}",
-              "placeholder": "{{$json.prompt}}"
+              "helpText": "What this field is: The instruction for your local AI model.\nExample: Classify this customer review as positive, negative, or neutral. Reply with just one word: {{$json.review}}",
+              "placeholder": "{{$json.prompt}}",
+              "example": "{{$json.prompt}}"
             },
             {
               "name": "Temperature",
               "internalKey": "temperature",
               "type": "number",
+              "required": false,
               "description": "Creativity (0.0 - 1.0)",
-              "example": "0.2",
+              "helpText": "What this field is: A number used for temperature in AI Chat (Gemini) / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.temperature}} or pick the value from the data picker.",
               "placeholder": "0.2",
+              "example": "0.2",
               "defaultValue": "0.7"
             }
           ],
           "outputExample": {
-            "result": "Operation completed successfully.",
-            "text": ""
+            "text": "Local model generated a response for the prompt.",
+            "length": 48
           },
-          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
+          "outputDescription": "text: Value returned by this operation.\nlength: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use AI Chat (Gemini) to execute in a workflow.",
+            "scenario": "Process incoming AI Chat (Gemini) data with execute after a related upstream event is received",
             "inputValues": {
               "Prompt": "{{$json.prompt}}",
               "Temperature": "0.2"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "AI Chat (Gemini) returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

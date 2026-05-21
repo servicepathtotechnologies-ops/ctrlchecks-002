@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, ExternalLink, ChevronDown } from 'lucide-react';
+import { Plus, ExternalLink, ChevronDown, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -69,12 +69,24 @@ export function NodeCredentialSelector({ credentialTypeIds = [], providers = [],
       </Label>
 
       {compatible.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-muted-foreground/30 p-3 flex items-center justify-between gap-3">
+        <div className="rounded-lg border border-dashed border-muted-foreground/30 p-3 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">No connections yet</p>
-          <Button size="sm" variant="outline" onClick={() => openAddModal(preferredTypeId)}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Add
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => openAddModal(preferredTypeId)}
+              className="h-8 px-2 text-xs font-medium text-muted-foreground hover:text-primary"
+            >
+              <HelpCircle className="mr-1 h-3 w-3" />
+              Guide
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => openAddModal(preferredTypeId)}>
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              Add
+            </Button>
+          </div>
         </div>
       ) : (
         <DropdownMenu>
@@ -122,6 +134,21 @@ export function NodeCredentialSelector({ credentialTypeIds = [], providers = [],
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      )}
+
+      {compatible.length > 0 && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => openAddModal(preferredTypeId)}
+            className="h-auto px-1 py-0 text-xs font-medium text-muted-foreground hover:text-primary"
+          >
+            <HelpCircle className="mr-1 h-3 w-3" />
+            How to get this connection?
+          </Button>
+        </div>
       )}
 
       <NewConnectionModal

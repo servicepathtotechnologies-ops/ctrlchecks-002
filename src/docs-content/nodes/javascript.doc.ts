@@ -8,7 +8,9 @@ export const javascriptDoc: NodeDoc = {
   "description": "Execute custom JavaScript code",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const javascriptDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "JavaScript code to execute",
-              "example": "return { ...$json, fullName: $json.firstName + \" \" + $json.lastName };",
-              "placeholder": "return { ...$json, fullName: $json.firstName + \" \" + $json.lastName };"
+              "helpText": "What this field is: JavaScript code that runs on the workflow data.\nThe input data is available as the items array. Each item has a .json property with its data.\nYou must return an array of objects.\nSimple example (add a field):\n  return items.map(item => ({ ...item.json, fullName: item.json.firstName + ' ' + item.json.lastName }));\nFilter example (keep only active users):\n  return items.filter(item => item.json.status === 'active');\nTransform example (format a date):\n  return items.map(item => ({ ...item.json, formattedDate: new Date(item.json.createdAt).toLocaleDateString() }));",
+              "placeholder": "return { ...$json, fullName: $json.firstName + \" \" + $json.lastName };",
+              "example": "return { ...$json, fullName: $json.firstName + \" \" + $json.lastName };"
             }
           ],
           "outputExample": {

@@ -8,7 +8,9 @@ export const intervalDoc: NodeDoc = {
   "description": "Trigger workflow at fixed intervals",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const intervalDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Interval value",
-              "example": "1",
-              "placeholder": "1"
+              "helpText": "What this field is: How often this workflow repeats.\nHow to fill it: Type a number. Combined with the \"Unit\" field, this sets the full frequency.\nExample: 15 (then set unit to \"minutes\") runs every 15 minutes.",
+              "placeholder": "1",
+              "example": "1"
             },
             {
               "name": "Unit",
@@ -36,8 +39,9 @@ export const intervalDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Interval unit",
-              "example": "seconds",
-              "placeholder": "seconds"
+              "helpText": "What this field is: The time unit for the interval.\nOptions: seconds, minutes, hours.\nExample: minutes",
+              "placeholder": "seconds",
+              "example": "seconds"
             }
           ],
           "outputExample": {

@@ -8,7 +8,9 @@ export const queuePushDoc: NodeDoc = {
   "description": "Push a message to a queue",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const queuePushDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Name of the queue",
-              "example": "tasks",
-              "placeholder": "tasks"
+              "helpText": "What this field is: Name of the queue for Queue Push / Execute.\nHow to fill it: Enter the queue name value requested by Queue Push, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.queueName}} or pick the value from the data picker.",
+              "placeholder": "tasks",
+              "example": "tasks"
             },
             {
               "name": "Message",
@@ -36,16 +39,19 @@ export const queuePushDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Message to push (can be any JSON-serializable value)",
-              "example": "{{$json}}",
-              "placeholder": "{{$json}}"
+              "helpText": "What this field is: Message to push (can be any JSON-serializable value) for Queue Push / Execute.\nHow to fill it: Type the message, prompt, or content you want Queue Push to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "{{$json}}",
+              "example": "{{$json}}"
             },
             {
               "name": "Options",
               "internalKey": "options",
               "type": "json",
+              "required": false,
               "description": "Additional Bull options (delay, priority, etc.)",
-              "example": "{\"key\":\"value\"}",
-              "placeholder": "{\"key\":\"value\"}"
+              "helpText": "What this field is: Additional Bull options (delay, priority, etc.) for Queue Push / Execute.\nHow to fill it: Enter valid JSON in the format Queue Push expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.options}} or pick the value from the data picker.",
+              "placeholder": "{\"key\":\"value\"}",
+              "example": "{\"key\":\"value\"}"
             }
           ],
           "outputExample": {

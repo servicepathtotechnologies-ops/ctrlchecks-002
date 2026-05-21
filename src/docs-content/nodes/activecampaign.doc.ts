@@ -8,9 +8,14 @@ export const activecampaignDoc: NodeDoc = {
   "description": "ActiveCampaign marketing automation",
   "credentialType": "ActiveCampaign API Key",
   "credentialSetupSteps": [
-    "Log in to ActiveCampaign → Settings → Developer.",
-    "Copy the API URL and API Key.",
-    "In CtrlChecks, open Connections → Add Connection → ActiveCampaign → paste the API URL and Key → Save."
+    "What this is: ActiveCampaign uses an API key or account connection so CtrlChecks can safely access your ActiveCampaign account.",
+    "Log in to your ActiveCampaign account.",
+    "Click Settings (gear icon, bottom left) -> Developer.",
+    "You will see your API URL (e.g. https://youracccount.api-us1.com) and API Key. Copy both.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> ActiveCampaign -> enter the API URL and API Key -> Save.",
+    "Run a test step (e.g. list contacts) to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the ActiveCampaign node and select the saved connection."
   ],
   "credentialDocsUrl": "https://developers.activecampaign.com/reference/url",
   "resources": [
@@ -27,9 +32,11 @@ export const activecampaignDoc: NodeDoc = {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
+              "required": false,
               "description": "Contact ID",
-              "example": "contact-id",
-              "placeholder": "contact-id"
+              "helpText": "What this field is: Contact ID for ActiveCampaign / Add.\nWhere to find it: Open the item in ActiveCampaign and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.contactId}} or pick the value from the data picker.",
+              "placeholder": "contact-id",
+              "example": "contact-id"
             }
           ],
           "outputExample": {
@@ -42,13 +49,13 @@ export const activecampaignDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use ActiveCampaign to add in a workflow.",
+            "scenario": "Process incoming ActiveCampaign data with add after a related upstream event is received",
             "inputValues": {
               "Contact Id": "contact-id"
             },
-            "expectedOutput": "The node executes add and exposes its result for downstream nodes."
+            "expectedOutput": "ActiveCampaign returns structured add data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developers.activecampaign.com/reference/overview"
         },
@@ -61,9 +68,11 @@ export const activecampaignDoc: NodeDoc = {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
+              "required": false,
               "description": "Contact ID",
-              "example": "contact-id",
-              "placeholder": "contact-id"
+              "helpText": "What this field is: Contact ID for ActiveCampaign / Update.\nWhere to find it: Open the item in ActiveCampaign and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.contactId}} or pick the value from the data picker.",
+              "placeholder": "contact-id",
+              "example": "contact-id"
             }
           ],
           "outputExample": {
@@ -76,13 +85,13 @@ export const activecampaignDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use ActiveCampaign to update in a workflow.",
+            "scenario": "Process incoming ActiveCampaign data with update after a related upstream event is received",
             "inputValues": {
               "Contact Id": "contact-id"
             },
-            "expectedOutput": "The node executes update and exposes its result for downstream nodes."
+            "expectedOutput": "ActiveCampaign returns structured update data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developers.activecampaign.com/reference/overview"
         },
@@ -95,9 +104,11 @@ export const activecampaignDoc: NodeDoc = {
               "name": "Contact Id",
               "internalKey": "contactId",
               "type": "string",
+              "required": false,
               "description": "Contact ID",
-              "example": "contact-id",
-              "placeholder": "contact-id"
+              "helpText": "What this field is: Contact ID for ActiveCampaign / Delete.\nWhere to find it: Open the item in ActiveCampaign and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.contactId}} or pick the value from the data picker.",
+              "placeholder": "contact-id",
+              "example": "contact-id"
             }
           ],
           "outputExample": {
@@ -110,13 +121,13 @@ export const activecampaignDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use ActiveCampaign to delete in a workflow.",
+            "scenario": "Process incoming ActiveCampaign data with delete after a related upstream event is received",
             "inputValues": {
               "Contact Id": "contact-id"
             },
-            "expectedOutput": "The node executes delete and exposes its result for downstream nodes."
+            "expectedOutput": "ActiveCampaign returns structured delete data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developers.activecampaign.com/reference/overview"
         }

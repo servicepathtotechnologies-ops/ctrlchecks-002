@@ -8,7 +8,9 @@ export const aggregateDoc: NodeDoc = {
   "description": "Aggregate data",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,26 +27,32 @@ export const aggregateDoc: NodeDoc = {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
+              "required": false,
               "description": "Field to aggregate",
-              "example": "{{$json.amount}}",
-              "placeholder": "{{$json.amount}}"
+              "helpText": "What this field is: Field to aggregate for Aggregate / Sum.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "placeholder": "{{$json.amount}}",
+              "example": "{{$json.amount}}"
             },
             {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
+              "required": false,
               "description": "Delimiter used for join/concat operations",
-              "example": "\\n",
+              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Sum.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
               "placeholder": "\\n",
+              "example": "\\n",
               "defaultValue": "\n"
             },
             {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
+              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "example": "category",
-              "placeholder": "category"
+              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Sum.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "placeholder": "category",
+              "example": "category"
             }
           ],
           "outputExample": {
@@ -76,26 +84,32 @@ export const aggregateDoc: NodeDoc = {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
+              "required": false,
               "description": "Field to aggregate",
-              "example": "{{$json.amount}}",
-              "placeholder": "{{$json.amount}}"
+              "helpText": "What this field is: Field to aggregate for Aggregate / Avg.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "placeholder": "{{$json.amount}}",
+              "example": "{{$json.amount}}"
             },
             {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
+              "required": false,
               "description": "Delimiter used for join/concat operations",
-              "example": "\\n",
+              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Avg.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
               "placeholder": "\\n",
+              "example": "\\n",
               "defaultValue": "\n"
             },
             {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
+              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "example": "category",
-              "placeholder": "category"
+              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Avg.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "placeholder": "category",
+              "example": "category"
             }
           ],
           "outputExample": {
@@ -127,26 +141,32 @@ export const aggregateDoc: NodeDoc = {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
+              "required": false,
               "description": "Field to aggregate",
-              "example": "{{$json.amount}}",
-              "placeholder": "{{$json.amount}}"
+              "helpText": "What this field is: Field to aggregate for Aggregate / Count.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "placeholder": "{{$json.amount}}",
+              "example": "{{$json.amount}}"
             },
             {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
+              "required": false,
               "description": "Delimiter used for join/concat operations",
-              "example": "\\n",
+              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Count.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
               "placeholder": "\\n",
+              "example": "\\n",
               "defaultValue": "\n"
             },
             {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
+              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "example": "category",
-              "placeholder": "category"
+              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Count.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "placeholder": "category",
+              "example": "category"
             }
           ],
           "outputExample": {
@@ -178,26 +198,32 @@ export const aggregateDoc: NodeDoc = {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
+              "required": false,
               "description": "Field to aggregate",
-              "example": "{{$json.amount}}",
-              "placeholder": "{{$json.amount}}"
+              "helpText": "What this field is: Field to aggregate for Aggregate / Min.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "placeholder": "{{$json.amount}}",
+              "example": "{{$json.amount}}"
             },
             {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
+              "required": false,
               "description": "Delimiter used for join/concat operations",
-              "example": "\\n",
+              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Min.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
               "placeholder": "\\n",
+              "example": "\\n",
               "defaultValue": "\n"
             },
             {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
+              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "example": "category",
-              "placeholder": "category"
+              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Min.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "placeholder": "category",
+              "example": "category"
             }
           ],
           "outputExample": {
@@ -229,26 +255,32 @@ export const aggregateDoc: NodeDoc = {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
+              "required": false,
               "description": "Field to aggregate",
-              "example": "{{$json.amount}}",
-              "placeholder": "{{$json.amount}}"
+              "helpText": "What this field is: Field to aggregate for Aggregate / Max.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "placeholder": "{{$json.amount}}",
+              "example": "{{$json.amount}}"
             },
             {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
+              "required": false,
               "description": "Delimiter used for join/concat operations",
-              "example": "\\n",
+              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Max.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
               "placeholder": "\\n",
+              "example": "\\n",
               "defaultValue": "\n"
             },
             {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
+              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "example": "category",
-              "placeholder": "category"
+              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Max.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "placeholder": "category",
+              "example": "category"
             }
           ],
           "outputExample": {
@@ -280,26 +312,32 @@ export const aggregateDoc: NodeDoc = {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
+              "required": false,
               "description": "Field to aggregate",
-              "example": "{{$json.amount}}",
-              "placeholder": "{{$json.amount}}"
+              "helpText": "What this field is: Field to aggregate for Aggregate / Join.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "placeholder": "{{$json.amount}}",
+              "example": "{{$json.amount}}"
             },
             {
               "name": "Delimiter",
               "internalKey": "delimiter",
               "type": "string",
+              "required": false,
               "description": "Delimiter used for join/concat operations",
-              "example": "\\n",
+              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Join.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
               "placeholder": "\\n",
+              "example": "\\n",
               "defaultValue": "\n"
             },
             {
               "name": "Group By",
               "internalKey": "groupBy",
               "type": "string",
+              "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "example": "category",
-              "placeholder": "category"
+              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Join.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "placeholder": "category",
+              "example": "category"
             }
           ],
           "outputExample": {

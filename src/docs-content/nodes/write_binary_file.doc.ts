@@ -8,7 +8,9 @@ export const writeBinaryFileDoc: NodeDoc = {
   "description": "Write binary files",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const writeBinaryFileDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "File path",
-              "example": "/path/to/file.pdf",
-              "placeholder": "/path/to/file.pdf"
+              "helpText": "What this field is: Where to save the file, including the full path and filename.\nExample: /output/reports/summary.pdf or /tmp/export-{{$json.date}}.csv",
+              "placeholder": "/path/to/file.pdf",
+              "example": "/path/to/file.pdf"
             },
             {
               "name": "Data",
@@ -36,8 +39,9 @@ export const writeBinaryFileDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Binary data (base64)",
-              "example": "{{$json.data}}",
-              "placeholder": "{{$json.data}}"
+              "helpText": "What this field is: Binary data (base64) for Write Binary File / Execute.\nHow to fill it: Enter the data value requested by Write Binary File, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "placeholder": "{{$json.data}}",
+              "example": "{{$json.data}}"
             }
           ],
           "outputExample": {
@@ -50,14 +54,14 @@ export const writeBinaryFileDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Write Binary File to execute in a workflow.",
+            "scenario": "Process incoming Write Binary File data with execute after a related upstream event is received",
             "inputValues": {
               "File Path": "/path/to/file.pdf",
               "Data": "{{$json.data}}"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Write Binary File returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

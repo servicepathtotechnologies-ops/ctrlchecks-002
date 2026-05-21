@@ -8,7 +8,9 @@ export const apiKeyAuthDoc: NodeDoc = {
   "description": "Provides an API key for authentication",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const apiKeyAuthDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Name of the stored API key",
-              "example": "openai",
-              "placeholder": "openai"
+              "helpText": "What this field is: A private key or token that lets CtrlChecks access API Key Auth.\nWhere to get it: Open the API Key Auth dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "placeholder": "openai",
+              "example": "openai"
             }
           ],
           "outputExample": {
@@ -41,13 +44,13 @@ export const apiKeyAuthDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use API Key Auth to execute in a workflow.",
+            "scenario": "Process incoming API Key Auth data with execute after a related upstream event is received",
             "inputValues": {
               "Api Key Name": "openai"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "API Key Auth returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

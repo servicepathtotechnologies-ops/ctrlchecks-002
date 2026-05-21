@@ -8,11 +8,16 @@ export const discordWebhookDoc: NodeDoc = {
   "description": "Send messages via Discord webhook",
   "credentialType": "Discord Bot Token",
   "credentialSetupSteps": [
-    "Go to https://discord.com/developers/applications → click \"New Application\".",
-    "Under \"Bot\", click \"Add Bot\" → \"Yes, do it!\".",
-    "Click \"Reset Token\" and copy the bot token.",
-    "Under \"OAuth2 → URL Generator\", select \"bot\" scope + \"Send Messages\" permission, copy the URL, and add the bot to your server.",
-    "In CtrlChecks, open Connections → Add Connection → Discord → paste the Bot Token → Save."
+    "What this is: Discord Bot uses an API key or account connection so CtrlChecks can safely access your Discord Bot account.",
+    "Go to discord.com/developers/applications and sign in with your Discord account.",
+    "Click \"New Application\" -> give it a name (e.g. CtrlChecks Bot) -> Create.",
+    "Click \"Bot\" in the left menu -> \"Add Bot\" -> Yes, do it! Then click \"Reset Token\" and copy the token - keep it secret.",
+    "Enable Developer Mode in Discord: Settings -> Advanced -> Developer Mode ON. Then right-click any channel -> Copy ID to get the channel ID for use in the node.",
+    "In the OAuth2 -> URL Generator panel: select \"bot\" scope + \"Send Messages\" permission. Copy the URL, open it in a browser, and add the bot to your Discord server.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Discord -> paste the bot token -> Save.",
+    "Run a test step to confirm the bot posts to the chosen channel.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Discord Bot node and select the saved connection."
   ],
   "credentialDocsUrl": "https://discord.com/developers/docs/getting-started",
   "resources": [
@@ -31,8 +36,9 @@ export const discordWebhookDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Discord webhook URL",
-              "example": "https://discord.com/api/webhooks/...",
-              "placeholder": "https://discord.com/api/webhooks/..."
+              "helpText": "What this field is: A special URL that lets CtrlChecks post messages to a specific Discord channel without needing a bot.\nWhere to find it: In Discord → right-click the channel → Edit Channel → Integrations → Webhooks → New Webhook → Copy Webhook URL.\nExample: https://discord.com/api/webhooks/1234567890/xxxx...\nNote: Keep this URL private — anyone with it can post to your channel.",
+              "placeholder": "https://discord.com/api/webhooks/...",
+              "example": "https://discord.com/api/webhooks/..."
             },
             {
               "name": "Message",
@@ -40,8 +46,9 @@ export const discordWebhookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Message text",
-              "example": "{{$json.message}}",
-              "placeholder": "{{$json.message}}"
+              "helpText": "What this field is: Message text for Discord Webhook / Execute.\nHow to fill it: Type the message, prompt, or content you want Discord Webhook to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "{{$json.message}}",
+              "example": "{{$json.message}}"
             }
           ],
           "outputExample": {

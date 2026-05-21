@@ -8,7 +8,9 @@ export const timeoutDoc: NodeDoc = {
   "description": "Fails the workflow if execution takes longer than specified time",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const timeoutDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Maximum allowed time (in milliseconds)",
-              "example": "5000",
-              "placeholder": "5000"
+              "helpText": "What this field is: A number used for limit in Timeout / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "placeholder": "5000",
+              "example": "5000"
             }
           ],
           "outputExample": {
@@ -41,13 +44,13 @@ export const timeoutDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Timeout to execute in a workflow.",
+            "scenario": "Process incoming Timeout data with execute after a related upstream event is received",
             "inputValues": {
               "Limit": "5000"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Timeout returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

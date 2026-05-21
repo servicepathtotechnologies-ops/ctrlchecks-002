@@ -8,7 +8,9 @@ export const sortDoc: NodeDoc = {
   "description": "Sort arrays",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,26 +27,32 @@ export const sortDoc: NodeDoc = {
               "name": "Field",
               "internalKey": "field",
               "type": "string",
+              "required": false,
               "description": "Field to sort by",
-              "example": "name",
-              "placeholder": "name"
+              "helpText": "What this field is: Field to sort by for Sort / Execute.\nHow to fill it: Enter the field value requested by Sort, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "placeholder": "name",
+              "example": "name"
             },
             {
               "name": "Direction",
               "internalKey": "direction",
               "type": "string",
+              "required": false,
               "description": "Sort direction: asc, desc",
-              "example": "asc",
+              "helpText": "What this field is: Sort direction: asc, desc for Sort / Execute.\nHow to fill it: Enter the direction value requested by Sort, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.direction}} or pick the value from the data picker.",
               "placeholder": "asc",
+              "example": "asc",
               "defaultValue": "asc"
             },
             {
               "name": "Type",
               "internalKey": "type",
               "type": "string",
+              "required": false,
               "description": "Value type: auto, number, string, date",
-              "example": "auto",
+              "helpText": "What this field is: Value type: auto, number, string, date for Sort / Execute.\nHow to fill it: Enter the type value requested by Sort, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.type}} or pick the value from the data picker.",
               "placeholder": "auto",
+              "example": "auto",
               "defaultValue": "auto"
             }
           ],

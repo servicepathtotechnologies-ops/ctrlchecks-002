@@ -8,7 +8,9 @@ export const dateTimeDoc: NodeDoc = {
   "description": "Parse, format, and manipulate dates and times",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,17 +27,21 @@ export const dateTimeDoc: NodeDoc = {
               "name": "Date Value",
               "internalKey": "dateValue",
               "type": "string",
+              "required": false,
               "description": "Input date",
-              "example": "{{$json.timestamp}}",
-              "placeholder": "{{$json.timestamp}}"
+              "helpText": "What this field is: Input date for Date/Time / Format.\nHow to fill it: Enter the date value value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dateValue}} or pick the value from the data picker.",
+              "placeholder": "{{$json.timestamp}}",
+              "example": "{{$json.timestamp}}"
             },
             {
               "name": "Format",
               "internalKey": "format",
               "type": "string",
+              "required": false,
               "description": "Output format",
-              "example": "YYYY-MM-DD",
-              "placeholder": "YYYY-MM-DD"
+              "helpText": "What this field is: Output format for Date/Time / Format.\nHow to fill it: Enter the format value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.format}} or pick the value from the data picker.",
+              "placeholder": "YYYY-MM-DD",
+              "example": "YYYY-MM-DD"
             }
           ],
           "outputExample": {
@@ -63,31 +69,35 @@ export const dateTimeDoc: NodeDoc = {
               "name": "Date Value",
               "internalKey": "dateValue",
               "type": "string",
+              "required": false,
               "description": "Input date",
-              "example": "{{$json.timestamp}}",
-              "placeholder": "{{$json.timestamp}}"
+              "helpText": "What this field is: Input date for Date/Time / Calculate.\nHow to fill it: Enter the date value value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dateValue}} or pick the value from the data picker.",
+              "placeholder": "{{$json.timestamp}}",
+              "example": "{{$json.timestamp}}"
             },
             {
               "name": "Format",
               "internalKey": "format",
               "type": "string",
+              "required": false,
               "description": "Output format",
-              "example": "YYYY-MM-DD",
-              "placeholder": "YYYY-MM-DD"
+              "helpText": "What this field is: Output format for Date/Time / Calculate.\nHow to fill it: Enter the format value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.format}} or pick the value from the data picker.",
+              "placeholder": "YYYY-MM-DD",
+              "example": "YYYY-MM-DD"
             }
           ],
           "outputExample": {
-            "result": "Operation completed successfully.",
-            "text": ""
+            "text": "2025-01-22T09:00:00.000Z",
+            "length": 24
           },
-          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
+          "outputDescription": "text: Value returned by this operation.\nlength: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Date/Time to calculate in a workflow.",
+            "scenario": "Process incoming Date/Time data with calculate after a related upstream event is received",
             "inputValues": {
               "Date Value": "{{$json.timestamp}}",
               "Format": "YYYY-MM-DD"
             },
-            "expectedOutput": "The node executes calculate and exposes its result for downstream nodes."
+            "expectedOutput": "Date/Time returns structured calculate data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
@@ -100,31 +110,35 @@ export const dateTimeDoc: NodeDoc = {
               "name": "Date Value",
               "internalKey": "dateValue",
               "type": "string",
+              "required": false,
               "description": "Input date",
-              "example": "{{$json.timestamp}}",
-              "placeholder": "{{$json.timestamp}}"
+              "helpText": "What this field is: Input date for Date/Time / Extract.\nHow to fill it: Enter the date value value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dateValue}} or pick the value from the data picker.",
+              "placeholder": "{{$json.timestamp}}",
+              "example": "{{$json.timestamp}}"
             },
             {
               "name": "Format",
               "internalKey": "format",
               "type": "string",
+              "required": false,
               "description": "Output format",
-              "example": "YYYY-MM-DD",
-              "placeholder": "YYYY-MM-DD"
+              "helpText": "What this field is: Output format for Date/Time / Extract.\nHow to fill it: Enter the format value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.format}} or pick the value from the data picker.",
+              "placeholder": "YYYY-MM-DD",
+              "example": "YYYY-MM-DD"
             }
           ],
           "outputExample": {
-            "result": "Operation completed successfully.",
-            "text": ""
+            "text": "Wednesday, January 15, 2025 at 09:00 UTC",
+            "length": 40
           },
-          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
+          "outputDescription": "text: Value returned by this operation.\nlength: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Date/Time to extract in a workflow.",
+            "scenario": "Process incoming Date/Time data with extract after a related upstream event is received",
             "inputValues": {
               "Date Value": "{{$json.timestamp}}",
               "Format": "YYYY-MM-DD"
             },
-            "expectedOutput": "The node executes extract and exposes its result for downstream nodes."
+            "expectedOutput": "Date/Time returns structured extract data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
@@ -137,17 +151,21 @@ export const dateTimeDoc: NodeDoc = {
               "name": "Date Value",
               "internalKey": "dateValue",
               "type": "string",
+              "required": false,
               "description": "Input date",
-              "example": "{{$json.timestamp}}",
-              "placeholder": "{{$json.timestamp}}"
+              "helpText": "What this field is: Input date for Date/Time / Parse.\nHow to fill it: Enter the date value value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dateValue}} or pick the value from the data picker.",
+              "placeholder": "{{$json.timestamp}}",
+              "example": "{{$json.timestamp}}"
             },
             {
               "name": "Format",
               "internalKey": "format",
               "type": "string",
+              "required": false,
               "description": "Output format",
-              "example": "YYYY-MM-DD",
-              "placeholder": "YYYY-MM-DD"
+              "helpText": "What this field is: Output format for Date/Time / Parse.\nHow to fill it: Enter the format value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.format}} or pick the value from the data picker.",
+              "placeholder": "YYYY-MM-DD",
+              "example": "YYYY-MM-DD"
             }
           ],
           "outputExample": {

@@ -8,7 +8,9 @@ export const htmlDoc: NodeDoc = {
   "description": "Parse and manipulate HTML content",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const htmlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "HTML content",
-              "example": "{{$json.html}}",
-              "placeholder": "{{$json.html}}"
+              "helpText": "What this field is: HTML content for HTML / Parse.\nHow to fill it: Type the message, prompt, or content you want HTML to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "{{$json.html}}",
+              "example": "{{$json.html}}"
             }
           ],
           "outputExample": {
@@ -63,21 +66,22 @@ export const htmlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "HTML content",
-              "example": "{{$json.html}}",
-              "placeholder": "{{$json.html}}"
+              "helpText": "What this field is: HTML content for HTML / Extract.\nHow to fill it: Type the message, prompt, or content you want HTML to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "{{$json.html}}",
+              "example": "{{$json.html}}"
             }
           ],
           "outputExample": {
-            "result": "Operation completed successfully.",
-            "text": ""
+            "text": "Alice Smith",
+            "length": 11
           },
-          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
+          "outputDescription": "text: Value returned by this operation.\nlength: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use HTML to extract in a workflow.",
+            "scenario": "Process incoming HTML data with extract after a related upstream event is received",
             "inputValues": {
               "Html": "{{$json.html}}"
             },
-            "expectedOutput": "The node executes extract and exposes its result for downstream nodes."
+            "expectedOutput": "HTML returns structured extract data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         },
@@ -92,21 +96,22 @@ export const htmlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "HTML content",
-              "example": "{{$json.html}}",
-              "placeholder": "{{$json.html}}"
+              "helpText": "What this field is: HTML content for HTML / Clean.\nHow to fill it: Type the message, prompt, or content you want HTML to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "{{$json.html}}",
+              "example": "{{$json.html}}"
             }
           ],
           "outputExample": {
-            "result": "Operation completed successfully.",
-            "text": ""
+            "text": "Clean page text without scripts, styles, or markup.",
+            "length": 51
           },
-          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
+          "outputDescription": "text: Value returned by this operation.\nlength: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use HTML to clean in a workflow.",
+            "scenario": "Process incoming HTML data with clean after a related upstream event is received",
             "inputValues": {
               "Html": "{{$json.html}}"
             },
-            "expectedOutput": "The node executes clean and exposes its result for downstream nodes."
+            "expectedOutput": "HTML returns structured clean data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

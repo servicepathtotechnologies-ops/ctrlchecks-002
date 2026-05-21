@@ -8,9 +8,15 @@ export const intercomDoc: NodeDoc = {
   "description": "Intercom messaging operations",
   "credentialType": "Intercom API Key",
   "credentialSetupSteps": [
-    "Log in to Intercom → Settings → Integrations → Developer Hub → Your App → Access Tokens.",
-    "Copy the Access Token.",
-    "In CtrlChecks, open Connections → Add Connection → Intercom → paste the token → Save."
+    "What this is: Intercom uses an API key or account connection so CtrlChecks can safely access your Intercom account.",
+    "Log in to your Intercom account at app.intercom.com.",
+    "Click Settings (gear icon) -> Integrations -> Developer Hub.",
+    "Click \"Your Apps\" -> select your app (or create one) -> click \"Authentication\".",
+    "Copy the Access Token shown.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Intercom -> paste the access token -> Save.",
+    "Run a test step (e.g. list users/contacts) to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Intercom node and select the saved connection."
   ],
   "credentialDocsUrl": "https://developers.intercom.com/building-apps/docs/authorization",
   "resources": [
@@ -27,9 +33,11 @@ export const intercomDoc: NodeDoc = {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
+              "required": false,
               "description": "Conversation ID",
-              "example": "conv-id",
-              "placeholder": "conv-id"
+              "helpText": "What this field is: Conversation ID for Intercom / Send.\nWhere to find it: Open the item in Intercom and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.conversationId}} or pick the value from the data picker.",
+              "placeholder": "conv-id",
+              "example": "conv-id"
             }
           ],
           "outputExample": {
@@ -42,13 +50,13 @@ export const intercomDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Intercom to send in a workflow.",
+            "scenario": "Process incoming Intercom data with send after a related upstream event is received",
             "inputValues": {
               "Conversation Id": "conv-id"
             },
-            "expectedOutput": "The node executes send and exposes its result for downstream nodes."
+            "expectedOutput": "Intercom returns structured send data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developers.intercom.com/docs/references/rest-api/api.intercom.io/"
         },
@@ -61,9 +69,11 @@ export const intercomDoc: NodeDoc = {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
+              "required": false,
               "description": "Conversation ID",
-              "example": "conv-id",
-              "placeholder": "conv-id"
+              "helpText": "What this field is: Conversation ID for Intercom / Get.\nWhere to find it: Open the item in Intercom and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.conversationId}} or pick the value from the data picker.",
+              "placeholder": "conv-id",
+              "example": "conv-id"
             }
           ],
           "outputExample": {
@@ -76,13 +86,13 @@ export const intercomDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Intercom to get in a workflow.",
+            "scenario": "Process incoming Intercom data with get after a related upstream event is received",
             "inputValues": {
               "Conversation Id": "conv-id"
             },
-            "expectedOutput": "The node executes get and exposes its result for downstream nodes."
+            "expectedOutput": "Intercom returns structured get data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developers.intercom.com/docs/references/rest-api/api.intercom.io/"
         },
@@ -95,9 +105,11 @@ export const intercomDoc: NodeDoc = {
               "name": "Conversation Id",
               "internalKey": "conversationId",
               "type": "string",
+              "required": false,
               "description": "Conversation ID",
-              "example": "conv-id",
-              "placeholder": "conv-id"
+              "helpText": "What this field is: Conversation ID for Intercom / List.\nWhere to find it: Open the item in Intercom and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.conversationId}} or pick the value from the data picker.",
+              "placeholder": "conv-id",
+              "example": "conv-id"
             }
           ],
           "outputExample": {
@@ -110,13 +122,13 @@ export const intercomDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Intercom to list in a workflow.",
+            "scenario": "Process incoming Intercom data with list after a related upstream event is received",
             "inputValues": {
               "Conversation Id": "conv-id"
             },
-            "expectedOutput": "The node executes list and exposes its result for downstream nodes."
+            "expectedOutput": "Intercom returns structured list data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://developers.intercom.com/docs/references/rest-api/api.intercom.io/"
         }

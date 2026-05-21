@@ -8,7 +8,9 @@ export const workflowTriggerDoc: NodeDoc = {
   "description": "Trigger workflow from another workflow",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const workflowTriggerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "ID of the workflow that is allowed to trigger this workflow",
-              "example": "workflow_123",
-              "placeholder": "workflow_123"
+              "helpText": "What this field is: ID of the workflow that is allowed to trigger this workflow for Workflow Trigger / Execute.\nWhere to find it: Open the item in Workflow Trigger and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.source_workflow_id}} or pick the value from the data picker.",
+              "placeholder": "workflow_123",
+              "example": "workflow_123"
             }
           ],
           "outputExample": {

@@ -8,9 +8,15 @@ export const mailchimpDoc: NodeDoc = {
   "description": "Mailchimp email marketing operations",
   "credentialType": "Mailchimp API Key",
   "credentialSetupSteps": [
-    "Log in to Mailchimp → Account → Extras → API keys.",
-    "Click \"Create A Key\" and copy the key.",
-    "In CtrlChecks, open Connections → Add Connection → Mailchimp → paste the API key → Save."
+    "What this is: Mailchimp uses an API key or account connection so CtrlChecks can safely access your Mailchimp account.",
+    "Log in to your Mailchimp account at mailchimp.com.",
+    "Click your profile name (bottom left) -> Account & billing -> Extras -> API keys.",
+    "Click \"Create A Key\" -> give it a name (e.g. CtrlChecks) -> Generate Key.",
+    "Copy the API key shown - it ends with a datacenter code like -us21.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Mailchimp -> paste the API key -> Save.",
+    "Run a test step (e.g. list your audiences) to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Mailchimp node and select the saved connection."
   ],
   "credentialDocsUrl": "https://mailchimp.com/developer/marketing/guides/quick-start/",
   "resources": [
@@ -27,17 +33,21 @@ export const mailchimpDoc: NodeDoc = {
               "name": "List Id",
               "internalKey": "listId",
               "type": "string",
+              "required": false,
               "description": "Mailchimp list ID",
-              "example": "list-id",
-              "placeholder": "list-id"
+              "helpText": "What this field is: Mailchimp list ID for Mailchimp / Subscribe.\nWhere to find it: Open the item in Mailchimp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "placeholder": "list-id",
+              "example": "list-id"
             },
             {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
+              "required": false,
               "description": "Email address",
-              "example": "{{$json.email}}",
-              "placeholder": "{{$json.email}}"
+              "helpText": "What this field is: The email address that Mailchimp should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "placeholder": "{{$json.email}}",
+              "example": "{{$json.email}}"
             }
           ],
           "outputExample": {
@@ -50,14 +60,14 @@ export const mailchimpDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Mailchimp to subscribe in a workflow.",
+            "scenario": "Process incoming Mailchimp data with subscribe after a related upstream event is received",
             "inputValues": {
               "List Id": "list-id",
               "Email": "{{$json.email}}"
             },
-            "expectedOutput": "The node executes subscribe and exposes its result for downstream nodes."
+            "expectedOutput": "Mailchimp returns structured subscribe data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://mailchimp.com/developer/marketing/api/"
         },
@@ -70,17 +80,21 @@ export const mailchimpDoc: NodeDoc = {
               "name": "List Id",
               "internalKey": "listId",
               "type": "string",
+              "required": false,
               "description": "Mailchimp list ID",
-              "example": "list-id",
-              "placeholder": "list-id"
+              "helpText": "What this field is: Mailchimp list ID for Mailchimp / Unsubscribe.\nWhere to find it: Open the item in Mailchimp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "placeholder": "list-id",
+              "example": "list-id"
             },
             {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
+              "required": false,
               "description": "Email address",
-              "example": "{{$json.email}}",
-              "placeholder": "{{$json.email}}"
+              "helpText": "What this field is: The email address that Mailchimp should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "placeholder": "{{$json.email}}",
+              "example": "{{$json.email}}"
             }
           ],
           "outputExample": {
@@ -93,14 +107,14 @@ export const mailchimpDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Mailchimp to unsubscribe in a workflow.",
+            "scenario": "Process incoming Mailchimp data with unsubscribe after a related upstream event is received",
             "inputValues": {
               "List Id": "list-id",
               "Email": "{{$json.email}}"
             },
-            "expectedOutput": "The node executes unsubscribe and exposes its result for downstream nodes."
+            "expectedOutput": "Mailchimp returns structured unsubscribe data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://mailchimp.com/developer/marketing/api/"
         },
@@ -113,17 +127,21 @@ export const mailchimpDoc: NodeDoc = {
               "name": "List Id",
               "internalKey": "listId",
               "type": "string",
+              "required": false,
               "description": "Mailchimp list ID",
-              "example": "list-id",
-              "placeholder": "list-id"
+              "helpText": "What this field is: Mailchimp list ID for Mailchimp / Send.\nWhere to find it: Open the item in Mailchimp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "placeholder": "list-id",
+              "example": "list-id"
             },
             {
               "name": "Email",
               "internalKey": "email",
               "type": "email",
+              "required": false,
               "description": "Email address",
-              "example": "{{$json.email}}",
-              "placeholder": "{{$json.email}}"
+              "helpText": "What this field is: The email address that Mailchimp should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "placeholder": "{{$json.email}}",
+              "example": "{{$json.email}}"
             }
           ],
           "outputExample": {
@@ -136,14 +154,14 @@ export const mailchimpDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Mailchimp to send in a workflow.",
+            "scenario": "Process incoming Mailchimp data with send after a related upstream event is received",
             "inputValues": {
               "List Id": "list-id",
               "Email": "{{$json.email}}"
             },
-            "expectedOutput": "The node executes send and exposes its result for downstream nodes."
+            "expectedOutput": "Mailchimp returns structured send data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://mailchimp.com/developer/marketing/api/"
         }

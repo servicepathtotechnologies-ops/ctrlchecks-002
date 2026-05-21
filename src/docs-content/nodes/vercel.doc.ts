@@ -8,7 +8,15 @@ export const vercelDoc: NodeDoc = {
   "description": "Deploy projects and manage deployments on Vercel",
   "credentialType": "Vercel API Key",
   "credentialSetupSteps": [
-    "No credential required."
+    "What this is: Vercel uses an API key or account connection so CtrlChecks can safely access your Vercel account.",
+    "Go to vercel.com and sign in to your account.",
+    "Click your profile photo (top right) -> Account Settings -> Tokens.",
+    "Click \"Create\" -> give it a name (e.g. CtrlChecks) -> set scope to \"Full Account\" or a specific team -> set an expiry -> Create Token.",
+    "Copy the token immediately - it is shown only once.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Vercel -> paste the token -> Save.",
+    "Run a test step (e.g. list your deployments) to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Vercel node and select the saved connection."
   ],
   "credentialDocsUrl": "https://vercel.com/docs/rest-api",
   "resources": [
@@ -27,8 +35,9 @@ export const vercelDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Vercel project name (required for deploy operation). Can use template syntax like {{$json.projectName}}",
-              "example": "my-app",
-              "placeholder": "my-app"
+              "helpText": "What this field is: Vercel project name (required for deploy operation). Can use template syntax like {{$json.projectName}} for Vercel / Deploy.\nHow to fill it: Enter the project name value requested by Vercel, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.projectName}} or pick the value from the data picker.",
+              "placeholder": "my-app",
+              "example": "my-app"
             },
             {
               "name": "Token",
@@ -36,8 +45,9 @@ export const vercelDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Vercel API token (Bearer token). Use credential selection or template syntax like {{$credentials.vercel.token}}",
-              "example": "vercel_***",
+              "helpText": "What this field is: A private key or token that lets CtrlChecks access Vercel.\nWhere to get it: Open the Vercel dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
               "placeholder": "vercel_***",
+              "example": "vercel_***",
               "notes": "Stored and displayed as a masked credential value."
             }
           ],
@@ -51,14 +61,14 @@ export const vercelDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Vercel to deploy in a workflow.",
+            "scenario": "Process incoming Vercel data with deploy after a related upstream event is received",
             "inputValues": {
               "Project Name": "my-app",
               "Token": "vercel_***"
             },
-            "expectedOutput": "The node executes deploy and exposes its result for downstream nodes."
+            "expectedOutput": "Vercel returns structured deploy data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://vercel.com/docs/rest-api"
         },
@@ -73,8 +83,9 @@ export const vercelDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Vercel API token (Bearer token). Use credential selection or template syntax like {{$credentials.vercel.token}}",
-              "example": "vercel_***",
+              "helpText": "What this field is: A private key or token that lets CtrlChecks access Vercel.\nWhere to get it: Open the Vercel dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
               "placeholder": "vercel_***",
+              "example": "vercel_***",
               "notes": "Stored and displayed as a masked credential value."
             }
           ],
@@ -88,13 +99,13 @@ export const vercelDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Vercel to list deployments in a workflow.",
+            "scenario": "Process incoming Vercel data with list deployments after a related upstream event is received",
             "inputValues": {
               "Token": "vercel_***"
             },
-            "expectedOutput": "The node executes list deployments and exposes its result for downstream nodes."
+            "expectedOutput": "Vercel returns structured list deployments data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://vercel.com/docs/rest-api"
         }

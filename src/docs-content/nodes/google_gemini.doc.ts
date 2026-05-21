@@ -8,10 +8,14 @@ export const googleGeminiDoc: NodeDoc = {
   "description": "Google Gemini chat completion",
   "credentialType": "Google Gemini API Key",
   "credentialSetupSteps": [
-    "Go to https://aistudio.google.com/app/apikey.",
-    "Click \"Create API Key\" → select or create a Google Cloud project.",
-    "Copy the generated API key.",
-    "In CtrlChecks, open Connections → Add Connection → Google Gemini → paste the API key → Save."
+    "What this is: Google Gemini uses an API key or account connection so CtrlChecks can safely access your Google Gemini account.",
+    "Go to aistudio.google.com/app/apikey and sign in with your Google account.",
+    "Click \"Create API Key\" -> select or create a Google Cloud project -> Create API key in existing project.",
+    "Copy the generated API key - it is a long string of letters and numbers.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Google Gemini -> paste the API key -> Save.",
+    "Run a test step with a simple prompt to confirm Gemini responds correctly.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Google Gemini node and select the saved connection."
   ],
   "credentialDocsUrl": "https://ai.google.dev/tutorials/setup",
   "resources": [
@@ -30,8 +34,9 @@ export const googleGeminiDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Model name",
-              "example": "gemini-2.5-pro",
-              "placeholder": "gemini-2.5-pro"
+              "helpText": "What this field is: Which Gemini model to use.\nOptions:\n  gemini-1.5-flash  →  fast and affordable, good for most tasks\n  gemini-1.5-pro    →  more capable, better at complex reasoning\nRecommended: gemini-1.5-flash for most tasks.",
+              "placeholder": "gemini-2.5-pro",
+              "example": "gemini-2.5-pro"
             },
             {
               "name": "Api Key",
@@ -39,8 +44,9 @@ export const googleGeminiDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Gemini API key (node-level, required for this node to run)",
-              "example": "AIza...",
+              "helpText": "What this field is: A private key or token that lets CtrlChecks access Gemini.\nWhere to get it: Open the Gemini dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
               "placeholder": "AIza...",
+              "example": "AIza...",
               "notes": "Stored and displayed as a masked credential value."
             },
             {
@@ -49,23 +55,24 @@ export const googleGeminiDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Prompt text",
-              "example": "{{$json.prompt}}",
-              "placeholder": "{{$json.prompt}}"
+              "helpText": "What this field is: The instruction or question for Google Gemini AI.\nExample: Extract all names, email addresses, and phone numbers from the following text and return them as a JSON array: {{$json.rawText}}",
+              "placeholder": "{{$json.prompt}}",
+              "example": "{{$json.prompt}}"
             }
           ],
           "outputExample": {
-            "result": "Operation completed successfully.",
-            "text": ""
+            "text": "Here is a concise summary of the uploaded document.",
+            "length": 51
           },
-          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
+          "outputDescription": "text: Value returned by this operation.\nlength: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Gemini to execute in a workflow.",
+            "scenario": "Process incoming Gemini data with execute after a related upstream event is received",
             "inputValues": {
               "Model": "gemini-2.5-pro",
               "Api Key": "AIza...",
               "Prompt": "{{$json.prompt}}"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Gemini returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://ai.google.dev/api"
         }

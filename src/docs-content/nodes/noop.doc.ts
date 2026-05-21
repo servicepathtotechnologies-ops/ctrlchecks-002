@@ -8,7 +8,9 @@ export const noopDoc: NodeDoc = {
   "description": "Pass through node - no operation",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -23,13 +25,17 @@ export const noopDoc: NodeDoc = {
           "fields": [],
           "outputExample": {
             "success": true,
-            "data": {}
+            "operation": "default",
+            "data": {
+              "id": "item_123",
+              "status": "completed"
+            }
           },
-          "outputDescription": "success: Value returned by this node.\ndata: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\ndata: Returned records from the service.",
           "usageExample": {
-            "scenario": "Use NoOp to execute in a workflow.",
+            "scenario": "Process incoming NoOp data with execute after a related upstream event is received",
             "inputValues": {},
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "NoOp returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

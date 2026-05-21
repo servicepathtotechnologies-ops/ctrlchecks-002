@@ -8,7 +8,9 @@ export const tryCatchDoc: NodeDoc = {
   "description": "Executes a branch and catches errors, routing to error handler",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [

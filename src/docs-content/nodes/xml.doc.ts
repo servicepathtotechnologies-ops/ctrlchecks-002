@@ -8,7 +8,9 @@ export const xmlDoc: NodeDoc = {
   "description": "Parse and manipulate XML content",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const xmlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "XML content",
-              "example": "{{$json.xml}}",
-              "placeholder": "{{$json.xml}}"
+              "helpText": "What this field is: XML content for XML / Parse.\nHow to fill it: Type the message, prompt, or content you want XML to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "{{$json.xml}}",
+              "example": "{{$json.xml}}"
             }
           ],
           "outputExample": {
@@ -66,21 +69,22 @@ export const xmlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "XML content",
-              "example": "{{$json.xml}}",
-              "placeholder": "{{$json.xml}}"
+              "helpText": "What this field is: XML content for XML / Extract.\nHow to fill it: Type the message, prompt, or content you want XML to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "{{$json.xml}}",
+              "example": "{{$json.xml}}"
             }
           ],
           "outputExample": {
-            "result": "Operation completed successfully.",
-            "text": ""
+            "text": "Extracted value from the selected XML path.",
+            "length": 43
           },
-          "outputDescription": "result: Value returned by this node.\ntext: Value returned by this node.",
+          "outputDescription": "text: Value returned by this operation.\nlength: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use XML to extract in a workflow.",
+            "scenario": "Process incoming XML data with extract after a related upstream event is received",
             "inputValues": {
               "Xml": "{{$json.xml}}"
             },
-            "expectedOutput": "The node executes extract and exposes its result for downstream nodes."
+            "expectedOutput": "XML returns structured extract data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

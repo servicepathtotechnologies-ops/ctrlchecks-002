@@ -8,7 +8,9 @@ export const cacheSetDoc: NodeDoc = {
   "description": "Store a value in cache with optional TTL",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const cacheSetDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Cache key",
-              "example": "user:123",
-              "placeholder": "user:123"
+              "helpText": "What this field is: The name to give this cached value — like a label.\nUse descriptive names with colons as separators.\nExample: user:{{$json.userId}}:lastLogin or session:{{$json.sessionId}} or rate_limit:{{$json.ip}}",
+              "placeholder": "user:123",
+              "example": "user:123"
             },
             {
               "name": "Value",
@@ -36,16 +39,19 @@ export const cacheSetDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Value to store (will be JSON stringified)",
-              "example": "{{$json}}",
-              "placeholder": "{{$json}}"
+              "helpText": "What this field is: The data to cache (store temporarily for quick access later).\nExample: {\"theme\":\"dark\",\"language\":\"en\",\"timezone\":\"America/New_York\"} or {{$json.userPreferences}}",
+              "placeholder": "{{$json}}",
+              "example": "{{$json}}"
             },
             {
               "name": "Ttl",
               "internalKey": "ttl",
               "type": "number",
+              "required": false,
               "description": "Time-to-live in seconds (0 = no expiration)",
-              "example": "0",
+              "helpText": "What this field is: How many seconds until this cached value expires automatically.\nExamples: 300 = 5 minutes, 3600 = 1 hour, 86400 = 24 hours.\nLeave blank to cache forever (until manually deleted).",
               "placeholder": "0",
+              "example": "0",
               "defaultValue": "0"
             }
           ],

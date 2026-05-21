@@ -8,7 +8,9 @@ export const mathDoc: NodeDoc = {
   "description": "Mathematical operations and calculations",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,17 +27,21 @@ export const mathDoc: NodeDoc = {
               "name": "A",
               "internalKey": "a",
               "type": "number",
+              "required": false,
               "description": "First number",
-              "example": "10",
-              "placeholder": "10"
+              "helpText": "What this field is: A number used for a in Math / Add.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.a}} or pick the value from the data picker.",
+              "placeholder": "10",
+              "example": "10"
             },
             {
               "name": "B",
               "internalKey": "b",
               "type": "number",
+              "required": false,
               "description": "Second number",
-              "example": "5",
-              "placeholder": "5"
+              "helpText": "What this field is: A number used for b in Math / Add.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.b}} or pick the value from the data picker.",
+              "placeholder": "5",
+              "example": "5"
             }
           ],
           "outputExample": {
@@ -65,17 +71,21 @@ export const mathDoc: NodeDoc = {
               "name": "A",
               "internalKey": "a",
               "type": "number",
+              "required": false,
               "description": "First number",
-              "example": "10",
-              "placeholder": "10"
+              "helpText": "What this field is: A number used for a in Math / Subtract.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.a}} or pick the value from the data picker.",
+              "placeholder": "10",
+              "example": "10"
             },
             {
               "name": "B",
               "internalKey": "b",
               "type": "number",
+              "required": false,
               "description": "Second number",
-              "example": "5",
-              "placeholder": "5"
+              "helpText": "What this field is: A number used for b in Math / Subtract.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.b}} or pick the value from the data picker.",
+              "placeholder": "5",
+              "example": "5"
             }
           ],
           "outputExample": {
@@ -105,17 +115,21 @@ export const mathDoc: NodeDoc = {
               "name": "A",
               "internalKey": "a",
               "type": "number",
+              "required": false,
               "description": "First number",
-              "example": "10",
-              "placeholder": "10"
+              "helpText": "What this field is: A number used for a in Math / Multiply.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.a}} or pick the value from the data picker.",
+              "placeholder": "10",
+              "example": "10"
             },
             {
               "name": "B",
               "internalKey": "b",
               "type": "number",
+              "required": false,
               "description": "Second number",
-              "example": "5",
-              "placeholder": "5"
+              "helpText": "What this field is: A number used for b in Math / Multiply.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.b}} or pick the value from the data picker.",
+              "placeholder": "5",
+              "example": "5"
             }
           ],
           "outputExample": {
@@ -145,17 +159,21 @@ export const mathDoc: NodeDoc = {
               "name": "A",
               "internalKey": "a",
               "type": "number",
+              "required": false,
               "description": "First number",
-              "example": "10",
-              "placeholder": "10"
+              "helpText": "What this field is: A number used for a in Math / Divide.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.a}} or pick the value from the data picker.",
+              "placeholder": "10",
+              "example": "10"
             },
             {
               "name": "B",
               "internalKey": "b",
               "type": "number",
+              "required": false,
               "description": "Second number",
-              "example": "5",
-              "placeholder": "5"
+              "helpText": "What this field is: A number used for b in Math / Divide.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.b}} or pick the value from the data picker.",
+              "placeholder": "5",
+              "example": "5"
             }
           ],
           "outputExample": {

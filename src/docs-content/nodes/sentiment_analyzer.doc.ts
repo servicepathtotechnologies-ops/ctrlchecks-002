@@ -8,7 +8,9 @@ export const sentimentAnalyzerDoc: NodeDoc = {
   "description": "Analyze sentiment and emotions in text",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const sentimentAnalyzerDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Text to analyze",
-              "example": "{{$json.text}}",
-              "placeholder": "{{$json.text}}"
+              "helpText": "What this field is: The text to analyze for sentiment (positive, negative, or neutral feeling).\nExample: {{$json.customerReview}} or {{$json.feedbackMessage}}\nUse case: Analyze customer reviews, support tickets, or social media comments.",
+              "placeholder": "{{$json.text}}",
+              "example": "{{$json.text}}"
             }
           ],
           "outputExample": {

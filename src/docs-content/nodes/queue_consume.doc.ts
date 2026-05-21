@@ -8,7 +8,9 @@ export const queueConsumeDoc: NodeDoc = {
   "description": "Consume a message from a queue (waits for next message)",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,25 +29,30 @@ export const queueConsumeDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Name of the queue",
-              "example": "tasks",
-              "placeholder": "tasks"
+              "helpText": "What this field is: Name of the queue for Queue Consume / Execute.\nHow to fill it: Enter the queue name value requested by Queue Consume, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.queueName}} or pick the value from the data picker.",
+              "placeholder": "tasks",
+              "example": "tasks"
             },
             {
               "name": "Timeout",
               "internalKey": "timeout",
               "type": "number",
+              "required": false,
               "description": "Maximum wait time in milliseconds (0 = infinite)",
-              "example": "30000",
+              "helpText": "What this field is: A number used for timeout in Queue Consume / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.timeout}} or pick the value from the data picker.",
               "placeholder": "30000",
+              "example": "30000",
               "defaultValue": "30000"
             },
             {
               "name": "Auto Ack",
               "internalKey": "autoAck",
               "type": "boolean",
+              "required": false,
               "description": "Automatically acknowledge message after processing",
-              "example": "true",
+              "helpText": "What this field is: An on/off choice for auto ack in Queue Consume / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Queue Consume to use this optional behavior.",
               "placeholder": "true",
+              "example": "true",
               "defaultValue": "true"
             }
           ],

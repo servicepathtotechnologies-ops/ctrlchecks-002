@@ -61,7 +61,7 @@ export interface ConfigField {
   /** Show only when condition matches (optional fields; does not imply required). */
   visibleIf?: { field: string; equals: unknown };
   /** Require only when condition matches. */
-  requiredIf?: { field: string; equals: unknown };
+  requiredIf?: { field: string; equals?: unknown; notEquals?: unknown };
   /** Label for the "Add" button on keyValue / variableList / caseList widgets */
   addButtonLabel?: string;
 }

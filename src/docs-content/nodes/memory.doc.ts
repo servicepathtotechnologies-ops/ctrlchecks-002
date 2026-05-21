@@ -8,7 +8,9 @@ export const memoryDoc: NodeDoc = {
   "description": "Memory storage for AI Agent context",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -25,22 +27,24 @@ export const memoryDoc: NodeDoc = {
               "name": "Context",
               "internalKey": "context",
               "type": "string",
+              "required": false,
               "description": "Memory context",
-              "example": "{{$json.context}}",
-              "placeholder": "{{$json.context}}"
+              "helpText": "What this field is: Memory context for Memory / Execute.\nHow to fill it: Type the message, prompt, or content you want Memory to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "{{$json.context}}",
+              "example": "{{$json.context}}"
             }
           ],
           "outputExample": {
             "messages": [],
             "context": {}
           },
-          "outputDescription": "messages: Value returned by this node.\ncontext: Value returned by this node.",
+          "outputDescription": "messages: Returned records from the service.\ncontext: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Memory to execute in a workflow.",
+            "scenario": "Process incoming Memory data with execute after a related upstream event is received",
             "inputValues": {
               "Context": "{{$json.context}}"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Memory returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

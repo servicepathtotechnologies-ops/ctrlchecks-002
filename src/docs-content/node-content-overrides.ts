@@ -1425,6 +1425,32 @@ export const nodeContentOverrides: Record<string, Record<string, OperationOverri
       usageExample: { scenario: 'Find pages matching a filter', inputValues: { databaseId: '{{$env.NOTION_DB_ID}}', filter: '{}' }, expectedOutput: 'Returns matching page objects.' },
     },
   },
+
+  stop_and_error: {
+    default: {
+      description: 'Stop the workflow intentionally and return a clear error message.',
+      outputExample: { stopped: true, errorMessage: 'Validation failed', stoppedAt: '2025-01-15T10:00:00.000Z' },
+      outputDescription: 'stopped: Always true when this node stops execution. errorMessage: The message shown in the workflow run logs. stoppedAt: When execution was stopped.',
+      usageExample: {
+        scenario: 'Stop an order workflow when the required customer email is missing',
+        inputValues: { errorMessage: 'Customer email is missing. Cannot send confirmation.' },
+        expectedOutput: 'The workflow stops before later nodes run, and the run log shows the exact error message.',
+      },
+    },
+  },
+
+  webhook_response: {
+    default: {
+      description: 'Send a final HTTP response back to the app or service that called the webhook.',
+      outputExample: { responseCode: 200, body: { ok: true, orderId: 'ord_123' }, sent: true },
+      outputDescription: 'responseCode: HTTP status returned to the caller. body: The response payload sent back. sent: True when CtrlChecks sent the response.',
+      usageExample: {
+        scenario: 'Return a success message to a checkout form after creating an order',
+        inputValues: { responseCode: '200', body: '{"ok":true,"orderId":"{{$json.orderId}}"}' },
+        expectedOutput: 'The caller receives HTTP 200 with the order ID in the response body.',
+      },
+    },
+  },
 };
 
 /**

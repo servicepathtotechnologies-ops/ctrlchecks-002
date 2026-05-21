@@ -8,7 +8,9 @@ export const setDoc: NodeDoc = {
   "description": "Set/override multiple fields on the current item",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const setDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "JSON object of fields to set (supports template strings)",
-              "example": "{\"status\":\"new\",\"email\":\"{{$json.email}}\"}",
-              "placeholder": "{\"status\":\"new\",\"email\":\"{{$json.email}}\"}"
+              "helpText": "What this field is: JSON object of fields to set (supports template strings) for Set / Execute.\nHow to fill it: Enter the fields value requested by Set, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "placeholder": "{\"status\":\"new\",\"email\":\"{{$json.email}}\"}",
+              "example": "{\"status\":\"new\",\"email\":\"{{$json.email}}\"}"
             }
           ],
           "outputExample": {
@@ -41,13 +44,13 @@ export const setDoc: NodeDoc = {
             "output": {},
             "error": {}
           },
-          "outputDescription": "success: Value returned by this node.\noperation: Value returned by this node.\nid: Value returned by this node.\nmessage: Value returned by this node.\ndata: Value returned by this node.\nresult: Value returned by this node.\noutput: Value returned by this node.\nerror: Value returned by this node.",
+          "outputDescription": "success: Whether the service accepted the request.\noperation: Value returned by this operation.\nid: Unique identifier returned by the service.\nmessage: Value returned by this operation.\ndata: Returned records from the service.\nresult: Value returned by this operation.\noutput: Value returned by this operation.\nerror: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Set to execute in a workflow.",
+            "scenario": "Process incoming Set data with execute after a related upstream event is received",
             "inputValues": {
               "Fields": "{\"status\":\"new\",\"email\":\"{{$json.email}}\"}"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Set returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

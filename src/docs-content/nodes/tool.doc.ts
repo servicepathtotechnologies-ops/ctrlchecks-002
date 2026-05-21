@@ -8,7 +8,9 @@ export const toolDoc: NodeDoc = {
   "description": "Tool connector for AI Agent to use external functions",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,8 +29,9 @@ export const toolDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Tool name",
-              "example": "http_request",
-              "placeholder": "http_request"
+              "helpText": "What this field is: Tool name for Tool / Execute.\nHow to fill it: Enter the tool name value requested by Tool, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.toolName}} or pick the value from the data picker.",
+              "placeholder": "http_request",
+              "example": "http_request"
             }
           ],
           "outputExample": {
@@ -36,13 +39,13 @@ export const toolDoc: NodeDoc = {
             "description": "",
             "parameters": {}
           },
-          "outputDescription": "name: Value returned by this node.\ndescription: Value returned by this node.\nparameters: Value returned by this node.",
+          "outputDescription": "name: Value returned by this operation.\ndescription: Value returned by this operation.\nparameters: Value returned by this operation.",
           "usageExample": {
-            "scenario": "Use Tool to execute in a workflow.",
+            "scenario": "Process incoming Tool data with execute after a related upstream event is received",
             "inputValues": {
               "Tool Name": "http_request"
             },
-            "expectedOutput": "The node executes execute and exposes its result for downstream nodes."
+            "expectedOutput": "Tool returns structured execute data that downstream nodes can reference with {{$json.fieldName}}."
           },
           "externalDocsUrl": "https://docs.ctrlchecks.com"
         }

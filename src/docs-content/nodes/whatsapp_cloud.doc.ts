@@ -8,9 +8,18 @@ export const whatsappCloudDoc: NodeDoc = {
   "description": "Send messages via WhatsApp Cloud API",
   "credentialType": "Meta App Credentials",
   "credentialSetupSteps": [
-    "No credential required."
+    "What this is: Meta Apps uses an OAuth connection so CtrlChecks can safely access your Meta Apps account.",
+    "Go to developers.facebook.com/apps and sign in with your Facebook account.",
+    "Click \"Create App\" -> select \"Business\" type -> Next -> give it a name -> Create App.",
+    "Under \"Add Products to Your App\", click \"Set Up\" on Facebook Login.",
+    "Go to Facebook Login -> Settings -> add this URL to \"Valid OAuth Redirect URIs\": http://localhost:3001/api/oauth/facebook/callback -> Save Changes.",
+    "Copy the App ID and App Secret from Settings -> Basic.",
+    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Facebook -> click \"Connect with Facebook\" -> sign in and authorize.",
+    "Run a test step to confirm the connection works.",
+    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
+    "After saving, click Test Connection if it is available, then return to the Meta Apps node and select the saved connection."
   ],
-  "credentialDocsUrl": "https://developers.facebook.com/docs/whatsapp/cloud-api/reference",
+  "credentialDocsUrl": "https://developers.facebook.com/docs/facebook-login/web",
   "resources": [
     {
       "name": "Operations",
@@ -27,8 +36,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "example": "message",
+              "helpText": "What this field is: The type of WhatsApp message to send.\nOptions: send_text (regular text message), send_template (pre-approved template), send_media (image or document).\nExample: send_text for a regular message.",
               "placeholder": "message",
+              "example": "message",
               "defaultValue": "message"
             },
             {
@@ -37,8 +47,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp Phone Number ID (required for message operations)",
-              "example": "abc123",
-              "placeholder": "abc123"
+              "helpText": "What this field is: Your WhatsApp Business Phone Number ID from Meta.\nWhere to find it: Meta Business Suite → WhatsApp → Settings → Phone Numbers → copy the Phone Number ID (a long number, NOT the actual phone number itself).\nExample: 123456789012345",
+              "placeholder": "abc123",
+              "example": "abc123"
             },
             {
               "name": "To",
@@ -46,39 +57,28 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "example": "+1234567890",
-              "placeholder": "+1234567890"
+              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "placeholder": "+1234567890",
+              "example": "+1234567890"
             },
             {
               "name": "Text",
               "internalKey": "text",
               "type": "textarea",
+              "required": true,
               "description": "Text content (for sendText)",
-              "example": "{{$json.message}}",
-              "placeholder": "{{$json.message}}"
+              "helpText": "What this field is: The message content the recipient will receive.\nExample: Hi {{$json.name}}, your order #{{$json.orderId}} has been confirmed and will ship in 2 days.",
+              "placeholder": "{{$json.message}}",
+              "example": "{{$json.message}}"
             },
             {
               "name": "Message",
               "internalKey": "message",
               "type": "textarea",
-              "description": "Alias for text (legacy)"
-            },
-            {
-              "name": "Media Url",
-              "internalKey": "mediaUrl",
-              "type": "url",
-              "description": "Media URL (for sendMedia)",
-              "example": "https://api.example.com",
-              "placeholder": "https://api.example.com"
-            },
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "description": "WhatsApp Cloud API Token (required for authentication)",
-              "example": "your-whatsapp-api-token",
-              "placeholder": "your-whatsapp-api-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "required": true,
+              "description": "Alias for text (legacy)",
+              "helpText": "What this field is: Alias for text (legacy) for WhatsApp Cloud / SendText.\nHow to fill it: Type the message, prompt, or content you want WhatsApp Cloud to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "placeholder": "Hello {{$json.name}}"
             }
           ],
           "outputExample": {
@@ -117,8 +117,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "example": "message",
+              "helpText": "What this field is: The type of WhatsApp message to send.\nOptions: send_text (regular text message), send_template (pre-approved template), send_media (image or document).\nExample: send_text for a regular message.",
               "placeholder": "message",
+              "example": "message",
               "defaultValue": "message"
             },
             {
@@ -127,8 +128,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp Phone Number ID (required for message operations)",
-              "example": "abc123",
-              "placeholder": "abc123"
+              "helpText": "What this field is: Your WhatsApp Business Phone Number ID from Meta.\nWhere to find it: Meta Business Suite → WhatsApp → Settings → Phone Numbers → copy the Phone Number ID (a long number, NOT the actual phone number itself).\nExample: 123456789012345",
+              "placeholder": "abc123",
+              "example": "abc123"
             },
             {
               "name": "To",
@@ -136,39 +138,19 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "example": "+1234567890",
-              "placeholder": "+1234567890"
-            },
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "textarea",
-              "description": "Text content (for sendText)",
-              "example": "{{$json.message}}",
-              "placeholder": "{{$json.message}}"
-            },
-            {
-              "name": "Message",
-              "internalKey": "message",
-              "type": "textarea",
-              "description": "Alias for text (legacy)"
+              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "placeholder": "+1234567890",
+              "example": "+1234567890"
             },
             {
               "name": "Media Url",
               "internalKey": "mediaUrl",
               "type": "url",
+              "required": false,
               "description": "Media URL (for sendMedia)",
-              "example": "https://api.example.com",
-              "placeholder": "https://api.example.com"
-            },
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "description": "WhatsApp Cloud API Token (required for authentication)",
-              "example": "your-whatsapp-api-token",
-              "placeholder": "your-whatsapp-api-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "helpText": "What this field is: Media URL (for sendMedia) for WhatsApp Cloud / SendMedia.\nHow to fill it: Paste the full web address WhatsApp Cloud should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.mediaUrl}} or pick the value from the data picker.",
+              "placeholder": "https://api.example.com",
+              "example": "https://api.example.com"
             }
           ],
           "outputExample": {
@@ -207,8 +189,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "example": "message",
+              "helpText": "What this field is: The type of WhatsApp message to send.\nOptions: send_text (regular text message), send_template (pre-approved template), send_media (image or document).\nExample: send_text for a regular message.",
               "placeholder": "message",
+              "example": "message",
               "defaultValue": "message"
             },
             {
@@ -217,8 +200,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp Phone Number ID (required for message operations)",
-              "example": "abc123",
-              "placeholder": "abc123"
+              "helpText": "What this field is: Your WhatsApp Business Phone Number ID from Meta.\nWhere to find it: Meta Business Suite → WhatsApp → Settings → Phone Numbers → copy the Phone Number ID (a long number, NOT the actual phone number itself).\nExample: 123456789012345",
+              "placeholder": "abc123",
+              "example": "abc123"
             },
             {
               "name": "To",
@@ -226,39 +210,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "example": "+1234567890",
-              "placeholder": "+1234567890"
-            },
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "textarea",
-              "description": "Text content (for sendText)",
-              "example": "{{$json.message}}",
-              "placeholder": "{{$json.message}}"
-            },
-            {
-              "name": "Message",
-              "internalKey": "message",
-              "type": "textarea",
-              "description": "Alias for text (legacy)"
-            },
-            {
-              "name": "Media Url",
-              "internalKey": "mediaUrl",
-              "type": "url",
-              "description": "Media URL (for sendMedia)",
-              "example": "https://api.example.com",
-              "placeholder": "https://api.example.com"
-            },
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "description": "WhatsApp Cloud API Token (required for authentication)",
-              "example": "your-whatsapp-api-token",
-              "placeholder": "your-whatsapp-api-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "placeholder": "+1234567890",
+              "example": "+1234567890"
             }
           ],
           "outputExample": {
@@ -297,8 +251,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "example": "message",
+              "helpText": "What this field is: The type of WhatsApp message to send.\nOptions: send_text (regular text message), send_template (pre-approved template), send_media (image or document).\nExample: send_text for a regular message.",
               "placeholder": "message",
+              "example": "message",
               "defaultValue": "message"
             },
             {
@@ -307,8 +262,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp Phone Number ID (required for message operations)",
-              "example": "abc123",
-              "placeholder": "abc123"
+              "helpText": "What this field is: Your WhatsApp Business Phone Number ID from Meta.\nWhere to find it: Meta Business Suite → WhatsApp → Settings → Phone Numbers → copy the Phone Number ID (a long number, NOT the actual phone number itself).\nExample: 123456789012345",
+              "placeholder": "abc123",
+              "example": "abc123"
             },
             {
               "name": "To",
@@ -316,39 +272,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "example": "+1234567890",
-              "placeholder": "+1234567890"
-            },
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "textarea",
-              "description": "Text content (for sendText)",
-              "example": "{{$json.message}}",
-              "placeholder": "{{$json.message}}"
-            },
-            {
-              "name": "Message",
-              "internalKey": "message",
-              "type": "textarea",
-              "description": "Alias for text (legacy)"
-            },
-            {
-              "name": "Media Url",
-              "internalKey": "mediaUrl",
-              "type": "url",
-              "description": "Media URL (for sendMedia)",
-              "example": "https://api.example.com",
-              "placeholder": "https://api.example.com"
-            },
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "description": "WhatsApp Cloud API Token (required for authentication)",
-              "example": "your-whatsapp-api-token",
-              "placeholder": "your-whatsapp-api-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "placeholder": "+1234567890",
+              "example": "+1234567890"
             }
           ],
           "outputExample": {
@@ -387,8 +313,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "example": "message",
+              "helpText": "What this field is: The type of WhatsApp message to send.\nOptions: send_text (regular text message), send_template (pre-approved template), send_media (image or document).\nExample: send_text for a regular message.",
               "placeholder": "message",
+              "example": "message",
               "defaultValue": "message"
             },
             {
@@ -397,8 +324,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp Phone Number ID (required for message operations)",
-              "example": "abc123",
-              "placeholder": "abc123"
+              "helpText": "What this field is: Your WhatsApp Business Phone Number ID from Meta.\nWhere to find it: Meta Business Suite → WhatsApp → Settings → Phone Numbers → copy the Phone Number ID (a long number, NOT the actual phone number itself).\nExample: 123456789012345",
+              "placeholder": "abc123",
+              "example": "abc123"
             },
             {
               "name": "To",
@@ -406,39 +334,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "example": "+1234567890",
-              "placeholder": "+1234567890"
-            },
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "textarea",
-              "description": "Text content (for sendText)",
-              "example": "{{$json.message}}",
-              "placeholder": "{{$json.message}}"
-            },
-            {
-              "name": "Message",
-              "internalKey": "message",
-              "type": "textarea",
-              "description": "Alias for text (legacy)"
-            },
-            {
-              "name": "Media Url",
-              "internalKey": "mediaUrl",
-              "type": "url",
-              "description": "Media URL (for sendMedia)",
-              "example": "https://api.example.com",
-              "placeholder": "https://api.example.com"
-            },
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "description": "WhatsApp Cloud API Token (required for authentication)",
-              "example": "your-whatsapp-api-token",
-              "placeholder": "your-whatsapp-api-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "placeholder": "+1234567890",
+              "example": "+1234567890"
             }
           ],
           "outputExample": {
@@ -477,8 +375,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "example": "message",
+              "helpText": "What this field is: The type of WhatsApp message to send.\nOptions: send_text (regular text message), send_template (pre-approved template), send_media (image or document).\nExample: send_text for a regular message.",
               "placeholder": "message",
+              "example": "message",
               "defaultValue": "message"
             },
             {
@@ -487,8 +386,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp Phone Number ID (required for message operations)",
-              "example": "abc123",
-              "placeholder": "abc123"
+              "helpText": "What this field is: Your WhatsApp Business Phone Number ID from Meta.\nWhere to find it: Meta Business Suite → WhatsApp → Settings → Phone Numbers → copy the Phone Number ID (a long number, NOT the actual phone number itself).\nExample: 123456789012345",
+              "placeholder": "abc123",
+              "example": "abc123"
             },
             {
               "name": "To",
@@ -496,39 +396,9 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "example": "+1234567890",
-              "placeholder": "+1234567890"
-            },
-            {
-              "name": "Text",
-              "internalKey": "text",
-              "type": "textarea",
-              "description": "Text content (for sendText)",
-              "example": "{{$json.message}}",
-              "placeholder": "{{$json.message}}"
-            },
-            {
-              "name": "Message",
-              "internalKey": "message",
-              "type": "textarea",
-              "description": "Alias for text (legacy)"
-            },
-            {
-              "name": "Media Url",
-              "internalKey": "mediaUrl",
-              "type": "url",
-              "description": "Media URL (for sendMedia)",
-              "example": "https://api.example.com",
-              "placeholder": "https://api.example.com"
-            },
-            {
-              "name": "Api Key",
-              "internalKey": "apiKey",
-              "type": "password",
-              "description": "WhatsApp Cloud API Token (required for authentication)",
-              "example": "your-whatsapp-api-token",
-              "placeholder": "your-whatsapp-api-token",
-              "notes": "Stored and displayed as a masked credential value."
+              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "placeholder": "+1234567890",
+              "example": "+1234567890"
             }
           ],
           "outputExample": {

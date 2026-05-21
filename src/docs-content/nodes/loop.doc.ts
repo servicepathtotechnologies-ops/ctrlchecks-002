@@ -8,7 +8,9 @@ export const loopDoc: NodeDoc = {
   "description": "Iterate over array items with max iterations limit",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,16 +29,19 @@ export const loopDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Array to iterate over",
-              "example": "{{$json.items}}",
-              "placeholder": "{{$json.items}}"
+              "helpText": "What this field is: The list of items to process one at a time.\nHow to fill it: Usually {{$json.customers}} or {{$json.rows}} — the array output from a previous node.\nExample: If a Google Sheets Read returned 50 customer rows, use {{$json.rows}} to process each customer one at a time (e.g. send one email per customer).\nTip: The nodes inside the loop run once for each item. Use {{$json.item}} to access the current item's data.",
+              "placeholder": "{{$json.items}}",
+              "example": "{{$json.items}}"
             },
             {
               "name": "Max Iterations",
               "internalKey": "maxIterations",
               "type": "number",
+              "required": false,
               "description": "Maximum iterations",
-              "example": "100",
+              "helpText": "What this field is: A number used for max iterations in Loop / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxIterations}} or pick the value from the data picker.",
               "placeholder": "100",
+              "example": "100",
               "defaultValue": "100"
             }
           ],

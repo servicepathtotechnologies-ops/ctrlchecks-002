@@ -8,7 +8,9 @@ export const mergeDoc: NodeDoc = {
   "description": "Merge multiple branches of data",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,14 +29,18 @@ export const mergeDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Merge mode",
-              "example": "append",
-              "placeholder": "append"
+              "helpText": "What this field is: Merge mode for Merge / Execute.\nHow to fill it: Enter the mode value requested by Merge, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.mode}} or pick the value from the data picker.",
+              "placeholder": "append",
+              "example": "append"
             },
             {
               "name": "Join By",
               "internalKey": "joinBy",
               "type": "string",
-              "description": "Field to join on (for join mode)"
+              "required": false,
+              "description": "Field to join on (for join mode)",
+              "helpText": "What this field is: Field to join on (for join mode) for Merge / Execute.\nHow to fill it: Enter the join by value requested by Merge, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.joinBy}} or pick the value from the data picker.",
+              "placeholder": "Enter Join By"
             }
           ],
           "outputExample": {

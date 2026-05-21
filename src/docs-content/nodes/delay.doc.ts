@@ -8,7 +8,9 @@ export const delayDoc: NodeDoc = {
   "description": "Pause the workflow execution for a specified amount of time",
   "credentialType": "None",
   "credentialSetupSteps": [
-    "No credential required."
+    "This node does not need a saved account connection.",
+    "Open the node settings and fill the visible input fields.",
+    "Run the workflow when the required fields are complete."
   ],
   "credentialDocsUrl": "https://docs.ctrlchecks.com",
   "resources": [
@@ -27,16 +29,19 @@ export const delayDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Time to delay (in milliseconds)",
-              "example": "1000",
-              "placeholder": "1000"
+              "helpText": "What this field is: How long to pause the workflow before the next step runs.\nHow to fill it: Type a number, then set the unit below.\nExamples: 30 seconds → pauses briefly. 5 minutes → good for rate limiting. 24 hours → wait until next day.\nUse case: Pause before sending a follow-up email, wait for a process to finish, or space out API calls.",
+              "placeholder": "1000",
+              "example": "1000"
             },
             {
               "name": "Unit",
               "internalKey": "unit",
               "type": "select",
+              "required": false,
               "description": "Unit of time (milliseconds, seconds, minutes)",
-              "example": "milliseconds",
+              "helpText": "What this field is: The time unit for the delay.\nOptions: ms (milliseconds), s (seconds), m (minutes), h (hours).\nExample: s for seconds. So duration=30, unit=s means pause for 30 seconds.",
               "placeholder": "milliseconds",
+              "example": "milliseconds",
               "defaultValue": "milliseconds",
               "options": [
                 "Milliseconds",
