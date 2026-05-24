@@ -1,22 +1,53 @@
-﻿import { useState, useEffect, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle,
+  Crown,
+  KeyRound,
+  Loader2,
+  LogOut,
+  Save,
+  Shield,
+  Trash2,
+  User as UserIcon,
+  Zap,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { awsClient } from "@/integrations/aws/client";
 import { getBackendUrl } from "@/lib/api/getBackendUrl";
-import { rememberOAuthReturnTo } from "@/lib/oauth-return";
-import { startConnectorOAuth } from "@/lib/google-connector-oauth";
 import { isGeneratedCognitoEmail, resolveProfileEmail } from "@/lib/profile-email";
+import {
+  activateGeminiWallet,
+  deactivateGeminiWallet,
+  deleteGeminiWallet,
+  getGeminiWallet,
+  saveGeminiWalletKey,
+  testGeminiWallet,
+  type GeminiWalletState,
+} from "@/lib/api/geminiWallet";
+import { AppChromeHeader } from "@/components/layout/AppChromeHeader";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Save, CheckCircle, AlertCircle, RefreshCw, User as UserIcon, LogOut, Trash2, Zap, Crown, Shield, ArrowRight } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { AppChromeHeader } from "@/components/layout/AppChromeHeader";
 
 interface SubscriptionInfo {
   planName: string;
@@ -25,50 +56,51 @@ interface SubscriptionInfo {
   workflowsUsed: number;
   remainingWorkflows: number;
   utilizationPercentage: number;
+  billingMode?: "subscription" | "gemini_wallet";
+  subscriptionFrozen?: boolean;
+  walletStatus?: string;
+  freezeMessage?: string | null;
 }
 
-interface ConnectionStatus {
-  connected: boolean;
-  checking: boolean;
-  connecting: boolean;
-  expiresAt?: string | null;
-  reason?: string | null;
+const emptyWallet: GeminiWalletState = {
+  enabled: false,
+  status: "empty",
+  hasKey: false,
+  maskedKey: null,
+  lastValidatedAt: null,
+  lastUsedAt: null,
+  lastErrorCode: null,
+  lastErrorMessage: null,
+  subscriptionFrozen: false,
+};
+
+function formatDate(value: string | null) {
+  if (!value) return "Never";
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
 export default function Profile() {
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [profile, setProfile] = useState({
-    full_name: "",
-    email: "",
-    avatar_url: "",
-  });
+  const [profile, setProfile] = useState({ full_name: "", email: "", avatar_url: "" });
 
-  // Subscription state
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
 
-  // Connection states
-  const [connections, setConnections] = useState<{
-    google: ConnectionStatus;
-    linkedin: ConnectionStatus;
-    github: ConnectionStatus;
-    facebook: ConnectionStatus;
-    notion: ConnectionStatus;
-  }>({
-    google: { connected: false, checking: true, connecting: false },
-    linkedin: { connected: false, checking: true, connecting: false },
-    github: { connected: false, checking: true, connecting: false },
-    facebook: { connected: false, checking: true, connecting: false },
-    notion: { connected: false, checking: true, connecting: false },
-  });
+  const [wallet, setWallet] = useState<GeminiWalletState>(emptyWallet);
+  const [loadingWallet, setLoadingWallet] = useState(true);
+  const [walletBusy, setWalletBusy] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState("");
+
+  const userInitials = useMemo(() => {
+    const name = profile.full_name || profile.email || "User";
+    return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "U";
+  }, [profile.full_name, profile.email]);
 
   const loadProfile = useCallback(async () => {
     if (!user) return;
-    
     setLoading(true);
     try {
       const { data, error } = await awsClient
@@ -112,72 +144,14 @@ export default function Profile() {
     }
   }, [user]);
 
-  const checkConnections = useCallback(async () => {
-    if (!user) {
-      Object.keys(connections).forEach((key) => {
-        setConnections((prev) => ({
-          ...prev,
-          [key]: { ...prev[key as keyof typeof prev], checking: false },
-        }));
-      });
-      return;
-    }
-
-    try {
-      const token = (await awsClient.auth.getSession()).data.session?.access_token;
-      if (!token) throw new Error('No auth token available');
-
-      const response = await fetch(`${getBackendUrl()}/api/connections/status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error(`Connection status failed: ${response.status}`);
-
-      const data = await response.json();
-      const statuses = data.connections || {};
-      const services = ['google', 'linkedin', 'github', 'facebook', 'notion'] as const;
-
-      setConnections((prev) => {
-        const next = { ...prev };
-        for (const service of services) {
-          const status = statuses[service] || {};
-          next[service] = {
-            connected: Boolean(status.connected),
-            checking: false,
-            connecting: false,
-            expiresAt: status.expiresAt || null,
-            reason: status.reason || null,
-          };
-        }
-        return next;
-      });
-    } catch (error) {
-      console.error('Error checking connections:', error);
-      Object.keys(connections).forEach((key) => {
-        setConnections((prev) => ({
-          ...prev,
-          [key]: { ...prev[key as keyof typeof prev], checking: false, reason: 'network_error' },
-        }));
-      });
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user) {
-      loadProfile();
-      checkConnections();
-      fetchSubscription();
-    }
-  }, [user, loadProfile, checkConnections]);
-
-  const fetchSubscription = async () => {
+  const fetchSubscription = useCallback(async () => {
     if (!user) return;
     setLoadingSubscription(true);
     try {
       const session = await awsClient.auth.getSession();
       const token = session.data.session?.access_token;
       if (!token) return;
-      const backendUrl = getBackendUrl();
-      const res = await fetch(`${backendUrl}/api/subscriptions/current`, {
+      const res = await fetch(`${getBackendUrl()}/api/subscriptions/current`, {
         cache: "no-store",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -187,22 +161,46 @@ export default function Profile() {
         setSubscription({
           planName: data.subscription.planName,
           status: data.subscription.status,
-          workflowLimit: data.subscription.workflowLimit,
+          workflowLimit: data.usage.workflowLimit,
           workflowsUsed: data.usage.workflowsUsed,
           remainingWorkflows: data.usage.remainingWorkflows,
           utilizationPercentage: data.usage.utilizationPercentage,
+          billingMode: data.billingMode,
+          subscriptionFrozen: data.subscriptionFrozen,
+          walletStatus: data.walletStatus,
+          freezeMessage: data.freezeMessage,
         });
       }
-    } catch {
-      // silent
     } finally {
       setLoadingSubscription(false);
     }
+  }, [user]);
+
+  const fetchWallet = useCallback(async () => {
+    if (!user) return;
+    setLoadingWallet(true);
+    try {
+      setWallet(await getGeminiWallet());
+    } catch (error) {
+      toast({ title: "Gemini wallet unavailable", description: error instanceof Error ? error.message : "Unable to load wallet", variant: "destructive" });
+    } finally {
+      setLoadingWallet(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadProfile();
+    fetchSubscription();
+    fetchWallet();
+  }, [user, loadProfile, fetchSubscription, fetchWallet]);
+
+  const refreshBillingState = async () => {
+    await Promise.all([fetchWallet(), fetchSubscription()]);
   };
 
-  const handleSave = async () => {
+  const handleSaveProfile = async () => {
     if (!user) return;
-    
     setSaving(true);
     try {
       const { error } = await awsClient
@@ -213,325 +211,123 @@ export default function Profile() {
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
         }, { onConflict: "user_id" });
-
       if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
-      });
+      toast({ title: "Profile saved", description: "Your profile has been updated." });
     } catch (error) {
-      console.error("Error saving profile:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update profile",
-        variant: "destructive",
-      });
+      toast({ title: "Profile save failed", description: error instanceof Error ? error.message : "Failed to update profile", variant: "destructive" });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleConnect = async (service: 'google' | 'linkedin' | 'github' | 'facebook' | 'notion') => {
-    if (!user) {
-      toast({
-        title: 'Error',
-        description: 'Please sign in first',
-        variant: 'destructive',
-      });
+  const handleSaveWallet = async () => {
+    if (!apiKeyInput.trim()) {
+      toast({ title: "API key required", description: "Paste your Gemini API key before saving.", variant: "destructive" });
       return;
     }
-
-    setConnections((prev) => ({
-      ...prev,
-      [service]: { ...prev[service], connecting: true },
-    }));
-
+    setWalletBusy(true);
     try {
-      if (service === 'google' || service === 'linkedin' || service === 'github' || service === 'facebook') {
-        startConnectorOAuth(service, user.id);
-        return;
-      } else if (service === 'notion') {
-        const backendUrl = getBackendUrl();
-        rememberOAuthReturnTo();
-        const redirectUrl = `${window.location.origin}/auth/notion/callback`;
-        window.location.href = `${backendUrl}/api/oauth/notion/authorize?redirect_uri=${encodeURIComponent(redirectUrl)}`;
-        return;
-      }
-
-      toast({
-        title: 'Redirecting...',
-        description: `Please authorize access to ${service}`,
-      });
+      setWallet(await saveGeminiWalletKey(apiKeyInput));
+      setApiKeyInput("");
+      toast({ title: "Gemini key saved", description: "Your key was validated and stored securely." });
+      await fetchSubscription();
     } catch (error) {
-      console.error(`${service} OAuth error:`, error);
-      toast({
-        title: 'Authentication Failed',
-        description: error instanceof Error ? error.message : `Failed to initiate ${service} authentication`,
-        variant: 'destructive',
-      });
-      setConnections((prev) => ({
-        ...prev,
-        [service]: { ...prev[service], connecting: false },
-      }));
+      toast({ title: "Gemini key rejected", description: error instanceof Error ? error.message : "Replace the key and try again.", variant: "destructive" });
+      await refreshBillingState();
+    } finally {
+      setWalletBusy(false);
     }
   };
 
-  const handleDisconnect = async (service: 'google' | 'linkedin' | 'github' | 'facebook' | 'notion') => {
-    if (!user) return;
-
+  const handleWalletToggle = async (checked: boolean) => {
+    setWalletBusy(true);
     try {
-      if (service === 'google' || service === 'linkedin' || service === 'notion') {
-        const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
-        if (!authToken) {
-          throw new Error('No authentication token');
-        }
-        const backendUrl = getBackendUrl();
-        const response = await fetch(`${backendUrl}/api/connections/${service}`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error?.message || errorData.error || 'Failed to disconnect');
-        }
-      } else if (service === 'github' || service === 'facebook') {
-        const authToken = (await awsClient.auth.getSession()).data.session?.access_token;
-        if (!authToken) {
-          throw new Error('No authentication token');
-        }
-        const backendUrl = getBackendUrl();
-        const response = await fetch(`${backendUrl}/api/connections/${service}/disconnect`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error?.message || 'Failed to disconnect');
-        }
-      }
-
-      setConnections((prev) => ({
-        ...prev,
-        [service]: { ...prev[service], connected: false },
-      }));
-
+      setWallet(checked ? await activateGeminiWallet() : await deactivateGeminiWallet());
       toast({
-        title: 'Disconnected',
-        description: `${service} account disconnected successfully`,
+        title: checked ? "Gemini wallet activated" : "Gemini wallet paused",
+        description: checked
+          ? "AI usage will now use your Gemini key and subscription quota is frozen."
+          : "AI usage will return to your subscription plan.",
       });
-      checkConnections();
+      await fetchSubscription();
     } catch (error) {
-      console.error('Error disconnecting:', error);
-      toast({
-        title: 'Error',
-        description: `Failed to disconnect ${service} account`,
-        variant: 'destructive',
-      });
+      toast({ title: "Wallet update failed", description: error instanceof Error ? error.message : "Unable to update wallet mode", variant: "destructive" });
+      await refreshBillingState();
+    } finally {
+      setWalletBusy(false);
+    }
+  };
+
+  const handleTestWallet = async () => {
+    setWalletBusy(true);
+    try {
+      setWallet(await testGeminiWallet());
+      toast({ title: "Gemini key works", description: "Google accepted your API key." });
+    } catch (error) {
+      toast({ title: "Gemini key needs attention", description: error instanceof Error ? error.message : "Replace the key and try again.", variant: "destructive" });
+      await refreshBillingState();
+    } finally {
+      setWalletBusy(false);
+    }
+  };
+
+  const handleDeleteWallet = async () => {
+    setWalletBusy(true);
+    try {
+      setWallet(await deleteGeminiWallet());
+      setApiKeyInput("");
+      toast({ title: "Gemini wallet removed", description: "AI usage will return to your subscription plan." });
+      await fetchSubscription();
+    } catch (error) {
+      toast({ title: "Remove failed", description: error instanceof Error ? error.message : "Unable to remove wallet key", variant: "destructive" });
+    } finally {
+      setWalletBusy(false);
     }
   };
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out",
-      });
-      navigate('/');
-    } catch (error) {
-      console.error('Error signing out:', error);
-      toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
-    }
+    await signOut();
   };
 
   const handleDeleteAccount = async () => {
-    const session = await awsClient.auth.getSession();
-    const token = session.data.session?.access_token;
-    if (!token) {
-      toast({
-        title: "Error",
-        description: "No active session. Please sign in again.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!user) return;
     setDeleting(true);
     try {
-      const backendUrl = getBackendUrl();
-      const response = await fetch(`${backendUrl}/api/user/account`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          (typeof errorData.error === 'string' ? errorData.error : errorData.error?.message) ||
-          errorData.message ||
-          'Failed to delete account'
-        );
-      }
+      await awsClient.from("profiles").delete().eq("user_id", user.id);
       await signOut();
-      navigate('/');
+      toast({ title: "Account deleted", description: "Your account has been removed." });
     } catch (error) {
-      console.error('Error deleting account:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete account",
-        variant: "destructive",
-      });
+      toast({ title: "Delete failed", description: error instanceof Error ? error.message : "Failed to delete account", variant: "destructive" });
       setDeleting(false);
     }
   };
 
-  const userInitials = profile.full_name?.slice(0, 2).toUpperCase() ||
-    profile.email?.slice(0, 2).toUpperCase() || "U";
-
-  const totalConnected = Object.values(connections).filter(c => c.connected).length;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) return null;
-
-  const ConnectionCard = ({ 
-    service, 
-    icon, 
-    name, 
-    bgColor 
-  }: { 
-    service: 'google' | 'linkedin' | 'github' | 'facebook' | 'notion';
-    icon: React.ReactNode;
-    name: string;
-    bgColor: string;
-  }) => {
-    const status = connections[service];
-    return (
-      <div className="flex items-center justify-between rounded-lg border p-2.5">
-        <div className="flex items-center gap-2.5">
-          <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${bgColor}`}>
-            {icon}
-          </div>
-          <div>
-            <div className="font-medium text-sm">{name}</div>
-            <div className="text-xs text-muted-foreground">
-              {status.checking
-                ? 'Checking...'
-                : status.reason === 'network_error'
-                  ? 'Status unavailable'
-                  : status.connected
-                    ? 'Connected'
-                    : 'Not connected'}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {status.checking ? (
-            <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-          ) : status.reason === 'network_error' ? (
-            <>
-              <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={checkConnections}
-                className="h-7 text-xs px-2"
-              >
-                Retry
-              </Button>
-            </>
-          ) : status.connected ? (
-            <>
-              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDisconnect(service)}
-                disabled={status.connecting}
-                className="h-7 text-xs px-2"
-              >
-                Disconnect
-              </Button>
-            </>
-          ) : (
-            <>
-              <AlertCircle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => handleConnect(service)}
-                disabled={status.connecting}
-                className="h-7 text-xs px-2"
-              >
-                {status.connecting ? (
-                  <>
-                    <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  'Connect'
-                )}
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  };
+  const walletNeedsAttention = wallet.status === "invalid" || wallet.status === "quota_exceeded" || wallet.status === "error";
 
   return (
     <div className="min-h-screen bg-background">
       <AppChromeHeader />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-4 max-w-6xl">
+      <main className="container mx-auto max-w-6xl px-4 py-4">
         <div className="space-y-4">
-          {/* Page Header */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-xl font-bold flex items-center gap-2">
+              <h1 className="flex items-center gap-2 text-xl font-bold">
                 <UserIcon className="h-5 w-5" />
-                Profile & Connections
+                Profile
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage your profile information and connected accounts
+              <p className="mt-1 text-sm text-muted-foreground">
+                Manage your account, plan, and Gemini API wallet.
               </p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                disabled={loading || saving || deleting}
-                className="h-8 text-sm"
-              >
+            <div className="flex shrink-0 items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleSignOut} disabled={loading || saving || deleting} className="h-8 text-sm">
                 <LogOut className="mr-1.5 h-3.5 w-3.5" />
                 Sign Out
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={loading || saving || deleting}
-                    className="h-8 text-sm"
-                  >
+                  <Button variant="destructive" size="sm" disabled={loading || saving || deleting} className="h-8 text-sm">
                     <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                     Delete Account
                   </Button>
@@ -545,10 +341,7 @@ export default function Profile() {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteAccount}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
+                    <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                       Delete Account
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -557,268 +350,180 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Profile Details Card */}
-            <Card>              <CardHeader className="pb-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start">
+            <Card className="h-full">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base">Profile Details</CardTitle>
                 <CardDescription className="text-xs">Update your personal information</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-14 w-14">
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3 rounded-lg border bg-muted/25 p-3">
+                  <Avatar className="h-16 w-16">
                     <AvatarImage src={profile.avatar_url} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                      {userInitials}
-                    </AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-lg text-primary">{userInitials}</AvatarFallback>
                   </Avatar>
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-medium">Profile Picture</p>
-                    <p className="text-xs text-muted-foreground">
-                      Update your avatar URL below
-                    </p>
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="text-sm font-medium">Profile Picture</p>
+                    <p className="text-xs text-muted-foreground">Update your avatar URL below</p>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="full_name" className="text-xs">Full Name</Label>
-                    <Input
-                      id="full_name"
-                      value={profile.full_name}
-                      onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                      placeholder="Enter your full name"
-                      className="h-8 text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email" className="text-xs">Email</Label>
-                    <Input
-                      id="email"
-                      value={profile.email}
-                      disabled
-                      className="bg-muted h-8 text-sm"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Email cannot be changed
-                    </p>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="avatar_url" className="text-xs">Avatar URL</Label>
-                    <Input
-                      id="avatar_url"
-                      value={profile.avatar_url}
-                      onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })}
-                      placeholder="https://example.com/avatar.jpg"
-                      className="h-8 text-sm"
-                    />
-                  </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="full_name" className="text-xs">Full Name</Label>
+                  <Input id="full_name" value={profile.full_name} onChange={(event) => setProfile({ ...profile, full_name: event.target.value })} placeholder="Enter your full name" className="h-9 text-sm" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs">Email</Label>
+                  <Input id="email" value={profile.email} disabled className="h-9 bg-muted text-sm" />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="avatar_url" className="text-xs">Avatar URL</Label>
+                  <Input id="avatar_url" value={profile.avatar_url} onChange={(event) => setProfile({ ...profile, avatar_url: event.target.value })} placeholder="https://example.com/avatar.jpg" className="h-9 text-sm" />
                 </div>
 
-                <Button onClick={handleSave} disabled={saving} className="w-full h-8 text-sm">
-                  {saving ? (
-                    <>
-                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-3 w-3" />
-                      Save Changes
-                    </>
-                  )}
+                <Button onClick={handleSaveProfile} disabled={saving} className="h-9 w-full text-sm">
+                  {saving ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-2 h-3.5 w-3.5" />}
+                  Save Changes
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Connections Card */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between text-base">
-                  <span>Connections</span>
-                  {totalConnected > 0 && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                      {totalConnected} Connected
-                    </span>
+            <Card className="overflow-hidden">
+              <div className="border-b">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center justify-between gap-3 text-base">
+                    <span>Subscription Plan</span>
+                    {subscription && (
+                      <Badge variant="outline" className={subscription.subscriptionFrozen ? "border-emerald-500 text-emerald-600" : subscription.planName === "Enterprise" ? "border-amber-500 text-amber-600" : subscription.planName === "Pro" ? "border-primary text-primary" : "border-border text-muted-foreground"}>
+                        {subscription.subscriptionFrozen ? <KeyRound className="mr-1 h-3 w-3" /> : subscription.planName === "Enterprise" ? <Crown className="mr-1 h-3 w-3" /> : subscription.planName === "Pro" ? <Zap className="mr-1 h-3 w-3" /> : <Shield className="mr-1 h-3 w-3" />}
+                        {subscription.subscriptionFrozen ? "Gemini Wallet" : subscription.planName}
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-xs">Your plan usage and current billing mode</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 pb-5">
+                  {loadingSubscription ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading subscription...
+                    </div>
+                  ) : subscription ? (
+                    <>
+                      {subscription.subscriptionFrozen && (
+                        <div className="flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700">
+                          <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                          {subscription.freezeMessage || "Your Gemini wallet is active. Subscription workflow quota is frozen."}
+                        </div>
+                      )}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Subscription workflows used</span>
+                          <span className="font-medium">{subscription.workflowsUsed} / {subscription.workflowLimit}</span>
+                        </div>
+                        <Progress value={subscription.utilizationPercentage} className={`h-2 ${subscription.utilizationPercentage >= 90 ? "[&>div]:bg-red-500" : subscription.utilizationPercentage >= 70 ? "[&>div]:bg-amber-500" : "[&>div]:bg-primary"}`} />
+                        <p className="text-xs text-muted-foreground">
+                          {subscription.subscriptionFrozen
+                            ? "New wallet-mode workflows use your Gemini quota instead of this plan quota."
+                            : `${subscription.remainingWorkflows} workflow${subscription.remainingWorkflows !== 1 ? "s" : ""} remaining`}
+                        </p>
+                      </div>
+                      {!subscription.subscriptionFrozen && subscription.remainingWorkflows === 0 && (
+                        <div className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
+                          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                          You've reached your workflow limit. Upgrade your plan or activate your Gemini wallet.
+                        </div>
+                      )}
+                      <Button asChild className="h-9 w-full text-sm" variant={subscription.planName === "Free" ? "default" : "outline"}>
+                        <Link to="/subscriptions">
+                          {subscription.planName === "Free" ? <><Zap className="mr-2 h-3.5 w-3.5" />Upgrade Plan</> : <>Manage Subscription<ArrowRight className="ml-2 h-3.5 w-3.5" /></>}
+                        </Link>
+                      </Button>
+                    </>
+                  ) : (
+                    <Button asChild className="h-9 w-full text-sm">
+                      <Link to="/subscriptions"><Zap className="mr-2 h-3.5 w-3.5" />View Plans</Link>
+                    </Button>
                   )}
+                </CardContent>
+              </div>
+
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between gap-3 text-base">
+                  <span>Gemini API Key Wallet</span>
+                  <Switch checked={wallet.enabled && wallet.status === "active"} disabled={walletBusy || loadingWallet || !wallet.hasKey} onCheckedChange={handleWalletToggle} />
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Connect your accounts to use in workflows
+                  Use your own Gemini key for AI calls and keep plan quota untouched.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <ConnectionCard
-                  service="google"
-                  name="Google"
-                  bgColor="bg-red-50 dark:bg-red-950"
-                  icon={
-                    <svg className="h-4 w-4" viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.54 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      />
-                    </svg>
-                  }
-                />
+              <CardContent className="space-y-4">
+                {loadingWallet ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading wallet...
+                  </div>
+                ) : (
+                  <>
+                    <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{wallet.hasKey ? wallet.maskedKey : "No Gemini key saved"}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {wallet.subscriptionFrozen ? "Active. CtrlChecks is using your Gemini quota." : "Inactive. CtrlChecks uses your subscription plan."}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className={wallet.subscriptionFrozen ? "border-emerald-500 text-emerald-600" : walletNeedsAttention ? "border-destructive text-destructive" : ""}>
+                          {wallet.status.replace("_", " ")}
+                        </Badge>
+                      </div>
+                    </div>
 
-                <ConnectionCard
-                  service="linkedin"
-                  name="LinkedIn"
-                  bgColor="bg-blue-50 dark:bg-blue-950"
-                  icon={
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .771 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .771 23.2 0 22.222 0h.003z"/>
-                    </svg>
-                  }
-                />
+                    {walletNeedsAttention && (
+                      <div className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
+                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <div className="space-y-2">
+                          <p>{wallet.lastErrorMessage || "Your Gemini key needs attention."}</p>
+                          <Link to="/subscriptions" className="font-medium underline underline-offset-2">Choose a CtrlChecks plan</Link>
+                        </div>
+                      </div>
+                    )}
 
-                <ConnectionCard
-                  service="github"
-                  name="GitHub"
-                  bgColor="bg-gray-50 dark:bg-gray-950"
-                  icon={
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                  }
-                />
+                    <div className="space-y-1.5">
+                      <Label htmlFor="gemini_api_key" className="text-xs">Gemini API Key</Label>
+                      <Input
+                        id="gemini_api_key"
+                        type="password"
+                        value={apiKeyInput}
+                        onChange={(event) => setApiKeyInput(event.target.value)}
+                        placeholder={wallet.hasKey ? "Paste a new key to replace the saved key" : "AIza..."}
+                        className="h-9 text-sm"
+                      />
+                    </div>
 
-                <ConnectionCard
-                  service="facebook"
-                  name="Facebook"
-                  bgColor="bg-blue-50 dark:bg-blue-950"
-                  icon={
-                    <svg className="h-4 w-4" fill="#1877F2" viewBox="0 0 24 24">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                    </svg>
-                  }
-                />
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <Button onClick={handleSaveWallet} disabled={walletBusy || !apiKeyInput.trim()} className="h-9 text-sm">
+                        {walletBusy ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-2 h-3.5 w-3.5" />}
+                        Save
+                      </Button>
+                      <Button variant="outline" onClick={handleTestWallet} disabled={walletBusy || !wallet.hasKey} className="h-9 text-sm">
+                        Test Key
+                      </Button>
+                      <Button variant="outline" onClick={handleDeleteWallet} disabled={walletBusy || !wallet.hasKey} className="h-9 text-sm">
+                        Remove
+                      </Button>
+                    </div>
 
-                <ConnectionCard
-                  service="notion"
-                  name="Notion"
-                  bgColor="bg-gray-50 dark:bg-gray-950"
-                  icon={
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M4.459 4.208c.746.606 1.026.56 2.547.56l.09-.002h10.396c1.521 0 1.8.046 2.546-.56.747-.606.747-1.664 0-2.27-.746-.606-1.025-.56-2.546-.56l-10.396.001c-1.521 0-1.8-.046-2.547.56-.747.606-.747 1.664 0 2.27zm15.04 1.67c-.746.606-1.025.56-2.546.56l-10.396.001c-1.521 0-1.8-.046-2.547-.56-.747-.606-.747-1.664 0-2.27.746-.606 1.025-.56 2.546-.56l10.396.001c1.521 0 1.8-.046 2.547.56.747.606.747 1.664 0 2.27zm-2.546 3.39c1.521 0 1.8.046 2.546-.56.747-.606.747-1.664 0-2.27-.746-.606-1.025-.56-2.546-.56l-10.396.001c-1.521 0-1.8-.046-2.547.56-.747.606-.747 1.664 0 2.27.746.606 1.025.56 2.546.56l10.396-.001zm-2.546 3.39c1.521 0 1.8.046 2.546-.56.747-.606.747-1.664 0-2.27-.746-.606-1.025-.56-2.546-.56l-10.396.001c-1.521 0-1.8-.046-2.547.56-.747.606-.747 1.664 0 2.27.746.606 1.025.56 2.546.56l10.396-.001zm-2.546 3.39c1.521 0 1.8.046 2.546-.56.747-.606.747-1.664 0-2.27-.746-.606-1.025-.56-2.546-.56l-10.396.001c-1.521 0-1.8-.046-2.547.56-.747.606-.747 1.664 0 2.27.746.606 1.025.56 2.546.56l10.396-.001z"/>
-                    </svg>
-                  }
-                />
+                    <div className="grid grid-cols-1 gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+                      <p>Validated: <span className="text-foreground">{formatDate(wallet.lastValidatedAt)}</span></p>
+                      <p>Last used: <span className="text-foreground">{formatDate(wallet.lastUsedAt)}</span></p>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
-
-          {/* Subscription Card */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-base">
-                <span>Subscription Plan</span>
-                {subscription && (
-                  <Badge
-                    variant="outline"
-                    className={
-                      subscription.planName === "Enterprise"
-                        ? "border-amber-500 text-amber-600"
-                        : subscription.planName === "Pro"
-                        ? "border-primary text-primary"
-                        : "border-border text-muted-foreground"
-                    }
-                  >
-                    {subscription.planName === "Enterprise" ? (
-                      <Crown className="mr-1 h-3 w-3" />
-                    ) : subscription.planName === "Pro" ? (
-                      <Zap className="mr-1 h-3 w-3" />
-                    ) : (
-                      <Shield className="mr-1 h-3 w-3" />
-                    )}
-                    {subscription.planName}
-                  </Badge>
-                )}
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Your current plan and workflow usage
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {loadingSubscription ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading subscription...
-                </div>
-              ) : subscription ? (
-                <>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Workflows used</span>
-                      <span className="font-medium">
-                        {subscription.workflowsUsed} / {subscription.workflowLimit}
-                      </span>
-                    </div>
-                    <Progress
-                      value={subscription.utilizationPercentage}
-                      className={`h-2 ${
-                        subscription.utilizationPercentage >= 90
-                          ? "[&>div]:bg-red-500"
-                          : subscription.utilizationPercentage >= 70
-                          ? "[&>div]:bg-amber-500"
-                          : "[&>div]:bg-primary"
-                      }`}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {subscription.remainingWorkflows} workflow{subscription.remainingWorkflows !== 1 ? "s" : ""} remaining
-                    </p>
-                  </div>
-
-                  {subscription.remainingWorkflows === 0 && (
-                    <div className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
-                      <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                      You've reached your workflow limit. Upgrade to create more.
-                    </div>
-                  )}
-
-                  <Button asChild className="w-full h-8 text-sm" variant={subscription.planName === "Free" ? "default" : "outline"}>
-                    <Link to="/subscriptions">
-                      {subscription.planName === "Free" ? (
-                        <>
-                          <Zap className="mr-2 h-3.5 w-3.5" />
-                          Upgrade Plan
-                        </>
-                      ) : (
-                        <>
-                          Manage Subscription
-                          <ArrowRight className="ml-2 h-3.5 w-3.5" />
-                        </>
-                      )}
-                    </Link>
-                  </Button>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">No subscription found.</p>
-                  <Button asChild className="w-full h-8 text-sm">
-                    <Link to="/subscriptions">
-                      <Zap className="mr-2 h-3.5 w-3.5" />
-                      View Plans
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
         </div>
       </main>
     </div>
