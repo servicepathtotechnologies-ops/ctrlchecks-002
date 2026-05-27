@@ -33,6 +33,7 @@ import { CredentialStatusPanel } from './CredentialStatusPanel';
 import { fetchRuntimeCredentialStatus } from '@/lib/api/credentialStatus';
 import { CapabilityStage } from './CapabilityStage';
 import { CapabilityReviewStep } from './CapabilityReviewStep';
+import type { CapabilitySelectionValidationResult } from '@/lib/capability-selection-validation';
 import type { CapabilityContainer, NodeSelectionMap } from '../../types/capability-selection';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
 import { generateFieldGuide } from './guideGenerator';
@@ -97,6 +98,7 @@ import {
 import { nodesBySlug } from '@/docs-content';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
 import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
+import { prepareActionableFieldExample } from '@/lib/actionable-field-example';
 
 /**
  * Ensures proper state transitions before setting workflow blueprint.
@@ -248,13 +250,30 @@ function groupQuestionsByNode(questions: any[]) {
 
 type FieldDesc = {
     what: string;
+    setupSummary?: string;
     you: string;
     aiBuild: string;
     aiRun: string;
     example: string;
+    actionableExample?: {
+        value: unknown;
+        displayValue?: string;
+        canApply?: boolean;
+        applyMode?: 'buildtime_ai_once';
+        reason?: string;
+        source?: 'ai_field_guidance' | 'deterministic_field_guidance';
+    };
     needed?: string;
     bestOwner?: string;
     dataImpact?: string;
+    offBehavior?: string;
+    emptyBehavior?: string;
+    defaultBehaviorLabel?: string;
+    recommendedOwner?: 'You' | 'AI Build' | 'AI Runtime';
+    ownerReason?: string;
+    validationConfidence?: 'high' | 'medium' | 'low';
+    warnings?: string[];
+    safeValueSuggestion?: string;
 };
 type FieldDescMap = Record<string, FieldDesc>;
 
@@ -311,6 +330,58 @@ function buildDeterministicFieldExample(question: Record<string, any>, fieldDoc:
     return 'Example: set the value that matches the workflow you are building.';
 }
 
+function normalizeSummarySentence(value: unknown): string {
+    const text = String(value || '').replace(/\s+/g, ' ').trim();
+    if (!text) return '';
+    return /[.!?]$/.test(text) ? text : `${text}.`;
+}
+
+function stripConditionLead(value: string): string {
+    return String(value || '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/^if\s+(?:this\s+)?(?:field\s+)?(?:is\s+)?(?:enabled\s+but\s+)?empty,?\s*/i, '')
+        .replace(/^if\s+empty,?\s*/i, '')
+        .replace(/^if\s+(?:this\s+)?(?:field\s+)?(?:is\s+)?off,?\s*/i, '')
+        .trim();
+}
+
+function lowerFirst(value: string): string {
+    if (!value) return value;
+    return value.charAt(0).toLowerCase() + value.slice(1);
+}
+
+function buildFallbackSetupSummary(args: {
+    what: string;
+    requiredText: string;
+    emptyBehavior: string;
+    recommendedOwner: 'You' | 'AI Build' | 'AI Runtime';
+    ownerReason: string;
+    actionableExample?: FieldDesc['actionableExample'];
+}) {
+    const sentences: string[] = [];
+    const seen = new Set<string>();
+    const push = (value: unknown) => {
+        const sentence = normalizeSummarySentence(value);
+        const key = sentence.toLowerCase();
+        if (!sentence || seen.has(key)) return;
+        seen.add(key);
+        sentences.push(sentence);
+    };
+
+    push(args.what);
+    const emptyText = stripConditionLead(args.emptyBehavior);
+    push(emptyText ? `${args.requiredText} When no value is set, ${lowerFirst(emptyText)}` : args.requiredText);
+    push(`Recommended owner: ${args.recommendedOwner}. ${args.ownerReason}`);
+    if (args.actionableExample?.canApply) {
+        push('A safe suggested value is available below and can be applied as AI Build.');
+    } else if (args.actionableExample?.reason && !/no safe typed example/i.test(args.actionableExample.reason)) {
+        push(args.actionableExample.reason);
+    }
+
+    return sentences.slice(0, 4).join(' ');
+}
+
 function buildFieldOwnershipCopy(
     question: Record<string, any>,
     aiFieldDesc: FieldDesc | null,
@@ -344,19 +415,86 @@ function buildFieldOwnershipCopy(
         aiFieldDesc?.aiRun && aiFieldDesc.aiRun !== 'N/A' && aiFieldDesc.aiRun !== 'Not available for this field.'
             ? aiFieldDesc.aiRun
             : `AI will decide this ${humanField} fresh on every run from the live data flowing through the workflow.`;
-    const toggleOff =
-        `Toggle off leaves ${humanField} out of this setup for now. Toggle on lets you choose who owns it: You, AI build, or AI runtime.`;
+    const emptyBehavior =
+        aiFieldDesc?.emptyBehavior ||
+        (question.required === false
+            ? `If empty, this optional ${humanField} setting is skipped unless this workflow specifically needs it.`
+            : `If empty, this step may fail because ${humanField} is required before the workflow can run.`);
+    const offBehavior =
+        aiFieldDesc?.offBehavior ||
+        (question.required === false
+            ? `If off, this ${humanField} input is not included in setup. ${emptyBehavior}`
+            : `If off, this step will still need ${humanField} before the workflow can run.`);
+    const toggleOff = offBehavior;
     const requiredText = aiFieldDesc?.needed || (
         question.required === false
-            ? `Leave this off for now — it looks optional for this workflow step.`
-            : `Toggle this on and enter the value — this field is required for the step to work.`
+            ? `Leave this off only if this workflow does not need a custom ${humanField}.`
+            : `Toggle this on and enter the value. This field is required for the step to work.`
     );
     const dataImpact = aiFieldDesc?.dataImpact || (
         opts.fieldEnabled === false
             ? `Because it is off, this input will not shape how this step handles data yet.`
             : `When enabled, this input changes how this step reads, filters, writes, or prepares data for the next step.`
     );
-    return { what, you, aiBuild, aiRun, example, toggleOff, requiredText, dataImpact };
+    const recommendedOwner = aiFieldDesc?.recommendedOwner || (opts.selectedMode === 'runtime_ai' ? 'AI Runtime' : opts.selectedMode === 'buildtime_ai_once' ? 'AI Build' : 'You');
+    const ownerReason = aiFieldDesc?.ownerReason || 'This recommendation follows the field type, selected operation, and available AI ownership modes.';
+    const setupSummary = aiFieldDesc?.setupSummary || buildFallbackSetupSummary({
+        what,
+        requiredText,
+        emptyBehavior,
+        recommendedOwner,
+        ownerReason,
+        actionableExample: aiFieldDesc?.actionableExample,
+    });
+    return {
+        what,
+        setupSummary,
+        you,
+        aiBuild,
+        aiRun,
+        example,
+        toggleOff,
+        requiredText,
+        dataImpact,
+        offBehavior,
+        emptyBehavior,
+        defaultBehaviorLabel: aiFieldDesc?.defaultBehaviorLabel || (question.required === false ? 'Optional setting skipped' : 'Required value'),
+        recommendedOwner,
+        ownerReason,
+        validationConfidence: aiFieldDesc?.validationConfidence || 'medium',
+        warnings: Array.isArray(aiFieldDesc?.warnings) ? aiFieldDesc.warnings : [],
+        safeValueSuggestion: aiFieldDesc?.safeValueSuggestion,
+    };
+}
+
+function mergeBuildAiUsageSnapshot(existing: any, delta: any) {
+    if (!delta || typeof delta !== 'object' || !delta.totals || Number(delta.totals.callCount || 0) <= 0) {
+        return existing || null;
+    }
+    const base = existing && typeof existing === 'object' ? existing : {};
+    const baseTotals = base.totals || {};
+    const nextTotals = {
+        promptTokens: Number(baseTotals.promptTokens || 0) + Number(delta.totals.promptTokens || 0),
+        completionTokens: Number(baseTotals.completionTokens || 0) + Number(delta.totals.completionTokens || 0),
+        totalTokens: Number(baseTotals.totalTokens || 0) + Number(delta.totals.totalTokens || 0),
+        callCount: Number(baseTotals.callCount || 0) + Number(delta.totals.callCount || 0),
+    };
+    const byStage: Record<string, any> = { ...(base.byStage || {}) };
+    Object.entries(delta.byStage || {}).forEach(([stage, value]: [string, any]) => {
+        const prev = byStage[stage] || {};
+        byStage[stage] = {
+            promptTokens: Number(prev.promptTokens || 0) + Number(value?.promptTokens || 0),
+            completionTokens: Number(prev.completionTokens || 0) + Number(value?.completionTokens || 0),
+            totalTokens: Number(prev.totalTokens || 0) + Number(value?.totalTokens || 0),
+            callCount: Number(prev.callCount || 0) + Number(value?.callCount || 0),
+        };
+    });
+    return {
+        calls: [...(Array.isArray(base.calls) ? base.calls : []), ...(Array.isArray(delta.calls) ? delta.calls : [])],
+        totals: nextTotals,
+        byStage,
+        lastUpdatedAt: new Date().toISOString(),
+    };
 }
 
 function credentialWizardFriendlyStatus(status: string): string {
@@ -869,6 +1007,11 @@ export function AutonomousAgentWizard() {
     const [fieldDescriptions, setFieldDescriptions] = useState<
         Record<string, { loading: boolean; data: FieldDescMap | null }>
     >({});
+    const [fieldGuidanceBuildAiUsage, setFieldGuidanceBuildAiUsage] = useState<any | null>(null);
+    const [appliedFieldGuidanceExamples, setAppliedFieldGuidanceExamples] = useState<
+        Record<string, { nodeId: string; fieldName: string; mode: 'buildtime_ai_once'; source: string }>
+    >({});
+    const [appliedExampleKeys, setAppliedExampleKeys] = useState<Record<string, boolean>>({});
     const [fieldHelpExpanded, setFieldHelpExpanded] = useState<Record<string, boolean>>({});
     // Global walk-through: sequential field-by-field AI explanations across the entire ownership stage
     const [globalWalkActive, setGlobalWalkActive] = useState<{
@@ -974,6 +1117,8 @@ export function AutonomousAgentWizard() {
     const [capNodeStructuralPrompt, setCapNodeStructuralPrompt] = useState<string>('');
     /** Workflow returned by Phase 2 */
     const [capNodeWorkflow, setCapNodeWorkflow] = useState<any>(null);
+    /** Backend validation details for the capability-node-selection UI */
+    const [capNodeSelectionIssue, setCapNodeSelectionIssue] = useState<CapabilitySelectionValidationResult | null>(null);
     // -------------------------------------------------------------------------
 
     /** User toggles for unlockable credential fields (`unlock_<nodeId>_<field>` on attach-inputs). */
@@ -3601,7 +3746,16 @@ export function AutonomousAgentWizard() {
                     workflowMetadataCfg.originalUserPrompt = canonicalUserIntentForMetadata;
                 }
                 if (buildAiFromGen && typeof buildAiFromGen === 'object') {
-                    workflowMetadataCfg.buildAiUsage = buildAiFromGen;
+                    workflowMetadataCfg.buildAiUsage = fieldGuidanceBuildAiUsage
+                        ? mergeBuildAiUsageSnapshot(buildAiFromGen, fieldGuidanceBuildAiUsage)
+                        : buildAiFromGen;
+                } else if (fieldGuidanceBuildAiUsage) {
+                    workflowMetadataCfg.buildAiUsage = fieldGuidanceBuildAiUsage;
+                }
+                const appliedGuidanceListForMetadata = Object.values(appliedFieldGuidanceExamples);
+                if (appliedGuidanceListForMetadata.length > 0) {
+                    workflowMetadataCfg.fieldGuidanceAppliedCount = appliedGuidanceListForMetadata.length;
+                    workflowMetadataCfg.fieldGuidanceAppliedFields = appliedGuidanceListForMetadata;
                 }
                 const pendingNormalized = revalidateWorkflowGraph(
                     pendingWorkflowData.nodes,
@@ -3688,6 +3842,12 @@ export function AutonomousAgentWizard() {
                                 // Include user-initiated field ownership overrides so backend can persist them
                                 ...(Object.keys(fieldOwnershipOverrides).length > 0
                                     ? { fieldOwnershipOverrides }
+                                    : {}),
+                                ...(Object.keys(appliedFieldGuidanceExamples).length > 0
+                                    ? { fieldGuidanceApplied: Object.values(appliedFieldGuidanceExamples) }
+                                    : {}),
+                                ...(fieldGuidanceBuildAiUsage
+                                    ? { fieldGuidanceBuildAiUsage }
                                     : {}),
                             }),
                         });
@@ -5219,6 +5379,21 @@ export function AutonomousAgentWizard() {
         setFillModeValues((prev) => ({ ...prev, ...updates }));
     };
 
+    const readBackendErrorMessage = useCallback(async (response: Response, fallback: string) => {
+        let message = fallback;
+        try {
+            const data = await response.json();
+            if (typeof data?.error === 'string' && data.error.trim()) {
+                message = data.error.trim();
+            } else if (typeof data?.message === 'string' && data.message.trim()) {
+                message = data.message.trim();
+            }
+        } catch {
+            // Keep fallback when body is not JSON.
+        }
+        return message;
+    }, []);
+
     const fetchNodeDescription = useCallback(
         async (descKey: string, nodeType: string, nodeLabel: string, nodeId: string) => {
             // Toggle close if already open
@@ -5247,19 +5422,26 @@ export function AutonomousAgentWizard() {
                     headers,
                     body: JSON.stringify({ nodeType, nodeLabel, nodeNarrative, workflowOverview, userPrompt: prompt }),
                 });
+                if (!response.ok) {
+                    throw new Error(await readBackendErrorMessage(response, 'Could not load node description.'));
+                }
                 const data = await response.json();
+                if (data?.success === false) {
+                    throw new Error(data?.error || 'Could not load node description.');
+                }
                 setNodeDescriptions((prev) => ({
                     ...prev,
                     [descKey]: { loading: false, text: data.description || 'No description available.', open: true },
                 }));
-            } catch {
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Could not load description. Please try again.';
                 setNodeDescriptions((prev) => ({
                     ...prev,
-                    [descKey]: { loading: false, text: 'Could not load description. Please try again.', open: true },
+                    [descKey]: { loading: false, text: message, open: true },
                 }));
             }
         },
-        [nodeDescriptions, pendingWorkflowData, prompt]
+        [nodeDescriptions, pendingWorkflowData, prompt, readBackendErrorMessage]
     );
 
     const fetchFieldDescriptions = useCallback(
@@ -5296,6 +5478,13 @@ export function AutonomousAgentWizard() {
                         q.description ||
                         ''
                     ),
+                    options: Array.isArray(q.options)
+                        ? q.options.map((option: any) => (
+                            typeof option === 'string'
+                                ? { label: option, value: option }
+                                : { label: String(option?.label ?? option?.value ?? ''), value: String(option?.value ?? option?.label ?? '') }
+                        )).filter((option: any) => option.value)
+                        : [],
                     example: String(
                         q.exampleValue ||
                         q.example ||
@@ -5309,6 +5498,8 @@ export function AutonomousAgentWizard() {
                     supportsBuildtimeAI: q.supportsBuildtimeAI !== false,
                     fillModeDefault: String(q.fillModeDefault || 'manual_static'),
                     ownership: String(q.ownershipClass || ''),
+                    currentValue: q.currentValue ?? q.defaultValue ?? null,
+                    operation: String(q.operation || q.operationValue || ''),
                 }));
 
                 const response = await fetch(`${ENDPOINTS.itemBackend}/api/ai/field-descriptions`, {
@@ -5316,7 +5507,16 @@ export function AutonomousAgentWizard() {
                     headers,
                     body: JSON.stringify({ nodeType, nodeLabel, nodeNarrative, workflowOverview, userPrompt: prompt, fields: fieldPayload }),
                 });
+                if (!response.ok) {
+                    throw new Error(await readBackendErrorMessage(response, 'Could not load field guidance.'));
+                }
                 const data = await response.json();
+                if (data?.success === false) {
+                    throw new Error(data?.error || 'Could not load field guidance.');
+                }
+                if (data?.buildAiUsage) {
+                    setFieldGuidanceBuildAiUsage((prev) => mergeBuildAiUsageSnapshot(prev, data.buildAiUsage));
+                }
                 setFieldDescriptions((prev) => ({
                     ...prev,
                     [nodeId]: {
@@ -5327,16 +5527,60 @@ export function AutonomousAgentWizard() {
                         },
                     },
                 }));
-            } catch {
+            } catch (error) {
                 if (requestKey) fieldDescFetchedRef.current.delete(requestKey);
+                toast({
+                    title: 'Field guidance unavailable',
+                    description: error instanceof Error ? error.message : 'Could not load field guidance.',
+                    variant: 'destructive',
+                });
                 setFieldDescriptions((prev) => ({
                     ...prev,
                     [nodeId]: { loading: false, data: prev[nodeId]?.data || null },
                 }));
             }
         },
-        [fieldDescriptions, pendingWorkflowData, prompt]
+        [fieldDescriptions, pendingWorkflowData, prompt, readBackendErrorMessage, toast]
     );
+
+    useEffect(() => {
+        if (step !== 'configuration') return;
+        const question = manualConfigurationQuestions[currentQuestionIndex];
+        if (!question) return;
+        const nodeId = String(question.nodeId || '').trim();
+        const fieldName = String(question.fieldName || '').trim();
+        if (!nodeId || !fieldName) return;
+        const existing = fieldDescriptions[nodeId];
+        if (existing?.loading || existing?.data?.[fieldName]) return;
+        const requestKey = `${nodeId}:${fieldName}`;
+        if (fieldDescFetchedRef.current.has(requestKey)) return;
+        fieldDescFetchedRef.current.add(requestKey);
+        fetchFieldDescriptions(
+            nodeId,
+            String(question.nodeType || ''),
+            String(question.nodeLabel || question.nodeType || 'Node'),
+            [{
+                ...question,
+                selectedMode:
+                    ownershipEffectiveModes.byModeKey[`mode_${question.nodeId}_${question.fieldName}`] ||
+                    resolveWizardFieldFillMode(
+                        fillModeValues[`mode_${question.nodeId}_${question.fieldName}`],
+                        question.fillModeDefault as 'manual_static' | 'runtime_ai' | 'buildtime_ai_once' | undefined
+                    ),
+                fieldEnabled: true,
+                currentValue: question.defaultValue || null,
+            }],
+            requestKey
+        );
+    }, [
+        step,
+        manualConfigurationQuestions,
+        currentQuestionIndex,
+        fieldDescriptions,
+        fetchFieldDescriptions,
+        ownershipEffectiveModes.byModeKey,
+        fillModeValues,
+    ]);
 
     /**
      * Walks through every field across ALL nodes in the entire Field Ownership stage,
@@ -5414,6 +5658,13 @@ export function AutonomousAgentWizard() {
                                     fieldType: String(question.type || 'string'),
                                     description: String(question.description || question.helpText || ''),
                                     example: String(question.exampleValue || question.example || ''),
+                                    options: Array.isArray(question.options)
+                                        ? question.options.map((option: any) => (
+                                            typeof option === 'string'
+                                                ? { label: option, value: option }
+                                                : { label: String(option?.label ?? option?.value ?? ''), value: String(option?.value ?? option?.label ?? '') }
+                                        )).filter((option: any) => option.value)
+                                        : [],
                                     required: question.required !== false,
                                     selectedMode: String(question.selectedMode || ''),
                                     fieldEnabled: question.fieldEnabled === true,
@@ -5421,10 +5672,21 @@ export function AutonomousAgentWizard() {
                                     supportsBuildtimeAI: question.supportsBuildtimeAI !== false,
                                     fillModeDefault: String(question.fillModeDefault || 'manual_static'),
                                     ownership: String(question.ownershipClass || ''),
+                                    currentValue: question.defaultValue || null,
+                                    operation: String(question.operation || question.operationValue || ''),
                                 },
                             }),
                         });
+                        if (!resp.ok) {
+                            throw new Error(await readBackendErrorMessage(resp, 'Could not load field walkthrough guidance.'));
+                        }
                         const data = await resp.json();
+                        if (data?.success === false) {
+                            throw new Error(data?.error || 'Could not load field walkthrough guidance.');
+                        }
+                        if (data?.buildAiUsage) {
+                            setFieldGuidanceBuildAiUsage((prev) => mergeBuildAiUsageSnapshot(prev, data.buildAiUsage));
+                        }
                         setFieldDescriptions((prev) => ({
                             ...prev,
                             [nodeId]: {
@@ -5434,7 +5696,12 @@ export function AutonomousAgentWizard() {
                                     : (prev[nodeId]?.data || null),
                             },
                         }));
-                    } catch {
+                    } catch (error) {
+                        toast({
+                            title: 'Field walkthrough failed',
+                            description: error instanceof Error ? error.message : 'Could not load field walkthrough guidance.',
+                            variant: 'destructive',
+                        });
                         setFieldDescriptions((prev) => ({
                             ...prev,
                             [nodeId]: { loading: false, data: prev[nodeId]?.data || null },
@@ -5450,7 +5717,7 @@ export function AutonomousAgentWizard() {
             setGlobalWalkActive(null);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [globalWalkActive, fieldDescriptions, pendingWorkflowData, prompt, generatedWorkflowId]
+        [globalWalkActive, fieldDescriptions, pendingWorkflowData, prompt, generatedWorkflowId, readBackendErrorMessage, toast]
     );
 
     const proceedFromOwnershipStage = () => {
@@ -5524,6 +5791,7 @@ export function AutonomousAgentWizard() {
             setCapNodeContainers(containers);
             setCapNodeCorrelationId(data.correlationId ?? '');
             setCapNodeSelections({});
+            setCapNodeSelectionIssue(null);
             setOriginalPrompt(prompt);
 
             // Req 7.1, 7.3: do NOT call legacy structural prompt generation here
@@ -5543,6 +5811,7 @@ export function AutonomousAgentWizard() {
      */
     const handleCapabilityNodeSelectionGenerate = async (selections: NodeSelectionMap) => {
         setCapNodeSelections(selections);
+        setCapNodeSelectionIssue(null);
         setStep('analyzing');
         setIsSummarizeLayerProcessing(true);
 
@@ -5566,6 +5835,22 @@ export function AutonomousAgentWizard() {
 
             if (!response.ok) {
                 const err = await response.json().catch(() => ({ message: 'Generation failed' }));
+                if (err.code === 'MISSING_TRIGGER_SELECTION' || err.code === 'MULTIPLE_TRIGGER_SELECTION') {
+                    setCapNodeSelectionIssue({
+                        valid: false,
+                        code: err.code,
+                        title: err.code === 'MULTIPLE_TRIGGER_SELECTION' ? 'Choose one trigger' : 'Workflow needs a trigger',
+                        message: err.message || 'Select one trigger before continuing. Every workflow needs a starting point.',
+                        selectedCount: Object.keys(selections).length,
+                        requiredCount: capNodeContainers.length,
+                        triggerContainers: err.triggerContainers ?? [],
+                        selectedTriggerContainers: err.selectedTriggerContainers ?? [],
+                        invalidSelections: [],
+                        missingIntentSteps: err.missingContainers ?? [],
+                    });
+                    setStep('capability-node-selection');
+                    return;
+                }
                 throw new Error(err.message || err.error || 'Structural prompt generation failed');
             }
 
@@ -6281,6 +6566,8 @@ export function AutonomousAgentWizard() {
                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                                 <CapabilityStage
                                     containers={capNodeContainers}
+                                    validationIssue={capNodeSelectionIssue}
+                                    initialSelections={capNodeSelections}
                                     onComplete={(selections) => {
                                         void handleCapabilityNodeSelectionGenerate(selections);
                                     }}
@@ -6835,45 +7122,6 @@ export function AutonomousAgentWizard() {
                                                                             <p className="text-sm font-semibold">{group.nodeLabel}</p>
                                                                             <p className="text-xs text-muted-foreground">{group.nodeType}</p>
                                                                         </div>
-                                                                        <div className="flex flex-wrap items-center gap-2 justify-end">
-                                                                            {section.key === 'secrets' && (
-                                                                                <>
-                                                                                    <Button
-                                                                                        type="button"
-                                                                                        variant="ghost"
-                                                                                        size="sm"
-                                                                                        className="h-7 text-[10px] px-2"
-                                                                                        onClick={() =>
-                                                                                            applyOwnershipForNode(
-                                                                                                group.nodeId,
-                                                                                                'manual_static'
-                                                                                            )
-                                                                                        }
-                                                                                    >
-                                                                                        This node: You
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        type="button"
-                                                                                        variant="ghost"
-                                                                                        size="sm"
-                                                                                        className="h-7 text-[10px] px-2"
-                                                                                        onClick={() =>
-                                                                                            applyOwnershipForNode(
-                                                                                                group.nodeId,
-                                                                                                'runtime_ai'
-                                                                                            )
-                                                                                        }
-                                                                                    >
-                                                                                        This node: AI (best)
-                                                                                    </Button>
-                                                                                </>
-                                                                            )}
-                                                                            <Badge variant="outline" className="text-xs">
-                                                                                You {totals.you} | AI build {totals.aiBuild} | AI
-                                                                                run {totals.aiRun}
-                                                                                {totals.locked > 0 ? ` | Locked ${totals.locked}` : ''}
-                                                                            </Badge>
-                                                                        </div>
                                                                     </div>
                                                                     {/* On-demand AI node description */}
                                                                     {(() => {
@@ -6957,6 +7205,46 @@ export function AutonomousAgentWizard() {
                                                                                 fieldEnabled,
                                                                                 locked,
                                                                             });
+                                                                            const preparedOwnershipExample = prepareActionableFieldExample(question, aiFieldDesc?.actionableExample || null);
+                                                                            const appliedKey = `${question.nodeId}_${question.fieldName}`;
+                                                                            const exampleApplied = appliedExampleKeys[appliedKey] === true;
+                                                                            const applyOwnershipExample = () => {
+                                                                                if (!preparedOwnershipExample?.canApply) return;
+                                                                                const questionKey = String(question.id || '');
+                                                                                if (!questionKey) return;
+                                                                                if (question.category === 'credential' && question.isVaultCredential) {
+                                                                                    setCredentialValues((prev) => ({
+                                                                                        ...prev,
+                                                                                        [questionKey]: preparedOwnershipExample.valueForInput,
+                                                                                    }));
+                                                                                } else {
+                                                                                    setInputValues((prev) => ({
+                                                                                        ...prev,
+                                                                                        [questionKey]: preparedOwnershipExample.valueForInput,
+                                                                                    }));
+                                                                                }
+                                                                                setFillModeValues((prev) => ({
+                                                                                    ...prev,
+                                                                                    [modeKey]: 'buildtime_ai_once',
+                                                                                }));
+                                                                                setFieldEnabledOverrides((prev) => ({
+                                                                                    ...prev,
+                                                                                    [fieldEnabledKey]: true,
+                                                                                }));
+                                                                                setAppliedExampleKeys((prev) => ({
+                                                                                    ...prev,
+                                                                                    [appliedKey]: true,
+                                                                                }));
+                                                                                setAppliedFieldGuidanceExamples((prev) => ({
+                                                                                    ...prev,
+                                                                                    [appliedKey]: {
+                                                                                        nodeId: String(question.nodeId || ''),
+                                                                                        fieldName: String(question.fieldName || ''),
+                                                                                        mode: 'buildtime_ai_once',
+                                                                                        source: preparedOwnershipExample.source || 'ai_field_guidance',
+                                                                                    },
+                                                                                }));
+                                                                            };
                                                                             const ownershipFooterText =
                                                                                 rowExplanation ||
                                                                                 (String(question.ownershipClass || '') !==
@@ -7057,6 +7345,7 @@ export function AutonomousAgentWizard() {
                                                                                                                 ...question,
                                                                                                                 selectedMode,
                                                                                                                 fieldEnabled,
+                                                                                                                currentValue: question.defaultValue || null,
                                                                                                             }],
                                                                                                             requestKey
                                                                                                         );
@@ -7088,7 +7377,7 @@ export function AutonomousAgentWizard() {
                                                                                     {!fieldEnabled && !fieldHelpOpen && (
                                                                                         <div className="px-3 py-2 border-t border-border/20 space-y-1">
                                                                                             <p className="text-[11px] text-muted-foreground/55 italic leading-snug">
-                                                                                                Off for now. Open input field help to decide whether this field is needed.
+                                                                                                {fieldOwnershipCopy.offBehavior}
                                                                                             </p>
                                                                                             {workflowPreviewText ? (
                                                                                                 <p className="text-[10px] text-muted-foreground/40 font-mono truncate">Current value: {workflowPreviewText.slice(0, 100)}</p>
@@ -7133,12 +7422,15 @@ export function AutonomousAgentWizard() {
                                                                                         showRuntimeButton={showRuntimeButton}
                                                                                         ownershipFooterText={ownershipFooterText}
                                                                                         fieldOwnershipCopy={fieldOwnershipCopy}
+                                                                                        actionableExample={preparedOwnershipExample}
+                                                                                        exampleApplied={exampleApplied}
                                                                                         onModeChange={(mode) =>
                                                                                             setFillModeValues((prev) => ({
                                                                                                 ...prev,
                                                                                                 [modeKey]: mode,
                                                                                             }))
                                                                                         }
+                                                                                        onApplyExample={applyOwnershipExample}
                                                                                     />
 
                                                                                     {/* -- ON: full controls -- */}
@@ -7348,6 +7640,47 @@ export function AutonomousAgentWizard() {
                                                             : question.defaultValue !== undefined && question.defaultValue !== null
                                                               ? String(question.defaultValue)
                                                               : '';
+                                                    const configFieldDesc = fieldDescriptions[String(question.nodeId || '')]?.data?.[String(question.fieldName || '')] ?? null;
+                                                    const preparedExample = prepareActionableFieldExample(question, configFieldDesc?.actionableExample || null);
+                                                    const appliedKey = `${question.nodeId}_${question.fieldName}`;
+                                                    const modeKey = `mode_${question.nodeId}_${question.fieldName}`;
+                                                    const fieldEnabledKey = `fieldEnabled_${question.nodeId}_${question.fieldName}`;
+                                                    const exampleApplied = appliedExampleKeys[appliedKey] === true;
+                                                    const applyPreparedExample = () => {
+                                                        if (!preparedExample?.canApply) return;
+                                                        if (isCredVaultQ) {
+                                                            setCredentialValues({
+                                                                ...credentialValues,
+                                                                [questionKey]: preparedExample.valueForInput,
+                                                            });
+                                                        } else {
+                                                            setInputValues({
+                                                                ...inputValues,
+                                                                [questionKey]: preparedExample.valueForInput,
+                                                            });
+                                                        }
+                                                        setFillModeValues((prev) => ({
+                                                            ...prev,
+                                                            [modeKey]: 'buildtime_ai_once',
+                                                        }));
+                                                        setFieldEnabledOverrides((prev) => ({
+                                                            ...prev,
+                                                            [fieldEnabledKey]: true,
+                                                        }));
+                                                        setAppliedExampleKeys((prev) => ({
+                                                            ...prev,
+                                                            [appliedKey]: true,
+                                                        }));
+                                                        setAppliedFieldGuidanceExamples((prev) => ({
+                                                            ...prev,
+                                                            [appliedKey]: {
+                                                                nodeId: String(question.nodeId || ''),
+                                                                fieldName: String(question.fieldName || ''),
+                                                                mode: 'buildtime_ai_once',
+                                                                source: preparedExample.source || 'ai_field_guidance',
+                                                            },
+                                                        }));
+                                                    };
                                                     return (
                                                         <div className="space-y-4">
                                                             <div>
@@ -7477,6 +7810,38 @@ export function AutonomousAgentWizard() {
                                                                         }
                                                                     }}
                                                                 />
+                                                            )}
+
+                                                            {preparedExample && preparedExample.displayValue && (
+                                                                <div className="rounded border border-sky-500/25 bg-sky-500/5 p-3">
+                                                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <p className="text-xs font-medium text-foreground/85">AI suggested example</p>
+                                                                            <pre className="mt-1 max-h-28 overflow-auto whitespace-pre-wrap break-words font-mono text-[11px] text-muted-foreground">
+                                                                                {preparedExample.displayValue}
+                                                                            </pre>
+                                                                            {!preparedExample.canApply && preparedExample.reason ? (
+                                                                                <p className="mt-1 text-[10px] text-muted-foreground/70">{preparedExample.reason}</p>
+                                                                            ) : null}
+                                                                            {exampleApplied && (
+                                                                                <p className="mt-1 text-[10px] font-medium text-sky-600 dark:text-sky-300">
+                                                                                    Applied as AI Build
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                        {preparedExample.canApply && (
+                                                                            <Button
+                                                                                type="button"
+                                                                                size="sm"
+                                                                                variant={exampleApplied ? 'secondary' : 'outline'}
+                                                                                className="shrink-0"
+                                                                                onClick={applyPreparedExample}
+                                                                            >
+                                                                                {exampleApplied ? 'Use again' : 'Use this example'}
+                                                                            </Button>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             )}
                                                             
                                                             {runtimeValueMeta && (

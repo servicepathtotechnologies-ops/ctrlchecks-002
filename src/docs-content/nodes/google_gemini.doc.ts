@@ -34,9 +34,9 @@ export const googleGeminiDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Model name",
-              "helpText": "What this field is: Which Gemini model to use.\nOptions:\n  gemini-1.5-flash  →  fast and affordable, good for most tasks\n  gemini-1.5-pro    →  more capable, better at complex reasoning\nRecommended: gemini-1.5-flash for most tasks.",
-              "placeholder": "gemini-2.5-pro",
-              "example": "gemini-2.5-pro"
+              "helpText": "What this field is: Which Gemini model to use.\nOptions:\n  gemini-3.5-flash  →  fast and affordable, good for most tasks\n  gemini-1.5-pro    →  more capable, better at complex reasoning\nRecommended: gemini-3.5-flash for most tasks.",
+              "placeholder": "gemini-3.1-pro-preview",
+              "example": "gemini-3.1-pro-preview"
             },
             {
               "name": "Api Key",
@@ -68,7 +68,7 @@ export const googleGeminiDoc: NodeDoc = {
           "usageExample": {
             "scenario": "Process incoming Gemini data with execute after a related upstream event is received",
             "inputValues": {
-              "Model": "gemini-2.5-pro",
+              "Model": "gemini-3.1-pro-preview",
               "Api Key": "AIza...",
               "Prompt": "{{$json.prompt}}"
             },

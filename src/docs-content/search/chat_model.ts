@@ -7,7 +7,7 @@ export const chatModelSearchIndex = [
     "slug": "chat_model",
     "category": "AI",
     "href": "/docs/nodes/chat_model",
-    "text": "Chat Model Chat model connector for AI Agent node (uses Gemini 1.5 Flash by default) Use this node when a workflow needs chat model behavior with schema-driven inputs from the CtrlChecks node registry. AI"
+    "text": "Chat Model Chat model connector for AI Agent node (uses Gemini 3.5 Flash by default) Use this node when a workflow needs chat model behavior with schema-driven inputs from the CtrlChecks node registry. AI"
   },
   {
     "type": "operation",

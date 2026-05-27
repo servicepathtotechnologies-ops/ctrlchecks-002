@@ -1771,7 +1771,7 @@ function generateModelGuide(nodeType: string, fieldLabel: string): FieldGuide {
       '   • GPT-4o: Most capable, best for complex tasks',
       '   • GPT-4o Mini: Faster and cheaper, good for simple tasks',
       '   • Claude 3.5 Sonnet: Best for analysis and reasoning',
-      '   • Gemini 2.5 Flash: Efficient and cost-effective',
+      '   • Gemini 3.5 Flash: Efficient and cost-effective',
       'Step 3: Check model availability in your API plan',
       'Step 4: Consider cost vs. performance trade-offs',
       'Step 5: Select the model from the dropdown',

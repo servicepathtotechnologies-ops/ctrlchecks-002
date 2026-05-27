@@ -11,9 +11,14 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, ArrowLeft, ArrowRight, Wifi, WifiOff } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CheckCircle2, ArrowLeft, ArrowRight, Wifi, WifiOff, AlertCircle, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { NODE_LAYMAN_DESCRIPTIONS } from './nodeLaymanDescriptions';
+import {
+  type CapabilitySelectionValidationResult,
+  validateCapabilitySelections,
+} from '@/lib/capability-selection-validation';
 import type {
   CapabilityContainer,
   CandidateNode,
@@ -26,6 +31,8 @@ interface CapabilityStageProps {
   containers: CapabilityContainer[];
   onComplete: (selections: NodeSelectionMap) => void;
   onBack?: () => void;
+  validationIssue?: CapabilitySelectionValidationResult | null;
+  initialSelections?: NodeSelectionMap;
 }
 
 // ─── Credential Badge ─────────────────────────────────────────────────────────
@@ -166,9 +173,15 @@ function ContainerCard({ container, selectedNodeType, onSelect, index }: Contain
 
 // ─── Capability Stage ─────────────────────────────────────────────────────────
 
-export function CapabilityStage({ containers, onComplete, onBack }: CapabilityStageProps) {
+export function CapabilityStage({
+  containers,
+  onComplete,
+  onBack,
+  validationIssue,
+  initialSelections = {},
+}: CapabilityStageProps) {
   // Req 2.7 — no pre-selection; all selections are deferred to the user
-  const [selections, setSelections] = useState<NodeSelectionMap>({});
+  const [selections, setSelections] = useState<NodeSelectionMap>(initialSelections);
 
   // Req 3.4, 3.6 — preserve only valid prior user selections when containers change;
   // never auto-select any node the user has not explicitly chosen
@@ -194,8 +207,10 @@ export function CapabilityStage({ containers, onComplete, onBack }: CapabilitySt
   );
   const selectedCount = Object.keys(selections).length;
   const totalCount = containers.length;
-  // Req 3.4 — Continue enabled as soon as at least one selection exists across any container
-  const isComplete = totalCount > 0 && selectedCount >= 1;
+  const validation = validateCapabilitySelections(containers, selections);
+  const isComplete = totalCount > 0 && validation.valid && validation.invalidSelections.length === 0;
+  const missingTriggerIssue = !validation.valid ? validation : null;
+  const missingIntentSteps = validation.missingIntentSteps;
 
   function handleSelect(containerId: string, nodeType: string) {
     setSelections((prev) => {
@@ -229,6 +244,55 @@ export function CapabilityStage({ containers, onComplete, onBack }: CapabilitySt
           selected.
         </p>
       </div>
+
+      {missingTriggerIssue && (
+        <Alert className="border-blue-200 bg-blue-50 text-blue-950 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-100">
+          <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+          <AlertTitle>{validationIssue?.title || missingTriggerIssue.title || 'Workflow needs a trigger'}</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>{validationIssue?.message || missingTriggerIssue.message}</p>
+            {missingTriggerIssue.triggerContainers.length > 0 && (
+              <div className="space-y-2">
+                <p className="font-medium">Select one of these trigger steps:</p>
+                <div className="space-y-2">
+                  {missingTriggerIssue.triggerContainers.map((container) => (
+                    <div
+                      key={container.containerId}
+                      className="rounded-md border border-blue-200/80 bg-white/70 p-3 dark:border-blue-900/60 dark:bg-background/50"
+                    >
+                      <p className="text-sm font-medium">{container.label}</p>
+                      <p className="text-xs text-blue-900/80 dark:text-blue-100/75">{container.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {isComplete && missingIntentSteps.length > 0 && (
+        <Alert className="border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+          <Info className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+          <AlertTitle>Some intent steps are not selected</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>
+              You can continue with the selected trigger, but this workflow may not fully match the original request until these steps are added.
+            </p>
+            <div className="space-y-2">
+              {missingIntentSteps.map((container) => (
+                <div
+                  key={container.containerId}
+                  className="rounded-md border border-amber-200/80 bg-white/70 p-3 dark:border-amber-900/60 dark:bg-background/50"
+                >
+                  <p className="text-sm font-medium">{container.label}</p>
+                  <p className="text-xs text-amber-900/80 dark:text-amber-100/75">{container.description}</p>
+                </div>
+              ))}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Container list — Req 3.1, 3.2, 3.3 — natural flow, no inner scroll */}
       <div className="space-y-4">

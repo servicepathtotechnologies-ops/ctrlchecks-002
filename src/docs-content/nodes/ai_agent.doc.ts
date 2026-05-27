@@ -40,9 +40,9 @@ export const aiAgentDoc: NodeDoc = {
               "required": false,
               "description": "LLM model selection",
               "helpText": "What this field is: LLM model selection for AI Agent / Execute.\nHow to fill it: Enter the model value requested by AI Agent, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.model}} or pick the value from the data picker.",
-              "placeholder": "gemini-2.5-flash",
-              "example": "gemini-2.5-flash",
-              "defaultValue": "gemini-2.5-flash"
+              "placeholder": "gemini-3.5-flash",
+              "example": "gemini-3.5-flash",
+              "defaultValue": "gemini-3.5-flash"
             },
             {
               "name": "Memory",
@@ -74,7 +74,7 @@ export const aiAgentDoc: NodeDoc = {
             "scenario": "Process incoming AI Agent data with execute after a related upstream event is received",
             "inputValues": {
               "User Input": "Process this data",
-              "Model": "gemini-2.5-flash",
+              "Model": "gemini-3.5-flash",
               "Memory": "{\"key\":\"value\"}",
               "Tool": "{\"key\":\"value\"}"
             },

@@ -7,7 +7,7 @@ export const ollamaSearchIndex = [
     "slug": "ollama",
     "category": "AI",
     "href": "/docs/nodes/ollama",
-    "text": "AI Chat (Gemini) AI chat completion using Gemini 1.5 Flash (default LLM) Use this node when a workflow needs ai chat (gemini) behavior with schema-driven inputs from the CtrlChecks node registry. AI"
+    "text": "AI Chat (Gemini) AI chat completion using Gemini 3.5 Flash (default LLM) Use this node when a workflow needs ai chat (gemini) behavior with schema-driven inputs from the CtrlChecks node registry. AI"
   },
   {
     "type": "operation",

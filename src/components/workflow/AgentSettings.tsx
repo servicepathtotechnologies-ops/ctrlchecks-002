@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bot, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,19 +16,26 @@ import { Switch } from '@/components/ui/switch';
 import { awsClient } from '@/integrations/aws/client';
 import { toast } from '@/hooks/use-toast';
 import { useWorkflowStore } from '@/stores/workflowStore';
+import { ENDPOINTS } from '@/config/endpoints';
 
 interface AgentSettingsProps {
   workflowId: string | null;
 }
 
 export default function AgentSettings({ workflowId }: AgentSettingsProps) {
+  const fallbackModelOptions = [
+    { label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
+    { label: 'Gemini 3.1 Pro Preview', value: 'gemini-3.1-pro-preview' },
+    { label: 'Gemini 3.1 Flash-Lite', value: 'gemini-3.1-flash-lite' },
+  ];
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [modelOptions, setModelOptions] = useState(fallbackModelOptions);
   const [config, setConfig] = useState({
     goal: '',
     maxIterations: 10,
-    reasoningModel: 'gpt-4o',
-    actionModel: 'gpt-4o',
+    reasoningModel: 'gemini-3.5-flash',
+    actionModel: 'gemini-3.5-flash',
     memoryEnabled: true,
     temperature: 0.3,
   });
@@ -53,8 +60,8 @@ export default function AgentSettings({ workflowId }: AgentSettingsProps) {
           setConfig({
             goal: workflowData.agent_config.goal || '',
             maxIterations: workflowData.agent_config.maxIterations || 10,
-            reasoningModel: workflowData.agent_config.reasoningModel || 'gpt-4o',
-            actionModel: workflowData.agent_config.actionModel || 'gpt-4o',
+            reasoningModel: workflowData.agent_config.reasoningModel || 'gemini-3.5-flash',
+            actionModel: workflowData.agent_config.actionModel || 'gemini-3.5-flash',
             memoryEnabled: workflowData.agent_config.memoryEnabled !== false,
             temperature: workflowData.agent_config.temperature || 0.3,
           });
@@ -70,6 +77,41 @@ export default function AgentSettings({ workflowId }: AgentSettingsProps) {
       loadConfig();
     }
   }, [workflowId, open, loadConfig]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+
+    const loadModels = async () => {
+      try {
+        const response = await fetch(`${ENDPOINTS.itemBackend}/api/ai/models`);
+        const data = await response.json();
+        if (!response.ok || data?.success === false) {
+          throw new Error(data?.error || 'Failed to load backend AI models');
+        }
+        const nextOptions = Array.isArray(data?.models)
+          ? data.models
+              .map((model: any) => {
+                const value = String(model?.name || '').trim();
+                return value ? { value, label: value } : null;
+              })
+              .filter(Boolean)
+          : [];
+        if (!cancelled && nextOptions.length > 0) {
+          setModelOptions(nextOptions as Array<{ label: string; value: string }>);
+        }
+      } catch {
+        if (!cancelled) {
+          setModelOptions(fallbackModelOptions);
+        }
+      }
+    };
+
+    loadModels();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   const saveConfig = async () => {
     if (!workflowId) {
@@ -203,24 +245,12 @@ export default function AgentSettings({ workflowId }: AgentSettingsProps) {
                   value={config.reasoningModel}
                   onChange={(e) => setConfig({ ...config, reasoningModel: e.target.value })}
                 >
-                  <optgroup label="OpenAI">
-                    <option value="gpt-4o">GPT-4o</option>
-                    <option value="gpt-4o-mini">GPT-4o Mini</option>
-                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                  </optgroup>
-                  <optgroup label="Anthropic Claude">
-                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
-                    <option value="claude-3-opus">Claude 3 Opus</option>
-                    <option value="claude-3-haiku">Claude 3 Haiku</option>
-                  </optgroup>
-                  <optgroup label="Google Gemini">
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                    <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
-                  </optgroup>
+                  {modelOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </select>
                 <p className="text-sm text-muted-foreground">
-                  Model used for reasoning and decision-making. GPT-4o or Gemini 2.5 Pro recommended for best results.
+                  Model used for reasoning and decision-making. These options come from the backend Gemini model list.
                 </p>
               </div>
 
@@ -233,23 +263,12 @@ export default function AgentSettings({ workflowId }: AgentSettingsProps) {
                   value={config.actionModel}
                   onChange={(e) => setConfig({ ...config, actionModel: e.target.value })}
                 >
-                  <optgroup label="OpenAI">
-                    <option value="gpt-4o">GPT-4o</option>
-                    <option value="gpt-4o-mini">GPT-4o Mini</option>
-                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                  </optgroup>
-                  <optgroup label="Anthropic Claude">
-                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
-                    <option value="claude-3-haiku">Claude 3 Haiku</option>
-                  </optgroup>
-                  <optgroup label="Google Gemini">
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                    <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
-                  </optgroup>
+                  {modelOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </select>
                 <p className="text-sm text-muted-foreground">
-                  Model used for executing actions. Can be different from reasoning model. Gemini Flash is fast and cost-effective.
+                  Model used for executing actions. These options come from the backend Gemini model list.
                 </p>
               </div>
 
@@ -300,4 +319,3 @@ export default function AgentSettings({ workflowId }: AgentSettingsProps) {
     </Dialog>
   );
 }
-

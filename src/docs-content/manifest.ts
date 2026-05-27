@@ -326,7 +326,7 @@ export const nodeDocManifest = [
     "slug": "ai_chat_model",
     "displayName": "AI Chat Model",
     "category": "AI",
-    "description": "Call Gemini 1.5 Flash directly to generate a response (uses GEMINI_API_KEY) Use this node when a workflow needs ai chat model behavior with schema-driven inputs from the CtrlChecks node registry.",
+    "description": "Call Gemini 3.5 Flash directly to generate a response (uses GEMINI_API_KEY) Use this node when a workflow needs ai chat model behavior with schema-driven inputs from the CtrlChecks node registry.",
     "logoUrl": "/icons/nodes/ai_chat_model.svg"
   },
   {
@@ -606,7 +606,7 @@ export const nodeDocManifest = [
     "slug": "ollama",
     "displayName": "AI Chat (Gemini)",
     "category": "AI",
-    "description": "AI chat completion using Gemini 1.5 Flash (default LLM) Use this node when a workflow needs ai chat (gemini) behavior with schema-driven inputs from the CtrlChecks node registry.",
+    "description": "AI chat completion using Gemini 3.5 Flash (default LLM) Use this node when a workflow needs ai chat (gemini) behavior with schema-driven inputs from the CtrlChecks node registry.",
     "logoUrl": "/icons/nodes/ollama.svg"
   },
   {
@@ -627,7 +627,7 @@ export const nodeDocManifest = [
     "slug": "chat_model",
     "displayName": "Chat Model",
     "category": "AI",
-    "description": "Chat model connector for AI Agent node (uses Gemini 1.5 Flash by default) Use this node when a workflow needs chat model behavior with schema-driven inputs from the CtrlChecks node registry.",
+    "description": "Chat model connector for AI Agent node (uses Gemini 3.5 Flash by default) Use this node when a workflow needs chat model behavior with schema-driven inputs from the CtrlChecks node registry.",
     "logoUrl": "/icons/nodes/chat_model.svg"
   },
   {

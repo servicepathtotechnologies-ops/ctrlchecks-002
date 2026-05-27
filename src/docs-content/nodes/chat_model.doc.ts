@@ -5,7 +5,7 @@ export const chatModelDoc: NodeDoc = {
   "displayName": "Chat Model",
   "category": "AI",
   "logoUrl": "/icons/nodes/chat_model.svg",
-  "description": "Chat model connector for AI Agent node (uses Gemini 1.5 Flash by default)",
+  "description": "Chat model connector for AI Agent node (uses Gemini 3.5 Flash by default)",
   "credentialType": "None",
   "credentialSetupSteps": [
     "This node does not need a saved account connection.",

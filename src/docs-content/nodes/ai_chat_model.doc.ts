@@ -5,7 +5,7 @@ export const aiChatModelDoc: NodeDoc = {
   "displayName": "AI Chat Model",
   "category": "AI",
   "logoUrl": "/icons/nodes/ai_chat_model.svg",
-  "description": "Call Gemini 1.5 Flash directly to generate a response (uses GEMINI_API_KEY)",
+  "description": "Call Gemini 3.5 Flash directly to generate a response (uses GEMINI_API_KEY)",
   "credentialType": "None",
   "credentialSetupSteps": [
     "This node does not need a saved account connection.",

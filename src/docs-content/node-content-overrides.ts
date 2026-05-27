@@ -954,7 +954,7 @@ export const nodeContentOverrides: Record<string, Record<string, OperationOverri
       description: 'Generate text or multimodal content using Google Gemini.',
       outputExample: { text: 'The product description highlights ease of use and enterprise security, making it suitable for B2B markets.', model: 'gemini-1.5-pro', usage: { inputTokens: 120, outputTokens: 40 } },
       outputDescription: 'text: The generated response. model: Gemini model used. usage: Token counts.',
-      usageExample: { scenario: 'Classify incoming support emails into categories', inputValues: { prompt: 'Classify this email into one of: billing, technical, general. Email: {{$json.emailBody}}\nReturn only the category name.', model: 'gemini-1.5-flash' }, expectedOutput: 'Returns the category name (e.g. "billing") in `{{$json.text}}`.' },
+      usageExample: { scenario: 'Classify incoming support emails into categories', inputValues: { prompt: 'Classify this email into one of: billing, technical, general. Email: {{$json.emailBody}}\nReturn only the category name.', model: 'gemini-3.5-flash' }, expectedOutput: 'Returns the category name (e.g. "billing") in `{{$json.text}}`.' },
     },
   },
 

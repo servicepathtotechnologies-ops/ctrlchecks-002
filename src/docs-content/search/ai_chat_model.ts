@@ -7,7 +7,7 @@ export const aiChatModelSearchIndex = [
     "slug": "ai_chat_model",
     "category": "AI",
     "href": "/docs/nodes/ai_chat_model",
-    "text": "AI Chat Model Call Gemini 1.5 Flash directly to generate a response (uses GEMINI_API_KEY) Use this node when a workflow needs ai chat model behavior with schema-driven inputs from the CtrlChecks node registry. AI"
+    "text": "AI Chat Model Call Gemini 3.5 Flash directly to generate a response (uses GEMINI_API_KEY) Use this node when a workflow needs ai chat model behavior with schema-driven inputs from the CtrlChecks node registry. AI"
   },
   {
     "type": "operation",

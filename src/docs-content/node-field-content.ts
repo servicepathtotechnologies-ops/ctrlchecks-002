@@ -947,9 +947,9 @@ Examples: 500 = short summary, 1000 = medium analysis, 4000 = detailed document.
 Example: Extract all names, email addresses, and phone numbers from the following text and return them as a JSON array: {{$json.rawText}}`,
       model: `What this field is: Which Gemini model to use.
 Options:
-  gemini-1.5-flash  →  fast and affordable, good for most tasks
+  gemini-3.5-flash  →  fast and affordable, good for most tasks
   gemini-1.5-pro    →  more capable, better at complex reasoning
-Recommended: gemini-1.5-flash for most tasks.`,
+Recommended: gemini-3.5-flash for most tasks.`,
     },
   },
 

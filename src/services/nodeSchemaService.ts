@@ -46,6 +46,27 @@ export interface NodeDefinition {
     legacyAliases?: string[];
     status: 'implemented' | 'unsupported' | 'deprecated';
   }>;
+  operationFieldPolicies?: Array<{
+    resource?: string;
+    operation: string;
+    activeFields: string[];
+    requiredFields: string[];
+    optionalFields: string[];
+    inactiveFields: string[];
+    providerDefaultFields: string[];
+    credentialFields: string[];
+    diagnostics?: string[];
+    fields: Record<string, {
+      active: boolean;
+      required: boolean;
+      allowsEmpty: boolean;
+      runtimeAiAllowed: boolean;
+      buildtimeAiAllowed: boolean;
+      providerOwned: boolean;
+      credential: boolean;
+      reason: string;
+    }>;
+  }>;
   requiredInputs: string[];
   outgoingPorts: string[];
   incomingPorts: string[];

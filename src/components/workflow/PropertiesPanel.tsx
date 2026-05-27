@@ -2788,7 +2788,7 @@ export default function PropertiesPanel({
                                 (field.requiredIf as { field: string; equals?: any; notEquals?: any } | undefined);
                               if (requiredIf) {
                                 const conditionMet = conditionObjectMatches((currentConfig as any)?.[requiredIf.field], requiredIf);
-                                // Always show — required only when condition met, optional otherwise
+                                if (!conditionMet) return null;
                                 fieldConditionActive = conditionMet;
                                 effectiveRequired = conditionMet;
                               }

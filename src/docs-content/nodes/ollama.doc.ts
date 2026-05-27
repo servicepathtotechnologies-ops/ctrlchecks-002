@@ -5,7 +5,7 @@ export const ollamaDoc: NodeDoc = {
   "displayName": "AI Chat (Gemini)",
   "category": "AI",
   "logoUrl": "/icons/nodes/ollama.svg",
-  "description": "AI chat completion using Gemini 1.5 Flash (default LLM)",
+  "description": "AI chat completion using Gemini 3.5 Flash (default LLM)",
   "credentialType": "None",
   "credentialSetupSteps": [
     "This node does not need a saved account connection.",
