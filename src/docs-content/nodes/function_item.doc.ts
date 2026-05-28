@@ -29,7 +29,7 @@ export const functionItemDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Description of what should be done for each item",
-              "helpText": "What this field is: Description of what should be done for each item for Function Item / Execute.\nHow to fill it: Type the message, prompt, or content you want Function Item to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Description of what should be done for each item.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Process each contact.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Process each contact",
               "example": "Process each contact"
             },
@@ -39,7 +39,7 @@ export const functionItemDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Array of items to process",
-              "helpText": "What this field is: Array of items to process for Function Item / Execute.\nHow to fill it: Enter valid JSON in the format Function Item expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.items}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Array of items to process.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Function Item.\nExample: {{$json.items}}.\nTip: Use {{$json.items}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.items}}",
               "example": "{{$json.items}}"
             }

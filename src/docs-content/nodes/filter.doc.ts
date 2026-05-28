@@ -29,7 +29,7 @@ export const filterDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Filter condition",
-              "helpText": "What this field is: Filter condition for Filter / Execute.\nHow to fill it: Enter the condition value requested by Filter, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.condition}} or pick the value from the data picker.",
+              "helpText": "What this field is: Filter condition.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.age}} >= 18.\nTip: Use {{$json.condition}} when this value comes from an earlier step.",
               "placeholder": "{{$json.age}} >= 18",
               "example": "{{$json.age}} >= 18"
             }

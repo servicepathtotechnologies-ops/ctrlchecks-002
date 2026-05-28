@@ -29,7 +29,7 @@ export const apiKeyAuthDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Name of the stored API key",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access API Key Auth.\nWhere to get it: Open the API Key Auth dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: The saved connection name for the secret key you already stored in CtrlChecks.\nWhere to find it: Open CtrlChecks Connections and copy the name of the saved key you want this workflow to use.\nHow to fill it: Type the connection name only. Do not paste the secret key value here.\nExample: openai or billing_api.\nImportant: Store the real secret in Connections, not in this workflow field.",
               "placeholder": "openai",
               "example": "openai"
             }

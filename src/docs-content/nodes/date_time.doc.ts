@@ -29,7 +29,7 @@ export const dateTimeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Input date",
-              "helpText": "What this field is: Input date for Date/Time / Format.\nHow to fill it: Enter the date value value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dateValue}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Input date.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: {{$json.timestamp}}.\nTip: Use {{$json.dateValue}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "{{$json.timestamp}}",
               "example": "{{$json.timestamp}}"
             },
@@ -39,7 +39,7 @@ export const dateTimeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Output format",
-              "helpText": "What this field is: Output format for Date/Time / Format.\nHow to fill it: Enter the format value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.format}} or pick the value from the data picker.",
+              "helpText": "What this field is: Output format.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: YYYY-MM-DD.\nTip: Use {{$json.format}} when this value comes from an earlier step.",
               "placeholder": "YYYY-MM-DD",
               "example": "YYYY-MM-DD"
             }
@@ -71,7 +71,7 @@ export const dateTimeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Input date",
-              "helpText": "What this field is: Input date for Date/Time / Calculate.\nHow to fill it: Enter the date value value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dateValue}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Input date.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: {{$json.timestamp}}.\nTip: Use {{$json.dateValue}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "{{$json.timestamp}}",
               "example": "{{$json.timestamp}}"
             },
@@ -81,7 +81,7 @@ export const dateTimeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Output format",
-              "helpText": "What this field is: Output format for Date/Time / Calculate.\nHow to fill it: Enter the format value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.format}} or pick the value from the data picker.",
+              "helpText": "What this field is: Output format.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: YYYY-MM-DD.\nTip: Use {{$json.format}} when this value comes from an earlier step.",
               "placeholder": "YYYY-MM-DD",
               "example": "YYYY-MM-DD"
             }
@@ -112,7 +112,7 @@ export const dateTimeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Input date",
-              "helpText": "What this field is: Input date for Date/Time / Extract.\nHow to fill it: Enter the date value value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dateValue}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Input date.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: {{$json.timestamp}}.\nTip: Use {{$json.dateValue}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "{{$json.timestamp}}",
               "example": "{{$json.timestamp}}"
             },
@@ -122,7 +122,7 @@ export const dateTimeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Output format",
-              "helpText": "What this field is: Output format for Date/Time / Extract.\nHow to fill it: Enter the format value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.format}} or pick the value from the data picker.",
+              "helpText": "What this field is: Output format.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: YYYY-MM-DD.\nTip: Use {{$json.format}} when this value comes from an earlier step.",
               "placeholder": "YYYY-MM-DD",
               "example": "YYYY-MM-DD"
             }
@@ -153,7 +153,7 @@ export const dateTimeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Input date",
-              "helpText": "What this field is: Input date for Date/Time / Parse.\nHow to fill it: Enter the date value value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dateValue}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Input date.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: {{$json.timestamp}}.\nTip: Use {{$json.dateValue}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "{{$json.timestamp}}",
               "example": "{{$json.timestamp}}"
             },
@@ -163,7 +163,7 @@ export const dateTimeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Output format",
-              "helpText": "What this field is: Output format for Date/Time / Parse.\nHow to fill it: Enter the format value requested by Date/Time, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.format}} or pick the value from the data picker.",
+              "helpText": "What this field is: Output format.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: YYYY-MM-DD.\nTip: Use {{$json.format}} when this value comes from an earlier step.",
               "placeholder": "YYYY-MM-DD",
               "example": "YYYY-MM-DD"
             }

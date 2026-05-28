@@ -8,15 +8,12 @@ export const intercomDoc: NodeDoc = {
   "description": "Intercom messaging operations",
   "credentialType": "Intercom API Key",
   "credentialSetupSteps": [
-    "What this is: Intercom uses an API key or account connection so CtrlChecks can safely access your Intercom account.",
-    "Log in to your Intercom account at app.intercom.com.",
-    "Click Settings (gear icon) -> Integrations -> Developer Hub.",
-    "Click \"Your Apps\" -> select your app (or create one) -> click \"Authentication\".",
-    "Copy the Access Token shown.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Intercom -> paste the access token -> Save.",
-    "Run a test step (e.g. list users/contacts) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Intercom node and select the saved connection."
+    "What this is: The Intercom connection lets CtrlChecks access your Intercom account safely without putting secrets in workflow fields.",
+    "Where to start: Intercom account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Intercom, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Intercom.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Intercom step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.intercom.com/building-apps/docs/authorization",
   "resources": [
@@ -35,7 +32,7 @@ export const intercomDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Conversation ID",
-              "helpText": "What this field is: Conversation ID for Intercom / Send.\nWhere to find it: Open the item in Intercom and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.conversationId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Conversation ID that tells Intercom which item to use.\nWhere to find it: Open the item in Intercom and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: conv-id.\nTip: Use {{$json.conversationId}} when an earlier Intercom step provides this value.",
               "placeholder": "conv-id",
               "example": "conv-id"
             }
@@ -71,7 +68,7 @@ export const intercomDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Conversation ID",
-              "helpText": "What this field is: Conversation ID for Intercom / Get.\nWhere to find it: Open the item in Intercom and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.conversationId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Conversation ID that tells Intercom which item to use.\nWhere to find it: Open the item in Intercom and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: conv-id.\nTip: Use {{$json.conversationId}} when an earlier Intercom step provides this value.",
               "placeholder": "conv-id",
               "example": "conv-id"
             }
@@ -107,7 +104,7 @@ export const intercomDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Conversation ID",
-              "helpText": "What this field is: Conversation ID for Intercom / List.\nWhere to find it: Open the item in Intercom and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.conversationId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Conversation ID that tells Intercom which item to use.\nWhere to find it: Open the item in Intercom and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: conv-id.\nTip: Use {{$json.conversationId}} when an earlier Intercom step provides this value.",
               "placeholder": "conv-id",
               "example": "conv-id"
             }

@@ -39,7 +39,7 @@ export const webhookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "HTTP method to accept",
-              "helpText": "What this field is: HTTP method to accept for Webhook Trigger / Execute.\nHow to fill it: Enter the http method value requested by Webhook Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.httpMethod}} or pick the value from the data picker.",
+              "helpText": "What this field is: HTTP method to accept.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: GET.\nTip: Use {{$json.httpMethod}} when this value comes from an earlier step.",
               "placeholder": "GET",
               "example": "GET",
               "defaultValue": "POST"
@@ -50,7 +50,7 @@ export const webhookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "How to respond to webhook caller",
-              "helpText": "What this field is: How to respond to webhook caller for Webhook Trigger / Execute.\nHow to fill it: Enter the response mode value requested by Webhook Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.responseMode}} or pick the value from the data picker.",
+              "helpText": "What this field is: How to respond to webhook caller.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: responseNode.\nTip: Use {{$json.responseMode}} when this value comes from an earlier step.",
               "placeholder": "responseNode",
               "example": "responseNode",
               "defaultValue": "responseNode"
@@ -61,7 +61,7 @@ export const webhookDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Whether to verify webhook signatures (if supported by the sender)",
-              "helpText": "What this field is: An on/off choice for verify signature in Webhook Trigger / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Webhook Trigger to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Whether to verify webhook signatures.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use verify signature; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "false"
@@ -72,7 +72,7 @@ export const webhookDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Secret token used for signature verification (if verifySignature is enabled)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Webhook Trigger.\nWhere to get it: Open the Webhook Trigger dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Webhook Trigger token, a secret password that lets CtrlChecks talk to Webhook Trigger safely.\nWhere to find it: Webhook Trigger account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Webhook Trigger.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "{{ENV.WEBHOOK_SECRET}}",
               "example": "{{ENV.WEBHOOK_SECRET}}",
               "notes": "Stored and displayed as a masked credential value."

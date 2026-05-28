@@ -29,7 +29,7 @@ export const sortDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Field to sort by",
-              "helpText": "What this field is: Field to sort by for Sort / Execute.\nHow to fill it: Enter the field value requested by Sort, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "helpText": "What this field is: Field to sort by.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: name.\nTip: Use {{$json.field}} when this value comes from an earlier step.",
               "placeholder": "name",
               "example": "name"
             },
@@ -39,7 +39,7 @@ export const sortDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Sort direction: asc, desc",
-              "helpText": "What this field is: Sort direction: asc, desc for Sort / Execute.\nHow to fill it: Enter the direction value requested by Sort, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.direction}} or pick the value from the data picker.",
+              "helpText": "What this field is: Sort direction: asc, desc.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: asc.\nTip: Use {{$json.direction}} when this value comes from an earlier step.",
               "placeholder": "asc",
               "example": "asc",
               "defaultValue": "asc"
@@ -50,7 +50,7 @@ export const sortDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value type: auto, number, string, date",
-              "helpText": "What this field is: Value type: auto, number, string, date for Sort / Execute.\nHow to fill it: Enter the type value requested by Sort, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.type}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value type: auto, number, string, date.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: auto.\nTip: Use {{$json.type}} when this value comes from an earlier step.",
               "placeholder": "auto",
               "example": "auto",
               "defaultValue": "auto"

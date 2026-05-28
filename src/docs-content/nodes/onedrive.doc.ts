@@ -8,16 +8,12 @@ export const onedriveDoc: NodeDoc = {
   "description": "OneDrive file operations",
   "credentialType": "Microsoft Credential",
   "credentialSetupSteps": [
-    "What this is: Microsoft uses an OAuth connection so CtrlChecks can safely access your Microsoft account.",
-    "Go to portal.azure.com and sign in with your Microsoft account.",
-    "Go to Azure Active Directory -> App registrations -> New registration.",
-    "Give it a name (e.g. CtrlChecks Email) -> set Redirect URI to: http://localhost:3001/api/oauth/microsoft/callback -> Register.",
-    "Copy the Application (client) ID and Directory (tenant) ID.",
-    "Go to Certificates & Secrets -> New client secret -> Add. Copy the secret VALUE immediately.",
-    "Go to API permissions -> Add a permission -> Microsoft Graph -> Delegated -> add Mail.ReadWrite and Mail.Send.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Outlook -> enter Client ID, Secret, and Tenant ID -> Connect with Microsoft -> authorize.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Microsoft node and select the saved connection."
+    "What this is: The OneDrive connection lets CtrlChecks access your OneDrive account safely without putting secrets in workflow fields.",
+    "Where to start: OneDrive account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> OneDrive, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by OneDrive.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple OneDrive step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.microsoft.com/en-us/graph/api/resources/mail-api-overview",
   "resources": [
@@ -36,7 +32,7 @@ export const onedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: The destination folder path in OneDrive.\nExample: /Documents/Reports/2025",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             },
@@ -46,7 +42,7 @@ export const onedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base64 payload for upload (alternative to data)",
-              "helpText": "What this field is: Base64 payload for upload (alternative to data) for OneDrive / Upload.\nHow to fill it: Enter the data base64 value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dataBase64}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Base64 payload for upload that tells OneDrive which item to use.\nWhere to find it: Open the item in OneDrive and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: {{$json.dataBase64}}.\nTip: Use {{$json.dataBase64}} when an earlier OneDrive step provides this value.",
               "placeholder": "{{$json.dataBase64}}",
               "example": "{{$json.dataBase64}}"
             },
@@ -56,7 +52,7 @@ export const onedriveDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Base64 payload for upload",
-              "helpText": "What this field is: Base64 payload for upload for OneDrive / Upload.\nHow to fill it: Enter the data value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Base64 payload for upload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by OneDrive.\nExample: {{$json.data}}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             }
@@ -94,7 +90,7 @@ export const onedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: File path for OneDrive / Download.\nHow to fill it: Enter the path value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.path}} or pick the value from the data picker.",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             },
@@ -104,7 +100,7 @@ export const onedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base64 payload for upload (alternative to data)",
-              "helpText": "What this field is: Base64 payload for upload (alternative to data) for OneDrive / Download.\nHow to fill it: Enter the data base64 value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dataBase64}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Base64 payload for upload that tells OneDrive which item to use.\nWhere to find it: Open the item in OneDrive and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: {{$json.dataBase64}}.\nTip: Use {{$json.dataBase64}} when an earlier OneDrive step provides this value.",
               "placeholder": "{{$json.dataBase64}}",
               "example": "{{$json.dataBase64}}"
             },
@@ -114,7 +110,7 @@ export const onedriveDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Base64 payload for upload",
-              "helpText": "What this field is: Base64 payload for upload for OneDrive / Download.\nHow to fill it: Enter the data value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Base64 payload for upload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by OneDrive.\nExample: {{$json.data}}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             }
@@ -152,7 +148,7 @@ export const onedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: File path for OneDrive / List.\nHow to fill it: Enter the path value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.path}} or pick the value from the data picker.",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             },
@@ -162,7 +158,7 @@ export const onedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base64 payload for upload (alternative to data)",
-              "helpText": "What this field is: Base64 payload for upload (alternative to data) for OneDrive / List.\nHow to fill it: Enter the data base64 value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dataBase64}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Base64 payload for upload that tells OneDrive which item to use.\nWhere to find it: Open the item in OneDrive and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: {{$json.dataBase64}}.\nTip: Use {{$json.dataBase64}} when an earlier OneDrive step provides this value.",
               "placeholder": "{{$json.dataBase64}}",
               "example": "{{$json.dataBase64}}"
             },
@@ -172,7 +168,7 @@ export const onedriveDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Base64 payload for upload",
-              "helpText": "What this field is: Base64 payload for upload for OneDrive / List.\nHow to fill it: Enter the data value requested by OneDrive, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Base64 payload for upload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by OneDrive.\nExample: {{$json.data}}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             }

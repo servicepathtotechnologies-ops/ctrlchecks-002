@@ -29,7 +29,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Field to aggregate",
-              "helpText": "What this field is: Field to aggregate for Aggregate / Sum.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "helpText": "What this field is: Field to aggregate.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.amount}}.\nTip: Use {{$json.field}} when this value comes from an earlier step.",
               "placeholder": "{{$json.amount}}",
               "example": "{{$json.amount}}"
             },
@@ -39,7 +39,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Delimiter used for join/concat operations",
-              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Sum.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Delimiter used.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: \\n.\nTip: Use {{$json.delimiter}} when this value comes from an earlier step.",
               "placeholder": "\\n",
               "example": "\\n",
               "defaultValue": "\n"
@@ -50,7 +50,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Sum.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "helpText": "What this field is: group-by field . Note: grouping behavior depends on execution implementation..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: category.\nTip: Use {{$json.groupBy}} when this value comes from an earlier step.",
               "placeholder": "category",
               "example": "category"
             }
@@ -86,7 +86,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Field to aggregate",
-              "helpText": "What this field is: Field to aggregate for Aggregate / Avg.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "helpText": "What this field is: Field to aggregate.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.amount}}.\nTip: Use {{$json.field}} when this value comes from an earlier step.",
               "placeholder": "{{$json.amount}}",
               "example": "{{$json.amount}}"
             },
@@ -96,7 +96,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Delimiter used for join/concat operations",
-              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Avg.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Delimiter used.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: \\n.\nTip: Use {{$json.delimiter}} when this value comes from an earlier step.",
               "placeholder": "\\n",
               "example": "\\n",
               "defaultValue": "\n"
@@ -107,7 +107,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Avg.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "helpText": "What this field is: group-by field . Note: grouping behavior depends on execution implementation..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: category.\nTip: Use {{$json.groupBy}} when this value comes from an earlier step.",
               "placeholder": "category",
               "example": "category"
             }
@@ -143,7 +143,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Field to aggregate",
-              "helpText": "What this field is: Field to aggregate for Aggregate / Count.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "helpText": "What this field is: Field to aggregate.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.amount}}.\nTip: Use {{$json.field}} when this value comes from an earlier step.",
               "placeholder": "{{$json.amount}}",
               "example": "{{$json.amount}}"
             },
@@ -153,7 +153,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Delimiter used for join/concat operations",
-              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Count.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Delimiter used.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: \\n.\nTip: Use {{$json.delimiter}} when this value comes from an earlier step.",
               "placeholder": "\\n",
               "example": "\\n",
               "defaultValue": "\n"
@@ -164,7 +164,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Count.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "helpText": "What this field is: group-by field . Note: grouping behavior depends on execution implementation..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: category.\nTip: Use {{$json.groupBy}} when this value comes from an earlier step.",
               "placeholder": "category",
               "example": "category"
             }
@@ -200,7 +200,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Field to aggregate",
-              "helpText": "What this field is: Field to aggregate for Aggregate / Min.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "helpText": "What this field is: Field to aggregate.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.amount}}.\nTip: Use {{$json.field}} when this value comes from an earlier step.",
               "placeholder": "{{$json.amount}}",
               "example": "{{$json.amount}}"
             },
@@ -210,7 +210,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Delimiter used for join/concat operations",
-              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Min.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Delimiter used.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: \\n.\nTip: Use {{$json.delimiter}} when this value comes from an earlier step.",
               "placeholder": "\\n",
               "example": "\\n",
               "defaultValue": "\n"
@@ -221,7 +221,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Min.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "helpText": "What this field is: group-by field . Note: grouping behavior depends on execution implementation..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: category.\nTip: Use {{$json.groupBy}} when this value comes from an earlier step.",
               "placeholder": "category",
               "example": "category"
             }
@@ -257,7 +257,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Field to aggregate",
-              "helpText": "What this field is: Field to aggregate for Aggregate / Max.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "helpText": "What this field is: Field to aggregate.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.amount}}.\nTip: Use {{$json.field}} when this value comes from an earlier step.",
               "placeholder": "{{$json.amount}}",
               "example": "{{$json.amount}}"
             },
@@ -267,7 +267,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Delimiter used for join/concat operations",
-              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Max.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Delimiter used.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: \\n.\nTip: Use {{$json.delimiter}} when this value comes from an earlier step.",
               "placeholder": "\\n",
               "example": "\\n",
               "defaultValue": "\n"
@@ -278,7 +278,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Max.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "helpText": "What this field is: group-by field . Note: grouping behavior depends on execution implementation..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: category.\nTip: Use {{$json.groupBy}} when this value comes from an earlier step.",
               "placeholder": "category",
               "example": "category"
             }
@@ -314,7 +314,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Field to aggregate",
-              "helpText": "What this field is: Field to aggregate for Aggregate / Join.\nHow to fill it: Enter the field value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.field}} or pick the value from the data picker.",
+              "helpText": "What this field is: Field to aggregate.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.amount}}.\nTip: Use {{$json.field}} when this value comes from an earlier step.",
               "placeholder": "{{$json.amount}}",
               "example": "{{$json.amount}}"
             },
@@ -324,7 +324,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Delimiter used for join/concat operations",
-              "helpText": "What this field is: Delimiter used for join/concat operations for Aggregate / Join.\nHow to fill it: Enter the delimiter value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.delimiter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Delimiter used.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: \\n.\nTip: Use {{$json.delimiter}} when this value comes from an earlier step.",
               "placeholder": "\\n",
               "example": "\\n",
               "defaultValue": "\n"
@@ -335,7 +335,7 @@ export const aggregateDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation.",
-              "helpText": "What this field is: Optional group-by field (UI-supported). Note: grouping behavior depends on execution implementation. for Aggregate / Join.\nHow to fill it: Enter the group by value requested by Aggregate, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.groupBy}} or pick the value from the data picker.",
+              "helpText": "What this field is: group-by field . Note: grouping behavior depends on execution implementation..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: category.\nTip: Use {{$json.groupBy}} when this value comes from an earlier step.",
               "placeholder": "category",
               "example": "category"
             }

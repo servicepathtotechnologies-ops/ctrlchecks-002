@@ -8,16 +8,12 @@ export const woocommerceDoc: NodeDoc = {
   "description": "WooCommerce store operations",
   "credentialType": "WooCommerce API Key",
   "credentialSetupSteps": [
-    "What this is: WooCommerce uses an API key or account connection so CtrlChecks can safely access your WooCommerce account.",
-    "In your WordPress admin dashboard, go to WooCommerce -> Settings.",
-    "Click the \"Advanced\" tab -> REST API -> Add key.",
-    "Give it a description (e.g. CtrlChecks), set User to your admin account, and set Permissions to \"Read/Write\".",
-    "Click \"Generate API key\". Copy both the Consumer Key (starts with ck_) and Consumer Secret (starts with cs_) - they are only shown once.",
-    "Note your WooCommerce store URL (e.g. https://yourstore.com).",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> WooCommerce -> enter store URL, Consumer Key, and Consumer Secret -> Save.",
-    "Run a test step (e.g. list orders) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the WooCommerce node and select the saved connection."
+    "What this is: The WooCommerce connection lets CtrlChecks access your WooCommerce account safely without putting secrets in workflow fields.",
+    "Where to start: WooCommerce account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> WooCommerce, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by WooCommerce.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple WooCommerce step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://woocommerce.github.io/woocommerce-rest-api-docs/#authentication",
   "resources": [
@@ -36,7 +32,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "WooCommerce store base URL (e.g., https://example.com)",
-              "helpText": "What this field is: WooCommerce store base URL (e.g., https://example.com) for WooCommerce / Get.\nHow to fill it: Paste the full web address WooCommerce should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.storeUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for WooCommerce store base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://example.com.\nTip: Use {{$json.storeUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://example.com",
               "example": "https://example.com"
             },
@@ -46,7 +42,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "WooCommerce consumer key (optional if stored in vault under key \"woocommerce\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access WooCommerce.\nWhere to get it: Open the WooCommerce dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: WooCommerce token, a secret password that lets CtrlChecks talk to WooCommerce safely.\nWhere to find it: WooCommerce account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by WooCommerce.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "ck_...",
               "example": "ck_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -57,7 +53,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "WooCommerce consumer secret (optional if stored in vault under key \"woocommerce\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access WooCommerce.\nWhere to get it: Open the WooCommerce dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: WooCommerce token, a secret password that lets CtrlChecks talk to WooCommerce safely.\nWhere to find it: WooCommerce account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by WooCommerce.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "cs_...",
               "example": "cs_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -68,7 +64,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: product, order, customer",
-              "helpText": "What this field is: Resource chooses the kind of WooCommerce item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by WooCommerce.\nExample: In WooCommerce, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The WooCommerce entity type to work with.\nOptions: product, order, customer.\nExample: order to manage store orders, product for catalog items, customer for buyer accounts.\nTip: Use the resource that matches the store entity you want to manage.",
               "placeholder": "product",
               "example": "product",
               "defaultValue": "product"
@@ -79,7 +75,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (for get/update/delete)",
-              "helpText": "What this field is: Resource ID (for get/update/delete) for WooCommerce / Get.\nWhere to find it: Open the item in WooCommerce and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells WooCommerce which item to use.\nWhere to find it: Open the item in WooCommerce and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.id}} when an earlier WooCommerce step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -89,7 +85,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update",
-              "helpText": "What this field is: Payload for create/update for WooCommerce / Get.\nHow to fill it: Enter valid JSON in the format WooCommerce expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by WooCommerce.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             },
@@ -99,7 +95,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "List page size",
-              "helpText": "What this field is: A number used for per page in WooCommerce / Get.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.perPage}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List page size that tells WooCommerce which item to use.\nWhere to find it: Open the item in WooCommerce and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 50.\nTip: Use {{$json.perPage}} when an earlier WooCommerce step provides this value.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -140,7 +136,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "WooCommerce store base URL (e.g., https://example.com)",
-              "helpText": "What this field is: WooCommerce store base URL (e.g., https://example.com) for WooCommerce / Create.\nHow to fill it: Paste the full web address WooCommerce should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.storeUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for WooCommerce store base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://example.com.\nTip: Use {{$json.storeUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://example.com",
               "example": "https://example.com"
             },
@@ -150,7 +146,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "WooCommerce consumer key (optional if stored in vault under key \"woocommerce\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access WooCommerce.\nWhere to get it: Open the WooCommerce dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: WooCommerce token, a secret password that lets CtrlChecks talk to WooCommerce safely.\nWhere to find it: WooCommerce account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by WooCommerce.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "ck_...",
               "example": "ck_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -161,7 +157,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "WooCommerce consumer secret (optional if stored in vault under key \"woocommerce\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access WooCommerce.\nWhere to get it: Open the WooCommerce dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: WooCommerce token, a secret password that lets CtrlChecks talk to WooCommerce safely.\nWhere to find it: WooCommerce account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by WooCommerce.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "cs_...",
               "example": "cs_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -172,7 +168,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: product, order, customer",
-              "helpText": "What this field is: Resource chooses the kind of WooCommerce item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by WooCommerce.\nExample: In WooCommerce, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The WooCommerce entity type to work with.\nOptions: product, order, customer.\nExample: order to manage store orders, product for catalog items, customer for buyer accounts.\nTip: Use the resource that matches the store entity you want to manage.",
               "placeholder": "product",
               "example": "product",
               "defaultValue": "product"
@@ -183,7 +179,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (for get/update/delete)",
-              "helpText": "What this field is: Resource ID (for get/update/delete) for WooCommerce / Create.\nWhere to find it: Open the item in WooCommerce and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells WooCommerce which item to use.\nWhere to find it: Open the item in WooCommerce and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.id}} when an earlier WooCommerce step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -193,7 +189,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update",
-              "helpText": "What this field is: Payload for create/update for WooCommerce / Create.\nHow to fill it: Enter valid JSON in the format WooCommerce expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by WooCommerce.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             },
@@ -203,7 +199,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "List page size",
-              "helpText": "What this field is: A number used for per page in WooCommerce / Create.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.perPage}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List page size that tells WooCommerce which item to use.\nWhere to find it: Open the item in WooCommerce and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 50.\nTip: Use {{$json.perPage}} when an earlier WooCommerce step provides this value.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -244,7 +240,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "WooCommerce store base URL (e.g., https://example.com)",
-              "helpText": "What this field is: WooCommerce store base URL (e.g., https://example.com) for WooCommerce / Update.\nHow to fill it: Paste the full web address WooCommerce should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.storeUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for WooCommerce store base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://example.com.\nTip: Use {{$json.storeUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://example.com",
               "example": "https://example.com"
             },
@@ -254,7 +250,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "WooCommerce consumer key (optional if stored in vault under key \"woocommerce\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access WooCommerce.\nWhere to get it: Open the WooCommerce dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: WooCommerce token, a secret password that lets CtrlChecks talk to WooCommerce safely.\nWhere to find it: WooCommerce account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by WooCommerce.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "ck_...",
               "example": "ck_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -265,7 +261,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "WooCommerce consumer secret (optional if stored in vault under key \"woocommerce\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access WooCommerce.\nWhere to get it: Open the WooCommerce dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: WooCommerce token, a secret password that lets CtrlChecks talk to WooCommerce safely.\nWhere to find it: WooCommerce account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by WooCommerce.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "cs_...",
               "example": "cs_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -276,7 +272,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: product, order, customer",
-              "helpText": "What this field is: Resource chooses the kind of WooCommerce item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by WooCommerce.\nExample: In WooCommerce, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The WooCommerce entity type to work with.\nOptions: product, order, customer.\nExample: order to manage store orders, product for catalog items, customer for buyer accounts.\nTip: Use the resource that matches the store entity you want to manage.",
               "placeholder": "product",
               "example": "product",
               "defaultValue": "product"
@@ -287,7 +283,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (for get/update/delete)",
-              "helpText": "What this field is: Resource ID (for get/update/delete) for WooCommerce / Update.\nWhere to find it: Open the item in WooCommerce and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells WooCommerce which item to use.\nWhere to find it: Open the item in WooCommerce and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.id}} when an earlier WooCommerce step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -297,7 +293,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update",
-              "helpText": "What this field is: Payload for create/update for WooCommerce / Update.\nHow to fill it: Enter valid JSON in the format WooCommerce expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by WooCommerce.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             },
@@ -307,7 +303,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "List page size",
-              "helpText": "What this field is: A number used for per page in WooCommerce / Update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.perPage}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List page size that tells WooCommerce which item to use.\nWhere to find it: Open the item in WooCommerce and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 50.\nTip: Use {{$json.perPage}} when an earlier WooCommerce step provides this value.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -348,7 +344,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "WooCommerce store base URL (e.g., https://example.com)",
-              "helpText": "What this field is: WooCommerce store base URL (e.g., https://example.com) for WooCommerce / Delete.\nHow to fill it: Paste the full web address WooCommerce should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.storeUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for WooCommerce store base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://example.com.\nTip: Use {{$json.storeUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://example.com",
               "example": "https://example.com"
             },
@@ -358,7 +354,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "WooCommerce consumer key (optional if stored in vault under key \"woocommerce\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access WooCommerce.\nWhere to get it: Open the WooCommerce dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: WooCommerce token, a secret password that lets CtrlChecks talk to WooCommerce safely.\nWhere to find it: WooCommerce account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by WooCommerce.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "ck_...",
               "example": "ck_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -369,7 +365,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "WooCommerce consumer secret (optional if stored in vault under key \"woocommerce\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access WooCommerce.\nWhere to get it: Open the WooCommerce dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: WooCommerce token, a secret password that lets CtrlChecks talk to WooCommerce safely.\nWhere to find it: WooCommerce account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by WooCommerce.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "cs_...",
               "example": "cs_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -380,7 +376,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: product, order, customer",
-              "helpText": "What this field is: Resource chooses the kind of WooCommerce item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by WooCommerce.\nExample: In WooCommerce, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The WooCommerce entity type to work with.\nOptions: product, order, customer.\nExample: order to manage store orders, product for catalog items, customer for buyer accounts.\nTip: Use the resource that matches the store entity you want to manage.",
               "placeholder": "product",
               "example": "product",
               "defaultValue": "product"
@@ -391,7 +387,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (for get/update/delete)",
-              "helpText": "What this field is: Resource ID (for get/update/delete) for WooCommerce / Delete.\nWhere to find it: Open the item in WooCommerce and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells WooCommerce which item to use.\nWhere to find it: Open the item in WooCommerce and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.id}} when an earlier WooCommerce step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -401,7 +397,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update",
-              "helpText": "What this field is: Payload for create/update for WooCommerce / Delete.\nHow to fill it: Enter valid JSON in the format WooCommerce expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by WooCommerce.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             },
@@ -411,7 +407,7 @@ export const woocommerceDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "List page size",
-              "helpText": "What this field is: A number used for per page in WooCommerce / Delete.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.perPage}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List page size that tells WooCommerce which item to use.\nWhere to find it: Open the item in WooCommerce and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 50.\nTip: Use {{$json.perPage}} when an earlier WooCommerce step provides this value.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"

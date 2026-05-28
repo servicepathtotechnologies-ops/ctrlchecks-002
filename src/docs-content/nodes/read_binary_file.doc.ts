@@ -29,7 +29,7 @@ export const readBinaryFileDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "File path",
-              "helpText": "What this field is: The full file path of the file to read.\nExample: /uploads/reports/january.pdf or C:\\Users\\user\\Documents\\report.pdf\nTip: Use this before an AWS S3 Upload node or email attachment to load the file content.",
+              "helpText": "What this field is: The File path that tells Read Binary File which item to use.\nWhere to find it: Open the item in Read Binary File and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: /path/to/file.pdf.\nTip: Use {{$json.filePath}} when an earlier Read Binary File step provides this value.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             }

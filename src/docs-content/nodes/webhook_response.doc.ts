@@ -29,7 +29,7 @@ export const webhookResponseDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "HTTP response code",
-              "helpText": "What this field is: A number used for response code in Webhook Response / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.responseCode}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for HTTP response code.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 200.\nTip: Use {{$json.responseCode}} when the number comes from an earlier step.",
               "placeholder": "200",
               "example": "200",
               "defaultValue": "200"
@@ -40,7 +40,7 @@ export const webhookResponseDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Response body",
-              "helpText": "What this field is: Response body for Webhook Response / Execute.\nHow to fill it: Type the message, prompt, or content you want Webhook Response to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Response body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Webhook Response.\nExample: {{$json.result}}.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.result}}",
               "example": "{{$json.result}}"
             }

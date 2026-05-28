@@ -29,7 +29,7 @@ export const lightricksDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Text prompt for video generation",
-              "helpText": "What this field is: Text prompt for video generation for Lightricks LTX-2 / Execute.\nHow to fill it: Type the message, prompt, or content you want Lightricks LTX-2 to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Text prompt for video generation.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Summarize {{$json.text}}.\nTip: Use {{$json.prompt}} when this value comes from an earlier step.",
               "placeholder": "Summarize {{$json.text}}"
             },
             {
@@ -38,7 +38,7 @@ export const lightricksDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Generation mode",
-              "helpText": "What this field is: A list of allowed choices for mode in Lightricks LTX-2 / Execute.\nHow to fill it: Pick the option that matches what Lightricks LTX-2 should do. Do not type a custom value unless the UI allows it.\nAvailable choices: Text to Video (text-to-video), Image to Video (image-to-video), Audio to Video (audio-to-video), Video to Video (video-to-video), Image+Text to Video (image-text-to-video), Text to Audio (text-to-audio), Audio to Audio (audio-to-audio).",
+              "helpText": "Options: Choose the mode value this Lightricks LTX-2 step should use.\nHow to choose it: Pick the option that matches what you want this step to do.\nExample: Text to Video.\nTip: Use {{$json.mode}} only when an earlier step already provides a valid option value.",
               "placeholder": "text-to-video",
               "example": "text-to-video",
               "defaultValue": "text-to-video",
@@ -58,7 +58,7 @@ export const lightricksDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Input image URL (for image-to-video mode)",
-              "helpText": "What this field is: Input image URL (for image-to-video mode) for Lightricks LTX-2 / Execute.\nHow to fill it: Paste the full web address Lightricks LTX-2 should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.image_url}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Input image URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com.\nTip: Use {{$json.image_url}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com",
               "example": "https://api.example.com"
             },
@@ -68,7 +68,7 @@ export const lightricksDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Input audio URL (for audio modes)",
-              "helpText": "What this field is: Input audio URL (for audio modes) for Lightricks LTX-2 / Execute.\nHow to fill it: Paste the full web address Lightricks LTX-2 should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.audio_url}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Input audio URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com.\nTip: Use {{$json.audio_url}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com",
               "example": "https://api.example.com"
             },
@@ -78,7 +78,7 @@ export const lightricksDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Input video URL (for video-to-video mode)",
-              "helpText": "What this field is: Input video URL (for video-to-video mode) for Lightricks LTX-2 / Execute.\nHow to fill it: Paste the full web address Lightricks LTX-2 should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.video_url}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Input video URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com.\nTip: Use {{$json.video_url}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com",
               "example": "https://api.example.com"
             },
@@ -88,7 +88,7 @@ export const lightricksDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Video duration in seconds",
-              "helpText": "What this field is: A number used for duration in Lightricks LTX-2 / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.duration}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Video duration in seconds.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5.\nTip: Use {{$json.duration}} when the number comes from an earlier step.",
               "placeholder": "5",
               "example": "5",
               "defaultValue": "5"
@@ -99,7 +99,7 @@ export const lightricksDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Frames per second",
-              "helpText": "What this field is: A number used for fps in Lightricks LTX-2 / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.fps}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Frames per second.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.fps}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"
@@ -110,7 +110,7 @@ export const lightricksDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Video resolution",
-              "helpText": "What this field is: A list of allowed choices for resolution in Lightricks LTX-2 / Execute.\nHow to fill it: Pick the option that matches what Lightricks LTX-2 should do. Do not type a custom value unless the UI allows it.\nAvailable choices: 720p (720p), 1080p (1080p), 4K (4k).",
+              "helpText": "Options: Choose the resolution value this Lightricks LTX-2 step should use.\nHow to choose it: Pick the option that matches what you want this step to do.\nExample: 720p.\nTip: Use {{$json.resolution}} only when an earlier step already provides a valid option value.",
               "placeholder": "1080p",
               "example": "1080p",
               "defaultValue": "1080p",
@@ -126,7 +126,7 @@ export const lightricksDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Additional generation options",
-              "helpText": "What this field is: Additional generation options for Lightricks LTX-2 / Execute.\nHow to fill it: Enter valid JSON in the format Lightricks LTX-2 expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.options}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Additional generation options.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Lightricks LTX-2.\nExample: {}.\nTip: Use {{$json.options}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"

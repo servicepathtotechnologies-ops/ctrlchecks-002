@@ -29,7 +29,7 @@ export const textSummarizerDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Text to summarize",
-              "helpText": "What this field is: The text you want to summarize.\nExample: {{$json.articleContent}} or {{$json.emailBody}}\nTip: Connect this after a database read, HTTP request, or Gmail node — then use {{$json.body}} or the relevant field to pass the text.",
+              "helpText": "What this field is: Text to summarize.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.text}}.\nTip: Use {{$json.text}} when this value comes from an earlier step.",
               "placeholder": "{{$json.text}}",
               "example": "{{$json.text}}"
             },
@@ -39,7 +39,7 @@ export const textSummarizerDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum summary length",
-              "helpText": "What this field is: The maximum length of the summary in words or characters.\nExample: 100 (for a short 100-word summary) or 3 (for a 3-sentence summary).",
+              "helpText": "What this field is: The number used for Maximum summary length.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 100.\nTip: Use {{$json.maxLength}} when the number comes from an earlier step.",
               "placeholder": "100",
               "example": "100"
             }

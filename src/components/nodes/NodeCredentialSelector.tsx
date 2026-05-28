@@ -13,7 +13,6 @@ import { ConnectionStatusBadge } from '@/components/connections/ConnectionStatus
 import { ProviderLogo } from '@/components/connections/ProviderLogo';
 import { NewConnectionModal } from '@/components/connections/NewConnectionModal';
 import { useConnections } from '@/hooks/useConnections';
-import { useCredentialType } from '@/hooks/useCredentialTypes';
 import type { ConnectionRecord } from '@/lib/api/connections';
 
 interface Props {
@@ -28,17 +27,11 @@ interface Props {
 }
 
 function SelectedItem({ connection }: { connection: ConnectionRecord }) {
-  const credType = useCredentialType(connection.credentialTypeId);
   return (
-    <div className="flex items-center gap-2 min-w-0">
-      <ProviderLogo provider={connection.provider} size={20} />
-      <span className="truncate text-sm font-medium">{connection.name}</span>
-      <ConnectionStatusBadge status={connection.status} />
-      {credType && (
-        <span className="text-xs text-muted-foreground hidden sm:block truncate">
-          {credType.displayName}
-        </span>
-      )}
+    <div className="flex flex-1 items-center gap-2 min-w-0">
+      <ProviderLogo provider={connection.provider} size={20} className="shrink-0" />
+      <span className="flex-1 truncate text-sm font-medium min-w-0">{connection.name}</span>
+      <ConnectionStatusBadge status={connection.status} className="shrink-0" />
     </div>
   );
 }

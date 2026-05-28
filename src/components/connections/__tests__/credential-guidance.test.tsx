@@ -74,6 +74,62 @@ describe('credential guidance components', () => {
     expect(html).toContain('Database host or endpoint.');
   });
 
+  it('renders field description and notes when provided', () => {
+    const typeWithNotes: CredentialTypeDefinition = {
+      ...mysqlType,
+      guide: {
+        ...mysqlType.guide!,
+        fieldGuides: {
+          ...mysqlType.guide!.fieldGuides,
+          host: {
+            label: 'Host',
+            description: 'Hostname or IP of your database server.',
+            whereToFind: 'Check your hosting provider connection details.',
+            notes: ['Use the private IP when inside a VPC.', 'Do not include the port here.'],
+          },
+        },
+      },
+    };
+    const html = renderToString(<CredentialGuidePanel credentialType={typeWithNotes} />);
+    expect(html).toContain('Hostname or IP of your database server.');
+    expect(html).toContain('Use the private IP when inside a VPC.');
+    expect(html).toContain('Do not include the port here.');
+  });
+
+  it('renders Common Issues section when troubleshooting is provided', () => {
+    const typeWithTroubleshooting: CredentialTypeDefinition = {
+      ...mysqlType,
+      guide: {
+        ...mysqlType.guide!,
+        troubleshooting: [
+          'If you get ECONNREFUSED, check the host and port are correct.',
+          'Ensure the database user has SELECT permission.',
+        ],
+      },
+    };
+    const html = renderToString(<CredentialGuidePanel credentialType={typeWithTroubleshooting} />);
+    expect(html).toContain('Common Issues');
+    expect(html).toContain('ECONNREFUSED');
+    expect(html).toContain('SELECT permission');
+  });
+
+  it('renders URLs in step text as anchor tags', () => {
+    const typeWithUrlStep: CredentialTypeDefinition = {
+      ...mysqlType,
+      guide: {
+        ...mysqlType.guide!,
+        steps: ['Go to https://platform.openai.com/api-keys and sign in.'],
+      },
+    };
+    const html = renderToString(<CredentialGuidePanel credentialType={typeWithUrlStep} />);
+    expect(html).toContain('href="https://platform.openai.com/api-keys"');
+  });
+
+  it('does not render Common Issues section when troubleshooting is absent', () => {
+    const html = renderToString(<CredentialGuidePanel credentialType={mysqlType} />);
+    expect(html).not.toContain('Common Issues');
+  });
+
   it('renders OAuth-only guide content without requiring form fields', () => {
     const html = renderToString(<CredentialGuidePanel credentialType={oauthType} />);
 

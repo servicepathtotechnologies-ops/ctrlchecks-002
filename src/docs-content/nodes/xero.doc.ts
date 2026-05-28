@@ -8,15 +8,12 @@ export const xeroDoc: NodeDoc = {
   "description": "Create, fetch, update, and search Xero accounting records (contacts, invoices, items, payments, accounts).",
   "credentialType": "Xero Credential",
   "credentialSetupSteps": [
-    "What this is: Xero uses an OAuth connection so CtrlChecks can safely access your Xero account.",
-    "Go to developer.xero.com/app/manage and sign in with your Xero account.",
-    "Click \"New app\" -> give it a name (e.g. CtrlChecks) -> select \"Web app\" -> fill in company and website URL.",
-    "In the \"Redirect URIs\" field, enter: http://localhost:3001/api/oauth/xero/callback -> Create app.",
-    "Copy the Client ID and Client Secret from the app configuration page.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Xero -> click \"Connect with Xero\" -> sign in -> allow access.",
-    "Run a test step (e.g. list invoices) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Xero node and select the saved connection."
+    "What this is: The Xero connection lets CtrlChecks access your Xero account safely without putting secrets in workflow fields.",
+    "Where to start: Xero developer app connection or CtrlChecks Connections.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Xero, then sign in or paste the secret value requested there.",
+    "Example: the access token returned after Xero sign-in.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Xero step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developer.xero.com/documentation/getting-started-guide",
   "resources": [
@@ -35,7 +32,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero OAuth 2.0 access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Xero.\nWhere to get it: Open the Xero dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Xero access token, a secret password that lets CtrlChecks talk to Xero safely.\nWhere to find it: Xero developer app connection or CtrlChecks Connections.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the access token returned after Xero sign-in.\nImportant: Treat this like a bank password. Xero tokens expire; reconnect the Connection when needed.",
               "placeholder": "token_..."
             },
             {
@@ -44,7 +41,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero tenant ID",
-              "helpText": "What this field is: Your Xero organisation (tenant) ID.\nWhere to find it: After connecting to Xero, the tenant ID is returned in the OAuth response. It is a UUID like 550e8400-e29b-41d4-a716-446655440000.",
+              "helpText": "What this field is: The Xero tenant ID that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.tenantId}} when an earlier Xero step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -54,7 +51,7 @@ export const xeroDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "Xero resource",
-              "helpText": "What this field is: Resource chooses the kind of Xero item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Xero.\nExample: In Xero, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Xero accounting entity type to query or manage.\nOptions: Contacts (customers/suppliers), Invoices (bills/sales), Items (products), Payments, Accounts (chart of accounts).\nExample: invoices to fetch unpaid invoices, contacts to look up a customer.\nTip: The resource determines which Xero API endpoint is called.",
               "placeholder": "invoices",
               "example": "invoices",
               "defaultValue": "invoices",
@@ -72,7 +69,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record ID for get_by_id or update",
-              "helpText": "What this field is: Record ID for get_by_id or update for Xero / Get many.\nWhere to find it: Open the item in Xero and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID for get_by_id or update that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.recordId}} when an earlier Xero step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -82,7 +79,7 @@ export const xeroDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for create/update",
-              "helpText": "What this field is: Request body for create/update for Xero / Get many.\nHow to fill it: Enter valid JSON in the format Xero expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Xero.\nExample: {}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -93,7 +90,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Xero WHERE filter",
-              "helpText": "What this field is: Xero WHERE filter for Xero / Get many.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Xero which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.where}} or pick the value from the data picker.",
+              "helpText": "What this field is: Xero WHERE filter.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Where value.\nTip: Use {{$json.where}} when this value comes from an earlier step.",
               "placeholder": "Enter Where"
             },
             {
@@ -102,7 +99,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Sort order",
-              "helpText": "What this field is: Sort order for Xero / Get many.\nHow to fill it: Enter the order value requested by Xero, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.order}} or pick the value from the data picker.",
+              "helpText": "What this field is: Sort order.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Order value.\nTip: Use {{$json.order}} when this value comes from an earlier step.",
               "placeholder": "Enter Order"
             },
             {
@@ -111,7 +108,7 @@ export const xeroDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Page number",
-              "helpText": "What this field is: A number used for page in Xero / Get many.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.page}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Page number that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1.\nTip: Use {{$json.page}} when an earlier Xero step provides this value.",
               "placeholder": "1",
               "example": "1",
               "defaultValue": "1"
@@ -122,7 +119,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "ISO date — only records modified after",
-              "helpText": "What this field is: ISO date — only records modified after for Xero / Get many.\nHow to fill it: Enter the modified after value requested by Xero, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.modifiedAfter}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for ISO date — only records modified after.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.modifiedAfter}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Modified After"
             }
           ],
@@ -159,7 +156,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero OAuth 2.0 access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Xero.\nWhere to get it: Open the Xero dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Xero access token, a secret password that lets CtrlChecks talk to Xero safely.\nWhere to find it: Xero developer app connection or CtrlChecks Connections.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the access token returned after Xero sign-in.\nImportant: Treat this like a bank password. Xero tokens expire; reconnect the Connection when needed.",
               "placeholder": "token_..."
             },
             {
@@ -168,7 +165,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero tenant ID",
-              "helpText": "What this field is: Your Xero organisation (tenant) ID.\nWhere to find it: After connecting to Xero, the tenant ID is returned in the OAuth response. It is a UUID like 550e8400-e29b-41d4-a716-446655440000.",
+              "helpText": "What this field is: The Xero tenant ID that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.tenantId}} when an earlier Xero step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -178,7 +175,7 @@ export const xeroDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "Xero resource",
-              "helpText": "What this field is: Resource chooses the kind of Xero item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Xero.\nExample: In Xero, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Xero accounting entity type to query or manage.\nOptions: Contacts (customers/suppliers), Invoices (bills/sales), Items (products), Payments, Accounts (chart of accounts).\nExample: invoices to fetch unpaid invoices, contacts to look up a customer.\nTip: The resource determines which Xero API endpoint is called.",
               "placeholder": "invoices",
               "example": "invoices",
               "defaultValue": "invoices",
@@ -196,7 +193,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record ID for get_by_id or update",
-              "helpText": "What this field is: Record ID for get_by_id or update for Xero / Get by id.\nWhere to find it: Open the item in Xero and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID for get_by_id or update that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.recordId}} when an earlier Xero step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -206,7 +203,7 @@ export const xeroDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for create/update",
-              "helpText": "What this field is: Request body for create/update for Xero / Get by id.\nHow to fill it: Enter valid JSON in the format Xero expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Xero.\nExample: {}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -217,7 +214,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Xero WHERE filter",
-              "helpText": "What this field is: Xero WHERE filter for Xero / Get by id.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Xero which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.where}} or pick the value from the data picker.",
+              "helpText": "What this field is: Xero WHERE filter.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Where value.\nTip: Use {{$json.where}} when this value comes from an earlier step.",
               "placeholder": "Enter Where"
             },
             {
@@ -226,7 +223,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Sort order",
-              "helpText": "What this field is: Sort order for Xero / Get by id.\nHow to fill it: Enter the order value requested by Xero, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.order}} or pick the value from the data picker.",
+              "helpText": "What this field is: Sort order.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Order value.\nTip: Use {{$json.order}} when this value comes from an earlier step.",
               "placeholder": "Enter Order"
             },
             {
@@ -235,7 +232,7 @@ export const xeroDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Page number",
-              "helpText": "What this field is: A number used for page in Xero / Get by id.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.page}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Page number that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1.\nTip: Use {{$json.page}} when an earlier Xero step provides this value.",
               "placeholder": "1",
               "example": "1",
               "defaultValue": "1"
@@ -246,7 +243,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "ISO date — only records modified after",
-              "helpText": "What this field is: ISO date — only records modified after for Xero / Get by id.\nHow to fill it: Enter the modified after value requested by Xero, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.modifiedAfter}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for ISO date — only records modified after.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.modifiedAfter}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Modified After"
             }
           ],
@@ -283,7 +280,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero OAuth 2.0 access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Xero.\nWhere to get it: Open the Xero dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Xero access token, a secret password that lets CtrlChecks talk to Xero safely.\nWhere to find it: Xero developer app connection or CtrlChecks Connections.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the access token returned after Xero sign-in.\nImportant: Treat this like a bank password. Xero tokens expire; reconnect the Connection when needed.",
               "placeholder": "token_..."
             },
             {
@@ -292,7 +289,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero tenant ID",
-              "helpText": "What this field is: Your Xero organisation (tenant) ID.\nWhere to find it: After connecting to Xero, the tenant ID is returned in the OAuth response. It is a UUID like 550e8400-e29b-41d4-a716-446655440000.",
+              "helpText": "What this field is: The Xero tenant ID that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.tenantId}} when an earlier Xero step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -302,7 +299,7 @@ export const xeroDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "Xero resource",
-              "helpText": "What this field is: Resource chooses the kind of Xero item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Xero.\nExample: In Xero, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Xero accounting entity type to query or manage.\nOptions: Contacts (customers/suppliers), Invoices (bills/sales), Items (products), Payments, Accounts (chart of accounts).\nExample: invoices to fetch unpaid invoices, contacts to look up a customer.\nTip: The resource determines which Xero API endpoint is called.",
               "placeholder": "invoices",
               "example": "invoices",
               "defaultValue": "invoices",
@@ -320,7 +317,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record ID for get_by_id or update",
-              "helpText": "What this field is: Record ID for get_by_id or update for Xero / Create.\nWhere to find it: Open the item in Xero and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID for get_by_id or update that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.recordId}} when an earlier Xero step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -330,7 +327,7 @@ export const xeroDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for create/update",
-              "helpText": "What this field is: Request body for create/update for Xero / Create.\nHow to fill it: Enter valid JSON in the format Xero expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Xero.\nExample: {}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -341,7 +338,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Xero WHERE filter",
-              "helpText": "What this field is: Xero WHERE filter for Xero / Create.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Xero which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.where}} or pick the value from the data picker.",
+              "helpText": "What this field is: Xero WHERE filter.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Where value.\nTip: Use {{$json.where}} when this value comes from an earlier step.",
               "placeholder": "Enter Where"
             },
             {
@@ -350,7 +347,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Sort order",
-              "helpText": "What this field is: Sort order for Xero / Create.\nHow to fill it: Enter the order value requested by Xero, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.order}} or pick the value from the data picker.",
+              "helpText": "What this field is: Sort order.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Order value.\nTip: Use {{$json.order}} when this value comes from an earlier step.",
               "placeholder": "Enter Order"
             },
             {
@@ -359,7 +356,7 @@ export const xeroDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Page number",
-              "helpText": "What this field is: A number used for page in Xero / Create.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.page}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Page number that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1.\nTip: Use {{$json.page}} when an earlier Xero step provides this value.",
               "placeholder": "1",
               "example": "1",
               "defaultValue": "1"
@@ -370,7 +367,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "ISO date — only records modified after",
-              "helpText": "What this field is: ISO date — only records modified after for Xero / Create.\nHow to fill it: Enter the modified after value requested by Xero, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.modifiedAfter}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for ISO date — only records modified after.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.modifiedAfter}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Modified After"
             }
           ],
@@ -407,7 +404,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero OAuth 2.0 access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Xero.\nWhere to get it: Open the Xero dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Xero access token, a secret password that lets CtrlChecks talk to Xero safely.\nWhere to find it: Xero developer app connection or CtrlChecks Connections.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the access token returned after Xero sign-in.\nImportant: Treat this like a bank password. Xero tokens expire; reconnect the Connection when needed.",
               "placeholder": "token_..."
             },
             {
@@ -416,7 +413,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Xero tenant ID",
-              "helpText": "What this field is: Your Xero organisation (tenant) ID.\nWhere to find it: After connecting to Xero, the tenant ID is returned in the OAuth response. It is a UUID like 550e8400-e29b-41d4-a716-446655440000.",
+              "helpText": "What this field is: The Xero tenant ID that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.tenantId}} when an earlier Xero step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -426,7 +423,7 @@ export const xeroDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "Xero resource",
-              "helpText": "What this field is: Resource chooses the kind of Xero item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Xero.\nExample: In Xero, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Xero accounting entity type to query or manage.\nOptions: Contacts (customers/suppliers), Invoices (bills/sales), Items (products), Payments, Accounts (chart of accounts).\nExample: invoices to fetch unpaid invoices, contacts to look up a customer.\nTip: The resource determines which Xero API endpoint is called.",
               "placeholder": "invoices",
               "example": "invoices",
               "defaultValue": "invoices",
@@ -444,7 +441,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record ID for get_by_id or update",
-              "helpText": "What this field is: Record ID for get_by_id or update for Xero / Update.\nWhere to find it: Open the item in Xero and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID for get_by_id or update that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.recordId}} when an earlier Xero step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -454,7 +451,7 @@ export const xeroDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for create/update",
-              "helpText": "What this field is: Request body for create/update for Xero / Update.\nHow to fill it: Enter valid JSON in the format Xero expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Xero.\nExample: {}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -465,7 +462,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Xero WHERE filter",
-              "helpText": "What this field is: Xero WHERE filter for Xero / Update.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Xero which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.where}} or pick the value from the data picker.",
+              "helpText": "What this field is: Xero WHERE filter.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Where value.\nTip: Use {{$json.where}} when this value comes from an earlier step.",
               "placeholder": "Enter Where"
             },
             {
@@ -474,7 +471,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Sort order",
-              "helpText": "What this field is: Sort order for Xero / Update.\nHow to fill it: Enter the order value requested by Xero, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.order}} or pick the value from the data picker.",
+              "helpText": "What this field is: Sort order.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Order value.\nTip: Use {{$json.order}} when this value comes from an earlier step.",
               "placeholder": "Enter Order"
             },
             {
@@ -483,7 +480,7 @@ export const xeroDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Page number",
-              "helpText": "What this field is: A number used for page in Xero / Update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.page}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Page number that tells Xero which item to use.\nWhere to find it: Open the item in Xero and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1.\nTip: Use {{$json.page}} when an earlier Xero step provides this value.",
               "placeholder": "1",
               "example": "1",
               "defaultValue": "1"
@@ -494,7 +491,7 @@ export const xeroDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "ISO date — only records modified after",
-              "helpText": "What this field is: ISO date — only records modified after for Xero / Update.\nHow to fill it: Enter the modified after value requested by Xero, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.modifiedAfter}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for ISO date — only records modified after.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.modifiedAfter}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Modified After"
             }
           ],

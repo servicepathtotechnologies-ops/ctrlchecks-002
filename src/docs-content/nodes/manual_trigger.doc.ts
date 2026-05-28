@@ -29,7 +29,7 @@ export const manualTriggerDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional input data when triggered manually",
-              "helpText": "What this field is: Optional input data when triggered manually for Manual Trigger / Execute.\nHow to fill it: Enter valid JSON in the format Manual Trigger expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.inputData}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for input data when triggered manually.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Manual Trigger.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.inputData}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }

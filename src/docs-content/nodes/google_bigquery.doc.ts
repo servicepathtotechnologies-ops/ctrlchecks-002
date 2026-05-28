@@ -8,16 +8,12 @@ export const googleBigqueryDoc: NodeDoc = {
   "description": "Query Google BigQuery data warehouse",
   "credentialType": "Google OAuth",
   "credentialSetupSteps": [
-    "What this is: Google uses an OAuth connection so CtrlChecks can safely access your Google account.",
-    "Open the Google Cloud developer page at: https://console.cloud.google.com/apis/credentials",
-    "Create a new app or project and give it a clear name such as \"CtrlChecks\".",
-    "Enable the required API or permission scope: Required Google Workspace API scopes.",
-    "Create OAuth credentials. The provider will show a Client ID and Client Secret - copy both.",
-    "Add this redirect URI exactly: http://localhost:3001/api/oauth/google/callback",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Google -> connect and approve access.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Google node and select the saved connection."
+    "What this is: The Google BigQuery connection lets CtrlChecks access your Google BigQuery account safely without putting secrets in workflow fields.",
+    "Where to start: Google BigQuery account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Google BigQuery, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Google BigQuery.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Google BigQuery step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://console.cloud.google.com/apis/credentials",
   "resources": [
@@ -36,7 +32,7 @@ export const googleBigqueryDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for Google BigQuery / Execute.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Google BigQuery which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Google BigQuery.\nExample: SELECT * FROM dataset.table LIMIT 10.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "SELECT * FROM dataset.table LIMIT 10",
               "example": "SELECT * FROM dataset.table LIMIT 10"
             },
@@ -46,7 +42,7 @@ export const googleBigqueryDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project ID",
-              "helpText": "What this field is: Project ID for Google BigQuery / Execute.\nWhere to find it: Open the item in Google BigQuery and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.projectId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project ID that tells Google BigQuery which item to use.\nWhere to find it: Open the item in Google BigQuery and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: my-project.\nTip: Use {{$json.projectId}} when an earlier Google BigQuery step provides this value.",
               "placeholder": "my-project",
               "example": "my-project"
             }

@@ -29,7 +29,7 @@ export const limitDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Maximum items",
-              "helpText": "What this field is: A number used for limit in Limit / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Maximum items.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -39,7 +39,7 @@ export const limitDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Array to limit",
-              "helpText": "What this field is: Array to limit for Limit / Execute.\nHow to fill it: Enter valid JSON in the format Limit expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.array}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Array to limit.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Limit.\nExample: {{$json.items}}.\nTip: Use {{$json.array}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.items}}",
               "example": "{{$json.items}}"
             }

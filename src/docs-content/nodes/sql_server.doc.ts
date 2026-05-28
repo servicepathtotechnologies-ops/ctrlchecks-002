@@ -29,7 +29,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SQL Server hostname",
-              "helpText": "What this field is: SQL Server hostname for SQL Server / ExecuteQuery.\nHow to fill it: Enter the host value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -38,7 +38,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "SQL Server port",
-              "helpText": "What this field is: A number used for port in SQL Server / ExecuteQuery.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for SQL Server port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1433.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "1433",
               "example": "1433",
               "defaultValue": "1433"
@@ -49,7 +49,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SQL Server username",
-              "helpText": "What this field is: SQL Server username for SQL Server / ExecuteQuery.\nHow to fill it: Enter the username value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -58,7 +58,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "SQL Server password",
-              "helpText": "What this field is: SQL Server password for SQL Server / ExecuteQuery.\nHow to fill it: Enter the password value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server token, a secret password that lets CtrlChecks talk to SQL Server safely.\nWhere to find it: SQL Server account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SQL Server.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -68,7 +68,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for SQL Server / ExecuteQuery.\nHow to fill it: Enter the database value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells SQL Server which item to use.\nWhere to find it: Open the item in SQL Server and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier SQL Server step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -77,7 +77,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable encryption",
-              "helpText": "What this field is: An on/off choice for encrypt in SQL Server / ExecuteQuery.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want SQL Server to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable encryption.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use encrypt; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"
@@ -88,7 +88,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Trust server certificate",
-              "helpText": "What this field is: An on/off choice for trust server certificate in SQL Server / ExecuteQuery.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want SQL Server to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Trust server certificate.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use trust server certificate; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -99,7 +99,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for SQL Server / ExecuteQuery.\nHow to fill it: Enter the search, filter, SQL, or API query that tells SQL Server which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SQL Server.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -108,7 +108,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for SQL Server / ExecuteQuery.\nHow to fill it: Enter the table value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells SQL Server which item to use.\nWhere to find it: Open the item in SQL Server and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier SQL Server step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -117,7 +117,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Stored procedure name",
-              "helpText": "What this field is: Stored procedure name for SQL Server / ExecuteQuery.\nHow to fill it: Enter the procedure name value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.procedureName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Stored procedure name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Procedure Name value.\nTip: Use {{$json.procedureName}} when this value comes from an earlier step.",
               "placeholder": "Enter Procedure Name"
             }
           ],
@@ -154,7 +154,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SQL Server hostname",
-              "helpText": "What this field is: SQL Server hostname for SQL Server / Insert.\nHow to fill it: Enter the host value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -163,7 +163,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "SQL Server port",
-              "helpText": "What this field is: A number used for port in SQL Server / Insert.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for SQL Server port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1433.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "1433",
               "example": "1433",
               "defaultValue": "1433"
@@ -174,7 +174,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SQL Server username",
-              "helpText": "What this field is: SQL Server username for SQL Server / Insert.\nHow to fill it: Enter the username value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -183,7 +183,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "SQL Server password",
-              "helpText": "What this field is: SQL Server password for SQL Server / Insert.\nHow to fill it: Enter the password value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server token, a secret password that lets CtrlChecks talk to SQL Server safely.\nWhere to find it: SQL Server account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SQL Server.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -193,7 +193,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for SQL Server / Insert.\nHow to fill it: Enter the database value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells SQL Server which item to use.\nWhere to find it: Open the item in SQL Server and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier SQL Server step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -202,7 +202,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable encryption",
-              "helpText": "What this field is: An on/off choice for encrypt in SQL Server / Insert.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want SQL Server to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable encryption.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use encrypt; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"
@@ -213,7 +213,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Trust server certificate",
-              "helpText": "What this field is: An on/off choice for trust server certificate in SQL Server / Insert.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want SQL Server to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Trust server certificate.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use trust server certificate; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -224,7 +224,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for SQL Server / Insert.\nHow to fill it: Enter the search, filter, SQL, or API query that tells SQL Server which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SQL Server.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -233,7 +233,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for SQL Server / Insert.\nHow to fill it: Enter the table value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells SQL Server which item to use.\nWhere to find it: Open the item in SQL Server and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier SQL Server step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -242,7 +242,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Stored procedure name",
-              "helpText": "What this field is: Stored procedure name for SQL Server / Insert.\nHow to fill it: Enter the procedure name value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.procedureName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Stored procedure name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Procedure Name value.\nTip: Use {{$json.procedureName}} when this value comes from an earlier step.",
               "placeholder": "Enter Procedure Name"
             }
           ],
@@ -279,7 +279,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SQL Server hostname",
-              "helpText": "What this field is: SQL Server hostname for SQL Server / Update.\nHow to fill it: Enter the host value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -288,7 +288,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "SQL Server port",
-              "helpText": "What this field is: A number used for port in SQL Server / Update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for SQL Server port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1433.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "1433",
               "example": "1433",
               "defaultValue": "1433"
@@ -299,7 +299,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SQL Server username",
-              "helpText": "What this field is: SQL Server username for SQL Server / Update.\nHow to fill it: Enter the username value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -308,7 +308,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "SQL Server password",
-              "helpText": "What this field is: SQL Server password for SQL Server / Update.\nHow to fill it: Enter the password value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server token, a secret password that lets CtrlChecks talk to SQL Server safely.\nWhere to find it: SQL Server account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SQL Server.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -318,7 +318,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for SQL Server / Update.\nHow to fill it: Enter the database value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells SQL Server which item to use.\nWhere to find it: Open the item in SQL Server and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier SQL Server step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -327,7 +327,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable encryption",
-              "helpText": "What this field is: An on/off choice for encrypt in SQL Server / Update.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want SQL Server to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable encryption.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use encrypt; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"
@@ -338,7 +338,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Trust server certificate",
-              "helpText": "What this field is: An on/off choice for trust server certificate in SQL Server / Update.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want SQL Server to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Trust server certificate.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use trust server certificate; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -349,7 +349,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for SQL Server / Update.\nHow to fill it: Enter the search, filter, SQL, or API query that tells SQL Server which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SQL Server.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -358,7 +358,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for SQL Server / Update.\nHow to fill it: Enter the table value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells SQL Server which item to use.\nWhere to find it: Open the item in SQL Server and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier SQL Server step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -367,7 +367,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Stored procedure name",
-              "helpText": "What this field is: Stored procedure name for SQL Server / Update.\nHow to fill it: Enter the procedure name value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.procedureName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Stored procedure name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Procedure Name value.\nTip: Use {{$json.procedureName}} when this value comes from an earlier step.",
               "placeholder": "Enter Procedure Name"
             }
           ],
@@ -404,7 +404,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SQL Server hostname",
-              "helpText": "What this field is: SQL Server hostname for SQL Server / Delete.\nHow to fill it: Enter the host value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -413,7 +413,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "SQL Server port",
-              "helpText": "What this field is: A number used for port in SQL Server / Delete.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for SQL Server port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1433.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "1433",
               "example": "1433",
               "defaultValue": "1433"
@@ -424,7 +424,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SQL Server username",
-              "helpText": "What this field is: SQL Server username for SQL Server / Delete.\nHow to fill it: Enter the username value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -433,7 +433,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "SQL Server password",
-              "helpText": "What this field is: SQL Server password for SQL Server / Delete.\nHow to fill it: Enter the password value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server token, a secret password that lets CtrlChecks talk to SQL Server safely.\nWhere to find it: SQL Server account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SQL Server.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -443,7 +443,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for SQL Server / Delete.\nHow to fill it: Enter the database value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells SQL Server which item to use.\nWhere to find it: Open the item in SQL Server and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier SQL Server step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -452,7 +452,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable encryption",
-              "helpText": "What this field is: An on/off choice for encrypt in SQL Server / Delete.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want SQL Server to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable encryption.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use encrypt; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"
@@ -463,7 +463,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Trust server certificate",
-              "helpText": "What this field is: An on/off choice for trust server certificate in SQL Server / Delete.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want SQL Server to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Trust server certificate.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use trust server certificate; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -474,7 +474,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for SQL Server / Delete.\nHow to fill it: Enter the search, filter, SQL, or API query that tells SQL Server which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SQL Server.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -483,7 +483,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for SQL Server / Delete.\nHow to fill it: Enter the table value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells SQL Server which item to use.\nWhere to find it: Open the item in SQL Server and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier SQL Server step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -492,7 +492,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Stored procedure name",
-              "helpText": "What this field is: Stored procedure name for SQL Server / Delete.\nHow to fill it: Enter the procedure name value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.procedureName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Stored procedure name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Procedure Name value.\nTip: Use {{$json.procedureName}} when this value comes from an earlier step.",
               "placeholder": "Enter Procedure Name"
             }
           ],
@@ -529,7 +529,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SQL Server hostname",
-              "helpText": "What this field is: SQL Server hostname for SQL Server / StoredProcedure.\nHow to fill it: Enter the host value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -538,7 +538,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "SQL Server port",
-              "helpText": "What this field is: A number used for port in SQL Server / StoredProcedure.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for SQL Server port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1433.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "1433",
               "example": "1433",
               "defaultValue": "1433"
@@ -549,7 +549,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SQL Server username",
-              "helpText": "What this field is: SQL Server username for SQL Server / StoredProcedure.\nHow to fill it: Enter the username value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -558,7 +558,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "SQL Server password",
-              "helpText": "What this field is: SQL Server password for SQL Server / StoredProcedure.\nHow to fill it: Enter the password value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL Server token, a secret password that lets CtrlChecks talk to SQL Server safely.\nWhere to find it: SQL Server account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SQL Server.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -568,7 +568,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for SQL Server / StoredProcedure.\nHow to fill it: Enter the database value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells SQL Server which item to use.\nWhere to find it: Open the item in SQL Server and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier SQL Server step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -577,7 +577,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable encryption",
-              "helpText": "What this field is: An on/off choice for encrypt in SQL Server / StoredProcedure.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want SQL Server to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable encryption.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use encrypt; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"
@@ -588,7 +588,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Trust server certificate",
-              "helpText": "What this field is: An on/off choice for trust server certificate in SQL Server / StoredProcedure.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want SQL Server to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Trust server certificate.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use trust server certificate; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -599,7 +599,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for SQL Server / StoredProcedure.\nHow to fill it: Enter the search, filter, SQL, or API query that tells SQL Server which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SQL Server.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -608,7 +608,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for SQL Server / StoredProcedure.\nHow to fill it: Enter the table value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells SQL Server which item to use.\nWhere to find it: Open the item in SQL Server and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier SQL Server step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -617,7 +617,7 @@ export const sqlServerDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Stored procedure name",
-              "helpText": "What this field is: Stored procedure name for SQL Server / StoredProcedure.\nHow to fill it: Enter the procedure name value requested by SQL Server, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.procedureName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Stored procedure name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Procedure Name value.\nTip: Use {{$json.procedureName}} when this value comes from an earlier step.",
               "placeholder": "Enter Procedure Name"
             }
           ],

@@ -8,16 +8,12 @@ export const zoomVideoDoc: NodeDoc = {
   "description": "Create and manage Zoom meetings via the Zoom API",
   "credentialType": "Zoom Credential",
   "credentialSetupSteps": [
-    "What this is: Zoom uses an OAuth connection so CtrlChecks can safely access your Zoom account.",
-    "Go to marketplace.zoom.us and sign in with your Zoom account.",
-    "Click \"Develop\" (top right) -> Build App -> choose \"Server-to-Server OAuth\" (for automated/background access).",
-    "Give the app a name (e.g. CtrlChecks) -> Create.",
-    "On the app page, note your Account ID, Client ID, and Client Secret.",
-    "Under \"Scopes\", add: meeting:write:admin (to create meetings), meeting:read:admin (to list meetings). Click Continue.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Zoom -> paste Account ID, Client ID, and Client Secret -> Save.",
-    "Run a test step (e.g. create a meeting) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Zoom node and select the saved connection."
+    "What this is: The Zoom Video connection lets CtrlChecks access your Zoom Video account safely without putting secrets in workflow fields.",
+    "Where to start: Zoom Video account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Zoom Video, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Zoom Video.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Zoom Video step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.zoom.us/docs/internal-apps/s2s-oauth/",
   "resources": [
@@ -36,7 +32,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zoom OAuth 2.0 access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zoom Video.\nWhere to get it: Open the Zoom Video dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zoom Video token, a secret password that lets CtrlChecks talk to Zoom Video safely.\nWhere to find it: Zoom Video account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Zoom Video.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -45,7 +41,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Meeting topic/title",
-              "helpText": "What this field is: The meeting title — shown to all participants on the invite, in the Zoom app, and in calendar events.\nExample: Weekly Team Sync — {{$json.teamName}} or Q1 Sales Review",
+              "helpText": "What this field is: Meeting topic/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Team Sync.\nTip: Use {{$json.topic}} when this value comes from an earlier step.",
               "placeholder": "Team Sync",
               "example": "Team Sync"
             },
@@ -55,7 +51,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Meeting duration in minutes",
-              "helpText": "What this field is: How long the meeting runs, in minutes.\nExample: 30 (30 minutes), 60 (1 hour), 90 (1.5 hours).",
+              "helpText": "What this field is: The number used for Meeting duration in minutes.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 30.\nTip: Use {{$json.duration}} when the number comes from an earlier step.",
               "placeholder": "30",
               "example": "30",
               "defaultValue": "60"
@@ -66,7 +62,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Scheduled start time in ISO 8601 format (leave blank for instant meeting)",
-              "helpText": "What this field is: The date and time the meeting starts.\nFormat: ISO 8601 — YYYY-MM-DDTHH:MM:SSZ (the Z means UTC timezone).\nExample: 2025-06-15T14:00:00Z means June 15, 2025 at 2:00 PM UTC (which is 10:00 AM Eastern US time).\nTip: Use {{$json.meetingTime}} from an earlier step if the time comes from a form or calendar.",
+              "helpText": "What this field is: The date or time value for Scheduled start time in ISO 8601 format.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-05-01T10:00:00Z.\nTip: Use {{$json.startTime}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "2026-05-01T10:00:00Z",
               "example": "2026-05-01T10:00:00Z"
             },
@@ -76,7 +72,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Zoom meeting ID (required for get, delete, update operations)",
-              "helpText": "What this field is: Zoom meeting ID (required for get, delete, update operations) for Zoom Video / CreateMeeting.\nWhere to find it: Open the item in Zoom Video and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.meetingId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Zoom meeting ID that tells Zoom Video which item to use.\nWhere to find it: Open the item in Zoom Video and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.meetingId}} when an earlier Zoom Video step provides this value.",
               "placeholder": "123456789",
               "example": "123456789"
             }
@@ -116,7 +112,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zoom OAuth 2.0 access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zoom Video.\nWhere to get it: Open the Zoom Video dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zoom Video token, a secret password that lets CtrlChecks talk to Zoom Video safely.\nWhere to find it: Zoom Video account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Zoom Video.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -125,7 +121,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Meeting topic/title",
-              "helpText": "What this field is: Meeting topic/title for Zoom Video / ListMeetings.\nHow to fill it: Enter the topic value requested by Zoom Video, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.topic}} or pick the value from the data picker.",
+              "helpText": "What this field is: Meeting topic/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Team Sync.\nTip: Use {{$json.topic}} when this value comes from an earlier step.",
               "placeholder": "Team Sync",
               "example": "Team Sync"
             },
@@ -135,7 +131,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Meeting duration in minutes",
-              "helpText": "What this field is: A number used for duration in Zoom Video / ListMeetings.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.duration}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Meeting duration in minutes.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 30.\nTip: Use {{$json.duration}} when the number comes from an earlier step.",
               "placeholder": "30",
               "example": "30",
               "defaultValue": "60"
@@ -146,7 +142,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Scheduled start time in ISO 8601 format (leave blank for instant meeting)",
-              "helpText": "What this field is: Scheduled start time in ISO 8601 format (leave blank for instant meeting) for Zoom Video / ListMeetings.\nHow to fill it: Enter the start time value requested by Zoom Video, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.startTime}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Scheduled start time in ISO 8601 format.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-05-01T10:00:00Z.\nTip: Use {{$json.startTime}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "2026-05-01T10:00:00Z",
               "example": "2026-05-01T10:00:00Z"
             },
@@ -156,7 +152,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Zoom meeting ID (required for get, delete, update operations)",
-              "helpText": "What this field is: Zoom meeting ID (required for get, delete, update operations) for Zoom Video / ListMeetings.\nWhere to find it: Open the item in Zoom Video and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.meetingId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Zoom meeting ID that tells Zoom Video which item to use.\nWhere to find it: Open the item in Zoom Video and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.meetingId}} when an earlier Zoom Video step provides this value.",
               "placeholder": "123456789",
               "example": "123456789"
             }
@@ -196,7 +192,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zoom OAuth 2.0 access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zoom Video.\nWhere to get it: Open the Zoom Video dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zoom Video token, a secret password that lets CtrlChecks talk to Zoom Video safely.\nWhere to find it: Zoom Video account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Zoom Video.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -205,7 +201,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Meeting topic/title",
-              "helpText": "What this field is: Meeting topic/title for Zoom Video / GetMeeting.\nHow to fill it: Enter the topic value requested by Zoom Video, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.topic}} or pick the value from the data picker.",
+              "helpText": "What this field is: Meeting topic/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Team Sync.\nTip: Use {{$json.topic}} when this value comes from an earlier step.",
               "placeholder": "Team Sync",
               "example": "Team Sync"
             },
@@ -215,7 +211,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Meeting duration in minutes",
-              "helpText": "What this field is: A number used for duration in Zoom Video / GetMeeting.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.duration}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Meeting duration in minutes.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 30.\nTip: Use {{$json.duration}} when the number comes from an earlier step.",
               "placeholder": "30",
               "example": "30",
               "defaultValue": "60"
@@ -226,7 +222,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Scheduled start time in ISO 8601 format (leave blank for instant meeting)",
-              "helpText": "What this field is: Scheduled start time in ISO 8601 format (leave blank for instant meeting) for Zoom Video / GetMeeting.\nHow to fill it: Enter the start time value requested by Zoom Video, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.startTime}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Scheduled start time in ISO 8601 format.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-05-01T10:00:00Z.\nTip: Use {{$json.startTime}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "2026-05-01T10:00:00Z",
               "example": "2026-05-01T10:00:00Z"
             },
@@ -236,7 +232,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Zoom meeting ID (required for get, delete, update operations)",
-              "helpText": "What this field is: Zoom meeting ID (required for get, delete, update operations) for Zoom Video / GetMeeting.\nWhere to find it: Open the item in Zoom Video and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.meetingId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Zoom meeting ID that tells Zoom Video which item to use.\nWhere to find it: Open the item in Zoom Video and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.meetingId}} when an earlier Zoom Video step provides this value.",
               "placeholder": "123456789",
               "example": "123456789"
             }
@@ -276,7 +272,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zoom OAuth 2.0 access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zoom Video.\nWhere to get it: Open the Zoom Video dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zoom Video token, a secret password that lets CtrlChecks talk to Zoom Video safely.\nWhere to find it: Zoom Video account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Zoom Video.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -285,7 +281,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Meeting topic/title",
-              "helpText": "What this field is: Meeting topic/title for Zoom Video / DeleteMeeting.\nHow to fill it: Enter the topic value requested by Zoom Video, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.topic}} or pick the value from the data picker.",
+              "helpText": "What this field is: Meeting topic/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Team Sync.\nTip: Use {{$json.topic}} when this value comes from an earlier step.",
               "placeholder": "Team Sync",
               "example": "Team Sync"
             },
@@ -295,7 +291,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Meeting duration in minutes",
-              "helpText": "What this field is: A number used for duration in Zoom Video / DeleteMeeting.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.duration}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Meeting duration in minutes.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 30.\nTip: Use {{$json.duration}} when the number comes from an earlier step.",
               "placeholder": "30",
               "example": "30",
               "defaultValue": "60"
@@ -306,7 +302,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Scheduled start time in ISO 8601 format (leave blank for instant meeting)",
-              "helpText": "What this field is: Scheduled start time in ISO 8601 format (leave blank for instant meeting) for Zoom Video / DeleteMeeting.\nHow to fill it: Enter the start time value requested by Zoom Video, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.startTime}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Scheduled start time in ISO 8601 format.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-05-01T10:00:00Z.\nTip: Use {{$json.startTime}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "2026-05-01T10:00:00Z",
               "example": "2026-05-01T10:00:00Z"
             },
@@ -316,7 +312,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Zoom meeting ID (required for get, delete, update operations)",
-              "helpText": "What this field is: Zoom meeting ID (required for get, delete, update operations) for Zoom Video / DeleteMeeting.\nWhere to find it: Open the item in Zoom Video and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.meetingId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Zoom meeting ID that tells Zoom Video which item to use.\nWhere to find it: Open the item in Zoom Video and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.meetingId}} when an earlier Zoom Video step provides this value.",
               "placeholder": "123456789",
               "example": "123456789"
             }
@@ -356,7 +352,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zoom OAuth 2.0 access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zoom Video.\nWhere to get it: Open the Zoom Video dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zoom Video token, a secret password that lets CtrlChecks talk to Zoom Video safely.\nWhere to find it: Zoom Video account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Zoom Video.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -365,7 +361,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Meeting topic/title",
-              "helpText": "What this field is: Meeting topic/title for Zoom Video / UpdateMeeting.\nHow to fill it: Enter the topic value requested by Zoom Video, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.topic}} or pick the value from the data picker.",
+              "helpText": "What this field is: Meeting topic/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Team Sync.\nTip: Use {{$json.topic}} when this value comes from an earlier step.",
               "placeholder": "Team Sync",
               "example": "Team Sync"
             },
@@ -375,7 +371,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Meeting duration in minutes",
-              "helpText": "What this field is: A number used for duration in Zoom Video / UpdateMeeting.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.duration}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Meeting duration in minutes.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 30.\nTip: Use {{$json.duration}} when the number comes from an earlier step.",
               "placeholder": "30",
               "example": "30",
               "defaultValue": "60"
@@ -386,7 +382,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Scheduled start time in ISO 8601 format (leave blank for instant meeting)",
-              "helpText": "What this field is: Scheduled start time in ISO 8601 format (leave blank for instant meeting) for Zoom Video / UpdateMeeting.\nHow to fill it: Enter the start time value requested by Zoom Video, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.startTime}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Scheduled start time in ISO 8601 format.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-05-01T10:00:00Z.\nTip: Use {{$json.startTime}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "2026-05-01T10:00:00Z",
               "example": "2026-05-01T10:00:00Z"
             },
@@ -396,7 +392,7 @@ export const zoomVideoDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Zoom meeting ID (required for get, delete, update operations)",
-              "helpText": "What this field is: Zoom meeting ID (required for get, delete, update operations) for Zoom Video / UpdateMeeting.\nWhere to find it: Open the item in Zoom Video and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.meetingId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Zoom meeting ID that tells Zoom Video which item to use.\nWhere to find it: Open the item in Zoom Video and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.meetingId}} when an earlier Zoom Video step provides this value.",
               "placeholder": "123456789",
               "example": "123456789"
             }

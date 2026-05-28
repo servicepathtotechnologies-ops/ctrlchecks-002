@@ -29,7 +29,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB hostname",
-              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -38,7 +38,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "TimescaleDB port",
-              "helpText": "What this field is: A number used for port in TimescaleDB / ExecuteQuery.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for TimescaleDB port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5432.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "5432",
               "example": "5432",
               "defaultValue": "5432"
@@ -49,7 +49,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB username",
-              "helpText": "What this field is: TimescaleDB username for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -58,7 +58,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
-              "helpText": "What this field is: TimescaleDB password for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB token, a secret password that lets CtrlChecks talk to TimescaleDB safely.\nWhere to find it: TimescaleDB account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by TimescaleDB.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -68,7 +68,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -77,7 +77,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable SSL",
-              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / ExecuteQuery.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable SSL.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use ssl; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -88,7 +88,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by TimescaleDB.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -97,7 +97,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -106,7 +106,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time column for timeBucket/first/last",
-              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Time column.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.timeColumn}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Time Column"
             },
             {
@@ -115,7 +115,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time interval",
-              "helpText": "What this field is: Time interval for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "helpText": "What this field is: Time interval.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Interval value.\nTip: Use {{$json.interval}} when this value comes from an earlier step.",
               "placeholder": "Enter Interval"
             },
             {
@@ -124,7 +124,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value column for first/last",
-              "helpText": "What this field is: Value column for first/last for TimescaleDB / ExecuteQuery.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value column.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Value Column value.\nTip: Use {{$json.valueColumn}} when this value comes from an earlier step.",
               "placeholder": "Enter Value Column"
             }
           ],
@@ -161,7 +161,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB hostname",
-              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / Insert.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -170,7 +170,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "TimescaleDB port",
-              "helpText": "What this field is: A number used for port in TimescaleDB / Insert.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for TimescaleDB port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5432.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "5432",
               "example": "5432",
               "defaultValue": "5432"
@@ -181,7 +181,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB username",
-              "helpText": "What this field is: TimescaleDB username for TimescaleDB / Insert.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -190,7 +190,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
-              "helpText": "What this field is: TimescaleDB password for TimescaleDB / Insert.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB token, a secret password that lets CtrlChecks talk to TimescaleDB safely.\nWhere to find it: TimescaleDB account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by TimescaleDB.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -200,7 +200,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for TimescaleDB / Insert.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -209,7 +209,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable SSL",
-              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / Insert.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable SSL.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use ssl; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -220,7 +220,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for TimescaleDB / Insert.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by TimescaleDB.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -229,7 +229,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for TimescaleDB / Insert.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -238,7 +238,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time column for timeBucket/first/last",
-              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / Insert.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Time column.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.timeColumn}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Time Column"
             },
             {
@@ -247,7 +247,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time interval",
-              "helpText": "What this field is: Time interval for TimescaleDB / Insert.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "helpText": "What this field is: Time interval.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Interval value.\nTip: Use {{$json.interval}} when this value comes from an earlier step.",
               "placeholder": "Enter Interval"
             },
             {
@@ -256,7 +256,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value column for first/last",
-              "helpText": "What this field is: Value column for first/last for TimescaleDB / Insert.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value column.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Value Column value.\nTip: Use {{$json.valueColumn}} when this value comes from an earlier step.",
               "placeholder": "Enter Value Column"
             }
           ],
@@ -293,7 +293,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB hostname",
-              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / Update.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -302,7 +302,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "TimescaleDB port",
-              "helpText": "What this field is: A number used for port in TimescaleDB / Update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for TimescaleDB port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5432.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "5432",
               "example": "5432",
               "defaultValue": "5432"
@@ -313,7 +313,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB username",
-              "helpText": "What this field is: TimescaleDB username for TimescaleDB / Update.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -322,7 +322,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
-              "helpText": "What this field is: TimescaleDB password for TimescaleDB / Update.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB token, a secret password that lets CtrlChecks talk to TimescaleDB safely.\nWhere to find it: TimescaleDB account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by TimescaleDB.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -332,7 +332,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for TimescaleDB / Update.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -341,7 +341,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable SSL",
-              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / Update.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable SSL.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use ssl; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -352,7 +352,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for TimescaleDB / Update.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by TimescaleDB.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -361,7 +361,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for TimescaleDB / Update.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -370,7 +370,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time column for timeBucket/first/last",
-              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / Update.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Time column.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.timeColumn}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Time Column"
             },
             {
@@ -379,7 +379,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time interval",
-              "helpText": "What this field is: Time interval for TimescaleDB / Update.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "helpText": "What this field is: Time interval.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Interval value.\nTip: Use {{$json.interval}} when this value comes from an earlier step.",
               "placeholder": "Enter Interval"
             },
             {
@@ -388,7 +388,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value column for first/last",
-              "helpText": "What this field is: Value column for first/last for TimescaleDB / Update.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value column.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Value Column value.\nTip: Use {{$json.valueColumn}} when this value comes from an earlier step.",
               "placeholder": "Enter Value Column"
             }
           ],
@@ -425,7 +425,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB hostname",
-              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / Delete.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -434,7 +434,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "TimescaleDB port",
-              "helpText": "What this field is: A number used for port in TimescaleDB / Delete.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for TimescaleDB port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5432.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "5432",
               "example": "5432",
               "defaultValue": "5432"
@@ -445,7 +445,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB username",
-              "helpText": "What this field is: TimescaleDB username for TimescaleDB / Delete.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -454,7 +454,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
-              "helpText": "What this field is: TimescaleDB password for TimescaleDB / Delete.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB token, a secret password that lets CtrlChecks talk to TimescaleDB safely.\nWhere to find it: TimescaleDB account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by TimescaleDB.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -464,7 +464,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for TimescaleDB / Delete.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -473,7 +473,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable SSL",
-              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / Delete.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable SSL.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use ssl; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -484,7 +484,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for TimescaleDB / Delete.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by TimescaleDB.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -493,7 +493,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for TimescaleDB / Delete.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -502,7 +502,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time column for timeBucket/first/last",
-              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / Delete.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Time column.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.timeColumn}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Time Column"
             },
             {
@@ -511,7 +511,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time interval",
-              "helpText": "What this field is: Time interval for TimescaleDB / Delete.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "helpText": "What this field is: Time interval.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Interval value.\nTip: Use {{$json.interval}} when this value comes from an earlier step.",
               "placeholder": "Enter Interval"
             },
             {
@@ -520,7 +520,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value column for first/last",
-              "helpText": "What this field is: Value column for first/last for TimescaleDB / Delete.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value column.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Value Column value.\nTip: Use {{$json.valueColumn}} when this value comes from an earlier step.",
               "placeholder": "Enter Value Column"
             }
           ],
@@ -557,7 +557,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB hostname",
-              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / TimeBucket.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -566,7 +566,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "TimescaleDB port",
-              "helpText": "What this field is: A number used for port in TimescaleDB / TimeBucket.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for TimescaleDB port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5432.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "5432",
               "example": "5432",
               "defaultValue": "5432"
@@ -577,7 +577,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB username",
-              "helpText": "What this field is: TimescaleDB username for TimescaleDB / TimeBucket.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -586,7 +586,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
-              "helpText": "What this field is: TimescaleDB password for TimescaleDB / TimeBucket.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB token, a secret password that lets CtrlChecks talk to TimescaleDB safely.\nWhere to find it: TimescaleDB account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by TimescaleDB.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -596,7 +596,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for TimescaleDB / TimeBucket.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -605,7 +605,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable SSL",
-              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / TimeBucket.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable SSL.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use ssl; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -616,7 +616,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for TimescaleDB / TimeBucket.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by TimescaleDB.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -625,7 +625,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for TimescaleDB / TimeBucket.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -634,7 +634,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time column for timeBucket/first/last",
-              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / TimeBucket.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Time column.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.timeColumn}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Time Column"
             },
             {
@@ -643,7 +643,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time interval",
-              "helpText": "What this field is: Time interval for TimescaleDB / TimeBucket.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "helpText": "What this field is: Time interval.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Interval value.\nTip: Use {{$json.interval}} when this value comes from an earlier step.",
               "placeholder": "Enter Interval"
             },
             {
@@ -652,7 +652,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value column for first/last",
-              "helpText": "What this field is: Value column for first/last for TimescaleDB / TimeBucket.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value column.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Value Column value.\nTip: Use {{$json.valueColumn}} when this value comes from an earlier step.",
               "placeholder": "Enter Value Column"
             }
           ],
@@ -689,7 +689,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB hostname",
-              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / First.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -698,7 +698,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "TimescaleDB port",
-              "helpText": "What this field is: A number used for port in TimescaleDB / First.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for TimescaleDB port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5432.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "5432",
               "example": "5432",
               "defaultValue": "5432"
@@ -709,7 +709,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB username",
-              "helpText": "What this field is: TimescaleDB username for TimescaleDB / First.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -718,7 +718,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
-              "helpText": "What this field is: TimescaleDB password for TimescaleDB / First.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB token, a secret password that lets CtrlChecks talk to TimescaleDB safely.\nWhere to find it: TimescaleDB account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by TimescaleDB.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -728,7 +728,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for TimescaleDB / First.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -737,7 +737,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable SSL",
-              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / First.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable SSL.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use ssl; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -748,7 +748,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for TimescaleDB / First.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by TimescaleDB.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -757,7 +757,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for TimescaleDB / First.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -766,7 +766,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time column for timeBucket/first/last",
-              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / First.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Time column.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.timeColumn}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Time Column"
             },
             {
@@ -775,7 +775,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time interval",
-              "helpText": "What this field is: Time interval for TimescaleDB / First.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "helpText": "What this field is: Time interval.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Interval value.\nTip: Use {{$json.interval}} when this value comes from an earlier step.",
               "placeholder": "Enter Interval"
             },
             {
@@ -784,7 +784,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value column for first/last",
-              "helpText": "What this field is: Value column for first/last for TimescaleDB / First.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value column.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Value Column value.\nTip: Use {{$json.valueColumn}} when this value comes from an earlier step.",
               "placeholder": "Enter Value Column"
             }
           ],
@@ -821,7 +821,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB hostname",
-              "helpText": "What this field is: TimescaleDB hostname for TimescaleDB / Last.\nHow to fill it: Enter the host value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.host}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB hostname.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Host value.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "Enter Host"
             },
             {
@@ -830,7 +830,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "TimescaleDB port",
-              "helpText": "What this field is: A number used for port in TimescaleDB / Last.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.port}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for TimescaleDB port.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5432.\nTip: Use {{$json.port}} when the number comes from an earlier step.",
               "placeholder": "5432",
               "example": "5432",
               "defaultValue": "5432"
@@ -841,7 +841,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "TimescaleDB username",
-              "helpText": "What this field is: TimescaleDB username for TimescaleDB / Last.\nHow to fill it: Enter the username value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -850,7 +850,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "TimescaleDB password",
-              "helpText": "What this field is: TimescaleDB password for TimescaleDB / Last.\nHow to fill it: Enter the password value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: TimescaleDB token, a secret password that lets CtrlChecks talk to TimescaleDB safely.\nWhere to find it: TimescaleDB account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by TimescaleDB.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -860,7 +860,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database name",
-              "helpText": "What this field is: Database name for TimescaleDB / Last.\nHow to fill it: Enter the database value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.database}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Database name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.database}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "Enter Database"
             },
             {
@@ -869,7 +869,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable SSL",
-              "helpText": "What this field is: An on/off choice for ssl in TimescaleDB / Last.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want TimescaleDB to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable SSL.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use ssl; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -880,7 +880,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query",
-              "helpText": "What this field is: SQL query for TimescaleDB / Last.\nHow to fill it: Enter the search, filter, SQL, or API query that tells TimescaleDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by TimescaleDB.\nExample: status = active.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "status = active"
             },
             {
@@ -889,7 +889,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for TimescaleDB / Last.\nHow to fill it: Enter the table value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells TimescaleDB which item to use.\nWhere to find it: Open the item in TimescaleDB and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier TimescaleDB step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -898,7 +898,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time column for timeBucket/first/last",
-              "helpText": "What this field is: Time column for timeBucket/first/last for TimescaleDB / Last.\nHow to fill it: Enter the time column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timeColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Time column.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2026-06-01T09:00:00+05:30.\nTip: Use {{$json.timeColumn}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "Enter Time Column"
             },
             {
@@ -907,7 +907,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Time interval",
-              "helpText": "What this field is: Time interval for TimescaleDB / Last.\nHow to fill it: Enter the interval value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.interval}} or pick the value from the data picker.",
+              "helpText": "What this field is: Time interval.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Interval value.\nTip: Use {{$json.interval}} when this value comes from an earlier step.",
               "placeholder": "Enter Interval"
             },
             {
@@ -916,7 +916,7 @@ export const timescaledbDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value column for first/last",
-              "helpText": "What this field is: Value column for first/last for TimescaleDB / Last.\nHow to fill it: Enter the value column value requested by TimescaleDB, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.valueColumn}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value column.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Value Column value.\nTip: Use {{$json.valueColumn}} when this value comes from an earlier step.",
               "placeholder": "Enter Value Column"
             }
           ],

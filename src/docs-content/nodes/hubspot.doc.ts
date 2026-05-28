@@ -8,16 +8,12 @@ export const hubspotDoc: NodeDoc = {
   "description": "HubSpot CRM operations - create, update, retrieve, or search contacts, companies, deals, tickets, and other objects",
   "credentialType": "HubSpot API Key",
   "credentialSetupSteps": [
-    "What this is: HubSpot uses an API key or account connection so CtrlChecks can safely access your HubSpot account.",
-    "Log in to your HubSpot account at app.hubspot.com.",
-    "Click the Settings gear icon (top right) -> Integrations -> Private Apps.",
-    "Click \"Create a private app\". Give it a name like CtrlChecks Integration.",
-    "Go to the \"Scopes\" tab. Add the scopes you need: crm.objects.contacts.read and crm.objects.contacts.write for contacts; crm.objects.deals.read and crm.objects.deals.write for deals. Add more as needed.",
-    "Click \"Create app\" -> confirm. Copy the Access Token shown - it starts with pat-na1- (or similar region prefix).",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> HubSpot -> paste the access token -> Save.",
-    "Run a test step (e.g. search for a contact by email) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the HubSpot node and select the saved connection."
+    "What this is: The HubSpot connection lets CtrlChecks access your HubSpot account safely without putting secrets in workflow fields.",
+    "Where to start: HubSpot -> Settings -> Integrations -> Private Apps -> your app -> Auth.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> HubSpot, then sign in or paste the secret value requested there.",
+    "Example: pat-na1-... or the token HubSpot shows.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple HubSpot step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.hubspot.com/docs/api/private-apps",
   "resources": [
@@ -36,7 +32,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
-              "helpText": "What this field is: The type of HubSpot record to work with.\nOptions:\n  contact  →  for people (customers, leads, contacts)\n  company  →  for businesses and organizations\n  deal     →  for sales opportunities and pipeline stages\n  ticket   →  for support cases\nExample: Choose \"contact\" to create or update a person in HubSpot.",
+              "helpText": "What this field is: HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: contact.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "contact",
               "example": "contact",
               "defaultValue": "contact"
@@ -47,7 +43,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Object ID (required for get, update, delete)",
-              "helpText": "What this field is: Object ID (required for get, update, delete) for HubSpot / Get.\nWhere to find it: Open the item in HubSpot and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The HubSpot record ID for the contact, company, deal, ticket, or other object.\nWhere to find it: Open the record in HubSpot and copy the numeric ID from the URL, or use the id returned by a previous HubSpot step.\nExample: 123456789.\nTip: Use {{$json.id}} from a previous search or create step.",
               "placeholder": "123456789",
               "example": "123456789"
             },
@@ -94,7 +90,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
-              "helpText": "What this field is: The type of HubSpot record to work with.\nOptions:\n  contact  →  for people (customers, leads, contacts)\n  company  →  for businesses and organizations\n  deal     →  for sales opportunities and pipeline stages\n  ticket   →  for support cases\nExample: Choose \"contact\" to create or update a person in HubSpot.",
+              "helpText": "What this field is: HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: contact.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "contact",
               "example": "contact",
               "defaultValue": "contact"
@@ -105,7 +101,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Number of records to return",
-              "helpText": "What this field is: A number used for limit in HubSpot / GetMany.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10",
               "defaultValue": "10"
@@ -116,7 +112,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Pagination token for next page",
-              "helpText": "What this field is: Pagination token for next page for HubSpot / GetMany.\nHow to fill it: Enter the after value requested by HubSpot, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.after}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Pagination token for next page.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: paging_token.\nTip: Use {{$json.after}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "paging_token",
               "example": "paging_token"
             }
@@ -154,7 +150,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
-              "helpText": "What this field is: The type of HubSpot record to work with.\nOptions:\n  contact  →  for people (customers, leads, contacts)\n  company  →  for businesses and organizations\n  deal     →  for sales opportunities and pipeline stages\n  ticket   →  for support cases\nExample: Choose \"contact\" to create or update a person in HubSpot.",
+              "helpText": "What this field is: HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: contact.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "contact",
               "example": "contact",
               "defaultValue": "contact"
@@ -165,7 +161,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Object properties for create/update operations",
-              "helpText": "What this field is: The record data to create in HubSpot. Use HubSpot internal property names (NOT the display labels you see in the UI).\nWhere to find internal names: HubSpot → Settings (gear icon) → Properties → select the object type → click any property → see \"Internal name\".\nContact example: {\"email\":\"alice@example.com\",\"firstname\":\"Alice\",\"lastname\":\"Kumar\",\"phone\":\"+14155552671\",\"company\":\"Acme Corp\",\"jobtitle\":\"Marketing Manager\",\"lifecyclestage\":\"lead\"}\nDeal example: {\"dealname\":\"Enterprise License - Acme Corp\",\"amount\":\"50000\",\"pipeline\":\"default\",\"dealstage\":\"appointmentscheduled\",\"closedate\":\"2025-06-30\"}\nCompany example: {\"name\":\"Acme Corp\",\"domain\":\"acmecorp.com\",\"industry\":\"COMPUTER_SOFTWARE\",\"city\":\"San Francisco\",\"country\":\"United States\"}\nCommon contact fields: email, firstname, lastname, phone, company, jobtitle, website, lifecyclestage\nCommon deal stages: appointmentscheduled, qualifiedtobuy, presentationscheduled, contractsent, closedwon, closedlost",
+              "helpText": "What this field is: The HubSpot field values to create or update on a record.\nWhere to find it: In HubSpot, open Settings -> Properties and copy the internal property name, such as email, firstname, lastname, amount, or dealstage.\nHow to fill it: Enter structured data in { } brackets where each key is a HubSpot internal property name.\nExample: {\"email\":\"alice@example.com\",\"firstname\":\"Alice\",\"lastname\":\"Kumar\"}.\nTip: Use internal names, not only the labels you see on screen.",
               "placeholder": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}",
               "example": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}"
             }
@@ -200,7 +196,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
-              "helpText": "What this field is: The type of HubSpot record to work with.\nOptions:\n  contact  →  for people (customers, leads, contacts)\n  company  →  for businesses and organizations\n  deal     →  for sales opportunities and pipeline stages\n  ticket   →  for support cases\nExample: Choose \"contact\" to create or update a person in HubSpot.",
+              "helpText": "What this field is: HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: contact.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "contact",
               "example": "contact",
               "defaultValue": "contact"
@@ -211,7 +207,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Object ID (required for get, update, delete)",
-              "helpText": "What this field is: Object ID (required for get, update, delete) for HubSpot / Update.\nWhere to find it: Open the item in HubSpot and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The HubSpot record ID for the contact, company, deal, ticket, or other object.\nWhere to find it: Open the record in HubSpot and copy the numeric ID from the URL, or use the id returned by a previous HubSpot step.\nExample: 123456789.\nTip: Use {{$json.id}} from a previous search or create step.",
               "placeholder": "123456789",
               "example": "123456789"
             },
@@ -231,7 +227,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Object properties for create/update operations",
-              "helpText": "What this field is: HubSpot properties are the fields CtrlChecks sends when update runs for the selected HubSpot resource.\nWhere to find property names: In HubSpot, open Settings -> Properties, choose the object type, and copy the internal property name.\nContact example: {\"email\":\"alice@example.com\",\"firstname\":\"Alice\",\"lastname\":\"Kumar\",\"phone\":\"+919876543210\"}\nDeal example: {\"dealname\":\"Website redesign\",\"amount\":\"25000\",\"pipeline\":\"default\",\"dealstage\":\"appointmentscheduled\"}\nDynamic example: {\"email\":\"{{$json.email}}\",\"firstname\":\"{{$json.firstName}}\"}\nCommon mistake: Use HubSpot internal names such as firstname, not only the visible label such as First name.",
+              "helpText": "What this field is: The HubSpot field values to create or update on a record.\nWhere to find it: In HubSpot, open Settings -> Properties and copy the internal property name, such as email, firstname, lastname, amount, or dealstage.\nHow to fill it: Enter structured data in { } brackets where each key is a HubSpot internal property name.\nExample: {\"email\":\"alice@example.com\",\"firstname\":\"Alice\",\"lastname\":\"Kumar\"}.\nTip: Use internal names, not only the labels you see on screen.",
               "placeholder": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}",
               "example": "{\"email\":\"test@example.com\",\"firstname\":\"John\",\"lastname\":\"Doe\"}"
             }
@@ -266,7 +262,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
-              "helpText": "What this field is: The type of HubSpot record to work with.\nOptions:\n  contact  →  for people (customers, leads, contacts)\n  company  →  for businesses and organizations\n  deal     →  for sales opportunities and pipeline stages\n  ticket   →  for support cases\nExample: Choose \"contact\" to create or update a person in HubSpot.",
+              "helpText": "What this field is: HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: contact.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "contact",
               "example": "contact",
               "defaultValue": "contact"
@@ -277,7 +273,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Object ID (required for get, update, delete)",
-              "helpText": "What this field is: Object ID (required for get, update, delete) for HubSpot / Delete.\nWhere to find it: Open the item in HubSpot and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The HubSpot record ID for the contact, company, deal, ticket, or other object.\nWhere to find it: Open the record in HubSpot and copy the numeric ID from the URL, or use the id returned by a previous HubSpot step.\nExample: 123456789.\nTip: Use {{$json.id}} from a previous search or create step.",
               "placeholder": "123456789",
               "example": "123456789"
             },
@@ -325,7 +321,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline",
-              "helpText": "What this field is: The type of HubSpot record to work with.\nOptions:\n  contact  →  for people (customers, leads, contacts)\n  company  →  for businesses and organizations\n  deal     →  for sales opportunities and pipeline stages\n  ticket   →  for support cases\nExample: Choose \"contact\" to create or update a person in HubSpot.",
+              "helpText": "What this field is: HubSpot object type: contact, company, deal, ticket, product, line_item, quote, call, email, meeting, note, task, owner, pipeline.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: contact.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "contact",
               "example": "contact",
               "defaultValue": "contact"
@@ -336,7 +332,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Search query (required for search operation)",
-              "helpText": "What this field is: Search query (required for search operation) for HubSpot / Search.\nHow to fill it: Enter the search, filter, SQL, or API query that tells HubSpot which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.searchQuery}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Search query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by HubSpot.\nExample: email:test@example.com.\nTip: Use {{$json.searchQuery}} when an earlier step already prepared this data.",
               "placeholder": "email:test@example.com",
               "example": "email:test@example.com"
             },
@@ -346,7 +342,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Number of records to return",
-              "helpText": "What this field is: A number used for limit in HubSpot / Search.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10",
               "defaultValue": "10"
@@ -357,7 +353,7 @@ export const hubspotDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Pagination token for next page",
-              "helpText": "What this field is: Pagination token for next page for HubSpot / Search.\nHow to fill it: Enter the after value requested by HubSpot, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.after}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Pagination token for next page.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: paging_token.\nTip: Use {{$json.after}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "paging_token",
               "example": "paging_token"
             }

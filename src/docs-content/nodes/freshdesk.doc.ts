@@ -8,15 +8,12 @@ export const freshdeskDoc: NodeDoc = {
   "description": "Freshdesk support operations",
   "credentialType": "Freshdesk API Key",
   "credentialSetupSteps": [
-    "What this is: Freshdesk uses an API key or account connection so CtrlChecks can safely access your Freshdesk account.",
-    "Log in to your Freshdesk account at yourcompany.freshdesk.com.",
-    "Click your profile photo (top right) -> Profile Settings.",
-    "On the right side of the page, you will see \"Your API Key\". Copy it.",
-    "Note your Freshdesk subdomain - it is the part before .freshdesk.com (e.g. if URL is mycompany.freshdesk.com, subdomain is mycompany).",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Freshdesk -> enter your domain (mycompany.freshdesk.com) and API key -> Save.",
-    "Run a test step (e.g. create a test ticket) to confirm it appears in Freshdesk.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Freshdesk node and select the saved connection."
+    "What this is: The Freshdesk connection lets CtrlChecks access your Freshdesk account safely without putting secrets in workflow fields.",
+    "Where to start: Freshdesk account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Freshdesk, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Freshdesk.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Freshdesk step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.freshdesk.com/api/",
   "resources": [
@@ -35,7 +32,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Freshdesk domain (e.g., yourcompany.freshdesk.com)",
-              "helpText": "What this field is: Freshdesk domain (e.g., yourcompany.freshdesk.com) for Freshdesk / Get.\nHow to fill it: Enter the domain value requested by Freshdesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Freshdesk domain that tells Freshdesk which item to use.\nWhere to find it: Open the item in Freshdesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: mycompany.freshdesk.com.\nTip: Use {{$json.domain}} when an earlier Freshdesk step provides this value.",
               "placeholder": "mycompany.freshdesk.com",
               "example": "mycompany.freshdesk.com"
             },
@@ -45,7 +42,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Freshdesk API key (optional if stored in vault under key \"freshdesk\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Freshdesk.\nWhere to get it: Open the Freshdesk dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Freshdesk token, a secret password that lets CtrlChecks talk to Freshdesk safely.\nWhere to find it: Freshdesk account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Freshdesk.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -55,7 +52,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: ticket, contact, company",
-              "helpText": "What this field is: Resource chooses the kind of Freshdesk item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Freshdesk.\nExample: In Freshdesk, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Freshdesk entity type to work with.\nOptions: ticket, contact, company.\nExample: ticket\nTip: Use {{$json.resource}} to set dynamically.",
               "placeholder": "ticket",
               "example": "ticket",
               "defaultValue": "ticket"
@@ -66,7 +63,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (e.g., ticket ID for get/update/delete)",
-              "helpText": "What this field is: Resource ID (e.g., ticket ID for get/update/delete) for Freshdesk / Get.\nWhere to find it: Open the item in Freshdesk and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells Freshdesk which item to use.\nWhere to find it: Open the item in Freshdesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 12345.\nTip: Use {{$json.id}} when an earlier Freshdesk step provides this value.",
               "placeholder": "12345",
               "example": "12345"
             },
@@ -76,7 +73,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Ticket subject (create)",
-              "helpText": "What this field is: Ticket subject (create) for Freshdesk / Get.\nHow to fill it: Enter the subject value requested by Freshdesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Welcome, {{$json.name}}.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Welcome, {{$json.name}}"
             },
             {
@@ -85,7 +82,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket description (create)",
-              "helpText": "What this field is: Ticket description (create) for Freshdesk / Get.\nHow to fill it: Type the message, prompt, or content you want Freshdesk to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Ticket description.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.descriptionText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -94,7 +91,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "email",
               "required": false,
               "description": "Requester email (create)",
-              "helpText": "What this field is: The email address that Freshdesk should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "helpText": "What this field is: The email address for Requester email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -104,7 +101,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Priority (1=Low,2=Medium,3=High,4=Urgent)",
-              "helpText": "What this field is: A number used for priority in Freshdesk / Get.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Priority.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -114,7 +111,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Status (2=Open,3=Pending,4=Resolved,5=Closed)",
-              "helpText": "What this field is: A number used for status in Freshdesk / Get.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Status.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.status}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -124,7 +121,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update",
-              "helpText": "What this field is: Payload for create/update for Freshdesk / Get.\nHow to fill it: Enter valid JSON in the format Freshdesk expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Freshdesk.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -164,7 +161,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Freshdesk domain (e.g., yourcompany.freshdesk.com)",
-              "helpText": "What this field is: Freshdesk domain (e.g., yourcompany.freshdesk.com) for Freshdesk / Create.\nHow to fill it: Enter the domain value requested by Freshdesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Freshdesk domain that tells Freshdesk which item to use.\nWhere to find it: Open the item in Freshdesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: mycompany.freshdesk.com.\nTip: Use {{$json.domain}} when an earlier Freshdesk step provides this value.",
               "placeholder": "mycompany.freshdesk.com",
               "example": "mycompany.freshdesk.com"
             },
@@ -174,7 +171,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Freshdesk API key (optional if stored in vault under key \"freshdesk\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Freshdesk.\nWhere to get it: Open the Freshdesk dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Freshdesk token, a secret password that lets CtrlChecks talk to Freshdesk safely.\nWhere to find it: Freshdesk account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Freshdesk.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -184,7 +181,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: ticket, contact, company",
-              "helpText": "What this field is: Resource chooses the kind of Freshdesk item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Freshdesk.\nExample: In Freshdesk, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Freshdesk entity type to work with.\nOptions: ticket, contact, company.\nExample: ticket\nTip: Use {{$json.resource}} to set dynamically.",
               "placeholder": "ticket",
               "example": "ticket",
               "defaultValue": "ticket"
@@ -195,7 +192,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (e.g., ticket ID for get/update/delete)",
-              "helpText": "What this field is: Resource ID (e.g., ticket ID for get/update/delete) for Freshdesk / Create.\nWhere to find it: Open the item in Freshdesk and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells Freshdesk which item to use.\nWhere to find it: Open the item in Freshdesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 12345.\nTip: Use {{$json.id}} when an earlier Freshdesk step provides this value.",
               "placeholder": "12345",
               "example": "12345"
             },
@@ -205,7 +202,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Ticket subject (create)",
-              "helpText": "What this field is: Short summary of the support issue.\nExample: Cannot access dashboard after password reset",
+              "helpText": "What this field is: Ticket subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Welcome, {{$json.name}}.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Welcome, {{$json.name}}"
             },
             {
@@ -214,7 +211,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket description (create)",
-              "helpText": "What this field is: Ticket description (create) for Freshdesk / Create.\nHow to fill it: Type the message, prompt, or content you want Freshdesk to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Ticket description.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.descriptionText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -223,7 +220,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "email",
               "required": false,
               "description": "Requester email (create)",
-              "helpText": "What this field is: The customer's email address — used to identify who submitted the ticket.\nExample: customer@company.com\nTip: Use {{$json.email}} from a form submission node.",
+              "helpText": "What this field is: The email address for Requester email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -233,7 +230,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Priority (1=Low,2=Medium,3=High,4=Urgent)",
-              "helpText": "What this field is: Issue urgency as a number.\nValues: 1 = Low, 2 = Medium, 3 = High, 4 = Urgent.\nExample: 3 for a high-priority issue.",
+              "helpText": "What this field is: The number used for Priority.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -243,7 +240,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Status (2=Open,3=Pending,4=Resolved,5=Closed)",
-              "helpText": "What this field is: The starting status of the ticket.\nValues: 2 = Open (most common for new tickets), 3 = Pending, 4 = Resolved, 5 = Closed.\nExample: 2",
+              "helpText": "What this field is: The number used for Status.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.status}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -253,7 +250,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update",
-              "helpText": "What this field is: Payload for create/update for Freshdesk / Create.\nHow to fill it: Enter valid JSON in the format Freshdesk expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Freshdesk.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -293,7 +290,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Freshdesk domain (e.g., yourcompany.freshdesk.com)",
-              "helpText": "What this field is: Freshdesk domain (e.g., yourcompany.freshdesk.com) for Freshdesk / Update.\nHow to fill it: Enter the domain value requested by Freshdesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Freshdesk domain that tells Freshdesk which item to use.\nWhere to find it: Open the item in Freshdesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: mycompany.freshdesk.com.\nTip: Use {{$json.domain}} when an earlier Freshdesk step provides this value.",
               "placeholder": "mycompany.freshdesk.com",
               "example": "mycompany.freshdesk.com"
             },
@@ -303,7 +300,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Freshdesk API key (optional if stored in vault under key \"freshdesk\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Freshdesk.\nWhere to get it: Open the Freshdesk dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Freshdesk token, a secret password that lets CtrlChecks talk to Freshdesk safely.\nWhere to find it: Freshdesk account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Freshdesk.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -313,7 +310,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: ticket, contact, company",
-              "helpText": "What this field is: Resource chooses the kind of Freshdesk item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Freshdesk.\nExample: In Freshdesk, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Freshdesk entity type to work with.\nOptions: ticket, contact, company.\nExample: ticket\nTip: Use {{$json.resource}} to set dynamically.",
               "placeholder": "ticket",
               "example": "ticket",
               "defaultValue": "ticket"
@@ -324,7 +321,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (e.g., ticket ID for get/update/delete)",
-              "helpText": "What this field is: Resource ID (e.g., ticket ID for get/update/delete) for Freshdesk / Update.\nWhere to find it: Open the item in Freshdesk and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells Freshdesk which item to use.\nWhere to find it: Open the item in Freshdesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 12345.\nTip: Use {{$json.id}} when an earlier Freshdesk step provides this value.",
               "placeholder": "12345",
               "example": "12345"
             },
@@ -334,7 +331,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Ticket subject (create)",
-              "helpText": "What this field is: Ticket subject (create) for Freshdesk / Update.\nHow to fill it: Enter the subject value requested by Freshdesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Welcome, {{$json.name}}.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Welcome, {{$json.name}}"
             },
             {
@@ -343,7 +340,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket description (create)",
-              "helpText": "What this field is: Ticket description (create) for Freshdesk / Update.\nHow to fill it: Type the message, prompt, or content you want Freshdesk to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Ticket description.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.descriptionText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -352,7 +349,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "email",
               "required": false,
               "description": "Requester email (create)",
-              "helpText": "What this field is: The email address that Freshdesk should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "helpText": "What this field is: The email address for Requester email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -362,7 +359,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Priority (1=Low,2=Medium,3=High,4=Urgent)",
-              "helpText": "What this field is: A number used for priority in Freshdesk / Update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Priority.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -372,7 +369,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Status (2=Open,3=Pending,4=Resolved,5=Closed)",
-              "helpText": "What this field is: A number used for status in Freshdesk / Update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Status.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.status}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -382,7 +379,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update",
-              "helpText": "What this field is: Payload for create/update for Freshdesk / Update.\nHow to fill it: Enter valid JSON in the format Freshdesk expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Freshdesk.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -422,7 +419,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Freshdesk domain (e.g., yourcompany.freshdesk.com)",
-              "helpText": "What this field is: Freshdesk domain (e.g., yourcompany.freshdesk.com) for Freshdesk / Delete.\nHow to fill it: Enter the domain value requested by Freshdesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Freshdesk domain that tells Freshdesk which item to use.\nWhere to find it: Open the item in Freshdesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: mycompany.freshdesk.com.\nTip: Use {{$json.domain}} when an earlier Freshdesk step provides this value.",
               "placeholder": "mycompany.freshdesk.com",
               "example": "mycompany.freshdesk.com"
             },
@@ -432,7 +429,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Freshdesk API key (optional if stored in vault under key \"freshdesk\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Freshdesk.\nWhere to get it: Open the Freshdesk dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Freshdesk token, a secret password that lets CtrlChecks talk to Freshdesk safely.\nWhere to find it: Freshdesk account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Freshdesk.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -442,7 +439,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: ticket, contact, company",
-              "helpText": "What this field is: Resource chooses the kind of Freshdesk item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Freshdesk.\nExample: In Freshdesk, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Freshdesk entity type to work with.\nOptions: ticket, contact, company.\nExample: ticket\nTip: Use {{$json.resource}} to set dynamically.",
               "placeholder": "ticket",
               "example": "ticket",
               "defaultValue": "ticket"
@@ -453,7 +450,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (e.g., ticket ID for get/update/delete)",
-              "helpText": "What this field is: Resource ID (e.g., ticket ID for get/update/delete) for Freshdesk / Delete.\nWhere to find it: Open the item in Freshdesk and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells Freshdesk which item to use.\nWhere to find it: Open the item in Freshdesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 12345.\nTip: Use {{$json.id}} when an earlier Freshdesk step provides this value.",
               "placeholder": "12345",
               "example": "12345"
             },
@@ -463,7 +460,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Ticket subject (create)",
-              "helpText": "What this field is: Ticket subject (create) for Freshdesk / Delete.\nHow to fill it: Enter the subject value requested by Freshdesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Welcome, {{$json.name}}.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Welcome, {{$json.name}}"
             },
             {
@@ -472,7 +469,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket description (create)",
-              "helpText": "What this field is: Ticket description (create) for Freshdesk / Delete.\nHow to fill it: Type the message, prompt, or content you want Freshdesk to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Ticket description.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.descriptionText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -481,7 +478,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "email",
               "required": false,
               "description": "Requester email (create)",
-              "helpText": "What this field is: The email address that Freshdesk should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "helpText": "What this field is: The email address for Requester email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -491,7 +488,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Priority (1=Low,2=Medium,3=High,4=Urgent)",
-              "helpText": "What this field is: A number used for priority in Freshdesk / Delete.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Priority.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -501,7 +498,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Status (2=Open,3=Pending,4=Resolved,5=Closed)",
-              "helpText": "What this field is: A number used for status in Freshdesk / Delete.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Status.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.status}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -511,7 +508,7 @@ export const freshdeskDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update",
-              "helpText": "What this field is: Payload for create/update for Freshdesk / Delete.\nHow to fill it: Enter valid JSON in the format Freshdesk expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Freshdesk.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }

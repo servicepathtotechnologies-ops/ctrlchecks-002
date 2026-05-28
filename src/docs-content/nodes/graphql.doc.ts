@@ -29,7 +29,7 @@ export const graphqlDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "GraphQL endpoint URL",
-              "helpText": "What this field is: GraphQL endpoint URL for GraphQL / Execute.\nHow to fill it: Paste the full web address GraphQL should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.url}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for GraphQL endpoint URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com/graphql.\nTip: Use {{$json.url}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com/graphql",
               "example": "https://api.example.com/graphql"
             },
@@ -39,7 +39,7 @@ export const graphqlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "GraphQL query",
-              "helpText": "What this field is: GraphQL query for GraphQL / Execute.\nHow to fill it: Enter the search, filter, SQL, or API query that tells GraphQL which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for GraphQL query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GraphQL.\nExample: { user(id: 1) { name email } }.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "{ user(id: 1) { name email } }",
               "example": "{ user(id: 1) { name email } }"
             },
@@ -49,7 +49,7 @@ export const graphqlDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "GraphQL variables",
-              "helpText": "What this field is: GraphQL variables for GraphQL / Execute.\nHow to fill it: Enter valid JSON in the format GraphQL expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.variables}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for GraphQL variables.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GraphQL.\nExample: {\"id\":1}.\nTip: Use {{$json.variables}} when an earlier step already prepared this data.",
               "placeholder": "{\"id\":1}",
               "example": "{\"id\":1}"
             }

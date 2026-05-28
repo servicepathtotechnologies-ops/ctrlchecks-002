@@ -8,15 +8,12 @@ export const gitlabDoc: NodeDoc = {
   "description": "GitLab repository operations",
   "credentialType": "GitLab API Key",
   "credentialSetupSteps": [
-    "What this is: GitLab uses an API key or account connection so CtrlChecks can safely access your GitLab account.",
-    "Go to gitlab.com and sign in -> click your profile photo (top right) -> Edit profile -> Access Tokens.",
-    "Click \"Add new token\" -> give it a name (e.g. CtrlChecks) -> set an expiry date.",
-    "Select scopes: \"api\" for full access, or \"read_repository\" and \"write_repository\" for repo-only access.",
-    "Click \"Create personal access token\". Copy the token - it starts with glpat- and is shown only once.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> GitLab -> paste the glpat- token -> Save.",
-    "Run a test step (e.g. list your projects) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the GitLab node and select the saved connection."
+    "What this is: The GitLab connection lets CtrlChecks access your GitLab account safely without putting secrets in workflow fields.",
+    "Where to start: GitLab account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> GitLab, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by GitLab.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple GitLab step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html",
   "resources": [
@@ -35,7 +32,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "GitLab API base URL (default: https://gitlab.com/api/v4)",
-              "helpText": "What this field is: GitLab API base URL (default: https://gitlab.com/api/v4) for GitLab / Create.\nHow to fill it: Paste the full web address GitLab should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.baseUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for GitLab API base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://gitlab.com/api/v4.\nTip: Use {{$json.baseUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://gitlab.com/api/v4",
               "example": "https://gitlab.com/api/v4",
               "defaultValue": "https://gitlab.com/api/v4"
@@ -46,7 +43,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Repository name",
-              "helpText": "What this field is: Repository name for GitLab / Create.\nHow to fill it: Enter the repo value requested by GitLab, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Repository name that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: owner/repo.\nTip: Use {{$json.repo}} when an earlier GitLab step provides this value.",
               "placeholder": "owner/repo",
               "example": "owner/repo"
             },
@@ -56,7 +53,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project ID or URL-encoded path (e.g., group%2Fproject)",
-              "helpText": "What this field is: Project ID or URL-encoded path (e.g., group%2Fproject) for GitLab / Create.\nWhere to find it: Open the item in GitLab and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.projectId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project ID or URL-encoded path that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.projectId}} when an earlier GitLab step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -66,7 +63,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue IID (project-scoped issue number)",
-              "helpText": "What this field is: Issue IID (project-scoped issue number) for GitLab / Create.\nWhere to find it: Open the item in GitLab and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.issueIid}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Issue IID that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1.\nTip: Use {{$json.issueIid}} when an earlier GitLab step provides this value.",
               "placeholder": "1",
               "example": "1"
             },
@@ -76,7 +73,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title (create)",
-              "helpText": "What this field is: Issue title (create) for GitLab / Create.\nHow to fill it: Enter the title value requested by GitLab, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "Enter Title"
             },
             {
@@ -85,7 +82,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue description (create)",
-              "helpText": "What this field is: Issue description (create) for GitLab / Create.\nHow to fill it: Type the message, prompt, or content you want GitLab to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.descriptionText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             }
           ],
@@ -124,7 +121,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "GitLab API base URL (default: https://gitlab.com/api/v4)",
-              "helpText": "What this field is: GitLab API base URL (default: https://gitlab.com/api/v4) for GitLab / Read.\nHow to fill it: Paste the full web address GitLab should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.baseUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for GitLab API base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://gitlab.com/api/v4.\nTip: Use {{$json.baseUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://gitlab.com/api/v4",
               "example": "https://gitlab.com/api/v4",
               "defaultValue": "https://gitlab.com/api/v4"
@@ -135,7 +132,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Repository name",
-              "helpText": "What this field is: Repository name for GitLab / Read.\nHow to fill it: Enter the repo value requested by GitLab, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Repository name that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: owner/repo.\nTip: Use {{$json.repo}} when an earlier GitLab step provides this value.",
               "placeholder": "owner/repo",
               "example": "owner/repo"
             },
@@ -145,7 +142,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project ID or URL-encoded path (e.g., group%2Fproject)",
-              "helpText": "What this field is: Project ID or URL-encoded path (e.g., group%2Fproject) for GitLab / Read.\nWhere to find it: Open the item in GitLab and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.projectId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project ID or URL-encoded path that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.projectId}} when an earlier GitLab step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -155,7 +152,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue IID (project-scoped issue number)",
-              "helpText": "What this field is: Issue IID (project-scoped issue number) for GitLab / Read.\nWhere to find it: Open the item in GitLab and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.issueIid}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Issue IID that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1.\nTip: Use {{$json.issueIid}} when an earlier GitLab step provides this value.",
               "placeholder": "1",
               "example": "1"
             },
@@ -165,7 +162,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title (create)",
-              "helpText": "What this field is: Issue title (create) for GitLab / Read.\nHow to fill it: Enter the title value requested by GitLab, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "Enter Title"
             },
             {
@@ -174,7 +171,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue description (create)",
-              "helpText": "What this field is: Issue description (create) for GitLab / Read.\nHow to fill it: Type the message, prompt, or content you want GitLab to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.descriptionText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             }
           ],
@@ -213,7 +210,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "GitLab API base URL (default: https://gitlab.com/api/v4)",
-              "helpText": "What this field is: GitLab API base URL (default: https://gitlab.com/api/v4) for GitLab / Update.\nHow to fill it: Paste the full web address GitLab should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.baseUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for GitLab API base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://gitlab.com/api/v4.\nTip: Use {{$json.baseUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://gitlab.com/api/v4",
               "example": "https://gitlab.com/api/v4",
               "defaultValue": "https://gitlab.com/api/v4"
@@ -224,7 +221,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Repository name",
-              "helpText": "What this field is: Repository name for GitLab / Update.\nHow to fill it: Enter the repo value requested by GitLab, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Repository name that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: owner/repo.\nTip: Use {{$json.repo}} when an earlier GitLab step provides this value.",
               "placeholder": "owner/repo",
               "example": "owner/repo"
             },
@@ -234,7 +231,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project ID or URL-encoded path (e.g., group%2Fproject)",
-              "helpText": "What this field is: Project ID or URL-encoded path (e.g., group%2Fproject) for GitLab / Update.\nWhere to find it: Open the item in GitLab and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.projectId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project ID or URL-encoded path that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.projectId}} when an earlier GitLab step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -244,7 +241,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue IID (project-scoped issue number)",
-              "helpText": "What this field is: Issue IID (project-scoped issue number) for GitLab / Update.\nWhere to find it: Open the item in GitLab and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.issueIid}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Issue IID that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1.\nTip: Use {{$json.issueIid}} when an earlier GitLab step provides this value.",
               "placeholder": "1",
               "example": "1"
             },
@@ -254,7 +251,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title (create)",
-              "helpText": "What this field is: Issue title (create) for GitLab / Update.\nHow to fill it: Enter the title value requested by GitLab, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "Enter Title"
             },
             {
@@ -263,7 +260,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue description (create)",
-              "helpText": "What this field is: Issue description (create) for GitLab / Update.\nHow to fill it: Type the message, prompt, or content you want GitLab to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.descriptionText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             }
           ],
@@ -302,7 +299,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "GitLab API base URL (default: https://gitlab.com/api/v4)",
-              "helpText": "What this field is: GitLab API base URL (default: https://gitlab.com/api/v4) for GitLab / Delete.\nHow to fill it: Paste the full web address GitLab should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.baseUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for GitLab API base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://gitlab.com/api/v4.\nTip: Use {{$json.baseUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://gitlab.com/api/v4",
               "example": "https://gitlab.com/api/v4",
               "defaultValue": "https://gitlab.com/api/v4"
@@ -313,7 +310,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Repository name",
-              "helpText": "What this field is: Repository name for GitLab / Delete.\nHow to fill it: Enter the repo value requested by GitLab, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Repository name that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: owner/repo.\nTip: Use {{$json.repo}} when an earlier GitLab step provides this value.",
               "placeholder": "owner/repo",
               "example": "owner/repo"
             },
@@ -323,7 +320,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project ID or URL-encoded path (e.g., group%2Fproject)",
-              "helpText": "What this field is: Project ID or URL-encoded path (e.g., group%2Fproject) for GitLab / Delete.\nWhere to find it: Open the item in GitLab and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.projectId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project ID or URL-encoded path that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.projectId}} when an earlier GitLab step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -333,7 +330,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue IID (project-scoped issue number)",
-              "helpText": "What this field is: Issue IID (project-scoped issue number) for GitLab / Delete.\nWhere to find it: Open the item in GitLab and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.issueIid}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Issue IID that tells GitLab which item to use.\nWhere to find it: Open the item in GitLab and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1.\nTip: Use {{$json.issueIid}} when an earlier GitLab step provides this value.",
               "placeholder": "1",
               "example": "1"
             },
@@ -343,7 +340,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title (create)",
-              "helpText": "What this field is: Issue title (create) for GitLab / Delete.\nHow to fill it: Enter the title value requested by GitLab, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "Enter Title"
             },
             {
@@ -352,7 +349,7 @@ export const gitlabDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue description (create)",
-              "helpText": "What this field is: Issue description (create) for GitLab / Delete.\nHow to fill it: Type the message, prompt, or content you want GitLab to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.descriptionText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             }
           ],

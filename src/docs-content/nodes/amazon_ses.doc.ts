@@ -8,16 +8,12 @@ export const amazonSesDoc: NodeDoc = {
   "description": "Send emails through Amazon Simple Email Service (SES)",
   "credentialType": "AWS Credential",
   "credentialSetupSteps": [
-    "What this is: AWS uses an OAuth connection so CtrlChecks can safely access your AWS account.",
-    "Go to aws.amazon.com and sign in -> open IAM (Identity and Access Management).",
-    "Click Users -> Create user. Give it a name (e.g. ctrlchecks-s3) and click Next.",
-    "Under \"Permissions options\", click \"Attach policies directly\" -> search for \"AmazonS3FullAccess\" -> select it -> Next -> Create user.",
-    "Click the new user -> Security credentials tab -> Access keys -> Create access key -> Application running outside AWS.",
-    "Copy the Access Key ID and Secret Access Key. Also note your AWS region (e.g. us-east-1) and your S3 bucket name.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> AWS S3 -> enter Access Key ID, Secret Access Key, and Region -> Save.",
-    "Run a test step (e.g. upload a small test file) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the AWS node and select the saved connection."
+    "What this is: The Amazon SES connection lets CtrlChecks access your Amazon SES account safely without putting secrets in workflow fields.",
+    "Where to start: AWS IAM -> Users or Roles -> Security credentials.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Amazon SES, then sign in or paste the secret value requested there.",
+    "Example: Access key ID plus secret access key.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Amazon SES step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/setting-up-s3.html",
   "resources": [
@@ -36,7 +32,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Email recipients (To, Cc, Bcc)",
-              "helpText": "What this field is: The email address that Amazon SES should use for recipients.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "helpText": "What this field is: Structured data for Email recipients.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Amazon SES.\nExample: {\"to\":[\"user@example.com\"]}.\nTip: Use {{$json.recipients}} when an earlier step already prepared this data.",
               "placeholder": "{\"to\":[\"user@example.com\"]}",
               "example": "{\"to\":[\"user@example.com\"]}"
             },
@@ -46,7 +42,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Email subject line",
-              "helpText": "What this field is: Email subject line for Amazon SES / Execute.\nHow to fill it: Enter the subject value requested by Amazon SES, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Email subject line.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Order Confirmation.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Order Confirmation",
               "example": "Order Confirmation"
             },
@@ -56,7 +52,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Email body content (HTML or plain text)",
-              "helpText": "What this field is: Email body content (HTML or plain text) for Amazon SES / Execute.\nHow to fill it: Type the message, prompt, or content you want Amazon SES to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Email body content.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Amazon SES.\nExample: Hello {{$json.name}}, your order is confirmed..\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "Hello {{$json.name}}, your order is confirmed.",
               "example": "Hello {{$json.name}}, your order is confirmed."
             },
@@ -66,7 +62,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Use AWS SES template instead of raw email",
-              "helpText": "What this field is: Use AWS SES template instead of raw email for Amazon SES / Execute.\nHow to fill it: Type the message, prompt, or content you want Amazon SES to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Use AWS SES template instead of raw email.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: false.\nTip: Use {{$json.useTemplate}} when this value comes from an earlier step.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -77,7 +73,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "AWS SES template name (required if useTemplate is true)",
-              "helpText": "What this field is: AWS SES template name (required if useTemplate is true) for Amazon SES / Execute.\nHow to fill it: Type the message, prompt, or content you want Amazon SES to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: The name of an AWS SES email template to use (only required when Use Template is true).\nWhere to find it: AWS Console → SES → Email templates. The template name is shown in the list.\nExample: OrderConfirmationV2 or WelcomeEmail\nCreate templates with the AWS CLI: aws ses create-template --cli-input-json file://template.json",
               "placeholder": "OrderConfirmation",
               "example": "OrderConfirmation"
             },
@@ -87,7 +83,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Template variables as JSON object",
-              "helpText": "What this field is: Template variables as JSON object for Amazon SES / Execute.\nHow to fill it: Type the message, prompt, or content you want Amazon SES to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Template variables as structured data in { } brackets object.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Amazon SES.\nExample: {\"name\":\"John\",\"orderId\":\"12345\"}.\nTip: Use {{$json.templateData}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"John\",\"orderId\":\"12345\"}",
               "example": "{\"name\":\"John\",\"orderId\":\"12345\"}"
             },
@@ -97,7 +93,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Sender email address (must be verified in SES)",
-              "helpText": "What this field is: Sender email address (must be verified in SES) for Amazon SES / Execute.\nHow to fill it: Enter the from address value requested by Amazon SES, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fromAddress}} or pick the value from the data picker.",
+              "helpText": "What this field is: Sender email address.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: noreply@example.com.\nTip: Use {{$json.fromAddress}} when this value comes from an earlier step.",
               "placeholder": "noreply@example.com",
               "example": "noreply@example.com"
             },
@@ -107,7 +103,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Reply-to email addresses",
-              "helpText": "What this field is: Reply-to email addresses for Amazon SES / Execute.\nHow to fill it: Enter valid JSON in the format Amazon SES expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.replyToAddresses}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Reply-to email addresses.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Amazon SES.\nExample: [\"support@example.com\"].\nTip: Use {{$json.replyToAddresses}} when an earlier step already prepared this data.",
               "placeholder": "[\"support@example.com\"]",
               "example": "[\"support@example.com\"]"
             },
@@ -117,7 +113,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Email attachments",
-              "helpText": "What this field is: Email attachments for Amazon SES / Execute.\nHow to fill it: Enter valid JSON in the format Amazon SES expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.attachments}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Email attachments.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Amazon SES.\nExample: [{\"filename\":\"report.pdf\",\"content\":\"{{$json.pdfContent}}\",\"contentType\":\"application/pdf\"}].\nTip: Use {{$json.attachments}} when an earlier step already prepared this data.",
               "placeholder": "[{\"filename\":\"report.pdf\",\"content\":\"{{$json.pdfContent}}\",\"contentType\":\"application/pdf\"}]",
               "example": "[{\"filename\":\"report.pdf\",\"content\":\"{{$json.pdfContent}}\",\"contentType\":\"application/pdf\"}]"
             },
@@ -127,7 +123,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "AWS region for SES service",
-              "helpText": "What this field is: AWS region for SES service for Amazon SES / Execute.\nHow to fill it: Enter the aws region value requested by Amazon SES, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.awsRegion}} or pick the value from the data picker.",
+              "helpText": "What this field is: AWS region for SES service.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: us-east-1.\nTip: Use {{$json.awsRegion}} when this value comes from an earlier step.",
               "placeholder": "us-east-1",
               "example": "us-east-1",
               "defaultValue": "us-east-1"
@@ -138,7 +134,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SES configuration set for tracking",
-              "helpText": "What this field is: SES configuration set for tracking for Amazon SES / Execute.\nHow to fill it: Enter the configuration set name value requested by Amazon SES, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.configurationSetName}} or pick the value from the data picker.",
+              "helpText": "What this field is: SES configuration set for tracking.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: my-config-set.\nTip: Use {{$json.configurationSetName}} when this value comes from an earlier step.",
               "placeholder": "my-config-set",
               "example": "my-config-set"
             },
@@ -148,7 +144,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Email tags for tracking and filtering",
-              "helpText": "What this field is: Email tags for tracking and filtering for Amazon SES / Execute.\nHow to fill it: Enter valid JSON in the format Amazon SES expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.tags}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Email tags for tracking and filtering.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Amazon SES.\nExample: {\"campaign\":\"newsletter\",\"type\":\"promotional\"}.\nTip: Use {{$json.tags}} when an earlier step already prepared this data.",
               "placeholder": "{\"campaign\":\"newsletter\",\"type\":\"promotional\"}",
               "example": "{\"campaign\":\"newsletter\",\"type\":\"promotional\"}"
             },
@@ -158,7 +154,7 @@ export const amazonSesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Bounce handling email address",
-              "helpText": "What this field is: Bounce handling email address for Amazon SES / Execute.\nHow to fill it: Enter the return path value requested by Amazon SES, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.returnPath}} or pick the value from the data picker.",
+              "helpText": "What this field is: Bounce handling email address.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: bounces@example.com.\nTip: Use {{$json.returnPath}} when this value comes from an earlier step.",
               "placeholder": "bounces@example.com",
               "example": "bounces@example.com"
             }

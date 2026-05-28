@@ -29,7 +29,7 @@ export const memoryDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Memory context",
-              "helpText": "What this field is: Memory context for Memory / Execute.\nHow to fill it: Type the message, prompt, or content you want Memory to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Memory context.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.context}}.\nTip: Use {{$json.context}} when this value comes from an earlier step.",
               "placeholder": "{{$json.context}}",
               "example": "{{$json.context}}"
             }

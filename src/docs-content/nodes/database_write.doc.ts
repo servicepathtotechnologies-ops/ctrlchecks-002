@@ -29,7 +29,7 @@ export const databaseWriteDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment.",
-              "helpText": "What this field is: Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment. for Database Write / Execute.\nHow to fill it: Enter the connection string value requested by Database Write, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Database connection string . If omitted, uses DATABASE_URL from environment..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: postgresql://user:pass@host:5432/dbname.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "postgresql://user:pass@host:5432/dbname",
               "example": "postgresql://user:pass@host:5432/dbname"
             },
@@ -39,7 +39,7 @@ export const databaseWriteDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query to execute",
-              "helpText": "What this field is: SQL query to execute for Database Write / Execute.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Database Write which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for SQL query to execute.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Database Write.\nExample: INSERT INTO users (name, email) VALUES ($1, $2).\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "INSERT INTO users (name, email) VALUES ($1, $2)",
               "example": "INSERT INTO users (name, email) VALUES ($1, $2)"
             },
@@ -49,7 +49,7 @@ export const databaseWriteDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Query parameters",
-              "helpText": "What this field is: Query parameters for Database Write / Execute.\nHow to fill it: Enter valid JSON in the format Database Write expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.parameters}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Query parameters.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Database Write.\nExample: [\"item\"].\nTip: Use {{$json.parameters}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             }

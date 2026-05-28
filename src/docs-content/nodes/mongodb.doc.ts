@@ -8,15 +8,12 @@ export const mongodbDoc: NodeDoc = {
   "description": "MongoDB database operations",
   "credentialType": "MongoDB Credential",
   "credentialSetupSteps": [
-    "What this is: MongoDB uses an OAuth connection so CtrlChecks can safely access your MongoDB account.",
-    "For MongoDB Atlas (cloud): go to cloud.mongodb.com and sign in -> open your cluster -> click \"Connect\" -> \"Connect your application\".",
-    "Copy the connection string - it looks like: mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/databasename",
-    "Replace \"password\" in the string with your actual database user password.",
-    "For local MongoDB: use the connection string: mongodb://localhost:27017/yourdatabasename",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> MongoDB -> paste the connection string -> Save.",
-    "Run a test step (e.g. find documents in a collection) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the MongoDB node and select the saved connection."
+    "What this is: The MongoDB connection lets CtrlChecks access your MongoDB account safely without putting secrets in workflow fields.",
+    "Where to start: MongoDB account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> MongoDB, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by MongoDB.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple MongoDB step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://www.mongodb.com/docs/drivers/node/current/fundamentals/connection/connect/",
   "resources": [
@@ -35,7 +32,7 @@ export const mongodbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Collection name",
-              "helpText": "What this field is: The MongoDB collection to work with — like a table in a regular database.\nExample: users or orders or products or event_logs\nTip: Collection names are case-sensitive.",
+              "helpText": "What this field is: Collection name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: users.\nTip: Use {{$json.collection}} when this value comes from an earlier step.",
               "placeholder": "users",
               "example": "users"
             },
@@ -45,7 +42,7 @@ export const mongodbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "MongoDB query",
-              "helpText": "What this field is: MongoDB query for MongoDB / Find.\nHow to fill it: Enter the search, filter, SQL, or API query that tells MongoDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for MongoDB query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by MongoDB.\nExample: {\"name\":\"John\"}.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"John\"}",
               "example": "{\"name\":\"John\"}"
             }
@@ -82,7 +79,7 @@ export const mongodbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Collection name",
-              "helpText": "What this field is: The MongoDB collection to work with — like a table in a regular database.\nExample: users or orders or products or event_logs\nTip: Collection names are case-sensitive.",
+              "helpText": "What this field is: Collection name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: users.\nTip: Use {{$json.collection}} when this value comes from an earlier step.",
               "placeholder": "users",
               "example": "users"
             },
@@ -92,7 +89,7 @@ export const mongodbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "MongoDB query",
-              "helpText": "What this field is: MongoDB query for MongoDB / Insert.\nHow to fill it: Enter the search, filter, SQL, or API query that tells MongoDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for MongoDB query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by MongoDB.\nExample: {\"name\":\"John\"}.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"John\"}",
               "example": "{\"name\":\"John\"}"
             }
@@ -129,7 +126,7 @@ export const mongodbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Collection name",
-              "helpText": "What this field is: The MongoDB collection to work with — like a table in a regular database.\nExample: users or orders or products or event_logs\nTip: Collection names are case-sensitive.",
+              "helpText": "What this field is: Collection name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: users.\nTip: Use {{$json.collection}} when this value comes from an earlier step.",
               "placeholder": "users",
               "example": "users"
             },
@@ -139,7 +136,7 @@ export const mongodbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "MongoDB query",
-              "helpText": "What this field is: MongoDB query for MongoDB / Update.\nHow to fill it: Enter the search, filter, SQL, or API query that tells MongoDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for MongoDB query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by MongoDB.\nExample: {\"name\":\"John\"}.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"John\"}",
               "example": "{\"name\":\"John\"}"
             }
@@ -176,7 +173,7 @@ export const mongodbDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Collection name",
-              "helpText": "What this field is: The MongoDB collection to work with — like a table in a regular database.\nExample: users or orders or products or event_logs\nTip: Collection names are case-sensitive.",
+              "helpText": "What this field is: Collection name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: users.\nTip: Use {{$json.collection}} when this value comes from an earlier step.",
               "placeholder": "users",
               "example": "users"
             },
@@ -186,7 +183,7 @@ export const mongodbDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "MongoDB query",
-              "helpText": "What this field is: MongoDB query for MongoDB / Delete.\nHow to fill it: Enter the search, filter, SQL, or API query that tells MongoDB which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for MongoDB query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by MongoDB.\nExample: {\"name\":\"John\"}.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"John\"}",
               "example": "{\"name\":\"John\"}"
             }

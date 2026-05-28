@@ -29,7 +29,7 @@ export const retryDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Maximum number of retry attempts",
-              "helpText": "What this field is: A number used for max attempts in Retry / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxAttempts}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Maximum number of retry attempts.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 3.\nTip: Use {{$json.maxAttempts}} when the number comes from an earlier step.",
               "placeholder": "3",
               "example": "3",
               "defaultValue": "3"
@@ -40,7 +40,7 @@ export const retryDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Delay between retries (in milliseconds)",
-              "helpText": "What this field is: A number used for delay between in Retry / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.delayBetween}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Delay between retries.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1000.\nTip: Use {{$json.delayBetween}} when the number comes from an earlier step.",
               "placeholder": "1000",
               "example": "1000",
               "defaultValue": "1000"
@@ -51,7 +51,7 @@ export const retryDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Backoff strategy (none, linear, exponential)",
-              "helpText": "What this field is: A list of allowed choices for backoff in Retry / Execute.\nHow to fill it: Pick the option that matches what Retry should do. Do not type a custom value unless the UI allows it.\nAvailable choices: None (none), Linear (linear), Exponential (exponential).",
+              "helpText": "Options: Choose the backoff value this Retry step should use.\nHow to choose it: Pick the option that matches what you want this step to do.\nExample: None.\nTip: Use {{$json.backoff}} only when an earlier step already provides a valid option value.",
               "placeholder": "none",
               "example": "none",
               "defaultValue": "none",

@@ -29,7 +29,7 @@ export const mathDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "First number",
-              "helpText": "What this field is: A number used for a in Math / Add.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.a}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for First number.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.a}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -39,7 +39,7 @@ export const mathDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Second number",
-              "helpText": "What this field is: A number used for b in Math / Add.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.b}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Second number.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5.\nTip: Use {{$json.b}} when the number comes from an earlier step.",
               "placeholder": "5",
               "example": "5"
             }
@@ -73,7 +73,7 @@ export const mathDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "First number",
-              "helpText": "What this field is: A number used for a in Math / Subtract.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.a}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for First number.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.a}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -83,7 +83,7 @@ export const mathDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Second number",
-              "helpText": "What this field is: A number used for b in Math / Subtract.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.b}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Second number.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5.\nTip: Use {{$json.b}} when the number comes from an earlier step.",
               "placeholder": "5",
               "example": "5"
             }
@@ -117,7 +117,7 @@ export const mathDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "First number",
-              "helpText": "What this field is: A number used for a in Math / Multiply.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.a}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for First number.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.a}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -127,7 +127,7 @@ export const mathDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Second number",
-              "helpText": "What this field is: A number used for b in Math / Multiply.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.b}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Second number.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5.\nTip: Use {{$json.b}} when the number comes from an earlier step.",
               "placeholder": "5",
               "example": "5"
             }
@@ -161,7 +161,7 @@ export const mathDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "First number",
-              "helpText": "What this field is: A number used for a in Math / Divide.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.a}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for First number.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.a}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -171,7 +171,7 @@ export const mathDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Second number",
-              "helpText": "What this field is: A number used for b in Math / Divide.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.b}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Second number.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5.\nTip: Use {{$json.b}} when the number comes from an earlier step.",
               "placeholder": "5",
               "example": "5"
             }

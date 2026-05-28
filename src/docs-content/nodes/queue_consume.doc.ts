@@ -29,7 +29,7 @@ export const queueConsumeDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Name of the queue",
-              "helpText": "What this field is: Name of the queue for Queue Consume / Execute.\nHow to fill it: Enter the queue name value requested by Queue Consume, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.queueName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Name of the queue.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: tasks.\nTip: Use {{$json.queueName}} when this value comes from an earlier step.",
               "placeholder": "tasks",
               "example": "tasks"
             },
@@ -39,7 +39,7 @@ export const queueConsumeDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum wait time in milliseconds (0 = infinite)",
-              "helpText": "What this field is: A number used for timeout in Queue Consume / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.timeout}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Maximum wait time in milliseconds.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 30000.\nTip: Use {{$json.timeout}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "30000",
               "example": "30000",
               "defaultValue": "30000"
@@ -50,7 +50,7 @@ export const queueConsumeDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Automatically acknowledge message after processing",
-              "helpText": "What this field is: An on/off choice for auto ack in Queue Consume / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Queue Consume to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Automatically acknowledge message after processing.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use auto ack; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"

@@ -29,7 +29,7 @@ export const switchDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Expression or template evaluated to a scalar (e.g. {{$json.status}}). Must match one of cases[].value.",
-              "helpText": "What this field is: Expression or template evaluated to a scalar (e.g. {{$json.status}}). Must match one of cases[].value. for Switch / Execute.\nHow to fill it: Enter the expression value requested by Switch, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.expression}} or pick the value from the data picker.",
+              "helpText": "What this field is: Expression or template evaluated to a scalar . Must match one of cases[].value..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.status}}.\nTip: Use {{$json.expression}} when this value comes from an earlier step.",
               "placeholder": "{{$json.status}}",
               "example": "{{$json.status}}"
             },
@@ -39,7 +39,7 @@ export const switchDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Case definitions; each value becomes an outgoing port name. Example: [{ value: \"active\", label: \"Active\" }]",
-              "helpText": "What this field is: The list of branches — each with a value to match and a label.\nFormat: JSON array of case objects with value and label.\nExample: [{\"value\":\"approved\",\"label\":\"Approved\"},{\"value\":\"rejected\",\"label\":\"Rejected\"},{\"value\":\"pending\",\"label\":\"Pending Review\"}]\nThe workflow takes the branch whose value matches the input. If no branch matches, it takes the \"default\" path.",
+              "helpText": "What this field is: Structured data for Case definitions; each value becomes an outgoing port name. Example: [{ value: \"active\", label: \"Active\" }].\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Switch.\nExample: [{\"value\":\"active\",\"label\":\"Active\"},{\"value\":\"pending\",\"label\":\"Pending\"}].\nTip: Use {{$json.cases}} when an earlier step already prepared this data.",
               "placeholder": "[{\"value\":\"active\",\"label\":\"Active\"},{\"value\":\"pending\",\"label\":\"Pending\"}]",
               "example": "[{\"value\":\"active\",\"label\":\"Active\"},{\"value\":\"pending\",\"label\":\"Pending\"}]"
             },
@@ -49,7 +49,7 @@ export const switchDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional hint: how expression is interpreted (e.g. expression, string, number)",
-              "helpText": "What this field is: Optional hint: how expression is interpreted (e.g. expression, string, number) for Switch / Execute.\nHow to fill it: Enter the routing type value requested by Switch, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.routingType}} or pick the value from the data picker.",
+              "helpText": "What this field is: hint: how expression is interpreted.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: expression.\nTip: Use {{$json.routingType}} when this value comes from an earlier step.",
               "placeholder": "expression",
               "example": "expression"
             },
@@ -59,7 +59,7 @@ export const switchDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Deprecated alias for cases; migrated automatically to cases",
-              "helpText": "What this field is: Deprecated alias for cases; migrated automatically to cases for Switch / Execute.\nHow to fill it: Enter valid JSON in the format Switch expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.rules}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Deprecated alias for cases; migrated automatically to cases.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Switch.\nExample: [\"item\"].\nTip: Use {{$json.rules}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             }

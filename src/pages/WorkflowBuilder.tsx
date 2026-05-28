@@ -1259,6 +1259,7 @@ export default function WorkflowBuilder() {
         <WorkflowConnectionGate
           missingConnections={missingConnections}
           workflowId={id}
+          workflowName={useWorkflowStore.getState().workflowName}
           isLoading={isCheckingConnections && missingConnections.length === 0}
           onDismiss={() => setGateDismissed(true)}
         />
@@ -1307,7 +1308,7 @@ export default function WorkflowBuilder() {
           <div className="flex-1 min-h-0 min-w-0 flex overflow-hidden">
             {/* Left Panel - Node Library */}
             {nodeLibraryOpen ? (
-              <div className="relative w-[clamp(14rem,18vw,18rem)] min-w-0 shrink-0 overflow-hidden border-r border-border/60">
+              <div className="relative w-[360px] shrink-0 overflow-hidden border-r border-border/60">
                 <NodeLibrary
                   onDragStart={onDragStart}
                   onClose={() => setNodeLibraryOpen(false)}
@@ -1335,7 +1336,7 @@ export default function WorkflowBuilder() {
 
             {/* Right Panel - Properties */}
             {propertiesPanelOpen ? (
-              <div className="relative min-w-0 shrink-0 overflow-hidden border-l border-border/60 max-w-[min(35rem,calc(100vw-4rem))]">
+              <div className="relative w-[360px] shrink-0 overflow-hidden border-l border-border/60">
                 <PropertiesPanel
                   onClose={() => setPropertiesPanelOpen(false)}
                   lastResolvedInputs={lastResolvedInputs}

@@ -8,16 +8,12 @@ export const airtableDoc: NodeDoc = {
   "description": "Read, write, update, or delete records in Airtable bases and tables",
   "credentialType": "Airtable API Key",
   "credentialSetupSteps": [
-    "What this is: Airtable uses an API key or account connection so CtrlChecks can safely access your Airtable account.",
-    "Go to airtable.com and sign in to your account.",
-    "Click your profile photo (top right) -> Developer hub (or go to airtable.com/account -> API section).",
-    "Click \"Personal access tokens\" -> Create new token. Give it a name (e.g. CtrlChecks).",
-    "Add scopes: data.records:read and data.records:write. Under \"Access\", add the specific Base(s) you want CtrlChecks to access.",
-    "Click \"Create token\". Copy the token - it starts with pat. and is shown only once.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Airtable -> paste the pat. token -> Save.",
-    "To find your Base ID: open the base in Airtable -> Help menu -> API documentation - the ID starting with \"app\" is shown at the top.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Airtable node and select the saved connection."
+    "What this is: The Airtable connection lets CtrlChecks access your Airtable account safely without putting secrets in workflow fields.",
+    "Where to start: Airtable -> Developer hub -> Personal access tokens.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Airtable, then sign in or paste the secret value requested there.",
+    "Example: pat....",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Airtable step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://airtable.com/developers/web/api/introduction",
   "resources": [
@@ -36,7 +32,7 @@ export const airtableDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Airtable API key (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Airtable.\nWhere to get it: Open the Airtable dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Airtable personal access token, a secret password that lets CtrlChecks talk to Airtable safely.\nWhere to find it: Airtable -> Developer hub -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: pat....\nImportant: Treat this like a bank password. Grant access only to the bases this workflow needs.",
               "placeholder": "patXXXXXXXXXXXXXX",
               "example": "patXXXXXXXXXXXXXX",
               "notes": "Stored and displayed as a masked credential value."
@@ -47,7 +43,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Airtable OAuth access token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Airtable.\nWhere to get it: Open the Airtable dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Airtable personal access token, a secret password that lets CtrlChecks talk to Airtable safely.\nWhere to find it: Airtable -> Developer hub -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: pat....\nImportant: Treat this like a bank password. Grant access only to the bases this workflow needs.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -67,7 +63,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Airtable table ID or name",
-              "helpText": "What this field is: The name or ID of the specific table within your Airtable base.\nHow to find it: Open your base — the tab names at the top are your table names.\nExample: Contacts or Orders or Products\nNote: You can use the display name (e.g. Contacts) or the table ID (tblXXXXXX).",
+              "helpText": "What this field is: The Airtable table ID or name that tells Airtable which item to use.\nWhere to find it: Open the item in Airtable and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: tblXXXXXXXXXXXXXX.\nTip: Use {{$json.tableId}} when an earlier Airtable step provides this value.",
               "placeholder": "tblXXXXXXXXXXXXXX",
               "example": "tblXXXXXXXXXXXXXX"
             },
@@ -77,7 +73,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record ID (required for update/delete)",
-              "helpText": "What this field is: Record ID (required for update/delete) for Airtable / Read.\nWhere to find it: Open the item in Airtable and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID that tells Airtable which item to use.\nWhere to find it: Open the item in Airtable and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: recXXXXXXXXXXXXXX.\nTip: Use {{$json.recordId}} when an earlier Airtable step provides this value.",
               "placeholder": "recXXXXXXXXXXXXXX",
               "example": "recXXXXXXXXXXXXXX"
             },
@@ -87,7 +83,7 @@ export const airtableDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field values for create/update",
-              "helpText": "What this field is: Field values for create/update for Airtable / Read.\nHow to fill it: Enter valid JSON in the format Airtable expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field values.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Airtable.\nExample: {\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}",
               "example": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}"
             }
@@ -127,7 +123,7 @@ export const airtableDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Airtable API key (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Airtable.\nWhere to get it: Open the Airtable dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Airtable personal access token, a secret password that lets CtrlChecks talk to Airtable safely.\nWhere to find it: Airtable -> Developer hub -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: pat....\nImportant: Treat this like a bank password. Grant access only to the bases this workflow needs.",
               "placeholder": "patXXXXXXXXXXXXXX",
               "example": "patXXXXXXXXXXXXXX",
               "notes": "Stored and displayed as a masked credential value."
@@ -138,7 +134,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Airtable OAuth access token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Airtable.\nWhere to get it: Open the Airtable dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Airtable personal access token, a secret password that lets CtrlChecks talk to Airtable safely.\nWhere to find it: Airtable -> Developer hub -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: pat....\nImportant: Treat this like a bank password. Grant access only to the bases this workflow needs.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -158,7 +154,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Airtable table ID or name",
-              "helpText": "What this field is: The name or ID of the specific table within your Airtable base.\nHow to find it: Open your base — the tab names at the top are your table names.\nExample: Contacts or Orders or Products\nNote: You can use the display name (e.g. Contacts) or the table ID (tblXXXXXX).",
+              "helpText": "What this field is: The Airtable table ID or name that tells Airtable which item to use.\nWhere to find it: Open the item in Airtable and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: tblXXXXXXXXXXXXXX.\nTip: Use {{$json.tableId}} when an earlier Airtable step provides this value.",
               "placeholder": "tblXXXXXXXXXXXXXX",
               "example": "tblXXXXXXXXXXXXXX"
             },
@@ -168,7 +164,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record ID (required for update/delete)",
-              "helpText": "What this field is: Record ID (required for update/delete) for Airtable / Create.\nWhere to find it: Open the item in Airtable and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID that tells Airtable which item to use.\nWhere to find it: Open the item in Airtable and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: recXXXXXXXXXXXXXX.\nTip: Use {{$json.recordId}} when an earlier Airtable step provides this value.",
               "placeholder": "recXXXXXXXXXXXXXX",
               "example": "recXXXXXXXXXXXXXX"
             },
@@ -178,7 +174,7 @@ export const airtableDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field values for create/update",
-              "helpText": "What this field is: The data for the new record, as a JSON object.\nKeys must exactly match your Airtable column names.\nExample: {\"Name\":\"Alice Kumar\",\"Email\":\"alice@example.com\",\"Status\":\"New Lead\",\"Company\":\"Acme Corp\",\"Phone\":\"+14155552671\"}",
+              "helpText": "What this field is: Structured data for Field values.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Airtable.\nExample: {\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}",
               "example": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}"
             }
@@ -215,7 +211,7 @@ export const airtableDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Airtable API key (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Airtable.\nWhere to get it: Open the Airtable dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Airtable personal access token, a secret password that lets CtrlChecks talk to Airtable safely.\nWhere to find it: Airtable -> Developer hub -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: pat....\nImportant: Treat this like a bank password. Grant access only to the bases this workflow needs.",
               "placeholder": "patXXXXXXXXXXXXXX",
               "example": "patXXXXXXXXXXXXXX",
               "notes": "Stored and displayed as a masked credential value."
@@ -226,7 +222,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Airtable OAuth access token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Airtable.\nWhere to get it: Open the Airtable dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Airtable personal access token, a secret password that lets CtrlChecks talk to Airtable safely.\nWhere to find it: Airtable -> Developer hub -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: pat....\nImportant: Treat this like a bank password. Grant access only to the bases this workflow needs.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -246,7 +242,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Airtable table ID or name",
-              "helpText": "What this field is: The name or ID of the specific table within your Airtable base.\nHow to find it: Open your base — the tab names at the top are your table names.\nExample: Contacts or Orders or Products\nNote: You can use the display name (e.g. Contacts) or the table ID (tblXXXXXX).",
+              "helpText": "What this field is: The Airtable table ID or name that tells Airtable which item to use.\nWhere to find it: Open the item in Airtable and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: tblXXXXXXXXXXXXXX.\nTip: Use {{$json.tableId}} when an earlier Airtable step provides this value.",
               "placeholder": "tblXXXXXXXXXXXXXX",
               "example": "tblXXXXXXXXXXXXXX"
             },
@@ -256,7 +252,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record ID (required for update/delete)",
-              "helpText": "What this field is: The unique ID of the Airtable record to update.\nFormat: Starts with \"rec\" followed by letters and numbers. Example: recABCDEFGHIJ1234\nWhere to find it: Run an Airtable List or Get operation first — each record in the output has an \"id\" field.\nTip: Use {{$json.id}} from the previous step.",
+              "helpText": "What this field is: The Record ID that tells Airtable which item to use.\nWhere to find it: Open the item in Airtable and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: recXXXXXXXXXXXXXX.\nTip: Use {{$json.recordId}} when an earlier Airtable step provides this value.",
               "placeholder": "recXXXXXXXXXXXXXX",
               "example": "recXXXXXXXXXXXXXX"
             },
@@ -266,7 +262,7 @@ export const airtableDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field values for create/update",
-              "helpText": "What this field is: The fields to update on the existing record.\nExample: {\"Status\":\"Qualified\",\"Notes\":\"Followed up on 2025-01-15\"}",
+              "helpText": "What this field is: Structured data for Field values.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Airtable.\nExample: {\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}",
               "example": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}"
             }
@@ -303,7 +299,7 @@ export const airtableDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Airtable API key (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Airtable.\nWhere to get it: Open the Airtable dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Airtable personal access token, a secret password that lets CtrlChecks talk to Airtable safely.\nWhere to find it: Airtable -> Developer hub -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: pat....\nImportant: Treat this like a bank password. Grant access only to the bases this workflow needs.",
               "placeholder": "patXXXXXXXXXXXXXX",
               "example": "patXXXXXXXXXXXXXX",
               "notes": "Stored and displayed as a masked credential value."
@@ -314,7 +310,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Airtable OAuth access token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Airtable.\nWhere to get it: Open the Airtable dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Airtable personal access token, a secret password that lets CtrlChecks talk to Airtable safely.\nWhere to find it: Airtable -> Developer hub -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: pat....\nImportant: Treat this like a bank password. Grant access only to the bases this workflow needs.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -334,7 +330,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Airtable table ID or name",
-              "helpText": "What this field is: The name or ID of the specific table within your Airtable base.\nHow to find it: Open your base — the tab names at the top are your table names.\nExample: Contacts or Orders or Products\nNote: You can use the display name (e.g. Contacts) or the table ID (tblXXXXXX).",
+              "helpText": "What this field is: The Airtable table ID or name that tells Airtable which item to use.\nWhere to find it: Open the item in Airtable and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: tblXXXXXXXXXXXXXX.\nTip: Use {{$json.tableId}} when an earlier Airtable step provides this value.",
               "placeholder": "tblXXXXXXXXXXXXXX",
               "example": "tblXXXXXXXXXXXXXX"
             },
@@ -344,7 +340,7 @@ export const airtableDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record ID (required for update/delete)",
-              "helpText": "What this field is: Record ID (required for update/delete) for Airtable / Delete.\nWhere to find it: Open the item in Airtable and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID that tells Airtable which item to use.\nWhere to find it: Open the item in Airtable and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: recXXXXXXXXXXXXXX.\nTip: Use {{$json.recordId}} when an earlier Airtable step provides this value.",
               "placeholder": "recXXXXXXXXXXXXXX",
               "example": "recXXXXXXXXXXXXXX"
             },
@@ -354,7 +350,7 @@ export const airtableDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field values for create/update",
-              "helpText": "What this field is: Field values for create/update for Airtable / Delete.\nHow to fill it: Enter valid JSON in the format Airtable expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field values.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Airtable.\nExample: {\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}",
               "example": "{\"Name\":\"John Doe\",\"Email\":\"test@example.com\"}"
             }

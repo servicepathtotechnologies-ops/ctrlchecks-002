@@ -8,15 +8,12 @@ export const calendlyDoc: NodeDoc = {
   "description": "Fetch events, event types, scheduled meetings, and user info from Calendly.",
   "credentialType": "Calendly API Key",
   "credentialSetupSteps": [
-    "What this is: Calendly uses an API key or account connection so CtrlChecks can safely access your Calendly account.",
-    "Log in to your Calendly account at calendly.com.",
-    "Click your profile photo (top right) -> Integrations -> API & Webhooks.",
-    "Under \"Personal Access Tokens\", click \"Generate new token\" -> give it a name -> Create Token.",
-    "Copy the token shown.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Calendly -> paste the token -> Save.",
-    "Run a test step (e.g. list your event types) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Calendly node and select the saved connection."
+    "What this is: The Calendly connection lets CtrlChecks access your Calendly account safely without putting secrets in workflow fields.",
+    "Where to start: Calendly account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Calendly, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Calendly.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Calendly step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developer.calendly.com/api-docs/ZG9jOjExMjM0NzU2-calendly-developer-portal",
   "resources": [
@@ -35,7 +32,7 @@ export const calendlyDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Calendly personal access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Calendly.\nWhere to get it: Open the Calendly dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Calendly token, a secret password that lets CtrlChecks talk to Calendly safely.\nWhere to find it: Calendly account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Calendly.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -44,7 +41,7 @@ export const calendlyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Calendly user URI",
-              "helpText": "What this field is: Calendly user URI for Calendly / Get events.\nHow to fill it: Enter the user uri value requested by Calendly, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.userUri}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Calendly user URI.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://example.com/resource.\nTip: Use {{$json.userUri}} when the URL comes from an earlier step.",
               "placeholder": "Enter User Uri"
             },
             {
@@ -88,7 +85,7 @@ export const calendlyDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Calendly personal access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Calendly.\nWhere to get it: Open the Calendly dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Calendly token, a secret password that lets CtrlChecks talk to Calendly safely.\nWhere to find it: Calendly account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Calendly.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -97,7 +94,7 @@ export const calendlyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Calendly user URI",
-              "helpText": "What this field is: Calendly user URI for Calendly / Get event types.\nHow to fill it: Enter the user uri value requested by Calendly, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.userUri}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Calendly user URI.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://example.com/resource.\nTip: Use {{$json.userUri}} when the URL comes from an earlier step.",
               "placeholder": "Enter User Uri"
             },
             {
@@ -141,7 +138,7 @@ export const calendlyDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Calendly personal access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Calendly.\nWhere to get it: Open the Calendly dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Calendly token, a secret password that lets CtrlChecks talk to Calendly safely.\nWhere to find it: Calendly account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Calendly.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -150,7 +147,7 @@ export const calendlyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Calendly user URI",
-              "helpText": "What this field is: Calendly user URI for Calendly / Get scheduled events.\nHow to fill it: Enter the user uri value requested by Calendly, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.userUri}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Calendly user URI.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://example.com/resource.\nTip: Use {{$json.userUri}} when the URL comes from an earlier step.",
               "placeholder": "Enter User Uri"
             },
             {
@@ -194,7 +191,7 @@ export const calendlyDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Calendly personal access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Calendly.\nWhere to get it: Open the Calendly dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Calendly token, a secret password that lets CtrlChecks talk to Calendly safely.\nWhere to find it: Calendly account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Calendly.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -203,7 +200,7 @@ export const calendlyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Calendly user URI",
-              "helpText": "What this field is: Calendly user URI for Calendly / Get user.\nHow to fill it: Enter the user uri value requested by Calendly, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.userUri}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Calendly user URI.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://example.com/resource.\nTip: Use {{$json.userUri}} when the URL comes from an earlier step.",
               "placeholder": "Enter User Uri"
             },
             {

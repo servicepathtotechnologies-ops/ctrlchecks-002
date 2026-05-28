@@ -8,15 +8,12 @@ export const pipedriveDoc: NodeDoc = {
   "description": "Pipedrive CRM operations - manage deals, persons, organizations, and activities",
   "credentialType": "Pipedrive API Key",
   "credentialSetupSteps": [
-    "What this is: Pipedrive uses an API key or account connection so CtrlChecks can safely access your Pipedrive account.",
-    "Log in to your Pipedrive account at app.pipedrive.com.",
-    "Click your profile photo or initials (top right) -> Personal Preferences.",
-    "Click the \"API\" tab. Your API token is shown - copy it.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Pipedrive -> paste the API token -> Save.",
-    "To find a deal ID for use in the node: open any deal in Pipedrive - the number in the browser URL (e.g. /deal/123) is the deal ID.",
-    "Run a test step (e.g. search for a deal) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Pipedrive node and select the saved connection."
+    "What this is: The Pipedrive connection lets CtrlChecks access your Pipedrive account safely without putting secrets in workflow fields.",
+    "Where to start: Pipedrive account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Pipedrive, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Pipedrive.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Pipedrive step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.pipedrive.com/docs/api/v1",
   "resources": [
@@ -35,7 +32,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Pipedrive API token (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Pipedrive.\nWhere to get it: Open the Pipedrive dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Pipedrive API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: your-pipedrive-api-token.\nTip: This field is used for authentication. Leave it blank when this operation does not need it.",
               "placeholder": "your-pipedrive-api-token",
               "example": "your-pipedrive-api-token"
             },
@@ -45,7 +42,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Pipedrive resource: deals, persons, organizations, activities",
-              "helpText": "What this field is: Resource chooses the kind of Pipedrive item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Pipedrive.\nExample: In Pipedrive, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Pipedrive entity type to work with.\nOptions: deals, persons, organizations, activities, leads, notes, products.\nExample: persons to create a contact, deals to create or update a pipeline deal.",
               "placeholder": "deals",
               "example": "deals",
               "defaultValue": "deals"
@@ -56,7 +53,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (required for get, update, delete)",
-              "helpText": "What this field is: Resource ID (required for get, update, delete) for Pipedrive / Get.\nWhere to find it: Open the item in Pipedrive and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells Pipedrive which item to use.\nWhere to find it: Open the item in Pipedrive and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.id}} when an earlier Pipedrive step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -66,7 +63,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Resource data for create/update",
-              "helpText": "What this field is: Resource data for create/update for Pipedrive / Get.\nHow to fill it: Enter valid JSON in the format Pipedrive expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Resource data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pipedrive.\nExample: {\"title\":\"Deal Title\",\"value\":1000}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"title\":\"Deal Title\",\"value\":1000}",
               "example": "{\"title\":\"Deal Title\",\"value\":1000}"
             }
@@ -105,7 +102,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Pipedrive API token (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Pipedrive.\nWhere to get it: Open the Pipedrive dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Pipedrive API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: your-pipedrive-api-token.\nTip: This field is used for authentication. Leave it blank when this operation does not need it.",
               "placeholder": "your-pipedrive-api-token",
               "example": "your-pipedrive-api-token"
             },
@@ -115,7 +112,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Pipedrive resource: deals, persons, organizations, activities",
-              "helpText": "What this field is: Resource chooses the kind of Pipedrive item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Pipedrive.\nExample: In Pipedrive, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Pipedrive entity type to work with.\nOptions: deals, persons, organizations, activities, leads, notes, products.\nExample: persons to create a contact, deals to create or update a pipeline deal.",
               "placeholder": "deals",
               "example": "deals",
               "defaultValue": "deals"
@@ -126,7 +123,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (required for get, update, delete)",
-              "helpText": "What this field is: Resource ID (required for get, update, delete) for Pipedrive / Create.\nWhere to find it: Open the item in Pipedrive and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells Pipedrive which item to use.\nWhere to find it: Open the item in Pipedrive and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.id}} when an earlier Pipedrive step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -136,7 +133,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Resource data for create/update",
-              "helpText": "What this field is: Resource data for create/update for Pipedrive / Create.\nHow to fill it: Enter valid JSON in the format Pipedrive expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Resource data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pipedrive.\nExample: {\"title\":\"Deal Title\",\"value\":1000}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"title\":\"Deal Title\",\"value\":1000}",
               "example": "{\"title\":\"Deal Title\",\"value\":1000}"
             }
@@ -175,7 +172,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Pipedrive API token (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Pipedrive.\nWhere to get it: Open the Pipedrive dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Pipedrive API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: your-pipedrive-api-token.\nTip: This field is used for authentication. Leave it blank when this operation does not need it.",
               "placeholder": "your-pipedrive-api-token",
               "example": "your-pipedrive-api-token"
             },
@@ -185,7 +182,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Pipedrive resource: deals, persons, organizations, activities",
-              "helpText": "What this field is: Resource chooses the kind of Pipedrive item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Pipedrive.\nExample: In Pipedrive, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Pipedrive entity type to work with.\nOptions: deals, persons, organizations, activities, leads, notes, products.\nExample: persons to create a contact, deals to create or update a pipeline deal.",
               "placeholder": "deals",
               "example": "deals",
               "defaultValue": "deals"
@@ -196,7 +193,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (required for get, update, delete)",
-              "helpText": "What this field is: Resource ID (required for get, update, delete) for Pipedrive / Update.\nWhere to find it: Open the item in Pipedrive and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells Pipedrive which item to use.\nWhere to find it: Open the item in Pipedrive and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.id}} when an earlier Pipedrive step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -206,7 +203,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Resource data for create/update",
-              "helpText": "What this field is: Resource data for create/update for Pipedrive / Update.\nHow to fill it: Enter valid JSON in the format Pipedrive expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Resource data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pipedrive.\nExample: {\"title\":\"Deal Title\",\"value\":1000}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"title\":\"Deal Title\",\"value\":1000}",
               "example": "{\"title\":\"Deal Title\",\"value\":1000}"
             }
@@ -245,7 +242,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Pipedrive API token (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Pipedrive.\nWhere to get it: Open the Pipedrive dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Pipedrive API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: your-pipedrive-api-token.\nTip: This field is used for authentication. Leave it blank when this operation does not need it.",
               "placeholder": "your-pipedrive-api-token",
               "example": "your-pipedrive-api-token"
             },
@@ -255,7 +252,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Pipedrive resource: deals, persons, organizations, activities",
-              "helpText": "What this field is: Resource chooses the kind of Pipedrive item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Pipedrive.\nExample: In Pipedrive, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Pipedrive entity type to work with.\nOptions: deals, persons, organizations, activities, leads, notes, products.\nExample: persons to create a contact, deals to create or update a pipeline deal.",
               "placeholder": "deals",
               "example": "deals",
               "defaultValue": "deals"
@@ -266,7 +263,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (required for get, update, delete)",
-              "helpText": "What this field is: Resource ID (required for get, update, delete) for Pipedrive / Delete.\nWhere to find it: Open the item in Pipedrive and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells Pipedrive which item to use.\nWhere to find it: Open the item in Pipedrive and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.id}} when an earlier Pipedrive step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -276,7 +273,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Resource data for create/update",
-              "helpText": "What this field is: Resource data for create/update for Pipedrive / Delete.\nHow to fill it: Enter valid JSON in the format Pipedrive expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Resource data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pipedrive.\nExample: {\"title\":\"Deal Title\",\"value\":1000}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"title\":\"Deal Title\",\"value\":1000}",
               "example": "{\"title\":\"Deal Title\",\"value\":1000}"
             }
@@ -315,7 +312,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Pipedrive API token (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Pipedrive.\nWhere to get it: Open the Pipedrive dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Pipedrive API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: your-pipedrive-api-token.\nTip: This field is used for authentication. Leave it blank when this operation does not need it.",
               "placeholder": "your-pipedrive-api-token",
               "example": "your-pipedrive-api-token"
             },
@@ -325,7 +322,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Pipedrive resource: deals, persons, organizations, activities",
-              "helpText": "What this field is: Resource chooses the kind of Pipedrive item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Pipedrive.\nExample: In Pipedrive, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Pipedrive entity type to work with.\nOptions: deals, persons, organizations, activities, leads, notes, products.\nExample: persons to create a contact, deals to create or update a pipeline deal.",
               "placeholder": "deals",
               "example": "deals",
               "defaultValue": "deals"
@@ -336,7 +333,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (required for get, update, delete)",
-              "helpText": "What this field is: Resource ID (required for get, update, delete) for Pipedrive / Search.\nWhere to find it: Open the item in Pipedrive and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID that tells Pipedrive which item to use.\nWhere to find it: Open the item in Pipedrive and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123.\nTip: Use {{$json.id}} when an earlier Pipedrive step provides this value.",
               "placeholder": "123",
               "example": "123"
             },
@@ -346,7 +343,7 @@ export const pipedriveDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Resource data for create/update",
-              "helpText": "What this field is: Resource data for create/update for Pipedrive / Search.\nHow to fill it: Enter valid JSON in the format Pipedrive expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Resource data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pipedrive.\nExample: {\"title\":\"Deal Title\",\"value\":1000}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"title\":\"Deal Title\",\"value\":1000}",
               "example": "{\"title\":\"Deal Title\",\"value\":1000}"
             }

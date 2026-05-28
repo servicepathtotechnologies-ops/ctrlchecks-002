@@ -8,13 +8,12 @@ export const sapDoc: NodeDoc = {
   "description": "Interact with SAP systems via OData/REST APIs — read and write business objects such as sales orders, purchase orders, materials, customers, and more.",
   "credentialType": "SAP Credential",
   "credentialSetupSteps": [
-    "What this is: SAP uses an OAuth connection so CtrlChecks can safely access your SAP account.",
-    "In your SAP system, ask your SAP administrator to create a Communication User with the required roles for the APIs you need.",
-    "In SAP Communication Management, set up a Communication Arrangement for the API (OData or REST endpoint) with Basic Authentication.",
-    "Note the base URL for your SAP system (e.g. https://yoursystem.sap.com), the username, and password.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> SAP -> enter Base URL, Username, and Password -> Test Connection -> Save.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields."
+    "What this is: The SAP connection lets CtrlChecks access your SAP account safely without putting secrets in workflow fields.",
+    "Where to start: SAP account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> SAP, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by SAP.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple SAP step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://help.sap.com/docs/",
   "resources": [
@@ -33,7 +32,7 @@ export const sapDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "SAP system base URL (e.g. https://your-sap-host:44300)",
-              "helpText": "What this field is: SAP system base URL (e.g. https://your-sap-host:44300) for SAP / Get.\nHow to fill it: Paste the full web address SAP should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.baseUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for SAP system base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://sap.example.com:44300.\nTip: Use {{$json.baseUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://sap.example.com:44300",
               "example": "https://sap.example.com:44300"
             },
@@ -43,7 +42,7 @@ export const sapDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "OData or REST endpoint path (relative to base URL)",
-              "helpText": "What this field is: OData or REST endpoint path (relative to base URL) for SAP / Get.\nHow to fill it: Paste the full web address SAP should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.endpoint}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for OData or REST endpoint path.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: /sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder.\nTip: Use {{$json.endpoint}} when the URL comes from an earlier step.",
               "placeholder": "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder",
               "example": "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder"
             },
@@ -53,7 +52,7 @@ export const sapDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for POST/PUT/PATCH operations",
-              "helpText": "What this field is: Request body for POST/PUT/PATCH operations for SAP / Get.\nHow to fill it: Enter valid JSON in the format SAP expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SAP.\nExample: {\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}",
               "example": "{\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}"
             },
@@ -63,7 +62,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData query string parameters (e.g. $top=10&$filter=...)",
-              "helpText": "What this field is: OData query string parameters (e.g. $top=10&$filter=...) for SAP / Get.\nHow to fill it: Enter the search, filter, SQL, or API query that tells SAP which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.queryParams}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData query string parameters.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SAP.\nExample: $top=10&$select=SalesOrder,SoldToParty.\nTip: Use {{$json.queryParams}} when an earlier step already prepared this data.",
               "placeholder": "$top=10&$select=SalesOrder,SoldToParty",
               "example": "$top=10&$select=SalesOrder,SoldToParty"
             },
@@ -73,7 +72,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 / SAML bearer token for SAP authentication (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access SAP.\nWhere to get it: Open the SAP dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: SAP token, a secret password that lets CtrlChecks talk to SAP safely.\nWhere to find it: SAP account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SAP.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -82,7 +81,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SAP Basic Auth username (used when no OAuth token is provided)",
-              "helpText": "What this field is: SAP Basic Auth username (used when no OAuth token is provided) for SAP / Get.\nHow to fill it: Enter the username value requested by SAP, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: SAP Basic Auth username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -91,7 +90,7 @@ export const sapDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "SAP Basic Auth password (used when no OAuth token is provided)",
-              "helpText": "What this field is: SAP Basic Auth password (used when no OAuth token is provided) for SAP / Get.\nHow to fill it: Enter the password value requested by SAP, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: SAP token, a secret password that lets CtrlChecks talk to SAP safely.\nWhere to find it: SAP account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SAP.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -101,7 +100,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "X-CSRF-Token value (required for POST/PUT/PATCH/DELETE on OData v2 services)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access SAP.\nWhere to get it: Open the SAP dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: X-CSRF-Token value.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: This field is used for POST/PUT/PATCH/DELETE on OData v2 services. Leave it blank when this operation does not need it.",
               "placeholder": "token_..."
             },
             {
@@ -110,7 +109,7 @@ export const sapDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Response format preference",
-              "helpText": "What this field is: A list of allowed choices for format in SAP / Get.\nHow to fill it: Pick the option that matches what SAP should do. Do not type a custom value unless the UI allows it.\nAvailable choices: JSON (json), XML (xml).",
+              "helpText": "Options: Choose the response format this SAP step should use.\nHow to choose it: Pick json for structured data in { } brackets, or xml when the SAP endpoint expects XML text.\nExample: json.\nTip: Use {{$json.format}} only when an earlier step already provides a valid option value.",
               "placeholder": "json",
               "example": "json",
               "defaultValue": "json",
@@ -155,7 +154,7 @@ export const sapDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "SAP system base URL (e.g. https://your-sap-host:44300)",
-              "helpText": "What this field is: SAP system base URL (e.g. https://your-sap-host:44300) for SAP / Post.\nHow to fill it: Paste the full web address SAP should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.baseUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for SAP system base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://sap.example.com:44300.\nTip: Use {{$json.baseUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://sap.example.com:44300",
               "example": "https://sap.example.com:44300"
             },
@@ -165,7 +164,7 @@ export const sapDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "OData or REST endpoint path (relative to base URL)",
-              "helpText": "What this field is: OData or REST endpoint path (relative to base URL) for SAP / Post.\nHow to fill it: Paste the full web address SAP should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.endpoint}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for OData or REST endpoint path.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: /sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder.\nTip: Use {{$json.endpoint}} when the URL comes from an earlier step.",
               "placeholder": "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder",
               "example": "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder"
             },
@@ -175,7 +174,7 @@ export const sapDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for POST/PUT/PATCH operations",
-              "helpText": "What this field is: Request body for POST/PUT/PATCH operations for SAP / Post.\nHow to fill it: Enter valid JSON in the format SAP expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SAP.\nExample: {\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}",
               "example": "{\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}"
             },
@@ -185,7 +184,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData query string parameters (e.g. $top=10&$filter=...)",
-              "helpText": "What this field is: OData query string parameters (e.g. $top=10&$filter=...) for SAP / Post.\nHow to fill it: Enter the search, filter, SQL, or API query that tells SAP which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.queryParams}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData query string parameters.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SAP.\nExample: $top=10&$select=SalesOrder,SoldToParty.\nTip: Use {{$json.queryParams}} when an earlier step already prepared this data.",
               "placeholder": "$top=10&$select=SalesOrder,SoldToParty",
               "example": "$top=10&$select=SalesOrder,SoldToParty"
             },
@@ -195,7 +194,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 / SAML bearer token for SAP authentication (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access SAP.\nWhere to get it: Open the SAP dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: SAP token, a secret password that lets CtrlChecks talk to SAP safely.\nWhere to find it: SAP account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SAP.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -204,7 +203,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SAP Basic Auth username (used when no OAuth token is provided)",
-              "helpText": "What this field is: SAP Basic Auth username (used when no OAuth token is provided) for SAP / Post.\nHow to fill it: Enter the username value requested by SAP, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: SAP Basic Auth username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -213,7 +212,7 @@ export const sapDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "SAP Basic Auth password (used when no OAuth token is provided)",
-              "helpText": "What this field is: SAP Basic Auth password (used when no OAuth token is provided) for SAP / Post.\nHow to fill it: Enter the password value requested by SAP, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: SAP token, a secret password that lets CtrlChecks talk to SAP safely.\nWhere to find it: SAP account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SAP.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -223,7 +222,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "X-CSRF-Token value (required for POST/PUT/PATCH/DELETE on OData v2 services)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access SAP.\nWhere to get it: Open the SAP dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: X-CSRF-Token value.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: This field is used for POST/PUT/PATCH/DELETE on OData v2 services. Leave it blank when this operation does not need it.",
               "placeholder": "token_..."
             },
             {
@@ -232,7 +231,7 @@ export const sapDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Response format preference",
-              "helpText": "What this field is: A list of allowed choices for format in SAP / Post.\nHow to fill it: Pick the option that matches what SAP should do. Do not type a custom value unless the UI allows it.\nAvailable choices: JSON (json), XML (xml).",
+              "helpText": "Options: Choose the response format this SAP step should use.\nHow to choose it: Pick json for structured data in { } brackets, or xml when the SAP endpoint expects XML text.\nExample: json.\nTip: Use {{$json.format}} only when an earlier step already provides a valid option value.",
               "placeholder": "json",
               "example": "json",
               "defaultValue": "json",
@@ -277,7 +276,7 @@ export const sapDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "SAP system base URL (e.g. https://your-sap-host:44300)",
-              "helpText": "What this field is: SAP system base URL (e.g. https://your-sap-host:44300) for SAP / Put.\nHow to fill it: Paste the full web address SAP should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.baseUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for SAP system base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://sap.example.com:44300.\nTip: Use {{$json.baseUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://sap.example.com:44300",
               "example": "https://sap.example.com:44300"
             },
@@ -287,7 +286,7 @@ export const sapDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "OData or REST endpoint path (relative to base URL)",
-              "helpText": "What this field is: OData or REST endpoint path (relative to base URL) for SAP / Put.\nHow to fill it: Paste the full web address SAP should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.endpoint}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for OData or REST endpoint path.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: /sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder.\nTip: Use {{$json.endpoint}} when the URL comes from an earlier step.",
               "placeholder": "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder",
               "example": "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder"
             },
@@ -297,7 +296,7 @@ export const sapDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for POST/PUT/PATCH operations",
-              "helpText": "What this field is: Request body for POST/PUT/PATCH operations for SAP / Put.\nHow to fill it: Enter valid JSON in the format SAP expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SAP.\nExample: {\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}",
               "example": "{\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}"
             },
@@ -307,7 +306,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData query string parameters (e.g. $top=10&$filter=...)",
-              "helpText": "What this field is: OData query string parameters (e.g. $top=10&$filter=...) for SAP / Put.\nHow to fill it: Enter the search, filter, SQL, or API query that tells SAP which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.queryParams}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData query string parameters.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SAP.\nExample: $top=10&$select=SalesOrder,SoldToParty.\nTip: Use {{$json.queryParams}} when an earlier step already prepared this data.",
               "placeholder": "$top=10&$select=SalesOrder,SoldToParty",
               "example": "$top=10&$select=SalesOrder,SoldToParty"
             },
@@ -317,7 +316,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 / SAML bearer token for SAP authentication (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access SAP.\nWhere to get it: Open the SAP dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: SAP token, a secret password that lets CtrlChecks talk to SAP safely.\nWhere to find it: SAP account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SAP.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -326,7 +325,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SAP Basic Auth username (used when no OAuth token is provided)",
-              "helpText": "What this field is: SAP Basic Auth username (used when no OAuth token is provided) for SAP / Put.\nHow to fill it: Enter the username value requested by SAP, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: SAP Basic Auth username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -335,7 +334,7 @@ export const sapDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "SAP Basic Auth password (used when no OAuth token is provided)",
-              "helpText": "What this field is: SAP Basic Auth password (used when no OAuth token is provided) for SAP / Put.\nHow to fill it: Enter the password value requested by SAP, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: SAP token, a secret password that lets CtrlChecks talk to SAP safely.\nWhere to find it: SAP account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SAP.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -345,7 +344,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "X-CSRF-Token value (required for POST/PUT/PATCH/DELETE on OData v2 services)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access SAP.\nWhere to get it: Open the SAP dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: X-CSRF-Token value.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: This field is used for POST/PUT/PATCH/DELETE on OData v2 services. Leave it blank when this operation does not need it.",
               "placeholder": "token_..."
             },
             {
@@ -354,7 +353,7 @@ export const sapDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Response format preference",
-              "helpText": "What this field is: A list of allowed choices for format in SAP / Put.\nHow to fill it: Pick the option that matches what SAP should do. Do not type a custom value unless the UI allows it.\nAvailable choices: JSON (json), XML (xml).",
+              "helpText": "Options: Choose the response format this SAP step should use.\nHow to choose it: Pick json for structured data in { } brackets, or xml when the SAP endpoint expects XML text.\nExample: json.\nTip: Use {{$json.format}} only when an earlier step already provides a valid option value.",
               "placeholder": "json",
               "example": "json",
               "defaultValue": "json",
@@ -399,7 +398,7 @@ export const sapDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "SAP system base URL (e.g. https://your-sap-host:44300)",
-              "helpText": "What this field is: SAP system base URL (e.g. https://your-sap-host:44300) for SAP / Patch.\nHow to fill it: Paste the full web address SAP should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.baseUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for SAP system base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://sap.example.com:44300.\nTip: Use {{$json.baseUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://sap.example.com:44300",
               "example": "https://sap.example.com:44300"
             },
@@ -409,7 +408,7 @@ export const sapDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "OData or REST endpoint path (relative to base URL)",
-              "helpText": "What this field is: OData or REST endpoint path (relative to base URL) for SAP / Patch.\nHow to fill it: Paste the full web address SAP should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.endpoint}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for OData or REST endpoint path.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: /sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder.\nTip: Use {{$json.endpoint}} when the URL comes from an earlier step.",
               "placeholder": "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder",
               "example": "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder"
             },
@@ -419,7 +418,7 @@ export const sapDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for POST/PUT/PATCH operations",
-              "helpText": "What this field is: Request body for POST/PUT/PATCH operations for SAP / Patch.\nHow to fill it: Enter valid JSON in the format SAP expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SAP.\nExample: {\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}",
               "example": "{\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}"
             },
@@ -429,7 +428,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData query string parameters (e.g. $top=10&$filter=...)",
-              "helpText": "What this field is: OData query string parameters (e.g. $top=10&$filter=...) for SAP / Patch.\nHow to fill it: Enter the search, filter, SQL, or API query that tells SAP which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.queryParams}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData query string parameters.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SAP.\nExample: $top=10&$select=SalesOrder,SoldToParty.\nTip: Use {{$json.queryParams}} when an earlier step already prepared this data.",
               "placeholder": "$top=10&$select=SalesOrder,SoldToParty",
               "example": "$top=10&$select=SalesOrder,SoldToParty"
             },
@@ -439,7 +438,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 / SAML bearer token for SAP authentication (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access SAP.\nWhere to get it: Open the SAP dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: SAP token, a secret password that lets CtrlChecks talk to SAP safely.\nWhere to find it: SAP account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SAP.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -448,7 +447,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SAP Basic Auth username (used when no OAuth token is provided)",
-              "helpText": "What this field is: SAP Basic Auth username (used when no OAuth token is provided) for SAP / Patch.\nHow to fill it: Enter the username value requested by SAP, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: SAP Basic Auth username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -457,7 +456,7 @@ export const sapDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "SAP Basic Auth password (used when no OAuth token is provided)",
-              "helpText": "What this field is: SAP Basic Auth password (used when no OAuth token is provided) for SAP / Patch.\nHow to fill it: Enter the password value requested by SAP, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: SAP token, a secret password that lets CtrlChecks talk to SAP safely.\nWhere to find it: SAP account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SAP.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -467,7 +466,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "X-CSRF-Token value (required for POST/PUT/PATCH/DELETE on OData v2 services)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access SAP.\nWhere to get it: Open the SAP dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: X-CSRF-Token value.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: This field is used for POST/PUT/PATCH/DELETE on OData v2 services. Leave it blank when this operation does not need it.",
               "placeholder": "token_..."
             },
             {
@@ -476,7 +475,7 @@ export const sapDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Response format preference",
-              "helpText": "What this field is: A list of allowed choices for format in SAP / Patch.\nHow to fill it: Pick the option that matches what SAP should do. Do not type a custom value unless the UI allows it.\nAvailable choices: JSON (json), XML (xml).",
+              "helpText": "Options: Choose the response format this SAP step should use.\nHow to choose it: Pick json for structured data in { } brackets, or xml when the SAP endpoint expects XML text.\nExample: json.\nTip: Use {{$json.format}} only when an earlier step already provides a valid option value.",
               "placeholder": "json",
               "example": "json",
               "defaultValue": "json",
@@ -521,7 +520,7 @@ export const sapDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "SAP system base URL (e.g. https://your-sap-host:44300)",
-              "helpText": "What this field is: SAP system base URL (e.g. https://your-sap-host:44300) for SAP / Delete.\nHow to fill it: Paste the full web address SAP should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.baseUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for SAP system base URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://sap.example.com:44300.\nTip: Use {{$json.baseUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://sap.example.com:44300",
               "example": "https://sap.example.com:44300"
             },
@@ -531,7 +530,7 @@ export const sapDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "OData or REST endpoint path (relative to base URL)",
-              "helpText": "What this field is: OData or REST endpoint path (relative to base URL) for SAP / Delete.\nHow to fill it: Paste the full web address SAP should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.endpoint}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for OData or REST endpoint path.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: /sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder.\nTip: Use {{$json.endpoint}} when the URL comes from an earlier step.",
               "placeholder": "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder",
               "example": "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder"
             },
@@ -541,7 +540,7 @@ export const sapDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for POST/PUT/PATCH operations",
-              "helpText": "What this field is: Request body for POST/PUT/PATCH operations for SAP / Delete.\nHow to fill it: Enter valid JSON in the format SAP expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SAP.\nExample: {\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}",
               "example": "{\"SalesOrderType\":\"OR\",\"SoldToParty\":\"{{$json.customerId}}\"}"
             },
@@ -551,7 +550,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData query string parameters (e.g. $top=10&$filter=...)",
-              "helpText": "What this field is: OData query string parameters (e.g. $top=10&$filter=...) for SAP / Delete.\nHow to fill it: Enter the search, filter, SQL, or API query that tells SAP which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.queryParams}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData query string parameters.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by SAP.\nExample: $top=10&$select=SalesOrder,SoldToParty.\nTip: Use {{$json.queryParams}} when an earlier step already prepared this data.",
               "placeholder": "$top=10&$select=SalesOrder,SoldToParty",
               "example": "$top=10&$select=SalesOrder,SoldToParty"
             },
@@ -561,7 +560,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 / SAML bearer token for SAP authentication (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access SAP.\nWhere to get it: Open the SAP dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: SAP token, a secret password that lets CtrlChecks talk to SAP safely.\nWhere to find it: SAP account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SAP.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -570,7 +569,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SAP Basic Auth username (used when no OAuth token is provided)",
-              "helpText": "What this field is: SAP Basic Auth username (used when no OAuth token is provided) for SAP / Delete.\nHow to fill it: Enter the username value requested by SAP, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: SAP Basic Auth username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Username value.\nTip: Use {{$json.username}} when this value comes from an earlier step.",
               "placeholder": "Enter Username"
             },
             {
@@ -579,7 +578,7 @@ export const sapDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "SAP Basic Auth password (used when no OAuth token is provided)",
-              "helpText": "What this field is: SAP Basic Auth password (used when no OAuth token is provided) for SAP / Delete.\nHow to fill it: Enter the password value requested by SAP, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: SAP token, a secret password that lets CtrlChecks talk to SAP safely.\nWhere to find it: SAP account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by SAP.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -589,7 +588,7 @@ export const sapDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "X-CSRF-Token value (required for POST/PUT/PATCH/DELETE on OData v2 services)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access SAP.\nWhere to get it: Open the SAP dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: X-CSRF-Token value.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: This field is used for POST/PUT/PATCH/DELETE on OData v2 services. Leave it blank when this operation does not need it.",
               "placeholder": "token_..."
             },
             {
@@ -598,7 +597,7 @@ export const sapDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Response format preference",
-              "helpText": "What this field is: A list of allowed choices for format in SAP / Delete.\nHow to fill it: Pick the option that matches what SAP should do. Do not type a custom value unless the UI allows it.\nAvailable choices: JSON (json), XML (xml).",
+              "helpText": "Options: Choose the response format this SAP step should use.\nHow to choose it: Pick json for structured data in { } brackets, or xml when the SAP endpoint expects XML text.\nExample: json.\nTip: Use {{$json.format}} only when an earlier step already provides a valid option value.",
               "placeholder": "json",
               "example": "json",
               "defaultValue": "json",

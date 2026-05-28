@@ -29,7 +29,7 @@ export const sentimentAnalyzerDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Text to analyze",
-              "helpText": "What this field is: The text to analyze for sentiment (positive, negative, or neutral feeling).\nExample: {{$json.customerReview}} or {{$json.feedbackMessage}}\nUse case: Analyze customer reviews, support tickets, or social media comments.",
+              "helpText": "What this field is: Text to analyze.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.text}}.\nTip: Use {{$json.text}} when this value comes from an earlier step.",
               "placeholder": "{{$json.text}}",
               "example": "{{$json.text}}"
             }

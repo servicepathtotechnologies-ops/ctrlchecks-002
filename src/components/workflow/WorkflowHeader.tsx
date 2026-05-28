@@ -76,7 +76,9 @@ export default function WorkflowHeader({
 
   const handleConnectionsClick = () => {
     const returnTo = workflowId && workflowId !== 'new' ? `/workflow/${workflowId}` : '/workflows';
-    navigate(`/connections?returnTo=${encodeURIComponent(returnTo)}`);
+    const params = new URLSearchParams({ returnTo });
+    if (workflowName) params.set('workflowName', workflowName);
+    navigate(`/connections?${params.toString()}`);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -8,16 +8,12 @@ export const paypalDoc: NodeDoc = {
   "description": "PayPal payment processing",
   "credentialType": "PayPal Credential",
   "credentialSetupSteps": [
-    "What this is: PayPal uses an OAuth connection so CtrlChecks can safely access your PayPal account.",
-    "Go to developer.paypal.com/dashboard and sign in with your PayPal business account.",
-    "Under \"My Apps & Credentials\", make sure you are on \"Sandbox\" tab for testing or \"Live\" tab for real payments.",
-    "Click \"Create App\" -> give it a name -> Create App.",
-    "Copy the Client ID and Secret shown on the app page.",
-    "Note: Sandbox credentials only work in test mode. Switch to Live credentials and go through PayPal business verification for real payments.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> PayPal -> paste Client ID and Secret -> Save.",
-    "Run a test step using Sandbox credentials first to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the PayPal node and select the saved connection."
+    "What this is: The PayPal connection lets CtrlChecks access your PayPal account safely without putting secrets in workflow fields.",
+    "Where to start: PayPal Developer Dashboard -> Apps & Credentials.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> PayPal, then sign in or paste the secret value requested there.",
+    "Example: Client ID and secret from PayPal.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple PayPal step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developer.paypal.com/api/rest/",
   "resources": [
@@ -36,7 +32,7 @@ export const paypalDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "PayPal access token (optional if stored in vault under key \"paypal\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access PayPal.\nWhere to get it: Open the PayPal dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: PayPal API credential, a secret password that lets CtrlChecks talk to PayPal safely.\nWhere to find it: PayPal Developer Dashboard -> Apps & Credentials.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: Client ID and secret from PayPal.\nImportant: Treat this like a bank password. Use Sandbox credentials while testing.",
               "placeholder": "token_..."
             },
             {
@@ -45,7 +41,7 @@ export const paypalDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "PayPal environment",
-              "helpText": "What this field is: PayPal environment for PayPal / Charge.\nHow to fill it: Enter the environment value requested by PayPal, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.environment}} or pick the value from the data picker.",
+              "helpText": "What this field is: PayPal environment.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: sandbox.\nTip: Use {{$json.environment}} when this value comes from an earlier step.",
               "placeholder": "sandbox",
               "example": "sandbox",
               "defaultValue": "live"
@@ -56,7 +52,7 @@ export const paypalDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Payment amount",
-              "helpText": "What this field is: The payment amount as a decimal number (NOT in cents like Stripe).\nExample: 20.00 for $20.00 or 149.99 for $149.99.",
+              "helpText": "What this field is: The number used for Payment amount.\nHow to fill it: Enter digits only, using the unit expected by PayPal. Check whether the service expects cents or a normal decimal amount.\nExample: 10.\nTip: Use {{$json.amount}} when an earlier order, invoice, or form provides the amount.",
               "placeholder": "10",
               "example": "10"
             },
@@ -66,7 +62,7 @@ export const paypalDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Currency (default: USD)",
-              "helpText": "What this field is: 3-letter currency code.\nExamples: USD, EUR, GBP, CAD, AUD, INR, JPY.",
+              "helpText": "What this field is: The currency code for this PayPal step.\nHow to fill it: Use a three-letter code supported by the service. Many payment services expect lowercase letters.\nExample: usd, eur, gbp, inr, or jpy.\nTip: Use {{$json.currency}} when the currency comes from an order or invoice.",
               "placeholder": "USD",
               "example": "USD",
               "defaultValue": "USD"
@@ -77,7 +73,7 @@ export const paypalDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Description for the payment/order",
-              "helpText": "What this field is: Description for the payment/order for PayPal / Charge.\nHow to fill it: Type the message, prompt, or content you want PayPal to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -86,7 +82,7 @@ export const paypalDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "PayPal capture ID (for refund)",
-              "helpText": "What this field is: PayPal capture ID (for refund) for PayPal / Charge.\nWhere to find it: Open the item in PayPal and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.paymentId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The PayPal capture ID that tells PayPal which item to use.\nWhere to find it: Open the item in PayPal and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 3C12345678901234A.\nTip: Use {{$json.paymentId}} when an earlier PayPal step provides this value.",
               "placeholder": "3C12345678901234A",
               "example": "3C12345678901234A"
             },
@@ -96,7 +92,7 @@ export const paypalDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "If true, capture immediately after creating order",
-              "helpText": "What this field is: An on/off choice for auto capture in PayPal / Charge.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want PayPal to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for If true, capture immediately after creating order.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use auto capture; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"
@@ -137,7 +133,7 @@ export const paypalDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "PayPal access token (optional if stored in vault under key \"paypal\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access PayPal.\nWhere to get it: Open the PayPal dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: PayPal API credential, a secret password that lets CtrlChecks talk to PayPal safely.\nWhere to find it: PayPal Developer Dashboard -> Apps & Credentials.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: Client ID and secret from PayPal.\nImportant: Treat this like a bank password. Use Sandbox credentials while testing.",
               "placeholder": "token_..."
             },
             {
@@ -146,7 +142,7 @@ export const paypalDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "PayPal environment",
-              "helpText": "What this field is: PayPal environment for PayPal / Refund.\nHow to fill it: Enter the environment value requested by PayPal, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.environment}} or pick the value from the data picker.",
+              "helpText": "What this field is: PayPal environment.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: sandbox.\nTip: Use {{$json.environment}} when this value comes from an earlier step.",
               "placeholder": "sandbox",
               "example": "sandbox",
               "defaultValue": "live"
@@ -157,7 +153,7 @@ export const paypalDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Payment amount",
-              "helpText": "What this field is: A number used for amount in PayPal / Refund.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.amount}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Payment amount.\nHow to fill it: Enter digits only, using the unit expected by PayPal. Check whether the service expects cents or a normal decimal amount.\nExample: 10.\nTip: Use {{$json.amount}} when an earlier order, invoice, or form provides the amount.",
               "placeholder": "10",
               "example": "10"
             },
@@ -167,7 +163,7 @@ export const paypalDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Currency (default: USD)",
-              "helpText": "What this field is: Currency (default: USD) for PayPal / Refund.\nHow to fill it: Enter the currency value requested by PayPal, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.currency}} or pick the value from the data picker.",
+              "helpText": "What this field is: The currency code for this PayPal step.\nHow to fill it: Use a three-letter code supported by the service. Many payment services expect lowercase letters.\nExample: usd, eur, gbp, inr, or jpy.\nTip: Use {{$json.currency}} when the currency comes from an order or invoice.",
               "placeholder": "USD",
               "example": "USD",
               "defaultValue": "USD"
@@ -178,7 +174,7 @@ export const paypalDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Description for the payment/order",
-              "helpText": "What this field is: Description for the payment/order for PayPal / Refund.\nHow to fill it: Type the message, prompt, or content you want PayPal to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -187,7 +183,7 @@ export const paypalDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "PayPal capture ID (for refund)",
-              "helpText": "What this field is: PayPal capture ID (for refund) for PayPal / Refund.\nWhere to find it: Open the item in PayPal and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.paymentId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The PayPal capture ID that tells PayPal which item to use.\nWhere to find it: Open the item in PayPal and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 3C12345678901234A.\nTip: Use {{$json.paymentId}} when an earlier PayPal step provides this value.",
               "placeholder": "3C12345678901234A",
               "example": "3C12345678901234A"
             },
@@ -197,7 +193,7 @@ export const paypalDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "If true, capture immediately after creating order",
-              "helpText": "What this field is: An on/off choice for auto capture in PayPal / Refund.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want PayPal to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for If true, capture immediately after creating order.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use auto capture; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"

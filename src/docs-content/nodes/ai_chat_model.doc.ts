@@ -29,7 +29,7 @@ export const aiChatModelDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Creativity (0.0 - 1.0)",
-              "helpText": "What this field is: A number used for temperature in AI Chat Model / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.temperature}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Creativity.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 0.2.\nTip: Use {{$json.temperature}} when the number comes from an earlier step.",
               "placeholder": "0.2",
               "example": "0.2",
               "defaultValue": "0.7"
@@ -40,7 +40,7 @@ export const aiChatModelDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "User prompt to send to the model",
-              "helpText": "What this field is: User prompt to send to the model for AI Chat Model / Execute.\nHow to fill it: Type the message, prompt, or content you want AI Chat Model to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: User prompt to send to the model.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.prompt}}.\nTip: Use {{$json.prompt}} when this value comes from an earlier step.",
               "placeholder": "{{$json.prompt}}",
               "example": "{{$json.prompt}}"
             },
@@ -50,7 +50,7 @@ export const aiChatModelDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "System prompt (optional)",
-              "helpText": "What this field is: System prompt (optional) for AI Chat Model / Execute.\nHow to fill it: Enter the system prompt value requested by AI Chat Model, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.systemPrompt}} or pick the value from the data picker.",
+              "helpText": "What this field is: System prompt.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: You are a helpful assistant..\nTip: Use {{$json.systemPrompt}} when this value comes from an earlier step.",
               "placeholder": "You are a helpful assistant.",
               "example": "You are a helpful assistant."
             },
@@ -60,7 +60,7 @@ export const aiChatModelDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Preferred response format",
-              "helpText": "What this field is: Preferred response format for AI Chat Model / Execute.\nHow to fill it: Enter the response format value requested by AI Chat Model, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.responseFormat}} or pick the value from the data picker.",
+              "helpText": "What this field is: Preferred response format.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: text.\nTip: Use {{$json.responseFormat}} when this value comes from an earlier step.",
               "placeholder": "text",
               "example": "text",
               "defaultValue": "text"

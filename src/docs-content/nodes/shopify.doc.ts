@@ -8,16 +8,12 @@ export const shopifyDoc: NodeDoc = {
   "description": "Shopify store operations",
   "credentialType": "Shopify API Key",
   "credentialSetupSteps": [
-    "What this is: Shopify uses an API key or account connection so CtrlChecks can safely access your Shopify account.",
-    "In your Shopify admin (yourstore.myshopify.com/admin), go to Settings -> Apps and sales channels.",
-    "Click \"Develop apps\" -> Allow custom app development (if prompted) -> Create an app. Give it a name like CtrlChecks.",
-    "Click the app name -> go to \"Configuration\" tab -> Admin API integration -> click Edit -> select the access scopes you need (e.g. read_orders, write_orders, read_products, write_products).",
-    "Go to \"API credentials\" tab -> click \"Install app\" -> Install. Copy the \"Admin API access token\" shown - it starts with shpat_ and is only shown once.",
-    "Note your shop domain - it is the part before .myshopify.com (e.g. if URL is mystore.myshopify.com, domain is mystore).",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Shopify -> enter shop domain and access token -> Save.",
-    "Run a test step (e.g. list products) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Shopify node and select the saved connection."
+    "What this is: The Shopify connection lets CtrlChecks access your Shopify account safely without putting secrets in workflow fields.",
+    "Where to start: Shopify Admin -> Apps -> Develop apps -> your app -> API credentials.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Shopify, then sign in or paste the secret value requested there.",
+    "Example: shpat_... for custom apps, or the access token Shopify gives your app.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Shopify step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://shopify.dev/docs/apps/auth/admin-app-access-tokens",
   "resources": [
@@ -36,7 +32,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Shopify shop domain (e.g., your-store.myshopify.com)",
-              "helpText": "What this field is: Your Shopify store's subdomain — just the part before .myshopify.com.\nExample: If your store is at mystore.myshopify.com, enter: mystore\nDo NOT include https:// or .myshopify.com — just the store name.",
+              "helpText": "What this field is: The Shopify shop domain that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: my-store.myshopify.com.\nTip: Use {{$json.shopDomain}} when an earlier Shopify step provides this value.",
               "placeholder": "my-store.myshopify.com",
               "example": "my-store.myshopify.com"
             },
@@ -46,7 +42,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Shopify Admin API access token (optional if stored in vault under key \"shopify\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Shopify.\nWhere to get it: Open the Shopify dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Shopify Admin API access token, a secret password that lets CtrlChecks talk to Shopify safely.\nWhere to find it: Shopify Admin -> Apps -> Develop apps -> your app -> API credentials.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: shpat_... for custom apps, or the access token Shopify gives your app.\nImportant: Treat this like a bank password. The token must have scopes for the resources this workflow reads or writes.",
               "placeholder": "shpat_...",
               "example": "shpat_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -57,7 +53,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: product, order, customer",
-              "helpText": "What this field is: Resource chooses the kind of Shopify item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Shopify.\nExample: In Shopify, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Shopify entity type to work with.\nOptions: product, order, customer.\nExample: product to manage your catalog, order to track/update orders, customer to look up buyers.\nTip: The resource determines which Shopify API endpoint is called.",
               "placeholder": "product",
               "example": "product",
               "defaultValue": "product"
@@ -68,7 +64,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (for get/update/delete). Alias for productId/orderId/customerId.",
-              "helpText": "What this field is: Resource ID (for get/update/delete). Alias for productId/orderId/customerId. for Shopify / Get.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID . Alias that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.id}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -78,7 +74,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Product ID",
-              "helpText": "What this field is: Product ID for Shopify / Get.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.productId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Product ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.productId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -98,7 +94,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer ID",
-              "helpText": "What this field is: Customer ID for Shopify / Get.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.customerId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Customer ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.customerId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -108,7 +104,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update (resource wrapper is added automatically)",
-              "helpText": "What this field is: Payload for create/update (resource wrapper is added automatically) for Shopify / Get.\nHow to fill it: Enter valid JSON in the format Shopify expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Shopify.\nExample: {\"title\":\"New product\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"title\":\"New product\"}",
               "example": "{\"title\":\"New product\"}"
             },
@@ -118,7 +114,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "List limit (for list operation)",
-              "helpText": "What this field is: A number used for limit in Shopify / Get.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for List limit.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -159,7 +155,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Shopify shop domain (e.g., your-store.myshopify.com)",
-              "helpText": "What this field is: Your Shopify store's subdomain — just the part before .myshopify.com.\nExample: If your store is at mystore.myshopify.com, enter: mystore\nDo NOT include https:// or .myshopify.com — just the store name.",
+              "helpText": "What this field is: The Shopify shop domain that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: my-store.myshopify.com.\nTip: Use {{$json.shopDomain}} when an earlier Shopify step provides this value.",
               "placeholder": "my-store.myshopify.com",
               "example": "my-store.myshopify.com"
             },
@@ -169,7 +165,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Shopify Admin API access token (optional if stored in vault under key \"shopify\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Shopify.\nWhere to get it: Open the Shopify dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Shopify Admin API access token, a secret password that lets CtrlChecks talk to Shopify safely.\nWhere to find it: Shopify Admin -> Apps -> Develop apps -> your app -> API credentials.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: shpat_... for custom apps, or the access token Shopify gives your app.\nImportant: Treat this like a bank password. The token must have scopes for the resources this workflow reads or writes.",
               "placeholder": "shpat_...",
               "example": "shpat_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -180,7 +176,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: product, order, customer",
-              "helpText": "What this field is: Resource chooses the kind of Shopify item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Shopify.\nExample: In Shopify, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Shopify entity type to work with.\nOptions: product, order, customer.\nExample: product to manage your catalog, order to track/update orders, customer to look up buyers.\nTip: The resource determines which Shopify API endpoint is called.",
               "placeholder": "product",
               "example": "product",
               "defaultValue": "product"
@@ -191,7 +187,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (for get/update/delete). Alias for productId/orderId/customerId.",
-              "helpText": "What this field is: Resource ID (for get/update/delete). Alias for productId/orderId/customerId. for Shopify / Create.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID . Alias that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.id}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -201,7 +197,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Product ID",
-              "helpText": "What this field is: Product ID for Shopify / Create.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.productId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Product ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.productId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -211,7 +207,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Order ID",
-              "helpText": "What this field is: Order ID for Shopify / Create.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.orderId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Order ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.orderId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -221,7 +217,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer ID",
-              "helpText": "What this field is: Customer ID for Shopify / Create.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.customerId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Customer ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.customerId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -231,7 +227,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update (resource wrapper is added automatically)",
-              "helpText": "What this field is: Payload for create/update (resource wrapper is added automatically) for Shopify / Create.\nHow to fill it: Enter valid JSON in the format Shopify expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Shopify.\nExample: {\"title\":\"New product\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"title\":\"New product\"}",
               "example": "{\"title\":\"New product\"}"
             },
@@ -241,7 +237,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "List limit (for list operation)",
-              "helpText": "What this field is: A number used for limit in Shopify / Create.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for List limit.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -282,7 +278,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Shopify shop domain (e.g., your-store.myshopify.com)",
-              "helpText": "What this field is: Your Shopify store's subdomain — just the part before .myshopify.com.\nExample: If your store is at mystore.myshopify.com, enter: mystore\nDo NOT include https:// or .myshopify.com — just the store name.",
+              "helpText": "What this field is: The Shopify shop domain that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: my-store.myshopify.com.\nTip: Use {{$json.shopDomain}} when an earlier Shopify step provides this value.",
               "placeholder": "my-store.myshopify.com",
               "example": "my-store.myshopify.com"
             },
@@ -292,7 +288,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Shopify Admin API access token (optional if stored in vault under key \"shopify\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Shopify.\nWhere to get it: Open the Shopify dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Shopify Admin API access token, a secret password that lets CtrlChecks talk to Shopify safely.\nWhere to find it: Shopify Admin -> Apps -> Develop apps -> your app -> API credentials.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: shpat_... for custom apps, or the access token Shopify gives your app.\nImportant: Treat this like a bank password. The token must have scopes for the resources this workflow reads or writes.",
               "placeholder": "shpat_...",
               "example": "shpat_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -303,7 +299,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: product, order, customer",
-              "helpText": "What this field is: Resource chooses the kind of Shopify item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Shopify.\nExample: In Shopify, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Shopify entity type to work with.\nOptions: product, order, customer.\nExample: product to manage your catalog, order to track/update orders, customer to look up buyers.\nTip: The resource determines which Shopify API endpoint is called.",
               "placeholder": "product",
               "example": "product",
               "defaultValue": "product"
@@ -314,7 +310,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (for get/update/delete). Alias for productId/orderId/customerId.",
-              "helpText": "What this field is: Resource ID (for get/update/delete). Alias for productId/orderId/customerId. for Shopify / Update.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID . Alias that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.id}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -324,7 +320,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Product ID",
-              "helpText": "What this field is: Product ID for Shopify / Update.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.productId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Product ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.productId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -334,7 +330,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Order ID",
-              "helpText": "What this field is: Order ID for Shopify / Update.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.orderId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Order ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.orderId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -344,7 +340,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer ID",
-              "helpText": "What this field is: Customer ID for Shopify / Update.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.customerId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Customer ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.customerId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -354,7 +350,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update (resource wrapper is added automatically)",
-              "helpText": "What this field is: Payload for create/update (resource wrapper is added automatically) for Shopify / Update.\nHow to fill it: Enter valid JSON in the format Shopify expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Shopify.\nExample: {\"title\":\"New product\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"title\":\"New product\"}",
               "example": "{\"title\":\"New product\"}"
             },
@@ -364,7 +360,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "List limit (for list operation)",
-              "helpText": "What this field is: A number used for limit in Shopify / Update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for List limit.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -405,7 +401,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Shopify shop domain (e.g., your-store.myshopify.com)",
-              "helpText": "What this field is: Your Shopify store's subdomain — just the part before .myshopify.com.\nExample: If your store is at mystore.myshopify.com, enter: mystore\nDo NOT include https:// or .myshopify.com — just the store name.",
+              "helpText": "What this field is: The Shopify shop domain that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: my-store.myshopify.com.\nTip: Use {{$json.shopDomain}} when an earlier Shopify step provides this value.",
               "placeholder": "my-store.myshopify.com",
               "example": "my-store.myshopify.com"
             },
@@ -415,7 +411,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Shopify Admin API access token (optional if stored in vault under key \"shopify\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Shopify.\nWhere to get it: Open the Shopify dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Shopify Admin API access token, a secret password that lets CtrlChecks talk to Shopify safely.\nWhere to find it: Shopify Admin -> Apps -> Develop apps -> your app -> API credentials.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: shpat_... for custom apps, or the access token Shopify gives your app.\nImportant: Treat this like a bank password. The token must have scopes for the resources this workflow reads or writes.",
               "placeholder": "shpat_...",
               "example": "shpat_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -426,7 +422,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Resource: product, order, customer",
-              "helpText": "What this field is: Resource chooses the kind of Shopify item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Shopify.\nExample: In Shopify, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Shopify entity type to work with.\nOptions: product, order, customer.\nExample: product to manage your catalog, order to track/update orders, customer to look up buyers.\nTip: The resource determines which Shopify API endpoint is called.",
               "placeholder": "product",
               "example": "product",
               "defaultValue": "product"
@@ -437,7 +433,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Resource ID (for get/update/delete). Alias for productId/orderId/customerId.",
-              "helpText": "What this field is: Resource ID (for get/update/delete). Alias for productId/orderId/customerId. for Shopify / Delete.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Resource ID . Alias that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.id}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -447,7 +443,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Product ID",
-              "helpText": "What this field is: Product ID for Shopify / Delete.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.productId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Product ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.productId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -457,7 +453,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Order ID",
-              "helpText": "What this field is: Order ID for Shopify / Delete.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.orderId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Order ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.orderId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -467,7 +463,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer ID",
-              "helpText": "What this field is: Customer ID for Shopify / Delete.\nWhere to find it: Open the item in Shopify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.customerId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Customer ID that tells Shopify which item to use.\nWhere to find it: Open the item in Shopify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1234567890.\nTip: Use {{$json.customerId}} when an earlier Shopify step provides this value.",
               "placeholder": "1234567890",
               "example": "1234567890"
             },
@@ -477,7 +473,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Payload for create/update (resource wrapper is added automatically)",
-              "helpText": "What this field is: Payload for create/update (resource wrapper is added automatically) for Shopify / Delete.\nHow to fill it: Enter valid JSON in the format Shopify expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Payload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Shopify.\nExample: {\"title\":\"New product\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"title\":\"New product\"}",
               "example": "{\"title\":\"New product\"}"
             },
@@ -487,7 +483,7 @@ export const shopifyDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "List limit (for list operation)",
-              "helpText": "What this field is: A number used for limit in Shopify / Delete.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for List limit.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"

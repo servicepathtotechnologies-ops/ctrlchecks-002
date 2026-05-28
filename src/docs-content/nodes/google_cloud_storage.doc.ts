@@ -8,16 +8,12 @@ export const googleCloudStorageDoc: NodeDoc = {
   "description": "Interact with Google Cloud Storage buckets (upload, download, delete, list)",
   "credentialType": "Google Cloud Storage Credential",
   "credentialSetupSteps": [
-    "What this is: Google Cloud Storage uses an OAuth connection so CtrlChecks can safely access your Google Cloud Storage account.",
-    "Go to console.cloud.google.com and sign in -> open your project (or create one).",
-    "Go to IAM & Admin -> Service Accounts -> Create Service Account.",
-    "Give it a name (e.g. ctrlchecks-storage) -> click Create and Continue.",
-    "Under \"Grant this service account access to project\", select role: Storage Object Admin -> Continue -> Done.",
-    "Click the service account you just created -> Keys tab -> Add Key -> Create new key -> JSON -> Create. A JSON file downloads.",
-    "Open the JSON file and copy its entire contents.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Google Cloud Storage -> paste the JSON key content -> Save.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Google Cloud Storage node and select the saved connection."
+    "What this is: The Google Cloud Storage connection lets CtrlChecks access your Google Cloud Storage account safely without putting secrets in workflow fields.",
+    "Where to start: Google Cloud Storage account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Google Cloud Storage, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Google Cloud Storage.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Google Cloud Storage step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://cloud.google.com/storage/docs/authentication",
   "resources": [
@@ -36,7 +32,7 @@ export const googleCloudStorageDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File name/path in bucket",
-              "helpText": "What this field is: File name/path in bucket for Google Cloud Storage / Execute.\nHow to fill it: Enter the file name value requested by Google Cloud Storage, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fileName}} or pick the value from the data picker.",
+              "helpText": "What this field is: The File name/path in bucket that tells Google Cloud Storage which item to use.\nWhere to find it: Open the item in Google Cloud Storage and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.fileName}} when an earlier Google Cloud Storage step provides this value.",
               "placeholder": "Enter File Name"
             },
             {
@@ -45,7 +41,7 @@ export const googleCloudStorageDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "File content for upload",
-              "helpText": "What this field is: File content for upload for Google Cloud Storage / Execute.\nHow to fill it: Type the message, prompt, or content you want Google Cloud Storage to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: The File content for upload that tells Google Cloud Storage which item to use.\nWhere to find it: Open the item in Google Cloud Storage and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.fileContent}} when an earlier Google Cloud Storage step provides this value.",
               "placeholder": "Enter File Content"
             },
             {
@@ -54,7 +50,7 @@ export const googleCloudStorageDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Prefix filter for list operations",
-              "helpText": "What this field is: Prefix filter for list operations for Google Cloud Storage / Execute.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Google Cloud Storage which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Prefix filter for list operations.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Google Cloud Storage.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.filter}} when an earlier step already prepared this data.",
               "placeholder": "Enter Filter"
             }
           ],

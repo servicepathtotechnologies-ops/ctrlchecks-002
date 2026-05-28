@@ -29,7 +29,7 @@ export const executeWorkflowDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "ID of the workflow to execute",
-              "helpText": "What this field is: ID of the workflow to execute for Execute Workflow / Execute.\nWhere to find it: Open the item in Execute Workflow and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workflowId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The ID of the workflow to execute that tells Execute Workflow which item to use.\nWhere to find it: Open the item in Execute Workflow and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123e4567-e89b-12d3-a456-426614174000.\nTip: Use {{$json.workflowId}} when an earlier Execute Workflow step provides this value.",
               "placeholder": "123e4567-e89b-12d3-a456-426614174000",
               "example": "123e4567-e89b-12d3-a456-426614174000"
             },
@@ -39,7 +39,7 @@ export const executeWorkflowDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Input data to pass to the sub-workflow",
-              "helpText": "What this field is: Input data to pass to the sub-workflow for Execute Workflow / Execute.\nHow to fill it: Enter valid JSON in the format Execute Workflow expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.input}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Input data to pass to the sub-workflow.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Execute Workflow.\nExample: {{$json}}.\nTip: Use {{$json.input}} when an earlier step already prepared this data.",
               "placeholder": "{{$json}}",
               "example": "{{$json}}"
             },
@@ -49,7 +49,7 @@ export const executeWorkflowDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Wait for the sub-workflow to finish",
-              "helpText": "What this field is: An on/off choice for wait for completion in Execute Workflow / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Execute Workflow to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Wait for the sub-workflow to finish.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use wait for completion; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"

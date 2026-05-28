@@ -29,7 +29,7 @@ export const parallelDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Execution mode (all, race)",
-              "helpText": "What this field is: A list of allowed choices for mode in Parallel / Execute.\nHow to fill it: Pick the option that matches what Parallel should do. Do not type a custom value unless the UI allows it.\nAvailable choices: Wait for all (all), Race (first completes) (race).",
+              "helpText": "Options: Choose the mode value this Parallel step should use.\nHow to choose it: Pick the option that matches what you want this step to do.\nExample: Wait for all.\nTip: Use {{$json.mode}} only when an earlier step already provides a valid option value.",
               "placeholder": "all",
               "example": "all",
               "defaultValue": "all",

@@ -8,16 +8,12 @@ export const discordWebhookDoc: NodeDoc = {
   "description": "Send messages via Discord webhook",
   "credentialType": "Discord Bot Token",
   "credentialSetupSteps": [
-    "What this is: Discord Bot uses an API key or account connection so CtrlChecks can safely access your Discord Bot account.",
-    "Go to discord.com/developers/applications and sign in with your Discord account.",
-    "Click \"New Application\" -> give it a name (e.g. CtrlChecks Bot) -> Create.",
-    "Click \"Bot\" in the left menu -> \"Add Bot\" -> Yes, do it! Then click \"Reset Token\" and copy the token - keep it secret.",
-    "Enable Developer Mode in Discord: Settings -> Advanced -> Developer Mode ON. Then right-click any channel -> Copy ID to get the channel ID for use in the node.",
-    "In the OAuth2 -> URL Generator panel: select \"bot\" scope + \"Send Messages\" permission. Copy the URL, open it in a browser, and add the bot to your Discord server.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Discord -> paste the bot token -> Save.",
-    "Run a test step to confirm the bot posts to the chosen channel.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Discord Bot node and select the saved connection."
+    "What this is: The Discord Webhook connection lets CtrlChecks access your Discord Webhook account safely without putting secrets in workflow fields.",
+    "Where to start: Discord Webhook account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Discord Webhook, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Discord Webhook.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Discord Webhook step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://discord.com/developers/docs/getting-started",
   "resources": [
@@ -46,7 +42,7 @@ export const discordWebhookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Message text",
-              "helpText": "What this field is: Message text for Discord Webhook / Execute.\nHow to fill it: Type the message, prompt, or content you want Discord Webhook to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Message text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.message}}.\nTip: Use {{$json.message}} when this value comes from an earlier step.",
               "placeholder": "{{$json.message}}",
               "example": "{{$json.message}}"
             }

@@ -4,6 +4,7 @@ import { UserGuide } from './UserGuide';
 import { cn } from '@/lib/utils';
 import { getNodeGuide, hasNodeGuide } from './nodeGuides';
 import { generateFieldGuide } from './guideGenerator';
+import { resolveFieldHelp, type FieldHelpContent } from '@/lib/resolve-field-help-content';
 
 // Detect guide type from field key or label
 function detectGuideType(key: string, label: string, type?: string): 'api_key' | 'url' | 'credential' | 'token' | 'endpoint' | 'custom' {
@@ -78,14 +79,48 @@ interface InputGuideLinkProps {
   helpCategory?: string;
   docsUrl?: string;
   exampleValue?: string;
+  options?: Array<{ label: string; value: string } | string>;
+  config?: Record<string, unknown>;
+  resolvedHelpContent?: FieldHelpContent | null;
 }
 
-export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, className, placeholder, helpText, helpCategory, docsUrl, exampleValue }: InputGuideLinkProps) {
+export function InputGuideLink({
+  fieldKey,
+  fieldLabel,
+  fieldType,
+  nodeType,
+  className,
+  placeholder,
+  helpText,
+  helpCategory,
+  docsUrl,
+  exampleValue,
+  options,
+  config,
+  resolvedHelpContent,
+}: InputGuideLinkProps) {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const resolvedHelp = resolvedHelpContent || (nodeType ? resolveFieldHelp({
+    nodeType,
+    fieldName: fieldKey,
+    fieldKey,
+    fieldLabel,
+    fieldType,
+    placeholder,
+    helpText,
+    helpCategory,
+    docsUrl,
+    exampleValue,
+    options,
+    config,
+    operation: config?.operation,
+    resource: config?.resource,
+  }) : null);
   
   // Try to get node-specific guide first
-  const nodeGuide = nodeType ? getNodeGuide(nodeType, fieldKey) : null;
-  const helpTextGuide = helpText ? parseHelpTextToGuide(helpText, fieldLabel, fieldType, placeholder) : null;
+  const resolvedHelpGuide = resolvedHelp ? fieldHelpContentToGuide(resolvedHelp, placeholder) : null;
+  const nodeGuide = !resolvedHelpGuide && nodeType ? getNodeGuide(nodeType, fieldKey) : null;
+  const helpTextGuide = !resolvedHelpGuide && helpText ? parseHelpTextToGuide(helpText, fieldLabel, fieldType, placeholder) : null;
   
   // Generate field guide if no node-specific guide or helpText guide exists
   // ALWAYS generate guide for Slack Bot Token to ensure correct guide is shown
@@ -103,7 +138,7 @@ export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, clas
     helpCategory && helpCategory !== 'none'
       ? { helpCategory, docsUrl, exampleValue }
       : undefined;
-  const generatedGuide = !helpTextGuide && !nodeGuide ? generateFieldGuide(
+  const generatedGuide = !resolvedHelpGuide && !helpTextGuide && !nodeGuide ? generateFieldGuide(
     nodeType || '',
     fieldKey || '',
     fieldLabel || '',
@@ -120,7 +155,7 @@ export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, clas
       : getGuideQuestion(fieldKey, fieldLabel);
   
   // Prefer the field's explicit guide. Node-specific and generated guides are fallbacks.
-  const activeGuide = helpTextGuide || nodeGuide || generatedGuide;
+  const activeGuide = resolvedHelpGuide || helpTextGuide || nodeGuide || generatedGuide;
 
   // Always show guide link (per requirements: ALL fields must have guides)
   // If no node-specific guide exists, we'll use generic guide based on field type
@@ -156,6 +191,22 @@ export function InputGuideLink({ fieldKey, fieldLabel, fieldType, nodeType, clas
       />
     </>
   );
+}
+
+function fieldHelpContentToGuide(help: FieldHelpContent, placeholder?: string): { title: string; steps: string[]; url?: string; example?: string; securityWarning?: boolean } {
+  const steps = help.description
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const securityWarning = /secure|secret|token|key/i.test(help.description);
+
+  return {
+    title: help.title,
+    steps: steps.length ? steps : [help.description],
+    example: help.example || placeholder,
+    securityWarning,
+  };
 }
 
 // Parse helpText into guide format

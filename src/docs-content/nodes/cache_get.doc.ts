@@ -29,7 +29,7 @@ export const cacheGetDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Cache key",
-              "helpText": "What this field is: The exact name of the cached value to retrieve.\nMust match the key used when the value was stored.\nExample: user:{{$json.userId}}:preferences\nTip: Use the same key pattern you used in the Cache Set node.",
+              "helpText": "What this field is: The Cache key that tells Cache Get which item to use.\nWhere to find it: Open the item in Cache Get and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: user:123.\nTip: Use {{$json.key}} when an earlier Cache Get step provides this value.",
               "placeholder": "user:123",
               "example": "user:123"
             },
@@ -39,7 +39,7 @@ export const cacheGetDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Value to return if key not found",
-              "helpText": "What this field is: Value to return if key not found for Cache Get / Execute.\nHow to fill it: Enter valid JSON in the format Cache Get expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.defaultValue}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Value to return if key not found.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Cache Get.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.defaultValue}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }

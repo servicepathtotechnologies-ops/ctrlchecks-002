@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Search, RefreshCw, Plus } from 'lucide-react';
+import { Search, RefreshCw, Plus, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { awsClient } from '@/integrations/aws/client';
 import { Button } from '@/components/ui/button';
@@ -172,6 +172,7 @@ function ServiceCatalog({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Connections() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: connections = [], isLoading, refetch, isFetching } = useConnections();
   const { data: credentialTypes = [], isLoading: credentialTypesLoading } = useCredentialTypes();
@@ -181,6 +182,8 @@ export default function Connections() {
   const [modalPreset, setModalPreset] = useState<string | undefined>();
   const [editingConnection, setEditingConnection] = useState<ConnectionRecord | null>(null);
 
+  const returnTo = searchParams.get('returnTo');
+  const workflowName = searchParams.get('workflowName');
   const requestedService = searchParams.get('service') || searchParams.get('credentialType');
 
   useEffect(() => {
@@ -217,6 +220,12 @@ export default function Connections() {
     if (!v) {
       setModalPreset(undefined);
       refetch();
+    }
+  }
+
+  function handleSaved() {
+    if (returnTo) {
+      navigate(returnTo);
     }
   }
 
@@ -260,6 +269,26 @@ export default function Connections() {
   return (
     <div className="min-h-screen bg-background">
       <AppChromeHeader />
+
+      {returnTo && (
+        <div className="border-b border-border bg-muted/40">
+          <div className="container mx-auto px-4 max-w-5xl">
+            <button
+              type="button"
+              onClick={() => navigate(returnTo)}
+              className="flex items-center gap-2 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 shrink-0" />
+              <span>
+                Back to workflow
+                {workflowName && (
+                  <span className="ml-1 font-medium text-foreground">— {workflowName}</span>
+                )}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         <WorkflowAuthGate>
@@ -358,6 +387,7 @@ export default function Connections() {
         open={modalOpen}
         onOpenChange={handleModalClose}
         preselectedCredentialTypeId={modalPreset}
+        onSaved={handleSaved}
       />
 
       {/* Modal: edit existing connection */}
@@ -371,6 +401,7 @@ export default function Connections() {
             }
           }}
           preselectedCredentialTypeId={editingConnection.credentialTypeId}
+          onSaved={handleSaved}
         />
       )}
     </div>

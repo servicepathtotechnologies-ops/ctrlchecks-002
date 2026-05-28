@@ -8,16 +8,12 @@ export const googleSheetsDoc: NodeDoc = {
   "description": "Read, write, append, or update data in Google Sheets",
   "credentialType": "Google Sheets OAuth",
   "credentialSetupSteps": [
-    "What this is: Google Sheets uses an OAuth connection so CtrlChecks can safely access your Google Sheets account.",
-    "Open the Google Cloud developer page at: https://console.cloud.google.com/apis/credentials",
-    "Create a new app or project and give it a clear name such as \"CtrlChecks\".",
-    "Enable the required API or permission scope: Google Sheets API: spreadsheets.readonly and spreadsheets.",
-    "Create OAuth credentials. The provider will show a Client ID and Client Secret - copy both.",
-    "Add this redirect URI exactly: http://localhost:3001/api/oauth/google/callback",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Google Sheets -> connect and approve access.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Google Sheets node and select the saved connection."
+    "What this is: The Google Sheets connection lets CtrlChecks access your Google Sheets account safely without putting secrets in workflow fields.",
+    "Where to start: Google Sheets account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Google Sheets, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Google Sheets.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Google Sheets step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://console.cloud.google.com/apis/credentials",
   "resources": [
@@ -56,7 +52,7 @@ export const googleSheetsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Cell range (e.g., A1:D100, leave empty for all used cells)",
-              "helpText": "What this field is: The exact cells to read or write — written in A1 notation.\nFormat: TabName!StartColumn+StartRow:EndColumn+EndRow\nExamples:\n  Sheet1!A1:D100  →  columns A to D, rows 1 to 100 on the Sheet1 tab\n  Customers!B2:E  →  column B to E, all rows starting from row 2 in the Customers tab\n  Sheet1!A:D      →  all rows in columns A through D\nTip: Use just A1:D1000 if you only have one sheet tab.",
+              "helpText": "What this field is: The cell range to read or write in the sheet.\nHow to fill it: Use A1 notation, which means column letters and row numbers.\nExample: A1:D100 reads columns A to D through row 100.\nTip: Use Sheet1!A:D when you want to include the tab name.",
               "placeholder": "A1:D100",
               "example": "A1:D100"
             },
@@ -66,7 +62,7 @@ export const googleSheetsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Output format for read operations",
-              "helpText": "What this field is: Output format for read operations for Google Sheets / Read.\nHow to fill it: Enter the output format value requested by Google Sheets, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.outputFormat}} or pick the value from the data picker.",
+              "helpText": "What this field is: Output format for read operations.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: json.\nTip: Use {{$json.outputFormat}} when this value comes from an earlier step.",
               "placeholder": "json",
               "example": "json",
               "defaultValue": "json"
@@ -130,7 +126,7 @@ export const googleSheetsDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Cell range (e.g., A1:D100, leave empty for all used cells)",
-              "helpText": "What this field is: The exact cells to read or write — written in A1 notation.\nFormat: TabName!StartColumn+StartRow:EndColumn+EndRow\nExamples:\n  Sheet1!A1:D100  →  columns A to D, rows 1 to 100 on the Sheet1 tab\n  Customers!B2:E  →  column B to E, all rows starting from row 2 in the Customers tab\n  Sheet1!A:D      →  all rows in columns A through D\nTip: Use just A1:D1000 if you only have one sheet tab.",
+              "helpText": "What this field is: The cell range to read or write in the sheet.\nHow to fill it: Use A1 notation, which means column letters and row numbers.\nExample: A1:D100 reads columns A to D through row 100.\nTip: Use Sheet1!A:D when you want to include the tab name.",
               "placeholder": "A1:D100",
               "example": "A1:D100"
             },
@@ -140,7 +136,7 @@ export const googleSheetsDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Data to write/append (for write/append operations)",
-              "helpText": "What this field is: Data to write/append (for write/append operations) for Google Sheets / Write.\nHow to fill it: Enter valid JSON in the format Google Sheets expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.values}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Data to write/append.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Google Sheets.\nExample: [\"item\"].\nTip: Use {{$json.values}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             }
@@ -194,7 +190,7 @@ export const googleSheetsDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Cell range (e.g., A1:D100, leave empty for all used cells)",
-              "helpText": "What this field is: The exact cells to read or write — written in A1 notation.\nFormat: TabName!StartColumn+StartRow:EndColumn+EndRow\nExamples:\n  Sheet1!A1:D100  →  columns A to D, rows 1 to 100 on the Sheet1 tab\n  Customers!B2:E  →  column B to E, all rows starting from row 2 in the Customers tab\n  Sheet1!A:D      →  all rows in columns A through D\nTip: Use just A1:D1000 if you only have one sheet tab.",
+              "helpText": "What this field is: The cell range to read or write in the sheet.\nHow to fill it: Use A1 notation, which means column letters and row numbers.\nExample: A1:D100 reads columns A to D through row 100.\nTip: Use Sheet1!A:D when you want to include the tab name.",
               "placeholder": "A1:D100",
               "example": "A1:D100"
             },
@@ -204,7 +200,7 @@ export const googleSheetsDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Data to write/append (for write/append operations)",
-              "helpText": "What this field is: One or more rows to add at the bottom of the sheet.\nFormat: Array of arrays.\nExample: [[\"Charlie\",\"charlie@example.com\",\"2025-01-17\"]]",
+              "helpText": "What this field is: Structured data for Data to write/append.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Google Sheets.\nExample: [\"item\"].\nTip: Use {{$json.values}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             }
@@ -259,7 +255,7 @@ export const googleSheetsDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Cell range (e.g., A1:D100, leave empty for all used cells)",
-              "helpText": "What this field is: The exact cells to read or write — written in A1 notation.\nFormat: TabName!StartColumn+StartRow:EndColumn+EndRow\nExamples:\n  Sheet1!A1:D100  →  columns A to D, rows 1 to 100 on the Sheet1 tab\n  Customers!B2:E  →  column B to E, all rows starting from row 2 in the Customers tab\n  Sheet1!A:D      →  all rows in columns A through D\nTip: Use just A1:D1000 if you only have one sheet tab.",
+              "helpText": "What this field is: The cell range to read or write in the sheet.\nHow to fill it: Use A1 notation, which means column letters and row numbers.\nExample: A1:D100 reads columns A to D through row 100.\nTip: Use Sheet1!A:D when you want to include the tab name.",
               "placeholder": "A1:D100",
               "example": "A1:D100"
             },
@@ -269,7 +265,7 @@ export const googleSheetsDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Data to write/append (for write/append operations)",
-              "helpText": "What this field is: Data to write/append (for write/append operations) for Google Sheets / Update.\nHow to fill it: Enter valid JSON in the format Google Sheets expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.values}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Data to write/append.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Google Sheets.\nExample: [\"item\"].\nTip: Use {{$json.values}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             }

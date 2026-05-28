@@ -29,7 +29,7 @@ export const timeoutDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Maximum allowed time (in milliseconds)",
-              "helpText": "What this field is: A number used for limit in Timeout / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Maximum allowed time.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5000.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "5000",
               "example": "5000"
             }

@@ -29,7 +29,7 @@ export const javascriptDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "JavaScript code to execute",
-              "helpText": "What this field is: JavaScript code that runs on the workflow data.\nThe input data is available as the items array. Each item has a .json property with its data.\nYou must return an array of objects.\nSimple example (add a field):\n  return items.map(item => ({ ...item.json, fullName: item.json.firstName + ' ' + item.json.lastName }));\nFilter example (keep only active users):\n  return items.filter(item => item.json.status === 'active');\nTransform example (format a date):\n  return items.map(item => ({ ...item.json, formattedDate: new Date(item.json.createdAt).toLocaleDateString() }));",
+              "helpText": "What this field is: JavaScript code to execute.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: return { ...$json, fullName: $json.firstName + \" \" + $json.lastName };.\nTip: Use {{$json.code}} when this value comes from an earlier step.",
               "placeholder": "return { ...$json, fullName: $json.firstName + \" \" + $json.lastName };",
               "example": "return { ...$json, fullName: $json.firstName + \" \" + $json.lastName };"
             }

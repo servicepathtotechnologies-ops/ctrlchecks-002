@@ -8,16 +8,12 @@ export const linkedinDoc: NodeDoc = {
   "description": "Post content to LinkedIn, manage LinkedIn profile and company pages",
   "credentialType": "LinkedIn OAuth",
   "credentialSetupSteps": [
-    "What this is: LinkedIn uses an OAuth connection so CtrlChecks can safely access your LinkedIn account.",
-    "Go to linkedin.com/developers and sign in with your LinkedIn account.",
-    "Click \"Create App\" -> fill in app name (e.g. CtrlChecks), your LinkedIn Company Page (required - create one at linkedin.com/company/setup/new if needed), and upload a logo image.",
-    "Under \"Auth\" settings, copy the Client ID and Client Secret.",
-    "In \"Auth\" settings, click \"Add redirect URL\" and enter: http://localhost:3001/api/oauth/linkedin/callback",
-    "Under \"Products\" tab, request access to \"Share on LinkedIn\" and \"Sign In with LinkedIn using OpenID Connect\". These are approved instantly.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> LinkedIn -> Connect with LinkedIn -> sign in and authorize.",
-    "Run a test step (e.g. create a post as draft) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the LinkedIn node and select the saved connection."
+    "What this is: The LinkedIn connection lets CtrlChecks access your LinkedIn account safely without putting secrets in workflow fields.",
+    "Where to start: LinkedIn Developer Portal -> your app -> Auth.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> LinkedIn, then sign in or paste the secret value requested there.",
+    "Example: the access token returned after LinkedIn sign-in.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple LinkedIn step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
   "resources": [
@@ -46,7 +42,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Public HTTPS URL to an image or video to attach to the post (required for create_post_media)",
-              "helpText": "What this field is: Public HTTPS URL to an image or video to attach to the post (required for create_post_media) for LinkedIn / Create post.\nHow to fill it: Paste the full web address LinkedIn should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.mediaUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Public HTTPS URL to an image or video to attach to the post.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://cdn.example.com/image.jpg.\nTip: Use {{$json.mediaUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://cdn.example.com/image.jpg",
               "example": "https://cdn.example.com/image.jpg"
             },
@@ -77,7 +73,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "If true, validate configuration and return a simulated request without calling LinkedIn",
-              "helpText": "What this field is: An on/off choice for dry run in LinkedIn / Create post.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want LinkedIn to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for If true, validate configuration and return a simulated request without calling LinkedIn.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use dry run; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -88,7 +84,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn)",
-              "helpText": "What this field is: Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn) for LinkedIn / Create post.\nHow to fill it: Type the message, prompt, or content you want LinkedIn to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: rich-text/HTML content stub.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.richText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -97,7 +93,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional media configuration stub (images/videos). Reserved for future LinkedIn media support.",
-              "helpText": "What this field is: Optional media configuration stub (images/videos). Reserved for future LinkedIn media support. for LinkedIn / Create post.\nHow to fill it: Enter valid JSON in the format LinkedIn expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.media}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for media configuration stub . Reserved for future LinkedIn media support..\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by LinkedIn.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.media}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -132,7 +128,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Post content text",
-              "helpText": "What this field is: The caption or text that appears with your media post.\nExample: Check out our new product demo video! {{$json.postText}}",
+              "helpText": "What this field is: Post content text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.text}}.\nTip: Use {{$json.text}} when this value comes from an earlier step.",
               "placeholder": "{{$json.text}}",
               "example": "{{$json.text}}"
             },
@@ -142,7 +138,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Public HTTPS URL to an image or video to attach to the post (required for create_post_media)",
-              "helpText": "What this field is: The public URL of the image or video to attach to the post.\nImportant: The file must be publicly accessible on the internet — not a local file.\nHow to get a public URL: Upload to AWS S3, Google Drive (set to public), Cloudinary, or any hosting service. Copy the direct file URL.\nExample: https://storage.googleapis.com/mybucket/demo-video.mp4",
+              "helpText": "What this field is: The web address for Public HTTPS URL to an image or video to attach to the post.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://cdn.example.com/image.jpg.\nTip: Use {{$json.mediaUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://cdn.example.com/image.jpg",
               "example": "https://cdn.example.com/image.jpg"
             },
@@ -152,7 +148,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Post visibility",
-              "helpText": "What this field is: Post visibility for LinkedIn / Create post media.\nHow to fill it: Enter the visibility value requested by LinkedIn, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.visibility}} or pick the value from the data picker.",
+              "helpText": "What this field is: Post visibility.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: PUBLIC.\nTip: Use {{$json.visibility}} when this value comes from an earlier step.",
               "placeholder": "PUBLIC",
               "example": "PUBLIC",
               "defaultValue": "PUBLIC"
@@ -173,7 +169,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "If true, validate configuration and return a simulated request without calling LinkedIn",
-              "helpText": "What this field is: An on/off choice for dry run in LinkedIn / Create post media.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want LinkedIn to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for If true, validate configuration and return a simulated request without calling LinkedIn.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use dry run; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -184,7 +180,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn)",
-              "helpText": "What this field is: Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn) for LinkedIn / Create post media.\nHow to fill it: Type the message, prompt, or content you want LinkedIn to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: rich-text/HTML content stub.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.richText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -193,7 +189,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional media configuration stub (images/videos). Reserved for future LinkedIn media support.",
-              "helpText": "What this field is: Optional media configuration stub (images/videos). Reserved for future LinkedIn media support. for LinkedIn / Create post media.\nHow to fill it: Enter valid JSON in the format LinkedIn expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.media}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for media configuration stub . Reserved for future LinkedIn media support..\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by LinkedIn.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.media}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -227,7 +223,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Post content text",
-              "helpText": "What this field is: Post content text for LinkedIn / Create article.\nHow to fill it: Type the message, prompt, or content you want LinkedIn to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Post content text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.text}}.\nTip: Use {{$json.text}} when this value comes from an earlier step.",
               "placeholder": "{{$json.text}}",
               "example": "{{$json.text}}"
             },
@@ -237,7 +233,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Public HTTPS URL to an image or video to attach to the post (required for create_post_media)",
-              "helpText": "What this field is: Public HTTPS URL to an image or video to attach to the post (required for create_post_media) for LinkedIn / Create article.\nHow to fill it: Paste the full web address LinkedIn should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.mediaUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Public HTTPS URL to an image or video to attach to the post.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://cdn.example.com/image.jpg.\nTip: Use {{$json.mediaUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://cdn.example.com/image.jpg",
               "example": "https://cdn.example.com/image.jpg"
             },
@@ -247,7 +243,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Post visibility",
-              "helpText": "What this field is: Post visibility for LinkedIn / Create article.\nHow to fill it: Enter the visibility value requested by LinkedIn, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.visibility}} or pick the value from the data picker.",
+              "helpText": "What this field is: Post visibility.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: PUBLIC.\nTip: Use {{$json.visibility}} when this value comes from an earlier step.",
               "placeholder": "PUBLIC",
               "example": "PUBLIC",
               "defaultValue": "PUBLIC"
@@ -268,7 +264,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "If true, validate configuration and return a simulated request without calling LinkedIn",
-              "helpText": "What this field is: An on/off choice for dry run in LinkedIn / Create article.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want LinkedIn to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for If true, validate configuration and return a simulated request without calling LinkedIn.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use dry run; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -279,7 +275,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn)",
-              "helpText": "What this field is: Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn) for LinkedIn / Create article.\nHow to fill it: Type the message, prompt, or content you want LinkedIn to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: rich-text/HTML content stub.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.richText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -288,7 +284,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional media configuration stub (images/videos). Reserved for future LinkedIn media support.",
-              "helpText": "What this field is: Optional media configuration stub (images/videos). Reserved for future LinkedIn media support. for LinkedIn / Create article.\nHow to fill it: Enter valid JSON in the format LinkedIn expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.media}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for media configuration stub . Reserved for future LinkedIn media support..\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by LinkedIn.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.media}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -322,7 +318,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Post content text",
-              "helpText": "What this field is: Post content text for LinkedIn / Get posts.\nHow to fill it: Type the message, prompt, or content you want LinkedIn to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Post content text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.text}}.\nTip: Use {{$json.text}} when this value comes from an earlier step.",
               "placeholder": "{{$json.text}}",
               "example": "{{$json.text}}"
             },
@@ -332,7 +328,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Public HTTPS URL to an image or video to attach to the post (required for create_post_media)",
-              "helpText": "What this field is: Public HTTPS URL to an image or video to attach to the post (required for create_post_media) for LinkedIn / Get posts.\nHow to fill it: Paste the full web address LinkedIn should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.mediaUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Public HTTPS URL to an image or video to attach to the post.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://cdn.example.com/image.jpg.\nTip: Use {{$json.mediaUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://cdn.example.com/image.jpg",
               "example": "https://cdn.example.com/image.jpg"
             },
@@ -342,7 +338,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Post visibility",
-              "helpText": "What this field is: Post visibility for LinkedIn / Get posts.\nHow to fill it: Enter the visibility value requested by LinkedIn, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.visibility}} or pick the value from the data picker.",
+              "helpText": "What this field is: Post visibility.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: PUBLIC.\nTip: Use {{$json.visibility}} when this value comes from an earlier step.",
               "placeholder": "PUBLIC",
               "example": "PUBLIC",
               "defaultValue": "PUBLIC"
@@ -363,7 +359,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "If true, validate configuration and return a simulated request without calling LinkedIn",
-              "helpText": "What this field is: An on/off choice for dry run in LinkedIn / Get posts.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want LinkedIn to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for If true, validate configuration and return a simulated request without calling LinkedIn.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use dry run; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -374,7 +370,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn)",
-              "helpText": "What this field is: Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn) for LinkedIn / Get posts.\nHow to fill it: Type the message, prompt, or content you want LinkedIn to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: rich-text/HTML content stub.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.richText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -383,7 +379,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional media configuration stub (images/videos). Reserved for future LinkedIn media support.",
-              "helpText": "What this field is: Optional media configuration stub (images/videos). Reserved for future LinkedIn media support. for LinkedIn / Get posts.\nHow to fill it: Enter valid JSON in the format LinkedIn expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.media}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for media configuration stub . Reserved for future LinkedIn media support..\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by LinkedIn.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.media}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -423,7 +419,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Post content text",
-              "helpText": "What this field is: Post content text for LinkedIn / Delete post.\nHow to fill it: Type the message, prompt, or content you want LinkedIn to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Post content text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.text}}.\nTip: Use {{$json.text}} when this value comes from an earlier step.",
               "placeholder": "{{$json.text}}",
               "example": "{{$json.text}}"
             },
@@ -433,7 +429,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Public HTTPS URL to an image or video to attach to the post (required for create_post_media)",
-              "helpText": "What this field is: Public HTTPS URL to an image or video to attach to the post (required for create_post_media) for LinkedIn / Delete post.\nHow to fill it: Paste the full web address LinkedIn should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.mediaUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Public HTTPS URL to an image or video to attach to the post.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://cdn.example.com/image.jpg.\nTip: Use {{$json.mediaUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://cdn.example.com/image.jpg",
               "example": "https://cdn.example.com/image.jpg"
             },
@@ -443,7 +439,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Post visibility",
-              "helpText": "What this field is: Post visibility for LinkedIn / Delete post.\nHow to fill it: Enter the visibility value requested by LinkedIn, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.visibility}} or pick the value from the data picker.",
+              "helpText": "What this field is: Post visibility.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: PUBLIC.\nTip: Use {{$json.visibility}} when this value comes from an earlier step.",
               "placeholder": "PUBLIC",
               "example": "PUBLIC",
               "defaultValue": "PUBLIC"
@@ -464,7 +460,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "If true, validate configuration and return a simulated request without calling LinkedIn",
-              "helpText": "What this field is: An on/off choice for dry run in LinkedIn / Delete post.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want LinkedIn to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for If true, validate configuration and return a simulated request without calling LinkedIn.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use dry run; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -475,7 +471,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn)",
-              "helpText": "What this field is: Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn) for LinkedIn / Delete post.\nHow to fill it: Type the message, prompt, or content you want LinkedIn to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: rich-text/HTML content stub.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.richText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -484,7 +480,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional media configuration stub (images/videos). Reserved for future LinkedIn media support.",
-              "helpText": "What this field is: Optional media configuration stub (images/videos). Reserved for future LinkedIn media support. for LinkedIn / Delete post.\nHow to fill it: Enter valid JSON in the format LinkedIn expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.media}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for media configuration stub . Reserved for future LinkedIn media support..\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by LinkedIn.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.media}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -518,7 +514,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Post content text",
-              "helpText": "What this field is: Post content text for LinkedIn / {{$json.operation}}.\nHow to fill it: Type the message, prompt, or content you want LinkedIn to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Post content text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.text}}.\nTip: Use {{$json.text}} when this value comes from an earlier step.",
               "placeholder": "{{$json.text}}",
               "example": "{{$json.text}}"
             },
@@ -528,7 +524,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Public HTTPS URL to an image or video to attach to the post (required for create_post_media)",
-              "helpText": "What this field is: Public HTTPS URL to an image or video to attach to the post (required for create_post_media) for LinkedIn / {{$json.operation}}.\nHow to fill it: Paste the full web address LinkedIn should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.mediaUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Public HTTPS URL to an image or video to attach to the post.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://cdn.example.com/image.jpg.\nTip: Use {{$json.mediaUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://cdn.example.com/image.jpg",
               "example": "https://cdn.example.com/image.jpg"
             },
@@ -538,7 +534,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Post visibility",
-              "helpText": "What this field is: Post visibility for LinkedIn / {{$json.operation}}.\nHow to fill it: Enter the visibility value requested by LinkedIn, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.visibility}} or pick the value from the data picker.",
+              "helpText": "What this field is: Post visibility.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: PUBLIC.\nTip: Use {{$json.visibility}} when this value comes from an earlier step.",
               "placeholder": "PUBLIC",
               "example": "PUBLIC",
               "defaultValue": "PUBLIC"
@@ -559,7 +555,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "If true, validate configuration and return a simulated request without calling LinkedIn",
-              "helpText": "What this field is: An on/off choice for dry run in LinkedIn / {{$json.operation}}.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want LinkedIn to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for If true, validate configuration and return a simulated request without calling LinkedIn.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use dry run; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -570,7 +566,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn)",
-              "helpText": "What this field is: Optional rich-text/HTML content stub for future media/rich posts (not yet sent to LinkedIn) for LinkedIn / {{$json.operation}}.\nHow to fill it: Type the message, prompt, or content you want LinkedIn to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: rich-text/HTML content stub.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.richText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -579,7 +575,7 @@ export const linkedinDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional media configuration stub (images/videos). Reserved for future LinkedIn media support.",
-              "helpText": "What this field is: Optional media configuration stub (images/videos). Reserved for future LinkedIn media support. for LinkedIn / {{$json.operation}}.\nHow to fill it: Enter valid JSON in the format LinkedIn expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.media}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for media configuration stub . Reserved for future LinkedIn media support..\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by LinkedIn.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.media}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }

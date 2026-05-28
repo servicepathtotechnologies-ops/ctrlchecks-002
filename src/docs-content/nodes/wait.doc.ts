@@ -29,7 +29,7 @@ export const waitDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Wait duration value",
-              "helpText": "What this field is: How long to pause the workflow.\nExample: 60 seconds = 1 minute pause before continuing.",
+              "helpText": "What this field is: The number used for Wait duration value.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1000.\nTip: Use {{$json.duration}} when the number comes from an earlier step.",
               "placeholder": "1000",
               "example": "1000"
             },
@@ -39,7 +39,7 @@ export const waitDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Duration unit",
-              "helpText": "What this field is: Duration unit for Wait / Execute.\nHow to fill it: Enter the unit value requested by Wait, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.unit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The time unit for the Duration value.\nOptions: milliseconds, seconds, minutes, hours.\nExample: Duration=30, Unit=seconds pauses the workflow for 30 seconds.\nDefault: milliseconds — so Duration=1000 = 1 second.",
               "placeholder": "milliseconds",
               "example": "milliseconds",
               "defaultValue": "milliseconds"

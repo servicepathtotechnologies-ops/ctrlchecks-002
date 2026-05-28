@@ -133,7 +133,7 @@ function guideText(parts: Array<string | null | undefined>): string {
 
 function dynamicTip(fieldKey: string, frontendType: ConfigField['type']): string | null {
   if (frontendType === 'boolean' || frontendType === 'select') return null;
-  return `Tip: To use data from an earlier node, type {{$json.${fieldKey}}} or pick the value from the data picker.`;
+  return `Tip: To use data from an earlier node, type {{$json.${fieldKey}}} or choose the value from the field picker.`;
 }
 
 function deriveInputHelpText(fieldKey: string, fieldSchema: InputFieldSchema, frontendType: ConfigField['type'], nodeType?: string): string {
@@ -144,23 +144,8 @@ function deriveInputHelpText(fieldKey: string, fieldSchema: InputFieldSchema, fr
     .replace(/\b\w/g, (c) => c.toUpperCase());
   const plainLabel = label.toLowerCase();
   const description = fieldSchema.description || `${label} for this node.`;
-  const serviceName = nodeType
-    ? nodeType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-    : 'this node';
-
-  if (lower === 'operation') {
-    return guideText([
-      `What this field is: This chooses the exact action ${serviceName} will perform.`,
-      `How to fill it: Pick the action that matches your goal for this ${serviceName} step. Use the choices shown in this node.`,
-      `Example: Choose Create when you want ${serviceName} to add a new record, or Search/Get Many when you want it to find existing records.`,
-    ]);
-  }
-  if (lower === 'resource') {
-    return guideText([
-      `What this field is: Resource chooses the kind of item ${serviceName} works with.`,
-      `How to fill it: Pick the object you want this step to work on, such as contact, company, deal, message, file, or another option shown in the dropdown.`,
-      `Example: In HubSpot, choose Contact for a person and Deal for a sales opportunity.`,
-    ]);
+  if (lower === 'operation' || lower === 'resource') {
+    return '';
   }
   if (nodeType === 'hubspot' && lower === 'properties') {
     return guideText([

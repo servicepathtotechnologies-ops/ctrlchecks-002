@@ -8,15 +8,12 @@ export const slackWebhookDoc: NodeDoc = {
   "description": "Send messages via Slack webhook",
   "credentialType": "Slack Webhook URL",
   "credentialSetupSteps": [
-    "What this is: Slack Webhook uses an API key or account connection so CtrlChecks can safely access your Slack Webhook account.",
-    "Go to api.slack.com/apps and sign in. Select your existing app, or click \"Create New App\" -> \"From scratch\".",
-    "In the left menu, click \"Incoming Webhooks\" -> toggle \"Activate Incoming Webhooks\" to ON.",
-    "Click \"Add New Webhook to Workspace\" -> select the channel you want messages posted to -> Allow.",
-    "Copy the Webhook URL shown - it starts with https://hooks.slack.com/services/. This URL is your credential.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Slack Webhook -> paste the webhook URL -> Save.",
-    "Run a test step in CtrlChecks to confirm a message appears in the selected channel.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Slack Webhook node and select the saved connection."
+    "What this is: The Slack Webhook connection lets CtrlChecks access your Slack Webhook account safely without putting secrets in workflow fields.",
+    "Where to start: Slack app -> Incoming Webhooks -> Add New Webhook to Workspace.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Slack Webhook, then sign in or paste the secret value requested there.",
+    "Example: https://hooks.slack.com/services/T000/B000/XXXX.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Slack Webhook step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://api.slack.com/messaging/webhooks",
   "resources": [
@@ -35,7 +32,7 @@ export const slackWebhookDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Slack webhook URL",
-              "helpText": "What this field is: Slack webhook URL for Slack Webhook / Execute.\nHow to fill it: Paste the full web address Slack Webhook should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.webhookUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Incoming Webhook URL that posts messages to a specific Slack channel.\nWhere to find it: api.slack.com/apps → your app → Incoming Webhooks → copy the URL.\nExample: https://hooks.slack.com/services/T00000/B00000/xxxx...\nNote: Keep this URL private — anyone with it can post to your channel.",
               "placeholder": "https://hooks.slack.com/services/...",
               "example": "https://hooks.slack.com/services/..."
             },
@@ -45,7 +42,7 @@ export const slackWebhookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Message text",
-              "helpText": "What this field is: Message text for Slack Webhook / Execute.\nHow to fill it: Type the message, prompt, or content you want Slack Webhook to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Message text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.message}}.\nTip: Use {{$json.message}} when this value comes from an earlier step.",
               "placeholder": "{{$json.message}}",
               "example": "{{$json.message}}"
             }

@@ -8,14 +8,12 @@ export const clickupDoc: NodeDoc = {
   "description": "Create, read, and manage ClickUp tasks, lists, spaces, and workspaces.",
   "credentialType": "ClickUp API Key",
   "credentialSetupSteps": [
-    "What this is: ClickUp uses an API key or account connection so CtrlChecks can safely access your ClickUp account.",
-    "Log in to your ClickUp account at app.clickup.com.",
-    "Click your profile avatar (bottom left) -> Settings -> Apps.",
-    "Under \"API Token\", click \"Generate\" if no token exists, or copy the existing token.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> ClickUp -> paste the API token -> Save.",
-    "Run a test step (e.g. list spaces or tasks) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the ClickUp node and select the saved connection."
+    "What this is: The ClickUp connection lets CtrlChecks access your ClickUp account safely without putting secrets in workflow fields.",
+    "Where to start: ClickUp account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> ClickUp, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by ClickUp.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple ClickUp step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://clickup.com/api",
   "resources": [
@@ -34,7 +32,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Create task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -44,7 +42,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Create task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -54,7 +52,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Create task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -64,7 +62,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Create task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -74,7 +72,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Create task.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -84,7 +82,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Create task.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -94,7 +92,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Create task.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -104,7 +102,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Create task.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -114,7 +112,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Create task.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }
@@ -154,7 +152,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Get tasks list.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -164,7 +162,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Get tasks list.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -174,7 +172,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Get tasks list.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -184,7 +182,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Get tasks list.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -194,7 +192,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Get tasks list.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -204,7 +202,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Get tasks list.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -214,7 +212,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Get tasks list.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -224,7 +222,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Get tasks list.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -234,7 +232,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Get tasks list.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }
@@ -274,7 +272,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Get task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -284,7 +282,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Get task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -294,7 +292,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Get task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -304,7 +302,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Get task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -314,7 +312,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Get task.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -324,7 +322,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Get task.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -334,7 +332,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Get task.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -344,7 +342,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Get task.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -354,7 +352,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Get task.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }
@@ -394,7 +392,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Update task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -404,7 +402,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Update task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -414,7 +412,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Update task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -424,7 +422,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Update task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -434,7 +432,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Update task.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -444,7 +442,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Update task.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -454,7 +452,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Update task.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -464,7 +462,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Update task.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -474,7 +472,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Update task.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }
@@ -514,7 +512,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Delete task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -524,7 +522,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Delete task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -534,7 +532,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Delete task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -544,7 +542,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Delete task.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -554,7 +552,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Delete task.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -564,7 +562,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Delete task.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -574,7 +572,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Delete task.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -584,7 +582,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Delete task.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -594,7 +592,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Delete task.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }
@@ -634,7 +632,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Add comment.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -644,7 +642,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Add comment.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -654,7 +652,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Add comment.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -664,7 +662,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Add comment.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -674,7 +672,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Add comment.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -684,7 +682,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Add comment.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -694,7 +692,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Add comment.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -704,7 +702,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Add comment.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -714,7 +712,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Add comment.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }
@@ -754,7 +752,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Update status.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -764,7 +762,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Update status.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -774,7 +772,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Update status.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -784,7 +782,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Update status.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -794,7 +792,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Update status.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -804,7 +802,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Update status.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -814,7 +812,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Update status.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -824,7 +822,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Update status.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -834,7 +832,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Update status.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }
@@ -874,7 +872,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Get teams.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -884,7 +882,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Get teams.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -894,7 +892,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Get teams.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -904,7 +902,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Get teams.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -914,7 +912,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Get teams.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -924,7 +922,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Get teams.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -934,7 +932,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Get teams.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -944,7 +942,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Get teams.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -954,7 +952,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Get teams.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }
@@ -994,7 +992,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Get spaces.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -1004,7 +1002,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Get spaces.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -1014,7 +1012,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Get spaces.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -1024,7 +1022,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Get spaces.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -1034,7 +1032,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Get spaces.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -1044,7 +1042,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Get spaces.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -1054,7 +1052,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Get spaces.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -1064,7 +1062,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Get spaces.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -1074,7 +1072,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Get spaces.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }
@@ -1114,7 +1112,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Get folders.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -1124,7 +1122,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Get folders.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -1134,7 +1132,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Get folders.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -1144,7 +1142,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Get folders.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -1154,7 +1152,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Get folders.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -1164,7 +1162,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Get folders.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -1174,7 +1172,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Get folders.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -1184,7 +1182,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Get folders.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -1194,7 +1192,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Get folders.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }
@@ -1234,7 +1232,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workspace (team) ID — find it in the workspace URL or via Get Teams",
-              "helpText": "What this field is: Workspace (team) ID — find it in the workspace URL or via Get Teams for ClickUp / Get lists.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workspaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Workspace ID — find it in the workspace URL or via Get Teams that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90161598841.\nTip: Use {{$json.workspaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90161598841",
               "example": "90161598841"
             },
@@ -1244,7 +1242,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Space ID — required for Get Spaces tasks; find via Get Spaces",
-              "helpText": "What this field is: Space ID — required for Get Spaces tasks; find via Get Spaces for ClickUp / Get lists.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.spaceId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Space ID — required for Get Spaces tasks; find via Get Spaces that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 90166920916.\nTip: Use {{$json.spaceId}} when an earlier ClickUp step provides this value.",
               "placeholder": "90166920916",
               "example": "90166920916"
             },
@@ -1254,7 +1252,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List ID — required for create_task and get_tasks_list; find via Get Lists",
-              "helpText": "What this field is: List ID — required for create_task and get_tasks_list; find via Get Lists for ClickUp / Get lists.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The List ID — required for create_task and get_tasks_list; find via Get Lists that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 901614760992.\nTip: Use {{$json.listId}} when an earlier ClickUp step provides this value.",
               "placeholder": "901614760992",
               "example": "901614760992"
             },
@@ -1264,7 +1262,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID — required for get_task, update_task, delete_task, add_comment, update_status",
-              "helpText": "What this field is: Task ID — required for get_task, update_task, delete_task, add_comment, update_status for ClickUp / Get lists.\nWhere to find it: Open the item in ClickUp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID — required for get_task, update_task, delete_task, add_comment, update_status that tells ClickUp which item to use.\nWhere to find it: Open the item in ClickUp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 86d31vafd.\nTip: Use {{$json.taskId}} when an earlier ClickUp step provides this value.",
               "placeholder": "86d31vafd",
               "example": "86d31vafd"
             },
@@ -1274,7 +1272,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task name/title (required for create_task)",
-              "helpText": "What this field is: Task name/title (required for create_task) for ClickUp / Get lists.\nHow to fill it: Enter the task name value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task name/title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Follow up with customer.\nTip: This field is used for create_task. Leave it blank when this operation does not need it.",
               "placeholder": "Follow up with customer",
               "example": "Follow up with customer"
             },
@@ -1284,7 +1282,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task description — markdown supported (optional for create_task / update_task)",
-              "helpText": "What this field is: Task description — markdown supported (optional for create_task / update_task) for ClickUp / Get lists.\nHow to fill it: Enter the task description value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.taskDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task description — markdown supported.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Details:\n- Action item 1\n- Action item 2.\nTip: Use {{$json.taskDescription}} when this value comes from an earlier step.",
               "placeholder": "Details:\n- Action item 1\n- Action item 2",
               "example": "Details:\n- Action item 1\n- Action item 2"
             },
@@ -1294,7 +1292,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task status (e.g. \"to do\", \"in progress\", \"complete\")",
-              "helpText": "What this field is: Task status (e.g. \"to do\", \"in progress\", \"complete\") for ClickUp / Get lists.\nHow to fill it: Enter the status value requested by ClickUp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Task status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: to do.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "to do",
               "example": "to do"
             },
@@ -1304,7 +1302,7 @@ export const clickupDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low",
-              "helpText": "What this field is: A number used for priority in ClickUp / Get lists.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Task priority: 1 = urgent, 2 = high, 3 = normal, 4 = low.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 1.\nTip: Use {{$json.priority}} when the number comes from an earlier step.",
               "placeholder": "1",
               "example": "1"
             },
@@ -1314,7 +1312,7 @@ export const clickupDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Comment text for add_comment operation",
-              "helpText": "What this field is: Comment text for add_comment operation for ClickUp / Get lists.\nHow to fill it: Type the message, prompt, or content you want ClickUp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Comment text for add_comment operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: This has been reviewed and approved..\nTip: Use {{$json.commentText}} when this value comes from an earlier step.",
               "placeholder": "This has been reviewed and approved.",
               "example": "This has been reviewed and approved."
             }

@@ -29,7 +29,7 @@ export const cacheSetDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Cache key",
-              "helpText": "What this field is: The name to give this cached value — like a label.\nUse descriptive names with colons as separators.\nExample: user:{{$json.userId}}:lastLogin or session:{{$json.sessionId}} or rate_limit:{{$json.ip}}",
+              "helpText": "What this field is: The Cache key that tells Cache Set which item to use.\nWhere to find it: Open the item in Cache Set and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: user:123.\nTip: Use {{$json.key}} when an earlier Cache Set step provides this value.",
               "placeholder": "user:123",
               "example": "user:123"
             },
@@ -39,7 +39,7 @@ export const cacheSetDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Value to store (will be JSON stringified)",
-              "helpText": "What this field is: The data to cache (store temporarily for quick access later).\nExample: {\"theme\":\"dark\",\"language\":\"en\",\"timezone\":\"America/New_York\"} or {{$json.userPreferences}}",
+              "helpText": "What this field is: Structured data for Value to store.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Cache Set.\nExample: {{$json}}.\nTip: Use {{$json.value}} when an earlier step already prepared this data.",
               "placeholder": "{{$json}}",
               "example": "{{$json}}"
             },
@@ -49,7 +49,7 @@ export const cacheSetDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Time-to-live in seconds (0 = no expiration)",
-              "helpText": "What this field is: How many seconds until this cached value expires automatically.\nExamples: 300 = 5 minutes, 3600 = 1 hour, 86400 = 24 hours.\nLeave blank to cache forever (until manually deleted).",
+              "helpText": "What this field is: The number used for Time-to-live in seconds.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 0.\nTip: Use {{$json.ttl}} when the number comes from an earlier step.",
               "placeholder": "0",
               "example": "0",
               "defaultValue": "0"

@@ -8,15 +8,12 @@ export const typeformDoc: NodeDoc = {
   "description": "Retrieve form responses, create forms, and fetch form definitions using Typeform.",
   "credentialType": "Typeform API Key",
   "credentialSetupSteps": [
-    "What this is: Typeform uses an API key or account connection so CtrlChecks can safely access your Typeform account.",
-    "Log in to your Typeform account at typeform.com.",
-    "Click your profile photo (top right) -> Settings -> Personal tokens.",
-    "Click \"Generate a new token\" -> give it a name (e.g. CtrlChecks) -> Generate token.",
-    "Copy the token shown - it is only displayed once.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Typeform -> paste the token -> Save.",
-    "Run a test step (e.g. list your forms) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Typeform node and select the saved connection."
+    "What this is: The Typeform connection lets CtrlChecks access your Typeform account safely without putting secrets in workflow fields.",
+    "Where to start: Typeform -> Account -> Personal tokens.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Typeform, then sign in or paste the secret value requested there.",
+    "Example: tfp_... or the token Typeform shows.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Typeform step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developer.typeform.com/get-started/personal-access-token/",
   "resources": [
@@ -35,7 +32,7 @@ export const typeformDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Typeform personal access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Typeform.\nWhere to get it: Open the Typeform dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Typeform personal access token, a secret password that lets CtrlChecks talk to Typeform safely.\nWhere to find it: Typeform -> Account -> Personal tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: tfp_... or the token Typeform shows.\nImportant: Treat this like a bank password. Keep it in Connections when possible.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -55,7 +52,7 @@ export const typeformDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Form title (for create_form)",
-              "helpText": "What this field is: Form title (for create_form) for Typeform / Get responses.\nHow to fill it: Enter the title value requested by Typeform, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Form title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: This field is used for create_form. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Title"
             }
           ],
@@ -90,7 +87,7 @@ export const typeformDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Typeform personal access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Typeform.\nWhere to get it: Open the Typeform dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Typeform personal access token, a secret password that lets CtrlChecks talk to Typeform safely.\nWhere to find it: Typeform -> Account -> Personal tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: tfp_... or the token Typeform shows.\nImportant: Treat this like a bank password. Keep it in Connections when possible.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -110,7 +107,7 @@ export const typeformDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Form title (for create_form)",
-              "helpText": "What this field is: Form title (for create_form) for Typeform / Create form.\nHow to fill it: Enter the title value requested by Typeform, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Form title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: This field is used for create_form. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Title"
             }
           ],
@@ -145,7 +142,7 @@ export const typeformDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Typeform personal access token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Typeform.\nWhere to get it: Open the Typeform dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Typeform personal access token, a secret password that lets CtrlChecks talk to Typeform safely.\nWhere to find it: Typeform -> Account -> Personal tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: tfp_... or the token Typeform shows.\nImportant: Treat this like a bank password. Keep it in Connections when possible.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -165,7 +162,7 @@ export const typeformDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Form title (for create_form)",
-              "helpText": "What this field is: Form title (for create_form) for Typeform / Get form.\nHow to fill it: Enter the title value requested by Typeform, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Form title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: This field is used for create_form. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Title"
             }
           ],

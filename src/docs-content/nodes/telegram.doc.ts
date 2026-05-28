@@ -8,16 +8,12 @@ export const telegramDoc: NodeDoc = {
   "description": "Send messages to Telegram chats using Telegram Bot API",
   "credentialType": "Telegram Bot Token",
   "credentialSetupSteps": [
-    "What this is: Telegram Bot uses an API key or account connection so CtrlChecks can safely access your Telegram Bot account.",
-    "Open the Telegram app on your phone or at web.telegram.org.",
-    "Search for @BotFather in the search bar and start a chat with it.",
-    "Type /newbot and press Send. BotFather will ask for a display name (e.g. My Company Bot) and then a username ending in \"bot\" (e.g. mycompany_bot).",
-    "BotFather will send you a token - it looks like 123456789:ABCdef_GHIjkl-MNOpqr. Copy the entire token.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Telegram -> paste the bot token -> Save.",
-    "To find a chat ID to send messages to: start a chat with your bot on Telegram, then search for @userinfobot and forward it a message from your chat - it will show you the chat ID.",
-    "Run a test step to send a message and confirm it arrives in Telegram.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Telegram Bot node and select the saved connection."
+    "What this is: The Telegram connection lets CtrlChecks access your Telegram account safely without putting secrets in workflow fields.",
+    "Where to start: Telegram -> chat with @BotFather -> /mybots -> your bot -> API Token.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Telegram, then sign in or paste the secret value requested there.",
+    "Example: 123456789:AA....",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Telegram step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://core.telegram.org/bots/tutorial",
   "resources": [
@@ -36,7 +32,7 @@ export const telegramDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Telegram Bot Token (stored as credential, not user input at runtime)",
-              "helpText": "What this field is: The secret token that identifies your Telegram bot.\nWhere to get it: Open Telegram, search for @BotFather, and start a chat. Type /newbot, follow the steps (give it a name and a username ending in \"bot\"). BotFather will send you the token — it looks like 123456789:ABCdef-GHIjkl.\nKeep it private — anyone with this token can control your bot.",
+              "helpText": "What this field is: Telegram Bot Token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: Use {{$json.botToken}} when this value comes from an earlier step.",
               "placeholder": "token_..."
             },
             {
@@ -45,7 +41,7 @@ export const telegramDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Target chat or channel ID (numeric, can be negative for channels)",
-              "helpText": "What this field is: The ID of the Telegram chat, group, or channel to send the message to.\nWhere to find it:\n  Personal chat: Open Telegram Web (web.telegram.org), click the conversation — the number in the browser URL is the chat ID.\n  Group or channel: Add your bot to the group, send a message, then open this URL in your browser: https://api.telegram.org/bot{YOUR_TOKEN}/getUpdates — look for \"chat\":{\"id\": in the response.\n  Quick way: Message @userinfobot in Telegram — it replies with your user ID.\nFormat: A plain number, positive for personal chats (e.g. 987654321), negative for groups (e.g. -100123456789).\nExample: 987654321 (personal) or -100123456789 (group)",
+              "helpText": "What this field is: The Telegram chat, group, or channel ID where the bot sends the message.\nWhere to find it: Send a message to the bot or group, then open https://api.telegram.org/botYOUR_TOKEN/getUpdates and look for chat.id.\nExample: 987654321 for a personal chat or -1001234567890 for a group or channel.\nTip: Add the bot to the group or channel before sending messages.",
               "placeholder": "123456789",
               "example": "123456789"
             },
@@ -55,7 +51,7 @@ export const telegramDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Telegram message type",
-              "helpText": "What this field is: Telegram message type for Telegram / Execute.\nHow to fill it: Type the message, prompt, or content you want Telegram to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Telegram message type.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: text.\nTip: Use {{$json.messageType}} when this value comes from an earlier step.",
               "placeholder": "text",
               "example": "text",
               "defaultValue": "text"
@@ -66,7 +62,7 @@ export const telegramDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Message text (required when messageType is \"text\")",
-              "helpText": "What this field is: Message text (required when messageType is \"text\") for Telegram / Execute.\nHow to fill it: Type the message, prompt, or content you want Telegram to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: The Telegram message text.\nHow to fill it: Type the message. You can include values from earlier steps.\nExample: Alert: {{$json.serverName}} CPU is {{$json.cpuPercent}}%.\nTip: If you use formatting, choose the matching Parse Mode.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -75,7 +71,7 @@ export const telegramDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Text formatting mode: none, HTML, Markdown, MarkdownV2",
-              "helpText": "What this field is: Text formatting mode: none, HTML, Markdown, MarkdownV2 for Telegram / Execute.\nHow to fill it: Enter the parse mode value requested by Telegram, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.parseMode}} or pick the value from the data picker.",
+              "helpText": "What this field is: Text formatting mode: none, HTML, Markdown, MarkdownV2.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: HTML.\nTip: Use {{$json.parseMode}} when this value comes from an earlier step.",
               "placeholder": "HTML",
               "example": "HTML",
               "defaultValue": "HTML"
@@ -86,7 +82,7 @@ export const telegramDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Disable automatic link previews",
-              "helpText": "What this field is: An on/off choice for disable web page preview in Telegram / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Telegram to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Disable automatic link previews.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use disable web page preview; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -97,7 +93,7 @@ export const telegramDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Media URL for photo/video/document/audio/animation message types",
-              "helpText": "What this field is: Media URL for photo/video/document/audio/animation message types for Telegram / Execute.\nHow to fill it: Paste the full web address Telegram should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.mediaUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Media URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com.\nTip: Use {{$json.mediaUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com",
               "example": "https://api.example.com"
             },
@@ -107,7 +103,7 @@ export const telegramDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Caption for media messages",
-              "helpText": "What this field is: Caption for media messages for Telegram / Execute.\nHow to fill it: Enter the caption value requested by Telegram, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.caption}} or pick the value from the data picker.",
+              "helpText": "What this field is: Caption for media messages.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Caption value.\nTip: Use {{$json.caption}} when this value comes from an earlier step.",
               "placeholder": "Enter Caption"
             },
             {
@@ -116,7 +112,7 @@ export const telegramDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Message ID to reply to",
-              "helpText": "What this field is: Message ID to reply to for Telegram / Execute.\nHow to fill it: Type the message, prompt, or content you want Telegram to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: The Message ID to reply to that tells Telegram which item to use.\nWhere to find it: Open the item in Telegram and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.replyToMessageId}} when an earlier Telegram step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -126,7 +122,7 @@ export const telegramDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Reply markup JSON (inline keyboard, reply keyboard, etc.)",
-              "helpText": "What this field is: Reply markup JSON (inline keyboard, reply keyboard, etc.) for Telegram / Execute.\nHow to fill it: Enter valid JSON in the format Telegram expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.replyMarkup}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Reply markup structured data in { } brackets.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Telegram.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.replyMarkup}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             },
@@ -136,7 +132,7 @@ export const telegramDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Send message silently without notification",
-              "helpText": "What this field is: An on/off choice for disable notification in Telegram / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Telegram to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Send message silently without notification.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use disable notification; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -147,7 +143,7 @@ export const telegramDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Protect content from being forwarded or saved",
-              "helpText": "What this field is: Protect content from being forwarded or saved for Telegram / Execute.\nHow to fill it: Type the message, prompt, or content you want Telegram to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Protect content from being forwarded or saved.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: false.\nTip: Use {{$json.protectContent}} when this value comes from an earlier step.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -158,7 +154,7 @@ export const telegramDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Allow sending even if replied-to message is missing",
-              "helpText": "What this field is: An on/off choice for allow sending without reply in Telegram / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Telegram to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Allow sending even if replied-to message is missing.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use allow sending without reply; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"

@@ -8,16 +8,12 @@ export const discordDoc: NodeDoc = {
   "description": "Send messages to Discord channels or users via Discord Bot API",
   "credentialType": "Discord Bot Token",
   "credentialSetupSteps": [
-    "What this is: Discord Bot uses an API key or account connection so CtrlChecks can safely access your Discord Bot account.",
-    "Go to discord.com/developers/applications and sign in with your Discord account.",
-    "Click \"New Application\" -> give it a name (e.g. CtrlChecks Bot) -> Create.",
-    "Click \"Bot\" in the left menu -> \"Add Bot\" -> Yes, do it! Then click \"Reset Token\" and copy the token - keep it secret.",
-    "Enable Developer Mode in Discord: Settings -> Advanced -> Developer Mode ON. Then right-click any channel -> Copy ID to get the channel ID for use in the node.",
-    "In the OAuth2 -> URL Generator panel: select \"bot\" scope + \"Send Messages\" permission. Copy the URL, open it in a browser, and add the bot to your Discord server.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Discord -> paste the bot token -> Save.",
-    "Run a test step to confirm the bot posts to the chosen channel.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Discord Bot node and select the saved connection."
+    "What this is: The Discord connection lets CtrlChecks access your Discord account safely without putting secrets in workflow fields.",
+    "Where to start: Discord account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Discord, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Discord.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Discord step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://discord.com/developers/docs/getting-started",
   "resources": [
@@ -46,7 +42,7 @@ export const discordDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Message text to send",
-              "helpText": "What this field is: Message text to send for Discord / Execute.\nHow to fill it: Type the message, prompt, or content you want Discord to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Message text to send.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Hello from workflow!.\nTip: Use {{$json.message}} when this value comes from an earlier step.",
               "placeholder": "Hello from workflow!",
               "example": "Hello from workflow!"
             },
@@ -56,7 +52,7 @@ export const discordDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Discord bot token (stored as credential)",
-              "helpText": "What this field is: Your Discord Bot Token — the secret that gives CtrlChecks permission to post as your bot.\nWhere to get it: discord.com/developers/applications → click your app → Bot → click \"Reset Token\" → copy the token.\nKeep it absolutely secret — anyone with this token can control your bot.",
+              "helpText": "What this field is: Discord bot token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: Use {{$json.botToken}} when this value comes from an earlier step.",
               "placeholder": "token_..."
             },
             {
@@ -65,7 +61,7 @@ export const discordDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Discord webhook URL — alternative to Bot Token, no channelId needed",
-              "helpText": "What this field is: Discord webhook URL — alternative to Bot Token, no channelId needed for Discord / Execute.\nHow to fill it: Paste the full web address Discord should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.webhookUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Discord webhook URL — alternative to Bot Token, no channelId needed.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://discord.com/api/webhooks/....\nTip: Use {{$json.webhookUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://discord.com/api/webhooks/...",
               "example": "https://discord.com/api/webhooks/..."
             }

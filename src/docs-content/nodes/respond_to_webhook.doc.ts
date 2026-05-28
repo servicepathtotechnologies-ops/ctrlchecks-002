@@ -29,7 +29,7 @@ export const respondToWebhookDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "HTTP status code",
-              "helpText": "What this field is: A number used for response code in Respond to Webhook / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.responseCode}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for HTTP status code.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 200.\nTip: Use {{$json.responseCode}} when the number comes from an earlier step.",
               "placeholder": "200",
               "example": "200",
               "defaultValue": "200"
@@ -40,7 +40,7 @@ export const respondToWebhookDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Response headers",
-              "helpText": "What this field is: Response headers for Respond to Webhook / Execute.\nHow to fill it: Enter valid JSON in the format Respond to Webhook expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.headers}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Response headers.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Respond to Webhook.\nExample: {\"Content-Type\":\"application/json\"}.\nTip: Use {{$json.headers}} when an earlier step already prepared this data.",
               "placeholder": "{\"Content-Type\":\"application/json\"}",
               "example": "{\"Content-Type\":\"application/json\"}",
               "defaultValue": "{\"Content-Type\":\"application/json\"}"
@@ -51,7 +51,7 @@ export const respondToWebhookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Response body data",
-              "helpText": "What this field is: The data to send back as the webhook response — what the calling service receives.\nFormat: JSON object or a simple value.\nExample: {\"success\":true,\"message\":\"Order received\",\"orderId\":\"{{$json.orderId}}\"}",
+              "helpText": "What this field is: Structured data for Response body data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Respond to Webhook.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }

@@ -8,16 +8,12 @@ export const githubDoc: NodeDoc = {
   "description": "GitHub repository operations",
   "credentialType": "GitHub API Key",
   "credentialSetupSteps": [
-    "What this is: GitHub uses an API key or account connection so CtrlChecks can safely access your GitHub account.",
-    "Go to github.com and sign in -> click your profile photo (top right) -> Settings.",
-    "Scroll down to \"Developer settings\" (bottom of left sidebar) -> Personal access tokens -> Tokens (classic).",
-    "Click \"Generate new token (classic)\" -> give it a name (e.g. CtrlChecks) -> set an expiry date.",
-    "Select scopes: \"repo\" (full control of repositories) for most use cases, or just \"issues\" if you only need to create issues. Click \"Generate token\".",
-    "Copy the token immediately - it starts with ghp_ and is shown only once.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> GitHub -> paste the ghp_ token -> Save.",
-    "Run a test step (e.g. list your repositories) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the GitHub node and select the saved connection."
+    "What this is: The GitHub connection lets CtrlChecks access your GitHub account safely without putting secrets in workflow fields.",
+    "Where to start: GitHub -> Settings -> Developer settings -> Personal access tokens.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> GitHub, then sign in or paste the secret value requested there.",
+    "Example: github_pat_... for fine-grained tokens or ghp_... for classic tokens.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple GitHub step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token",
   "resources": [
@@ -56,7 +52,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue/PR title",
-              "helpText": "What this field is: The issue title — shown in the issues list.\nExample: Bug: Login page crashes on Safari iOS 17 or Feature: Add CSV export to Reports",
+              "helpText": "What this field is: Issue/PR title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "Enter Title"
             },
             {
@@ -65,7 +61,7 @@ export const githubDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Issue/PR body or comment text",
-              "helpText": "What this field is: Detailed description of the issue or feature.\nExample: Steps to reproduce: 1) Open Safari on iOS 17, 2) Navigate to /login, 3) Click the Login button — the page crashes. Expected: Should log in. Browser console shows: TypeError at line 42.",
+              "helpText": "What this field is: Structured data for Issue/PR body or comment text.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GitHub.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -74,7 +70,7 @@ export const githubDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Issue number (for comments/updates)",
-              "helpText": "What this field is: A number used for issue number in GitHub / Create issue.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.issueNumber}} or pick the value from the data picker.",
+              "helpText": "What this field is: The GitHub issue or pull request number.\nWhere to find it: Open the issue or pull request. The number appears after # and at the end of the URL.\nExample: 42 from github.com/octocat/hello-world/issues/42.\nTip: Use {{$json.number}} from a previous GitHub Create Issue step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -84,7 +80,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue comment text (for add_issue_comment)",
-              "helpText": "What this field is: Issue comment text (for add_issue_comment) for GitHub / Create issue.\nHow to fill it: Enter the comment value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.comment}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue comment text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Comment value.\nTip: This field is used for add_issue_comment. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Comment"
             },
             {
@@ -93,7 +89,7 @@ export const githubDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Issue labels (array of strings)",
-              "helpText": "What this field is: Labels to tag the issue for easier filtering.\nFormat: JSON array of label names.\nExample: [\"bug\",\"high-priority\"] or [\"enhancement\",\"frontend\"]\nLabels must already exist in the repository.",
+              "helpText": "What this field is: Structured data for Issue labels.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GitHub.\nExample: [\"item\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             },
@@ -103,7 +99,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base branch/ref (for PR/workflow)",
-              "helpText": "What this field is: Base branch/ref (for PR/workflow) for GitHub / Create issue.\nHow to fill it: Enter the ref value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.ref}} or pick the value from the data picker.",
+              "helpText": "What this field is: The branch or tag GitHub should use.\nHow to fill it: Use a branch name for most workflows, or a full ref when GitHub requires it.\nExample: main, develop, or refs/heads/main.\nTip: Use {{$json.ref}} from a webhook when the branch should match an incoming event.",
               "placeholder": "main",
               "example": "main"
             },
@@ -113,7 +109,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Head branch name (for PR)",
-              "helpText": "What this field is: Head branch name (for PR) for GitHub / Create issue.\nHow to fill it: Enter the branch name value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.branchName}} or pick the value from the data picker.",
+              "helpText": "What this field is: The source branch for a pull request.\nHow to fill it: Type the branch that contains the changes you want to merge.\nExample: feature/add-login-page or fix/issue-42.\nTip: The branch must already exist in the repository.",
               "placeholder": "Enter Branch Name"
             },
             {
@@ -122,7 +118,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workflow ID or filename (for trigger_workflow)",
-              "helpText": "What this field is: Workflow ID or filename (for trigger_workflow) for GitHub / Create issue.\nWhere to find it: Open the item in GitHub and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workflowId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The GitHub Actions workflow to run.\nWhere to find it: In your repository, open .github/workflows and copy the workflow file name.\nExample: deploy.yml or release.yml.\nTip: The workflow must exist on the branch set in Ref.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -132,7 +128,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 Access Token for GitHub (if using OAuth authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access GitHub.\nWhere to get it: Open the GitHub dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: GitHub personal access token, a secret password that lets CtrlChecks talk to GitHub safely.\nWhere to find it: GitHub -> Settings -> Developer settings -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: github_pat_... for fine-grained tokens or ghp_... for classic tokens.\nImportant: Treat this like a bank password. Give the token only the repository permissions this workflow needs.",
               "placeholder": "your-github-oauth-token",
               "example": "your-github-oauth-token"
             },
@@ -142,7 +138,7 @@ export const githubDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "GitHub Personal Access Token (alternative to OAuth)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access GitHub.\nWhere to get it: Open the GitHub dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: GitHub personal access token, a secret password that lets CtrlChecks talk to GitHub safely.\nWhere to find it: GitHub -> Settings -> Developer settings -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: github_pat_... for fine-grained tokens or ghp_... for classic tokens.\nImportant: Treat this like a bank password. Give the token only the repository permissions this workflow needs.",
               "placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "example": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
@@ -199,7 +195,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue/PR title",
-              "helpText": "What this field is: Issue/PR title for GitHub / Add issue comment.\nHow to fill it: Enter the title value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue/PR title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "Enter Title"
             },
             {
@@ -208,7 +204,7 @@ export const githubDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Issue/PR body or comment text",
-              "helpText": "What this field is: Issue/PR body or comment text for GitHub / Add issue comment.\nHow to fill it: Type the message, prompt, or content you want GitHub to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Issue/PR body or comment text.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GitHub.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -217,7 +213,7 @@ export const githubDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Issue number (for comments/updates)",
-              "helpText": "What this field is: A number used for issue number in GitHub / Add issue comment.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.issueNumber}} or pick the value from the data picker.",
+              "helpText": "What this field is: The GitHub issue or pull request number.\nWhere to find it: Open the issue or pull request. The number appears after # and at the end of the URL.\nExample: 42 from github.com/octocat/hello-world/issues/42.\nTip: Use {{$json.number}} from a previous GitHub Create Issue step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -227,7 +223,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue comment text (for add_issue_comment)",
-              "helpText": "What this field is: Issue comment text (for add_issue_comment) for GitHub / Add issue comment.\nHow to fill it: Enter the comment value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.comment}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue comment text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Comment value.\nTip: This field is used for add_issue_comment. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Comment"
             },
             {
@@ -236,7 +232,7 @@ export const githubDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Issue labels (array of strings)",
-              "helpText": "What this field is: Issue labels (array of strings) for GitHub / Add issue comment.\nHow to fill it: Enter valid JSON in the format GitHub expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Issue labels.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GitHub.\nExample: [\"item\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             },
@@ -246,7 +242,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base branch/ref (for PR/workflow)",
-              "helpText": "What this field is: Base branch/ref (for PR/workflow) for GitHub / Add issue comment.\nHow to fill it: Enter the ref value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.ref}} or pick the value from the data picker.",
+              "helpText": "What this field is: The branch or tag GitHub should use.\nHow to fill it: Use a branch name for most workflows, or a full ref when GitHub requires it.\nExample: main, develop, or refs/heads/main.\nTip: Use {{$json.ref}} from a webhook when the branch should match an incoming event.",
               "placeholder": "main",
               "example": "main"
             },
@@ -256,7 +252,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Head branch name (for PR)",
-              "helpText": "What this field is: Head branch name (for PR) for GitHub / Add issue comment.\nHow to fill it: Enter the branch name value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.branchName}} or pick the value from the data picker.",
+              "helpText": "What this field is: The source branch for a pull request.\nHow to fill it: Type the branch that contains the changes you want to merge.\nExample: feature/add-login-page or fix/issue-42.\nTip: The branch must already exist in the repository.",
               "placeholder": "Enter Branch Name"
             },
             {
@@ -265,7 +261,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workflow ID or filename (for trigger_workflow)",
-              "helpText": "What this field is: Workflow ID or filename (for trigger_workflow) for GitHub / Add issue comment.\nWhere to find it: Open the item in GitHub and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workflowId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The GitHub Actions workflow to run.\nWhere to find it: In your repository, open .github/workflows and copy the workflow file name.\nExample: deploy.yml or release.yml.\nTip: The workflow must exist on the branch set in Ref.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -275,7 +271,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 Access Token for GitHub (if using OAuth authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access GitHub.\nWhere to get it: Open the GitHub dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: GitHub personal access token, a secret password that lets CtrlChecks talk to GitHub safely.\nWhere to find it: GitHub -> Settings -> Developer settings -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: github_pat_... for fine-grained tokens or ghp_... for classic tokens.\nImportant: Treat this like a bank password. Give the token only the repository permissions this workflow needs.",
               "placeholder": "your-github-oauth-token",
               "example": "your-github-oauth-token"
             },
@@ -285,7 +281,7 @@ export const githubDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "GitHub Personal Access Token (alternative to OAuth)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access GitHub.\nWhere to get it: Open the GitHub dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: GitHub personal access token, a secret password that lets CtrlChecks talk to GitHub safely.\nWhere to find it: GitHub -> Settings -> Developer settings -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: github_pat_... for fine-grained tokens or ghp_... for classic tokens.\nImportant: Treat this like a bank password. Give the token only the repository permissions this workflow needs.",
               "placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "example": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
@@ -346,7 +342,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue/PR title",
-              "helpText": "What this field is: The pull request title.\nExample: Fix: Resolve login page crash on Safari iOS 17",
+              "helpText": "What this field is: Issue/PR title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "Enter Title"
             },
             {
@@ -355,7 +351,7 @@ export const githubDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Issue/PR body or comment text",
-              "helpText": "What this field is: Issue/PR body or comment text for GitHub / Create pr.\nHow to fill it: Type the message, prompt, or content you want GitHub to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Issue/PR body or comment text.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GitHub.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -364,7 +360,7 @@ export const githubDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Issue number (for comments/updates)",
-              "helpText": "What this field is: A number used for issue number in GitHub / Create pr.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.issueNumber}} or pick the value from the data picker.",
+              "helpText": "What this field is: The GitHub issue or pull request number.\nWhere to find it: Open the issue or pull request. The number appears after # and at the end of the URL.\nExample: 42 from github.com/octocat/hello-world/issues/42.\nTip: Use {{$json.number}} from a previous GitHub Create Issue step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -374,7 +370,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue comment text (for add_issue_comment)",
-              "helpText": "What this field is: Issue comment text (for add_issue_comment) for GitHub / Create pr.\nHow to fill it: Enter the comment value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.comment}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue comment text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Comment value.\nTip: This field is used for add_issue_comment. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Comment"
             },
             {
@@ -383,7 +379,7 @@ export const githubDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Issue labels (array of strings)",
-              "helpText": "What this field is: Issue labels (array of strings) for GitHub / Create pr.\nHow to fill it: Enter valid JSON in the format GitHub expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Issue labels.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GitHub.\nExample: [\"item\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             },
@@ -393,7 +389,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base branch/ref (for PR/workflow)",
-              "helpText": "What this field is: Base branch/ref (for PR/workflow) for GitHub / Create pr.\nHow to fill it: Enter the ref value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.ref}} or pick the value from the data picker.",
+              "helpText": "What this field is: The branch or tag GitHub should use.\nHow to fill it: Use a branch name for most workflows, or a full ref when GitHub requires it.\nExample: main, develop, or refs/heads/main.\nTip: Use {{$json.ref}} from a webhook when the branch should match an incoming event.",
               "placeholder": "main",
               "example": "main"
             },
@@ -403,7 +399,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Head branch name (for PR)",
-              "helpText": "What this field is: Head branch name (for PR) for GitHub / Create pr.\nHow to fill it: Enter the branch name value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.branchName}} or pick the value from the data picker.",
+              "helpText": "What this field is: The source branch for a pull request.\nHow to fill it: Type the branch that contains the changes you want to merge.\nExample: feature/add-login-page or fix/issue-42.\nTip: The branch must already exist in the repository.",
               "placeholder": "Enter Branch Name"
             },
             {
@@ -412,7 +408,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workflow ID or filename (for trigger_workflow)",
-              "helpText": "What this field is: Workflow ID or filename (for trigger_workflow) for GitHub / Create pr.\nWhere to find it: Open the item in GitHub and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workflowId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The GitHub Actions workflow to run.\nWhere to find it: In your repository, open .github/workflows and copy the workflow file name.\nExample: deploy.yml or release.yml.\nTip: The workflow must exist on the branch set in Ref.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -422,7 +418,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 Access Token for GitHub (if using OAuth authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access GitHub.\nWhere to get it: Open the GitHub dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: GitHub personal access token, a secret password that lets CtrlChecks talk to GitHub safely.\nWhere to find it: GitHub -> Settings -> Developer settings -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: github_pat_... for fine-grained tokens or ghp_... for classic tokens.\nImportant: Treat this like a bank password. Give the token only the repository permissions this workflow needs.",
               "placeholder": "your-github-oauth-token",
               "example": "your-github-oauth-token"
             },
@@ -432,7 +428,7 @@ export const githubDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "GitHub Personal Access Token (alternative to OAuth)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access GitHub.\nWhere to get it: Open the GitHub dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: GitHub personal access token, a secret password that lets CtrlChecks talk to GitHub safely.\nWhere to find it: GitHub -> Settings -> Developer settings -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: github_pat_... for fine-grained tokens or ghp_... for classic tokens.\nImportant: Treat this like a bank password. Give the token only the repository permissions this workflow needs.",
               "placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "example": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
@@ -493,7 +489,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue/PR title",
-              "helpText": "What this field is: Issue/PR title for GitHub / Trigger workflow.\nHow to fill it: Enter the title value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue/PR title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "Enter Title"
             },
             {
@@ -502,7 +498,7 @@ export const githubDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Issue/PR body or comment text",
-              "helpText": "What this field is: Issue/PR body or comment text for GitHub / Trigger workflow.\nHow to fill it: Type the message, prompt, or content you want GitHub to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Issue/PR body or comment text.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GitHub.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -511,7 +507,7 @@ export const githubDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Issue number (for comments/updates)",
-              "helpText": "What this field is: A number used for issue number in GitHub / Trigger workflow.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.issueNumber}} or pick the value from the data picker.",
+              "helpText": "What this field is: The GitHub issue or pull request number.\nWhere to find it: Open the issue or pull request. The number appears after # and at the end of the URL.\nExample: 42 from github.com/octocat/hello-world/issues/42.\nTip: Use {{$json.number}} from a previous GitHub Create Issue step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -521,7 +517,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue comment text (for add_issue_comment)",
-              "helpText": "What this field is: Issue comment text (for add_issue_comment) for GitHub / Trigger workflow.\nHow to fill it: Enter the comment value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.comment}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue comment text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Comment value.\nTip: This field is used for add_issue_comment. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Comment"
             },
             {
@@ -530,7 +526,7 @@ export const githubDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Issue labels (array of strings)",
-              "helpText": "What this field is: Issue labels (array of strings) for GitHub / Trigger workflow.\nHow to fill it: Enter valid JSON in the format GitHub expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Issue labels.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GitHub.\nExample: [\"item\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             },
@@ -540,7 +536,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base branch/ref (for PR/workflow)",
-              "helpText": "What this field is: Base branch/ref (for PR/workflow) for GitHub / Trigger workflow.\nHow to fill it: Enter the ref value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.ref}} or pick the value from the data picker.",
+              "helpText": "What this field is: The branch or tag GitHub should use.\nHow to fill it: Use a branch name for most workflows, or a full ref when GitHub requires it.\nExample: main, develop, or refs/heads/main.\nTip: Use {{$json.ref}} from a webhook when the branch should match an incoming event.",
               "placeholder": "main",
               "example": "main"
             },
@@ -550,7 +546,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Head branch name (for PR)",
-              "helpText": "What this field is: Head branch name (for PR) for GitHub / Trigger workflow.\nHow to fill it: Enter the branch name value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.branchName}} or pick the value from the data picker.",
+              "helpText": "What this field is: The source branch for a pull request.\nHow to fill it: Type the branch that contains the changes you want to merge.\nExample: feature/add-login-page or fix/issue-42.\nTip: The branch must already exist in the repository.",
               "placeholder": "Enter Branch Name"
             },
             {
@@ -559,7 +555,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workflow ID or filename (for trigger_workflow)",
-              "helpText": "What this field is: Workflow ID or filename (for trigger_workflow) for GitHub / Trigger workflow.\nWhere to find it: Open the item in GitHub and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workflowId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The GitHub Actions workflow to run.\nWhere to find it: In your repository, open .github/workflows and copy the workflow file name.\nExample: deploy.yml or release.yml.\nTip: The workflow must exist on the branch set in Ref.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -569,7 +565,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 Access Token for GitHub (if using OAuth authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access GitHub.\nWhere to get it: Open the GitHub dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: GitHub personal access token, a secret password that lets CtrlChecks talk to GitHub safely.\nWhere to find it: GitHub -> Settings -> Developer settings -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: github_pat_... for fine-grained tokens or ghp_... for classic tokens.\nImportant: Treat this like a bank password. Give the token only the repository permissions this workflow needs.",
               "placeholder": "your-github-oauth-token",
               "example": "your-github-oauth-token"
             },
@@ -579,7 +575,7 @@ export const githubDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "GitHub Personal Access Token (alternative to OAuth)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access GitHub.\nWhere to get it: Open the GitHub dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: GitHub personal access token, a secret password that lets CtrlChecks talk to GitHub safely.\nWhere to find it: GitHub -> Settings -> Developer settings -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: github_pat_... for fine-grained tokens or ghp_... for classic tokens.\nImportant: Treat this like a bank password. Give the token only the repository permissions this workflow needs.",
               "placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "example": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
@@ -640,7 +636,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue/PR title",
-              "helpText": "What this field is: Issue/PR title for GitHub / List repos.\nHow to fill it: Enter the title value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue/PR title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Title value.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "Enter Title"
             },
             {
@@ -649,7 +645,7 @@ export const githubDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Issue/PR body or comment text",
-              "helpText": "What this field is: Issue/PR body or comment text for GitHub / List repos.\nHow to fill it: Type the message, prompt, or content you want GitHub to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Issue/PR body or comment text.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GitHub.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -658,7 +654,7 @@ export const githubDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Issue number (for comments/updates)",
-              "helpText": "What this field is: A number used for issue number in GitHub / List repos.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.issueNumber}} or pick the value from the data picker.",
+              "helpText": "What this field is: The GitHub issue or pull request number.\nWhere to find it: Open the issue or pull request. The number appears after # and at the end of the URL.\nExample: 42 from github.com/octocat/hello-world/issues/42.\nTip: Use {{$json.number}} from a previous GitHub Create Issue step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -668,7 +664,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue comment text (for add_issue_comment)",
-              "helpText": "What this field is: Issue comment text (for add_issue_comment) for GitHub / List repos.\nHow to fill it: Enter the comment value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.comment}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue comment text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Comment value.\nTip: This field is used for add_issue_comment. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Comment"
             },
             {
@@ -677,7 +673,7 @@ export const githubDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Issue labels (array of strings)",
-              "helpText": "What this field is: Issue labels (array of strings) for GitHub / List repos.\nHow to fill it: Enter valid JSON in the format GitHub expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Issue labels.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by GitHub.\nExample: [\"item\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             },
@@ -687,7 +683,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base branch/ref (for PR/workflow)",
-              "helpText": "What this field is: Base branch/ref (for PR/workflow) for GitHub / List repos.\nHow to fill it: Enter the ref value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.ref}} or pick the value from the data picker.",
+              "helpText": "What this field is: The branch or tag GitHub should use.\nHow to fill it: Use a branch name for most workflows, or a full ref when GitHub requires it.\nExample: main, develop, or refs/heads/main.\nTip: Use {{$json.ref}} from a webhook when the branch should match an incoming event.",
               "placeholder": "main",
               "example": "main"
             },
@@ -697,7 +693,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Head branch name (for PR)",
-              "helpText": "What this field is: Head branch name (for PR) for GitHub / List repos.\nHow to fill it: Enter the branch name value requested by GitHub, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.branchName}} or pick the value from the data picker.",
+              "helpText": "What this field is: The source branch for a pull request.\nHow to fill it: Type the branch that contains the changes you want to merge.\nExample: feature/add-login-page or fix/issue-42.\nTip: The branch must already exist in the repository.",
               "placeholder": "Enter Branch Name"
             },
             {
@@ -706,7 +702,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Workflow ID or filename (for trigger_workflow)",
-              "helpText": "What this field is: Workflow ID or filename (for trigger_workflow) for GitHub / List repos.\nWhere to find it: Open the item in GitHub and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.workflowId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The GitHub Actions workflow to run.\nWhere to find it: In your repository, open .github/workflows and copy the workflow file name.\nExample: deploy.yml or release.yml.\nTip: The workflow must exist on the branch set in Ref.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -716,7 +712,7 @@ export const githubDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 Access Token for GitHub (if using OAuth authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access GitHub.\nWhere to get it: Open the GitHub dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: GitHub personal access token, a secret password that lets CtrlChecks talk to GitHub safely.\nWhere to find it: GitHub -> Settings -> Developer settings -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: github_pat_... for fine-grained tokens or ghp_... for classic tokens.\nImportant: Treat this like a bank password. Give the token only the repository permissions this workflow needs.",
               "placeholder": "your-github-oauth-token",
               "example": "your-github-oauth-token"
             },
@@ -726,7 +722,7 @@ export const githubDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "GitHub Personal Access Token (alternative to OAuth)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access GitHub.\nWhere to get it: Open the GitHub dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: GitHub personal access token, a secret password that lets CtrlChecks talk to GitHub safely.\nWhere to find it: GitHub -> Settings -> Developer settings -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: github_pat_... for fine-grained tokens or ghp_... for classic tokens.\nImportant: Treat this like a bank password. Give the token only the repository permissions this workflow needs.",
               "placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "example": "ghp_xxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."

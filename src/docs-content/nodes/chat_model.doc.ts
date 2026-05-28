@@ -29,7 +29,7 @@ export const chatModelDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Creativity/temperature (0.0 - 1.0)",
-              "helpText": "What this field is: A number used for temperature in Chat Model / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.temperature}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Creativity/temperature.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 0.2.\nTip: Use {{$json.temperature}} when the number comes from an earlier step.",
               "placeholder": "0.2",
               "example": "0.2",
               "defaultValue": "0.7"

@@ -29,7 +29,7 @@ export const formDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Title of the form",
-              "helpText": "What this field is: Title of the form for Form Trigger / Execute.\nHow to fill it: Enter the form title value requested by Form Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.formTitle}} or pick the value from the data picker.",
+              "helpText": "What this field is: Title of the form.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Contact Us Form.\nTip: Use {{$json.formTitle}} when this value comes from an earlier step.",
               "placeholder": "Contact Us Form",
               "example": "Contact Us Form",
               "defaultValue": "Form Submission"
@@ -40,7 +40,7 @@ export const formDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Description shown on the form",
-              "helpText": "What this field is: Description shown on the form for Form Trigger / Execute.\nHow to fill it: Enter the form description value requested by Form Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.formDescription}} or pick the value from the data picker.",
+              "helpText": "What this field is: Description shown on the form.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Form Description value.\nTip: Use {{$json.formDescription}} when this value comes from an earlier step.",
               "placeholder": "Enter Form Description"
             },
             {
@@ -49,7 +49,7 @@ export const formDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Form fields configuration",
-              "helpText": "What this field is: The list of questions and input fields shown on the form.\nHow to fill it: Write a JSON array where each item is one form field with a name, label, and type.\nExample:\n[\n  {\"name\":\"email\",\"label\":\"Your Email\",\"type\":\"email\",\"required\":true},\n  {\"name\":\"name\",\"label\":\"Full Name\",\"type\":\"string\",\"required\":true},\n  {\"name\":\"message\",\"label\":\"Your Message\",\"type\":\"textarea\"}\n]\nTip: After saving, CtrlChecks gives you a public form URL you can share with users or embed on your website.",
+              "helpText": "What this field is: Structured data for Form fields configuration.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Form Trigger.\nExample: [].\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]",
               "defaultValue": "[]"
@@ -60,7 +60,7 @@ export const formDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Text on submit button",
-              "helpText": "What this field is: Text on submit button for Form Trigger / Execute.\nHow to fill it: Type the message, prompt, or content you want Form Trigger to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Text on submit button.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Submit.\nTip: Use {{$json.submitButtonText}} when this value comes from an earlier step.",
               "placeholder": "Submit",
               "example": "Submit",
               "defaultValue": "Submit"
@@ -71,7 +71,7 @@ export const formDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Message shown after successful submission",
-              "helpText": "What this field is: Message shown after successful submission for Form Trigger / Execute.\nHow to fill it: Type the message, prompt, or content you want Form Trigger to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Message shown after successful submission.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Thank you for your submission!.\nTip: Use {{$json.successMessage}} when this value comes from an earlier step.",
               "placeholder": "Thank you for your submission!",
               "example": "Thank you for your submission!",
               "defaultValue": "Thank you for your submission!"
@@ -82,7 +82,7 @@ export const formDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Allow same user to submit multiple times",
-              "helpText": "What this field is: An on/off choice for allow multiple submissions in Form Trigger / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Form Trigger to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Allow same user to submit multiple times.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use allow multiple submissions; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"
@@ -93,7 +93,7 @@ export const formDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Require user authentication",
-              "helpText": "What this field is: An on/off choice for require authentication in Form Trigger / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Form Trigger to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Require user authentication.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use require authentication; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -104,7 +104,7 @@ export const formDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable CAPTCHA verification",
-              "helpText": "What this field is: An on/off choice for captcha in Form Trigger / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Form Trigger to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable CAPTCHA verification.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use captcha; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"

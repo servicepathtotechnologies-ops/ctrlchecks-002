@@ -29,7 +29,7 @@ export const errorHandlerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Continue workflow after error",
-              "helpText": "What this field is: An on/off choice for continue on fail in Error Handler / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Error Handler to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Continue workflow after error.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use continue on fail; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -40,7 +40,7 @@ export const errorHandlerDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Retry failed node",
-              "helpText": "What this field is: An on/off choice for retry on fail in Error Handler / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Error Handler to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Retry failed node.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use retry on fail; turn OFF for the default behavior.",
               "placeholder": "true",
               "example": "true",
               "defaultValue": "true"
@@ -51,7 +51,7 @@ export const errorHandlerDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum retry attempts",
-              "helpText": "What this field is: A number used for max retries in Error Handler / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxRetries}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Maximum retry attempts.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 3.\nTip: Use {{$json.maxRetries}} when the number comes from an earlier step.",
               "placeholder": "3",
               "example": "3",
               "defaultValue": "3"
@@ -62,7 +62,7 @@ export const errorHandlerDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Delay between retries (ms)",
-              "helpText": "What this field is: A number used for retry delay in Error Handler / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.retryDelay}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Delay between retries.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5000.\nTip: Use {{$json.retryDelay}} when the number comes from an earlier step.",
               "placeholder": "5000",
               "example": "5000",
               "defaultValue": "5000"

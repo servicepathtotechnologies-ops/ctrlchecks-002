@@ -29,7 +29,7 @@ export const oauth2AuthDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "OAuth2 provider (google, github, etc.)",
-              "helpText": "What this field is: OAuth2 provider (google, github, etc.) for OAuth2 Auth / Execute.\nWhere to find it: Open the item in OAuth2 Auth and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567",
+              "helpText": "Options: Choose the provider value this OAuth2 Auth step should use.\nHow to choose it: Pick the option that matches what you want this step to do.\nExample: Google.\nTip: Use {{$json.provider}} only when an earlier step already provides a valid option value.",
               "placeholder": "google",
               "example": "google",
               "options": [
@@ -44,7 +44,7 @@ export const oauth2AuthDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Authorization URL (for custom provider)",
-              "helpText": "What this field is: Authorization URL (for custom provider) for OAuth2 Auth / Execute.\nHow to fill it: Paste the full web address OAuth2 Auth should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.authUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Authorization URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com.\nTip: Use {{$json.authUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com",
               "example": "https://api.example.com"
             },
@@ -54,7 +54,7 @@ export const oauth2AuthDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Token URL (for custom provider)",
-              "helpText": "What this field is: Token URL (for custom provider) for OAuth2 Auth / Execute.\nHow to fill it: Paste the full web address OAuth2 Auth should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.tokenUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Token URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com.\nTip: Use {{$json.tokenUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com",
               "example": "https://api.example.com"
             },
@@ -64,7 +64,7 @@ export const oauth2AuthDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Client ID",
-              "helpText": "What this field is: Client ID for OAuth2 Auth / Execute.\nWhere to find it: Open the item in OAuth2 Auth and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.clientId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Client ID that tells OAuth2 Auth which item to use.\nWhere to find it: Open the item in OAuth2 Auth and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.clientId}} when an earlier OAuth2 Auth step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -74,7 +74,7 @@ export const oauth2AuthDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Client Secret",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access OAuth2 Auth.\nWhere to get it: Open the OAuth2 Auth dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: OAuth2 Auth token, a secret password that lets CtrlChecks talk to OAuth2 Auth safely.\nWhere to find it: OAuth2 Auth account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by OAuth2 Auth.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Client Secret",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -84,7 +84,7 @@ export const oauth2AuthDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth scopes",
-              "helpText": "What this field is: OAuth scopes for OAuth2 Auth / Execute.\nHow to fill it: Enter the scope value requested by OAuth2 Auth, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.scope}} or pick the value from the data picker.",
+              "helpText": "What this field is: account sign-in scopes.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Scope value.\nTip: Use {{$json.scope}} when this value comes from an earlier step.",
               "placeholder": "Enter Scope"
             },
             {
@@ -93,7 +93,7 @@ export const oauth2AuthDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Action: getToken, refresh, or startFlow",
-              "helpText": "What this field is: A list of allowed choices for action in OAuth2 Auth / Execute.\nHow to fill it: Pick the option that matches what OAuth2 Auth should do. Do not type a custom value unless the UI allows it.\nAvailable choices: Get Token (getToken), Refresh Token (refresh), Start OAuth Flow (startFlow).",
+              "helpText": "Options: Choose the action value this OAuth2 Auth step should use.\nHow to choose it: Pick the option that matches what you want this step to do.\nExample: Get Token.\nTip: Use {{$json.action}} only when an earlier step already provides a valid option value.",
               "placeholder": "getToken",
               "example": "getToken",
               "defaultValue": "getToken",

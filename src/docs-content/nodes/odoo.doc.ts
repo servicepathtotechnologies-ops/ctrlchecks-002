@@ -8,15 +8,12 @@ export const odooDoc: NodeDoc = {
   "description": "Interact with Odoo ERP system (customers, invoices, products, and more)",
   "credentialType": "Odoo Credential",
   "credentialSetupSteps": [
-    "What this is: Odoo uses an OAuth connection so CtrlChecks can safely access your Odoo account.",
-    "Log in to your Odoo instance (e.g. https://yourcompany.odoo.com).",
-    "Click your profile name (top right) -> My Profile -> Preferences tab.",
-    "At the top of the Preferences page, you should see \"API Keys\". Click \"New API Key\" -> give it a name -> generate and copy the key.",
-    "Note your Odoo URL, database name, and login username.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Odoo -> enter your Odoo URL, database name, username, and API key -> Save.",
-    "Run a test step (e.g. list customers) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Odoo node and select the saved connection."
+    "What this is: The Odoo connection lets CtrlChecks access your Odoo account safely without putting secrets in workflow fields.",
+    "Where to start: Odoo account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Odoo, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Odoo.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Odoo step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://www.odoo.com/documentation/16.0/developer/reference/external_api.html",
   "resources": [
@@ -35,7 +32,7 @@ export const odooDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Odoo model name",
-              "helpText": "What this field is: The Odoo model (object type) to work with.\nExamples: res.partner (contacts), sale.order (sales), account.move (invoices), product.product (products), stock.picking (inventory).",
+              "helpText": "What this field is: Odoo model name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: res.partner.\nTip: Use {{$json.model}} when this value comes from an earlier step.",
               "placeholder": "res.partner",
               "example": "res.partner"
             },
@@ -45,7 +42,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Odoo domain filter (for getRecords)",
-              "helpText": "What this field is: Odoo domain filter (for getRecords) for Odoo / GetRecords.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Odoo domain filter that tells Odoo which item to use.\nWhere to find it: Open the item in Odoo and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: [[\"active\",\"=\",true]].\nTip: Use {{$json.domain}} when an earlier Odoo step provides this value.",
               "placeholder": "[[\"active\",\"=\",true]]",
               "example": "[[\"active\",\"=\",true]]"
             },
@@ -55,7 +52,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Fields to return (empty = all fields)",
-              "helpText": "What this field is: Fields to return (empty = all fields) for Odoo / GetRecords.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Fields to return.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: [\"id\",\"name\",\"email\"].\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "[\"id\",\"name\",\"email\"]",
               "example": "[\"id\",\"name\",\"email\"]"
             },
@@ -65,7 +62,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of records to return",
-              "helpText": "What this field is: A number used for limit in Odoo / GetRecords.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 100.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "100",
               "example": "100"
             },
@@ -75,7 +72,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Pagination offset",
-              "helpText": "What this field is: A number used for offset in Odoo / GetRecords.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.offset}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Pagination offset.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 0.\nTip: Use {{$json.offset}} when the number comes from an earlier step.",
               "placeholder": "0",
               "example": "0"
             },
@@ -85,7 +82,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Field values for create/update operations",
-              "helpText": "What this field is: Field values for create/update operations for Odoo / GetRecords.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.values}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field values.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: {\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}.\nTip: Use {{$json.values}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}",
               "example": "{\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}"
             },
@@ -95,7 +92,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Record ID for update/delete operations",
-              "helpText": "What this field is: Record ID for update/delete operations for Odoo / GetRecords.\nWhere to find it: Open the item in Odoo and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID that tells Odoo which item to use.\nWhere to find it: Open the item in Odoo and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 42.\nTip: Use {{$json.recordId}} when an earlier Odoo step provides this value.",
               "placeholder": "42",
               "example": "42"
             },
@@ -105,7 +102,7 @@ export const odooDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom method name for executeMethod operation",
-              "helpText": "What this field is: Custom method name for executeMethod operation for Odoo / GetRecords.\nHow to fill it: Enter the method value requested by Odoo, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.method}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom method name for executeMethod operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: action_confirm.\nTip: Use {{$json.method}} when this value comes from an earlier step.",
               "placeholder": "action_confirm",
               "example": "action_confirm"
             },
@@ -115,7 +112,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Positional arguments for executeMethod",
-              "helpText": "What this field is: Positional arguments for executeMethod for Odoo / GetRecords.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.methodArgs}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Positional arguments for executeMethod.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: [].\nTip: Use {{$json.methodArgs}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]"
             },
@@ -125,7 +122,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Keyword arguments for executeMethod",
-              "helpText": "What this field is: Keyword arguments for executeMethod for Odoo / GetRecords.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.methodKwargs}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Keyword arguments for executeMethod.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: {}.\nTip: Use {{$json.methodKwargs}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}"
             }
@@ -165,7 +162,7 @@ export const odooDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Odoo model name",
-              "helpText": "What this field is: The Odoo model (object type) to work with.\nExamples: res.partner (contacts), sale.order (sales), account.move (invoices), product.product (products), stock.picking (inventory).",
+              "helpText": "What this field is: Odoo model name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: res.partner.\nTip: Use {{$json.model}} when this value comes from an earlier step.",
               "placeholder": "res.partner",
               "example": "res.partner"
             },
@@ -175,7 +172,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Odoo domain filter (for getRecords)",
-              "helpText": "What this field is: Odoo domain filter (for getRecords) for Odoo / CreateRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Odoo domain filter that tells Odoo which item to use.\nWhere to find it: Open the item in Odoo and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: [[\"active\",\"=\",true]].\nTip: Use {{$json.domain}} when an earlier Odoo step provides this value.",
               "placeholder": "[[\"active\",\"=\",true]]",
               "example": "[[\"active\",\"=\",true]]"
             },
@@ -185,7 +182,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Fields to return (empty = all fields)",
-              "helpText": "What this field is: Fields to return (empty = all fields) for Odoo / CreateRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Fields to return.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: [\"id\",\"name\",\"email\"].\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "[\"id\",\"name\",\"email\"]",
               "example": "[\"id\",\"name\",\"email\"]"
             },
@@ -195,7 +192,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of records to return",
-              "helpText": "What this field is: A number used for limit in Odoo / CreateRecord.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 100.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "100",
               "example": "100"
             },
@@ -205,7 +202,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Pagination offset",
-              "helpText": "What this field is: A number used for offset in Odoo / CreateRecord.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.offset}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Pagination offset.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 0.\nTip: Use {{$json.offset}} when the number comes from an earlier step.",
               "placeholder": "0",
               "example": "0"
             },
@@ -215,7 +212,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Field values for create/update operations",
-              "helpText": "What this field is: Field values for create/update operations for Odoo / CreateRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.values}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field values.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: {\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}.\nTip: Use {{$json.values}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}",
               "example": "{\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}"
             },
@@ -225,7 +222,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Record ID for update/delete operations",
-              "helpText": "What this field is: Record ID for update/delete operations for Odoo / CreateRecord.\nWhere to find it: Open the item in Odoo and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID that tells Odoo which item to use.\nWhere to find it: Open the item in Odoo and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 42.\nTip: Use {{$json.recordId}} when an earlier Odoo step provides this value.",
               "placeholder": "42",
               "example": "42"
             },
@@ -235,7 +232,7 @@ export const odooDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom method name for executeMethod operation",
-              "helpText": "What this field is: Custom method name for executeMethod operation for Odoo / CreateRecord.\nHow to fill it: Enter the method value requested by Odoo, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.method}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom method name for executeMethod operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: action_confirm.\nTip: Use {{$json.method}} when this value comes from an earlier step.",
               "placeholder": "action_confirm",
               "example": "action_confirm"
             },
@@ -245,7 +242,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Positional arguments for executeMethod",
-              "helpText": "What this field is: Positional arguments for executeMethod for Odoo / CreateRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.methodArgs}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Positional arguments for executeMethod.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: [].\nTip: Use {{$json.methodArgs}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]"
             },
@@ -255,7 +252,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Keyword arguments for executeMethod",
-              "helpText": "What this field is: Keyword arguments for executeMethod for Odoo / CreateRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.methodKwargs}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Keyword arguments for executeMethod.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: {}.\nTip: Use {{$json.methodKwargs}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}"
             }
@@ -295,7 +292,7 @@ export const odooDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Odoo model name",
-              "helpText": "What this field is: The Odoo model (object type) to work with.\nExamples: res.partner (contacts), sale.order (sales), account.move (invoices), product.product (products), stock.picking (inventory).",
+              "helpText": "What this field is: Odoo model name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: res.partner.\nTip: Use {{$json.model}} when this value comes from an earlier step.",
               "placeholder": "res.partner",
               "example": "res.partner"
             },
@@ -305,7 +302,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Odoo domain filter (for getRecords)",
-              "helpText": "What this field is: Odoo domain filter (for getRecords) for Odoo / UpdateRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Odoo domain filter that tells Odoo which item to use.\nWhere to find it: Open the item in Odoo and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: [[\"active\",\"=\",true]].\nTip: Use {{$json.domain}} when an earlier Odoo step provides this value.",
               "placeholder": "[[\"active\",\"=\",true]]",
               "example": "[[\"active\",\"=\",true]]"
             },
@@ -315,7 +312,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Fields to return (empty = all fields)",
-              "helpText": "What this field is: Fields to return (empty = all fields) for Odoo / UpdateRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Fields to return.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: [\"id\",\"name\",\"email\"].\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "[\"id\",\"name\",\"email\"]",
               "example": "[\"id\",\"name\",\"email\"]"
             },
@@ -325,7 +322,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of records to return",
-              "helpText": "What this field is: A number used for limit in Odoo / UpdateRecord.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 100.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "100",
               "example": "100"
             },
@@ -335,7 +332,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Pagination offset",
-              "helpText": "What this field is: A number used for offset in Odoo / UpdateRecord.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.offset}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Pagination offset.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 0.\nTip: Use {{$json.offset}} when the number comes from an earlier step.",
               "placeholder": "0",
               "example": "0"
             },
@@ -345,7 +342,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Field values for create/update operations",
-              "helpText": "What this field is: Field values for create/update operations for Odoo / UpdateRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.values}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field values.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: {\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}.\nTip: Use {{$json.values}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}",
               "example": "{\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}"
             },
@@ -355,7 +352,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Record ID for update/delete operations",
-              "helpText": "What this field is: Record ID for update/delete operations for Odoo / UpdateRecord.\nWhere to find it: Open the item in Odoo and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID that tells Odoo which item to use.\nWhere to find it: Open the item in Odoo and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 42.\nTip: Use {{$json.recordId}} when an earlier Odoo step provides this value.",
               "placeholder": "42",
               "example": "42"
             },
@@ -365,7 +362,7 @@ export const odooDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom method name for executeMethod operation",
-              "helpText": "What this field is: Custom method name for executeMethod operation for Odoo / UpdateRecord.\nHow to fill it: Enter the method value requested by Odoo, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.method}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom method name for executeMethod operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: action_confirm.\nTip: Use {{$json.method}} when this value comes from an earlier step.",
               "placeholder": "action_confirm",
               "example": "action_confirm"
             },
@@ -375,7 +372,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Positional arguments for executeMethod",
-              "helpText": "What this field is: Positional arguments for executeMethod for Odoo / UpdateRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.methodArgs}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Positional arguments for executeMethod.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: [].\nTip: Use {{$json.methodArgs}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]"
             },
@@ -385,7 +382,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Keyword arguments for executeMethod",
-              "helpText": "What this field is: Keyword arguments for executeMethod for Odoo / UpdateRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.methodKwargs}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Keyword arguments for executeMethod.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: {}.\nTip: Use {{$json.methodKwargs}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}"
             }
@@ -425,7 +422,7 @@ export const odooDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Odoo model name",
-              "helpText": "What this field is: The Odoo model (object type) to work with.\nExamples: res.partner (contacts), sale.order (sales), account.move (invoices), product.product (products), stock.picking (inventory).",
+              "helpText": "What this field is: Odoo model name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: res.partner.\nTip: Use {{$json.model}} when this value comes from an earlier step.",
               "placeholder": "res.partner",
               "example": "res.partner"
             },
@@ -435,7 +432,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Odoo domain filter (for getRecords)",
-              "helpText": "What this field is: Odoo domain filter (for getRecords) for Odoo / DeleteRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Odoo domain filter that tells Odoo which item to use.\nWhere to find it: Open the item in Odoo and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: [[\"active\",\"=\",true]].\nTip: Use {{$json.domain}} when an earlier Odoo step provides this value.",
               "placeholder": "[[\"active\",\"=\",true]]",
               "example": "[[\"active\",\"=\",true]]"
             },
@@ -445,7 +442,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Fields to return (empty = all fields)",
-              "helpText": "What this field is: Fields to return (empty = all fields) for Odoo / DeleteRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Fields to return.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: [\"id\",\"name\",\"email\"].\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "[\"id\",\"name\",\"email\"]",
               "example": "[\"id\",\"name\",\"email\"]"
             },
@@ -455,7 +452,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of records to return",
-              "helpText": "What this field is: A number used for limit in Odoo / DeleteRecord.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 100.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "100",
               "example": "100"
             },
@@ -465,7 +462,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Pagination offset",
-              "helpText": "What this field is: A number used for offset in Odoo / DeleteRecord.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.offset}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Pagination offset.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 0.\nTip: Use {{$json.offset}} when the number comes from an earlier step.",
               "placeholder": "0",
               "example": "0"
             },
@@ -475,7 +472,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Field values for create/update operations",
-              "helpText": "What this field is: Field values for create/update operations for Odoo / DeleteRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.values}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field values.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: {\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}.\nTip: Use {{$json.values}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}",
               "example": "{\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}"
             },
@@ -485,7 +482,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Record ID for update/delete operations",
-              "helpText": "What this field is: Record ID for update/delete operations for Odoo / DeleteRecord.\nWhere to find it: Open the item in Odoo and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID that tells Odoo which item to use.\nWhere to find it: Open the item in Odoo and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 42.\nTip: Use {{$json.recordId}} when an earlier Odoo step provides this value.",
               "placeholder": "42",
               "example": "42"
             },
@@ -495,7 +492,7 @@ export const odooDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom method name for executeMethod operation",
-              "helpText": "What this field is: Custom method name for executeMethod operation for Odoo / DeleteRecord.\nHow to fill it: Enter the method value requested by Odoo, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.method}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom method name for executeMethod operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: action_confirm.\nTip: Use {{$json.method}} when this value comes from an earlier step.",
               "placeholder": "action_confirm",
               "example": "action_confirm"
             },
@@ -505,7 +502,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Positional arguments for executeMethod",
-              "helpText": "What this field is: Positional arguments for executeMethod for Odoo / DeleteRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.methodArgs}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Positional arguments for executeMethod.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: [].\nTip: Use {{$json.methodArgs}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]"
             },
@@ -515,7 +512,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Keyword arguments for executeMethod",
-              "helpText": "What this field is: Keyword arguments for executeMethod for Odoo / DeleteRecord.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.methodKwargs}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Keyword arguments for executeMethod.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: {}.\nTip: Use {{$json.methodKwargs}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}"
             }
@@ -555,7 +552,7 @@ export const odooDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Odoo model name",
-              "helpText": "What this field is: The Odoo model (object type) to work with.\nExamples: res.partner (contacts), sale.order (sales), account.move (invoices), product.product (products), stock.picking (inventory).",
+              "helpText": "What this field is: Odoo model name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: res.partner.\nTip: Use {{$json.model}} when this value comes from an earlier step.",
               "placeholder": "res.partner",
               "example": "res.partner"
             },
@@ -565,7 +562,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Odoo domain filter (for getRecords)",
-              "helpText": "What this field is: Odoo domain filter (for getRecords) for Odoo / ExecuteMethod.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Odoo domain filter that tells Odoo which item to use.\nWhere to find it: Open the item in Odoo and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: [[\"active\",\"=\",true]].\nTip: Use {{$json.domain}} when an earlier Odoo step provides this value.",
               "placeholder": "[[\"active\",\"=\",true]]",
               "example": "[[\"active\",\"=\",true]]"
             },
@@ -575,7 +572,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Fields to return (empty = all fields)",
-              "helpText": "What this field is: Fields to return (empty = all fields) for Odoo / ExecuteMethod.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Fields to return.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: [\"id\",\"name\",\"email\"].\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "[\"id\",\"name\",\"email\"]",
               "example": "[\"id\",\"name\",\"email\"]"
             },
@@ -585,7 +582,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of records to return",
-              "helpText": "What this field is: A number used for limit in Odoo / ExecuteMethod.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 100.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "100",
               "example": "100"
             },
@@ -595,7 +592,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Pagination offset",
-              "helpText": "What this field is: A number used for offset in Odoo / ExecuteMethod.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.offset}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Pagination offset.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 0.\nTip: Use {{$json.offset}} when the number comes from an earlier step.",
               "placeholder": "0",
               "example": "0"
             },
@@ -605,7 +602,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Field values for create/update operations",
-              "helpText": "What this field is: Field values for create/update operations for Odoo / ExecuteMethod.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.values}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field values.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: {\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}.\nTip: Use {{$json.values}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}",
               "example": "{\"name\":\"Acme Corp\",\"email\":\"info@acme.com\"}"
             },
@@ -615,7 +612,7 @@ export const odooDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Record ID for update/delete operations",
-              "helpText": "What this field is: Record ID for update/delete operations for Odoo / ExecuteMethod.\nWhere to find it: Open the item in Odoo and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.recordId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record ID that tells Odoo which item to use.\nWhere to find it: Open the item in Odoo and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 42.\nTip: Use {{$json.recordId}} when an earlier Odoo step provides this value.",
               "placeholder": "42",
               "example": "42"
             },
@@ -625,7 +622,7 @@ export const odooDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom method name for executeMethod operation",
-              "helpText": "What this field is: Custom method name for executeMethod operation for Odoo / ExecuteMethod.\nHow to fill it: Enter the method value requested by Odoo, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.method}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom method name for executeMethod operation.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: action_confirm.\nTip: Use {{$json.method}} when this value comes from an earlier step.",
               "placeholder": "action_confirm",
               "example": "action_confirm"
             },
@@ -635,7 +632,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Positional arguments for executeMethod",
-              "helpText": "What this field is: Positional arguments for executeMethod for Odoo / ExecuteMethod.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.methodArgs}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Positional arguments for executeMethod.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: [].\nTip: Use {{$json.methodArgs}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]"
             },
@@ -645,7 +642,7 @@ export const odooDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Keyword arguments for executeMethod",
-              "helpText": "What this field is: Keyword arguments for executeMethod for Odoo / ExecuteMethod.\nHow to fill it: Enter valid JSON in the format Odoo expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.methodKwargs}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Keyword arguments for executeMethod.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Odoo.\nExample: {}.\nTip: Use {{$json.methodKwargs}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}"
             }

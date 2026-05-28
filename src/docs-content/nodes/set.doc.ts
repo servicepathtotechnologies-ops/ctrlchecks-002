@@ -29,7 +29,7 @@ export const setDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "JSON object of fields to set (supports template strings)",
-              "helpText": "What this field is: JSON object of fields to set (supports template strings) for Set / Execute.\nHow to fill it: Enter the fields value requested by Set, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for structured data in { } brackets object of fields to set.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Set.\nExample: {\"status\":\"new\",\"email\":\"{{$json.email}}\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"status\":\"new\",\"email\":\"{{$json.email}}\"}",
               "example": "{\"status\":\"new\",\"email\":\"{{$json.email}}\"}"
             }

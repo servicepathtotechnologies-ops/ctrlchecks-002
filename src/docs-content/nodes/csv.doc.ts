@@ -29,7 +29,7 @@ export const csvDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "CSV content (for parse)",
-              "helpText": "What this field is: CSV content (for parse) for CSV / Parse.\nHow to fill it: Enter the csv value requested by CSV, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.csv}} or pick the value from the data picker.",
+              "helpText": "What this field is: CSV content.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.csv}}.\nTip: This field is used for parse. Leave it blank when this operation does not need it.",
               "placeholder": "{{$json.csv}}",
               "example": "{{$json.csv}}"
             },
@@ -39,7 +39,7 @@ export const csvDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Data array (for generate)",
-              "helpText": "What this field is: Data array (for generate) for CSV / Parse.\nHow to fill it: Enter valid JSON in the format CSV expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Data array.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by CSV.\nExample: {{$json.data}}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             }
@@ -86,7 +86,7 @@ export const csvDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "CSV content (for parse)",
-              "helpText": "What this field is: CSV content (for parse) for CSV / Generate.\nHow to fill it: Enter the csv value requested by CSV, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.csv}} or pick the value from the data picker.",
+              "helpText": "What this field is: CSV content.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.csv}}.\nTip: This field is used for parse. Leave it blank when this operation does not need it.",
               "placeholder": "{{$json.csv}}",
               "example": "{{$json.csv}}"
             },
@@ -96,7 +96,7 @@ export const csvDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Data array (for generate)",
-              "helpText": "What this field is: Data array (for generate) for CSV / Generate.\nHow to fill it: Enter valid JSON in the format CSV expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Data array.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by CSV.\nExample: {{$json.data}}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             }

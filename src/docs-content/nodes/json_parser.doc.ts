@@ -29,7 +29,7 @@ export const jsonParserDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "JSON string to parse",
-              "helpText": "What this field is: JSON string to parse for JSON Parser / Execute.\nHow to fill it: Enter the json value requested by JSON Parser, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.json}} or pick the value from the data picker.",
+              "helpText": "What this field is: Text that contains structured data in { } or [ ] brackets.\nHow to fill it: Paste the structured data text, or use a value from an earlier step.\nExample: {{$json.data}}.\nTip: Use {{$json.json}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             },
@@ -39,7 +39,7 @@ export const jsonParserDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Fields to extract from parsed JSON",
-              "helpText": "What this field is: Fields to extract from parsed JSON for JSON Parser / Execute.\nHow to fill it: Enter valid JSON in the format JSON Parser expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.extractFields}} or pick the value from the data picker.",
+              "helpText": "What this field is: The field names you want to pull out after parsing the structured data.\nHow to fill it: Enter a list in [ ] brackets with each field name in quotes.\nExample: [\"name\",\"age\",\"email\"].\nTip: Leave blank if you want to keep the full parsed result.",
               "placeholder": "[\"name\",\"age\",\"email\"]",
               "example": "[\"name\",\"age\",\"email\"]"
             }

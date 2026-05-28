@@ -8,16 +8,12 @@ export const jiraDoc: NodeDoc = {
   "description": "Jira issue tracking operations",
   "credentialType": "Atlassian API Key",
   "credentialSetupSteps": [
-    "What this is: Atlassian uses an API key or account connection so CtrlChecks can safely access your Atlassian account.",
-    "Go to id.atlassian.com and sign in with your Atlassian account.",
-    "Click \"Security\" tab -> scroll to \"API tokens\" -> Create API token.",
-    "Give it a label (e.g. CtrlChecks) and click Create. Copy the token shown.",
-    "Your Jira base URL is: https://yourcompany.atlassian.net (replace \"yourcompany\" with your organization name shown in your Jira URL).",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Jira -> enter your Jira URL (https://yourcompany.atlassian.net), your email address, and the API token -> Save.",
-    "To find your project key: open any Jira project - the key is shown in brackets next to the project name (e.g. PROJ).",
-    "Run a test step (e.g. create a test issue) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Atlassian node and select the saved connection."
+    "What this is: The Jira connection lets CtrlChecks access your Jira account safely without putting secrets in workflow fields.",
+    "Where to start: Jira account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Jira, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Jira.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Jira step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/",
   "resources": [
@@ -36,7 +32,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Atlassian domain (without https://)",
-              "helpText": "What this field is: Atlassian domain (without https://) for Jira / Create issue.\nHow to fill it: Enter the domain value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Atlassian domain that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: yourcompany.atlassian.net.\nTip: Use {{$json.domain}} when an earlier Jira step provides this value.",
               "placeholder": "yourcompany.atlassian.net",
               "example": "yourcompany.atlassian.net"
             },
@@ -66,7 +62,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title/summary — required for create_issue",
-              "helpText": "What this field is: The one-line title of the issue — shown in all Jira list views.\nKeep it concise and descriptive.\nExample: Login button not responding on Safari iOS 17 or Add CSV export to the Reports page",
+              "helpText": "What this field is: Issue title/summary — required for create_issue.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Summary value.\nTip: Use {{$json.summary}} when this value comes from an earlier step.",
               "placeholder": "Enter Summary"
             },
             {
@@ -75,7 +71,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Issue description (plain text, converted to ADF automatically)",
-              "helpText": "What this field is: Full details about the issue.\nExample: Steps to reproduce: 1) Open Safari on iOS 17, 2) Go to login page, 3) Tap Login button — nothing happens. Expected: Should log in. Actual: No response.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -84,7 +80,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue type — default: Task",
-              "helpText": "What this field is: The type of Jira issue.\nCommon values: Bug, Story, Task, Epic, Sub-task.\nMust exactly match the issue types configured in your Jira project (go to Project Settings → Issue Types to see the full list).\nExample: Bug",
+              "helpText": "What this field is: Issue type — default: Task.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Task.\nTip: Use {{$json.issueType}} when this value comes from an earlier step.",
               "placeholder": "Task",
               "example": "Task",
               "defaultValue": "Task"
@@ -95,7 +91,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue priority",
-              "helpText": "What this field is: The urgency level of the issue.\nCommon values: Highest, High, Medium, Low, Lowest.\nExample: High",
+              "helpText": "What this field is: Issue priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Highest.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "Highest",
               "example": "Highest"
             },
@@ -105,7 +101,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Assignee account ID (get from Jira user search)",
-              "helpText": "What this field is: Assignee account ID (get from Jira user search) for Jira / Create issue.\nHow to fill it: Enter the assignee value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.assignee}} or pick the value from the data picker.",
+              "helpText": "What this field is: Assignee account ID.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Assignee value.\nTip: Use {{$json.assignee}} when this value comes from an earlier step.",
               "placeholder": "Enter Assignee"
             },
             {
@@ -114,7 +110,7 @@ export const jiraDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Labels to attach to the issue",
-              "helpText": "What this field is: Labels to attach to the issue for Jira / Create issue.\nHow to fill it: Enter valid JSON in the format Jira expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Labels to attach to the issue.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: [\"bug\",\"urgent\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"bug\",\"urgent\"]",
               "example": "[\"bug\",\"urgent\"]"
             },
@@ -124,7 +120,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "JQL query — required for search_issues",
-              "helpText": "What this field is: JQL query — required for search_issues for Jira / Create issue.\nHow to fill it: Enter the jql value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jql}} or pick the value from the data picker.",
+              "helpText": "What this field is: JQL query — required for search_issues.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: project = PROJ AND status = \"In Progress\".\nTip: Use {{$json.jql}} when this value comes from an earlier step.",
               "placeholder": "project = PROJ AND status = \"In Progress\"",
               "example": "project = PROJ AND status = \"In Progress\""
             },
@@ -134,7 +130,7 @@ export const jiraDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max results for search_issues (default: 50)",
-              "helpText": "What this field is: A number used for max results in Jira / Create issue.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max results for search_issues.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.maxResults}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -145,7 +141,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Comment text — required for add_comment",
-              "helpText": "What this field is: Comment text — required for add_comment for Jira / Create issue.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Comment text — required for add_comment.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.commentBody}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -154,7 +150,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Transition ID — required for transition_issue",
-              "helpText": "What this field is: Transition ID — required for transition_issue for Jira / Create issue.\nWhere to find it: Open the item in Jira and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.transitionId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Transition ID — required for transition_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.transitionId}} when an earlier Jira step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }
@@ -189,7 +185,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Atlassian domain (without https://)",
-              "helpText": "What this field is: Atlassian domain (without https://) for Jira / Get issue.\nHow to fill it: Enter the domain value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Atlassian domain that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: yourcompany.atlassian.net.\nTip: Use {{$json.domain}} when an earlier Jira step provides this value.",
               "placeholder": "yourcompany.atlassian.net",
               "example": "yourcompany.atlassian.net"
             },
@@ -199,7 +195,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project key — required for create_issue",
-              "helpText": "What this field is: Project key — required for create_issue for Jira / Get issue.\nHow to fill it: Enter the project key value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.projectKey}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project key — required for create_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: PROJ.\nTip: Use {{$json.projectKey}} when an earlier Jira step provides this value.",
               "placeholder": "PROJ",
               "example": "PROJ"
             },
@@ -219,7 +215,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title/summary — required for create_issue",
-              "helpText": "What this field is: Issue title/summary — required for create_issue for Jira / Get issue.\nHow to fill it: Enter the summary value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title/summary — required for create_issue.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Summary value.\nTip: Use {{$json.summary}} when this value comes from an earlier step.",
               "placeholder": "Enter Summary"
             },
             {
@@ -228,7 +224,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Issue description (plain text, converted to ADF automatically)",
-              "helpText": "What this field is: Issue description (plain text, converted to ADF automatically) for Jira / Get issue.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -237,7 +233,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue type — default: Task",
-              "helpText": "What this field is: Issue type — default: Task for Jira / Get issue.\nHow to fill it: Enter the issue type value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.issueType}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue type — default: Task.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Task.\nTip: Use {{$json.issueType}} when this value comes from an earlier step.",
               "placeholder": "Task",
               "example": "Task",
               "defaultValue": "Task"
@@ -248,7 +244,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue priority",
-              "helpText": "What this field is: Issue priority for Jira / Get issue.\nHow to fill it: Enter the priority value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Highest.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "Highest",
               "example": "Highest"
             },
@@ -258,7 +254,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Assignee account ID (get from Jira user search)",
-              "helpText": "What this field is: Assignee account ID (get from Jira user search) for Jira / Get issue.\nHow to fill it: Enter the assignee value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.assignee}} or pick the value from the data picker.",
+              "helpText": "What this field is: Assignee account ID.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Assignee value.\nTip: Use {{$json.assignee}} when this value comes from an earlier step.",
               "placeholder": "Enter Assignee"
             },
             {
@@ -267,7 +263,7 @@ export const jiraDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Labels to attach to the issue",
-              "helpText": "What this field is: Labels to attach to the issue for Jira / Get issue.\nHow to fill it: Enter valid JSON in the format Jira expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Labels to attach to the issue.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: [\"bug\",\"urgent\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"bug\",\"urgent\"]",
               "example": "[\"bug\",\"urgent\"]"
             },
@@ -277,7 +273,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "JQL query — required for search_issues",
-              "helpText": "What this field is: JQL query — required for search_issues for Jira / Get issue.\nHow to fill it: Enter the jql value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jql}} or pick the value from the data picker.",
+              "helpText": "What this field is: JQL query — required for search_issues.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: project = PROJ AND status = \"In Progress\".\nTip: Use {{$json.jql}} when this value comes from an earlier step.",
               "placeholder": "project = PROJ AND status = \"In Progress\"",
               "example": "project = PROJ AND status = \"In Progress\""
             },
@@ -287,7 +283,7 @@ export const jiraDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max results for search_issues (default: 50)",
-              "helpText": "What this field is: A number used for max results in Jira / Get issue.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max results for search_issues.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.maxResults}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -298,7 +294,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Comment text — required for add_comment",
-              "helpText": "What this field is: Comment text — required for add_comment for Jira / Get issue.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Comment text — required for add_comment.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.commentBody}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -307,7 +303,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Transition ID — required for transition_issue",
-              "helpText": "What this field is: Transition ID — required for transition_issue for Jira / Get issue.\nWhere to find it: Open the item in Jira and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.transitionId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Transition ID — required for transition_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.transitionId}} when an earlier Jira step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }
@@ -349,7 +345,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Atlassian domain (without https://)",
-              "helpText": "What this field is: Atlassian domain (without https://) for Jira / Update issue.\nHow to fill it: Enter the domain value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Atlassian domain that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: yourcompany.atlassian.net.\nTip: Use {{$json.domain}} when an earlier Jira step provides this value.",
               "placeholder": "yourcompany.atlassian.net",
               "example": "yourcompany.atlassian.net"
             },
@@ -359,7 +355,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project key — required for create_issue",
-              "helpText": "What this field is: Project key — required for create_issue for Jira / Update issue.\nHow to fill it: Enter the project key value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.projectKey}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project key — required for create_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: PROJ.\nTip: Use {{$json.projectKey}} when an earlier Jira step provides this value.",
               "placeholder": "PROJ",
               "example": "PROJ"
             },
@@ -379,7 +375,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title/summary — required for create_issue",
-              "helpText": "What this field is: Issue title/summary — required for create_issue for Jira / Update issue.\nHow to fill it: Enter the summary value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title/summary — required for create_issue.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Summary value.\nTip: Use {{$json.summary}} when this value comes from an earlier step.",
               "placeholder": "Enter Summary"
             },
             {
@@ -388,7 +384,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Issue description (plain text, converted to ADF automatically)",
-              "helpText": "What this field is: Issue description (plain text, converted to ADF automatically) for Jira / Update issue.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -397,7 +393,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue type — default: Task",
-              "helpText": "What this field is: Issue type — default: Task for Jira / Update issue.\nHow to fill it: Enter the issue type value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.issueType}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue type — default: Task.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Task.\nTip: Use {{$json.issueType}} when this value comes from an earlier step.",
               "placeholder": "Task",
               "example": "Task",
               "defaultValue": "Task"
@@ -408,7 +404,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue priority",
-              "helpText": "What this field is: Issue priority for Jira / Update issue.\nHow to fill it: Enter the priority value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Highest.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "Highest",
               "example": "Highest"
             },
@@ -418,7 +414,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Assignee account ID (get from Jira user search)",
-              "helpText": "What this field is: Assignee account ID (get from Jira user search) for Jira / Update issue.\nHow to fill it: Enter the assignee value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.assignee}} or pick the value from the data picker.",
+              "helpText": "What this field is: Assignee account ID.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Assignee value.\nTip: Use {{$json.assignee}} when this value comes from an earlier step.",
               "placeholder": "Enter Assignee"
             },
             {
@@ -427,7 +423,7 @@ export const jiraDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Labels to attach to the issue",
-              "helpText": "What this field is: Labels to attach to the issue for Jira / Update issue.\nHow to fill it: Enter valid JSON in the format Jira expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Labels to attach to the issue.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: [\"bug\",\"urgent\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"bug\",\"urgent\"]",
               "example": "[\"bug\",\"urgent\"]"
             },
@@ -437,7 +433,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "JQL query — required for search_issues",
-              "helpText": "What this field is: JQL query — required for search_issues for Jira / Update issue.\nHow to fill it: Enter the jql value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jql}} or pick the value from the data picker.",
+              "helpText": "What this field is: JQL query — required for search_issues.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: project = PROJ AND status = \"In Progress\".\nTip: Use {{$json.jql}} when this value comes from an earlier step.",
               "placeholder": "project = PROJ AND status = \"In Progress\"",
               "example": "project = PROJ AND status = \"In Progress\""
             },
@@ -447,7 +443,7 @@ export const jiraDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max results for search_issues (default: 50)",
-              "helpText": "What this field is: A number used for max results in Jira / Update issue.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max results for search_issues.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.maxResults}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -458,7 +454,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Comment text — required for add_comment",
-              "helpText": "What this field is: Comment text — required for add_comment for Jira / Update issue.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Comment text — required for add_comment.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.commentBody}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -467,7 +463,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Transition ID — required for transition_issue",
-              "helpText": "What this field is: Transition ID — required for transition_issue for Jira / Update issue.\nWhere to find it: Open the item in Jira and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.transitionId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Transition ID — required for transition_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.transitionId}} when an earlier Jira step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }
@@ -507,7 +503,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Atlassian domain (without https://)",
-              "helpText": "What this field is: Atlassian domain (without https://) for Jira / Delete issue.\nHow to fill it: Enter the domain value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Atlassian domain that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: yourcompany.atlassian.net.\nTip: Use {{$json.domain}} when an earlier Jira step provides this value.",
               "placeholder": "yourcompany.atlassian.net",
               "example": "yourcompany.atlassian.net"
             },
@@ -517,7 +513,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project key — required for create_issue",
-              "helpText": "What this field is: Project key — required for create_issue for Jira / Delete issue.\nHow to fill it: Enter the project key value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.projectKey}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project key — required for create_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: PROJ.\nTip: Use {{$json.projectKey}} when an earlier Jira step provides this value.",
               "placeholder": "PROJ",
               "example": "PROJ"
             },
@@ -537,7 +533,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title/summary — required for create_issue",
-              "helpText": "What this field is: Issue title/summary — required for create_issue for Jira / Delete issue.\nHow to fill it: Enter the summary value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title/summary — required for create_issue.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Summary value.\nTip: Use {{$json.summary}} when this value comes from an earlier step.",
               "placeholder": "Enter Summary"
             },
             {
@@ -546,7 +542,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Issue description (plain text, converted to ADF automatically)",
-              "helpText": "What this field is: Issue description (plain text, converted to ADF automatically) for Jira / Delete issue.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -555,7 +551,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue type — default: Task",
-              "helpText": "What this field is: Issue type — default: Task for Jira / Delete issue.\nHow to fill it: Enter the issue type value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.issueType}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue type — default: Task.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Task.\nTip: Use {{$json.issueType}} when this value comes from an earlier step.",
               "placeholder": "Task",
               "example": "Task",
               "defaultValue": "Task"
@@ -566,7 +562,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue priority",
-              "helpText": "What this field is: Issue priority for Jira / Delete issue.\nHow to fill it: Enter the priority value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Highest.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "Highest",
               "example": "Highest"
             },
@@ -576,7 +572,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Assignee account ID (get from Jira user search)",
-              "helpText": "What this field is: Assignee account ID (get from Jira user search) for Jira / Delete issue.\nHow to fill it: Enter the assignee value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.assignee}} or pick the value from the data picker.",
+              "helpText": "What this field is: Assignee account ID.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Assignee value.\nTip: Use {{$json.assignee}} when this value comes from an earlier step.",
               "placeholder": "Enter Assignee"
             },
             {
@@ -585,7 +581,7 @@ export const jiraDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Labels to attach to the issue",
-              "helpText": "What this field is: Labels to attach to the issue for Jira / Delete issue.\nHow to fill it: Enter valid JSON in the format Jira expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Labels to attach to the issue.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: [\"bug\",\"urgent\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"bug\",\"urgent\"]",
               "example": "[\"bug\",\"urgent\"]"
             },
@@ -595,7 +591,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "JQL query — required for search_issues",
-              "helpText": "What this field is: JQL query — required for search_issues for Jira / Delete issue.\nHow to fill it: Enter the jql value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jql}} or pick the value from the data picker.",
+              "helpText": "What this field is: JQL query — required for search_issues.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: project = PROJ AND status = \"In Progress\".\nTip: Use {{$json.jql}} when this value comes from an earlier step.",
               "placeholder": "project = PROJ AND status = \"In Progress\"",
               "example": "project = PROJ AND status = \"In Progress\""
             },
@@ -605,7 +601,7 @@ export const jiraDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max results for search_issues (default: 50)",
-              "helpText": "What this field is: A number used for max results in Jira / Delete issue.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max results for search_issues.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.maxResults}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -616,7 +612,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Comment text — required for add_comment",
-              "helpText": "What this field is: Comment text — required for add_comment for Jira / Delete issue.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Comment text — required for add_comment.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.commentBody}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -625,7 +621,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Transition ID — required for transition_issue",
-              "helpText": "What this field is: Transition ID — required for transition_issue for Jira / Delete issue.\nWhere to find it: Open the item in Jira and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.transitionId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Transition ID — required for transition_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.transitionId}} when an earlier Jira step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }
@@ -665,7 +661,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Atlassian domain (without https://)",
-              "helpText": "What this field is: Atlassian domain (without https://) for Jira / Search issues.\nHow to fill it: Enter the domain value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Atlassian domain that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: yourcompany.atlassian.net.\nTip: Use {{$json.domain}} when an earlier Jira step provides this value.",
               "placeholder": "yourcompany.atlassian.net",
               "example": "yourcompany.atlassian.net"
             },
@@ -675,7 +671,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project key — required for create_issue",
-              "helpText": "What this field is: Project key — required for create_issue for Jira / Search issues.\nHow to fill it: Enter the project key value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.projectKey}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project key — required for create_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: PROJ.\nTip: Use {{$json.projectKey}} when an earlier Jira step provides this value.",
               "placeholder": "PROJ",
               "example": "PROJ"
             },
@@ -695,7 +691,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title/summary — required for create_issue",
-              "helpText": "What this field is: Issue title/summary — required for create_issue for Jira / Search issues.\nHow to fill it: Enter the summary value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title/summary — required for create_issue.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Summary value.\nTip: Use {{$json.summary}} when this value comes from an earlier step.",
               "placeholder": "Enter Summary"
             },
             {
@@ -704,7 +700,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Issue description (plain text, converted to ADF automatically)",
-              "helpText": "What this field is: Issue description (plain text, converted to ADF automatically) for Jira / Search issues.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -713,7 +709,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue type — default: Task",
-              "helpText": "What this field is: Issue type — default: Task for Jira / Search issues.\nHow to fill it: Enter the issue type value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.issueType}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue type — default: Task.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Task.\nTip: Use {{$json.issueType}} when this value comes from an earlier step.",
               "placeholder": "Task",
               "example": "Task",
               "defaultValue": "Task"
@@ -724,7 +720,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue priority",
-              "helpText": "What this field is: Issue priority for Jira / Search issues.\nHow to fill it: Enter the priority value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Highest.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "Highest",
               "example": "Highest"
             },
@@ -734,7 +730,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Assignee account ID (get from Jira user search)",
-              "helpText": "What this field is: Assignee account ID (get from Jira user search) for Jira / Search issues.\nHow to fill it: Enter the assignee value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.assignee}} or pick the value from the data picker.",
+              "helpText": "What this field is: Assignee account ID.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Assignee value.\nTip: Use {{$json.assignee}} when this value comes from an earlier step.",
               "placeholder": "Enter Assignee"
             },
             {
@@ -743,7 +739,7 @@ export const jiraDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Labels to attach to the issue",
-              "helpText": "What this field is: Labels to attach to the issue for Jira / Search issues.\nHow to fill it: Enter valid JSON in the format Jira expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Labels to attach to the issue.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: [\"bug\",\"urgent\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"bug\",\"urgent\"]",
               "example": "[\"bug\",\"urgent\"]"
             },
@@ -753,7 +749,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "JQL query — required for search_issues",
-              "helpText": "What this field is: JQL query — required for search_issues for Jira / Search issues.\nHow to fill it: Enter the jql value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jql}} or pick the value from the data picker.",
+              "helpText": "What this field is: JQL query — required for search_issues.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: project = PROJ AND status = \"In Progress\".\nTip: Use {{$json.jql}} when this value comes from an earlier step.",
               "placeholder": "project = PROJ AND status = \"In Progress\"",
               "example": "project = PROJ AND status = \"In Progress\""
             },
@@ -763,7 +759,7 @@ export const jiraDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max results for search_issues (default: 50)",
-              "helpText": "What this field is: A number used for max results in Jira / Search issues.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max results for search_issues.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.maxResults}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -774,7 +770,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Comment text — required for add_comment",
-              "helpText": "What this field is: Comment text — required for add_comment for Jira / Search issues.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Comment text — required for add_comment.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.commentBody}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -783,7 +779,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Transition ID — required for transition_issue",
-              "helpText": "What this field is: Transition ID — required for transition_issue for Jira / Search issues.\nWhere to find it: Open the item in Jira and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.transitionId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Transition ID — required for transition_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.transitionId}} when an earlier Jira step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }
@@ -823,7 +819,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Atlassian domain (without https://)",
-              "helpText": "What this field is: Atlassian domain (without https://) for Jira / Add comment.\nHow to fill it: Enter the domain value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Atlassian domain that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: yourcompany.atlassian.net.\nTip: Use {{$json.domain}} when an earlier Jira step provides this value.",
               "placeholder": "yourcompany.atlassian.net",
               "example": "yourcompany.atlassian.net"
             },
@@ -833,7 +829,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project key — required for create_issue",
-              "helpText": "What this field is: Project key — required for create_issue for Jira / Add comment.\nHow to fill it: Enter the project key value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.projectKey}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project key — required for create_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: PROJ.\nTip: Use {{$json.projectKey}} when an earlier Jira step provides this value.",
               "placeholder": "PROJ",
               "example": "PROJ"
             },
@@ -853,7 +849,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title/summary — required for create_issue",
-              "helpText": "What this field is: Issue title/summary — required for create_issue for Jira / Add comment.\nHow to fill it: Enter the summary value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title/summary — required for create_issue.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Summary value.\nTip: Use {{$json.summary}} when this value comes from an earlier step.",
               "placeholder": "Enter Summary"
             },
             {
@@ -862,7 +858,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Issue description (plain text, converted to ADF automatically)",
-              "helpText": "What this field is: Issue description (plain text, converted to ADF automatically) for Jira / Add comment.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -871,7 +867,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue type — default: Task",
-              "helpText": "What this field is: Issue type — default: Task for Jira / Add comment.\nHow to fill it: Enter the issue type value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.issueType}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue type — default: Task.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Task.\nTip: Use {{$json.issueType}} when this value comes from an earlier step.",
               "placeholder": "Task",
               "example": "Task",
               "defaultValue": "Task"
@@ -882,7 +878,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue priority",
-              "helpText": "What this field is: Issue priority for Jira / Add comment.\nHow to fill it: Enter the priority value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Highest.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "Highest",
               "example": "Highest"
             },
@@ -892,7 +888,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Assignee account ID (get from Jira user search)",
-              "helpText": "What this field is: Assignee account ID (get from Jira user search) for Jira / Add comment.\nHow to fill it: Enter the assignee value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.assignee}} or pick the value from the data picker.",
+              "helpText": "What this field is: Assignee account ID.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Assignee value.\nTip: Use {{$json.assignee}} when this value comes from an earlier step.",
               "placeholder": "Enter Assignee"
             },
             {
@@ -901,7 +897,7 @@ export const jiraDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Labels to attach to the issue",
-              "helpText": "What this field is: Labels to attach to the issue for Jira / Add comment.\nHow to fill it: Enter valid JSON in the format Jira expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Labels to attach to the issue.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: [\"bug\",\"urgent\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"bug\",\"urgent\"]",
               "example": "[\"bug\",\"urgent\"]"
             },
@@ -911,7 +907,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "JQL query — required for search_issues",
-              "helpText": "What this field is: JQL query — required for search_issues for Jira / Add comment.\nHow to fill it: Enter the jql value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jql}} or pick the value from the data picker.",
+              "helpText": "What this field is: JQL query — required for search_issues.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: project = PROJ AND status = \"In Progress\".\nTip: Use {{$json.jql}} when this value comes from an earlier step.",
               "placeholder": "project = PROJ AND status = \"In Progress\"",
               "example": "project = PROJ AND status = \"In Progress\""
             },
@@ -921,7 +917,7 @@ export const jiraDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max results for search_issues (default: 50)",
-              "helpText": "What this field is: A number used for max results in Jira / Add comment.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max results for search_issues.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.maxResults}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -932,7 +928,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Comment text — required for add_comment",
-              "helpText": "What this field is: Comment text — required for add_comment for Jira / Add comment.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Comment text — required for add_comment.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.commentBody}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -941,7 +937,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Transition ID — required for transition_issue",
-              "helpText": "What this field is: Transition ID — required for transition_issue for Jira / Add comment.\nWhere to find it: Open the item in Jira and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.transitionId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Transition ID — required for transition_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.transitionId}} when an earlier Jira step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }
@@ -981,7 +977,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Atlassian domain (without https://)",
-              "helpText": "What this field is: Atlassian domain (without https://) for Jira / Transition issue.\nHow to fill it: Enter the domain value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Atlassian domain that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: yourcompany.atlassian.net.\nTip: Use {{$json.domain}} when an earlier Jira step provides this value.",
               "placeholder": "yourcompany.atlassian.net",
               "example": "yourcompany.atlassian.net"
             },
@@ -991,7 +987,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project key — required for create_issue",
-              "helpText": "What this field is: Project key — required for create_issue for Jira / Transition issue.\nHow to fill it: Enter the project key value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.projectKey}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project key — required for create_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: PROJ.\nTip: Use {{$json.projectKey}} when an earlier Jira step provides this value.",
               "placeholder": "PROJ",
               "example": "PROJ"
             },
@@ -1011,7 +1007,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title/summary — required for create_issue",
-              "helpText": "What this field is: Issue title/summary — required for create_issue for Jira / Transition issue.\nHow to fill it: Enter the summary value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title/summary — required for create_issue.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Summary value.\nTip: Use {{$json.summary}} when this value comes from an earlier step.",
               "placeholder": "Enter Summary"
             },
             {
@@ -1020,7 +1016,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Issue description (plain text, converted to ADF automatically)",
-              "helpText": "What this field is: Issue description (plain text, converted to ADF automatically) for Jira / Transition issue.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -1029,7 +1025,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue type — default: Task",
-              "helpText": "What this field is: Issue type — default: Task for Jira / Transition issue.\nHow to fill it: Enter the issue type value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.issueType}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue type — default: Task.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Task.\nTip: Use {{$json.issueType}} when this value comes from an earlier step.",
               "placeholder": "Task",
               "example": "Task",
               "defaultValue": "Task"
@@ -1040,7 +1036,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue priority",
-              "helpText": "What this field is: Issue priority for Jira / Transition issue.\nHow to fill it: Enter the priority value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Highest.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "Highest",
               "example": "Highest"
             },
@@ -1050,7 +1046,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Assignee account ID (get from Jira user search)",
-              "helpText": "What this field is: Assignee account ID (get from Jira user search) for Jira / Transition issue.\nHow to fill it: Enter the assignee value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.assignee}} or pick the value from the data picker.",
+              "helpText": "What this field is: Assignee account ID.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Assignee value.\nTip: Use {{$json.assignee}} when this value comes from an earlier step.",
               "placeholder": "Enter Assignee"
             },
             {
@@ -1059,7 +1055,7 @@ export const jiraDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Labels to attach to the issue",
-              "helpText": "What this field is: Labels to attach to the issue for Jira / Transition issue.\nHow to fill it: Enter valid JSON in the format Jira expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Labels to attach to the issue.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: [\"bug\",\"urgent\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"bug\",\"urgent\"]",
               "example": "[\"bug\",\"urgent\"]"
             },
@@ -1069,7 +1065,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "JQL query — required for search_issues",
-              "helpText": "What this field is: JQL query — required for search_issues for Jira / Transition issue.\nHow to fill it: Enter the jql value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jql}} or pick the value from the data picker.",
+              "helpText": "What this field is: JQL query — required for search_issues.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: project = PROJ AND status = \"In Progress\".\nTip: Use {{$json.jql}} when this value comes from an earlier step.",
               "placeholder": "project = PROJ AND status = \"In Progress\"",
               "example": "project = PROJ AND status = \"In Progress\""
             },
@@ -1079,7 +1075,7 @@ export const jiraDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max results for search_issues (default: 50)",
-              "helpText": "What this field is: A number used for max results in Jira / Transition issue.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max results for search_issues.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.maxResults}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -1090,7 +1086,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Comment text — required for add_comment",
-              "helpText": "What this field is: Comment text — required for add_comment for Jira / Transition issue.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Comment text — required for add_comment.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.commentBody}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -1099,7 +1095,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Transition ID — required for transition_issue",
-              "helpText": "What this field is: Transition ID — required for transition_issue for Jira / Transition issue.\nWhere to find it: Open the item in Jira and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.transitionId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Transition ID — required for transition_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.transitionId}} when an earlier Jira step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }
@@ -1139,7 +1135,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Atlassian domain (without https://)",
-              "helpText": "What this field is: Atlassian domain (without https://) for Jira / Get projects.\nHow to fill it: Enter the domain value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.domain}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Atlassian domain that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: yourcompany.atlassian.net.\nTip: Use {{$json.domain}} when an earlier Jira step provides this value.",
               "placeholder": "yourcompany.atlassian.net",
               "example": "yourcompany.atlassian.net"
             },
@@ -1149,7 +1145,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Project key — required for create_issue",
-              "helpText": "What this field is: Project key — required for create_issue for Jira / Get projects.\nHow to fill it: Enter the project key value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.projectKey}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Project key — required for create_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: PROJ.\nTip: Use {{$json.projectKey}} when an earlier Jira step provides this value.",
               "placeholder": "PROJ",
               "example": "PROJ"
             },
@@ -1169,7 +1165,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue title/summary — required for create_issue",
-              "helpText": "What this field is: Issue title/summary — required for create_issue for Jira / Get projects.\nHow to fill it: Enter the summary value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.summary}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue title/summary — required for create_issue.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Summary value.\nTip: Use {{$json.summary}} when this value comes from an earlier step.",
               "placeholder": "Enter Summary"
             },
             {
@@ -1178,7 +1174,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Issue description (plain text, converted to ADF automatically)",
-              "helpText": "What this field is: Issue description (plain text, converted to ADF automatically) for Jira / Get projects.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Issue description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -1187,7 +1183,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue type — default: Task",
-              "helpText": "What this field is: Issue type — default: Task for Jira / Get projects.\nHow to fill it: Enter the issue type value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.issueType}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue type — default: Task.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Task.\nTip: Use {{$json.issueType}} when this value comes from an earlier step.",
               "placeholder": "Task",
               "example": "Task",
               "defaultValue": "Task"
@@ -1198,7 +1194,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Issue priority",
-              "helpText": "What this field is: Issue priority for Jira / Get projects.\nHow to fill it: Enter the priority value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Issue priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Highest.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "Highest",
               "example": "Highest"
             },
@@ -1208,7 +1204,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Assignee account ID (get from Jira user search)",
-              "helpText": "What this field is: Assignee account ID (get from Jira user search) for Jira / Get projects.\nHow to fill it: Enter the assignee value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.assignee}} or pick the value from the data picker.",
+              "helpText": "What this field is: Assignee account ID.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Assignee value.\nTip: Use {{$json.assignee}} when this value comes from an earlier step.",
               "placeholder": "Enter Assignee"
             },
             {
@@ -1217,7 +1213,7 @@ export const jiraDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Labels to attach to the issue",
-              "helpText": "What this field is: Labels to attach to the issue for Jira / Get projects.\nHow to fill it: Enter valid JSON in the format Jira expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.labels}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Labels to attach to the issue.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: [\"bug\",\"urgent\"].\nTip: Use {{$json.labels}} when an earlier step already prepared this data.",
               "placeholder": "[\"bug\",\"urgent\"]",
               "example": "[\"bug\",\"urgent\"]"
             },
@@ -1227,7 +1223,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "JQL query — required for search_issues",
-              "helpText": "What this field is: JQL query — required for search_issues for Jira / Get projects.\nHow to fill it: Enter the jql value requested by Jira, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jql}} or pick the value from the data picker.",
+              "helpText": "What this field is: JQL query — required for search_issues.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: project = PROJ AND status = \"In Progress\".\nTip: Use {{$json.jql}} when this value comes from an earlier step.",
               "placeholder": "project = PROJ AND status = \"In Progress\"",
               "example": "project = PROJ AND status = \"In Progress\""
             },
@@ -1237,7 +1233,7 @@ export const jiraDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max results for search_issues (default: 50)",
-              "helpText": "What this field is: A number used for max results in Jira / Get projects.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max results for search_issues.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.maxResults}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -1248,7 +1244,7 @@ export const jiraDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Comment text — required for add_comment",
-              "helpText": "What this field is: Comment text — required for add_comment for Jira / Get projects.\nHow to fill it: Type the message, prompt, or content you want Jira to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Comment text — required for add_comment.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Jira.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.commentBody}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -1257,7 +1253,7 @@ export const jiraDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Transition ID — required for transition_issue",
-              "helpText": "What this field is: Transition ID — required for transition_issue for Jira / Get projects.\nWhere to find it: Open the item in Jira and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.transitionId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Transition ID — required for transition_issue that tells Jira which item to use.\nWhere to find it: Open the item in Jira and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.transitionId}} when an earlier Jira step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }

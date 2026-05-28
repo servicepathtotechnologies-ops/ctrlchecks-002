@@ -71,8 +71,9 @@ import { collectUpstreamFieldHints } from '@/lib/upstreamFieldHints';
 import { normalizeIfElseConfig, normalizeIfElseConditions } from '@/lib/ifElseConditions';
 import { FieldOwnershipToggle } from '@/components/FieldOwnershipToggle';
 import { invalidateAfterConnectionChange } from '@/lib/queryInvalidation';
-import { buildContextualFieldHelp, shouldShowFieldForContext } from '@/lib/contextualFieldGuides';
+import { shouldShowFieldForContext } from '@/lib/contextualFieldGuides';
 import { NodeCredentialSelector } from '@/components/nodes/NodeCredentialSelector';
+import { resolveFieldHelp } from '@/lib/resolve-field-help-content';
 
 // Droppable field wrapper component - MUST be outside PropertiesPanel to avoid hook violations
 interface DroppableFieldWrapperProps {
@@ -134,23 +135,7 @@ interface Message {
 
 type ViewMode = 'properties' | 'ai-editor';
 
-const PROPERTIES_PANEL_DEFAULT_WIDTH = 400;
-const PROPERTIES_PANEL_MIN_WIDTH = 320;
-const PROPERTIES_PANEL_MAX_WIDTH = 560;
-const EDITOR_CHROME_RESERVED_WIDTH = 720;
-
-function getConstrainedPanelWidth(nextWidth: number): number {
-  if (typeof window === 'undefined') {
-    return Math.max(PROPERTIES_PANEL_MIN_WIDTH, Math.min(nextWidth, PROPERTIES_PANEL_DEFAULT_WIDTH));
-  }
-
-  const viewportAwareMax = Math.max(
-    PROPERTIES_PANEL_MIN_WIDTH,
-    Math.min(PROPERTIES_PANEL_MAX_WIDTH, window.innerWidth - EDITOR_CHROME_RESERVED_WIDTH),
-  );
-
-  return Math.max(PROPERTIES_PANEL_MIN_WIDTH, Math.min(nextWidth, viewportAwareMax));
-}
+const PROPERTIES_PANEL_WIDTH = 360;
 
 export default function PropertiesPanel({
   onClose,
@@ -236,8 +221,6 @@ export default function PropertiesPanel({
   const [testNodeTimeMs, setTestNodeTimeMs] = useState<number>(0);
 
   // Resizable sidebar state
-  const [width, setWidth] = useState(PROPERTIES_PANEL_DEFAULT_WIDTH);
-  const [isResizing, setIsResizing] = useState(false);
 
   // Help sidebar state
   const [selectedHelp, setSelectedHelp] = useState<{ title: string; steps: string[] } | null>(null);
@@ -808,43 +791,6 @@ export default function PropertiesPanel({
     }
   };
 
-  // Resize handlers
-  const startResizing = useCallback(() => {
-    setIsResizing(true);
-  }, []);
-
-  const stopResizing = useCallback(() => {
-    setIsResizing(false);
-  }, []);
-
-  const resize = useCallback(
-    (mouseMoveEvent: MouseEvent) => {
-      if (isResizing) {
-        const newWidth = window.innerWidth - mouseMoveEvent.clientX;
-        setWidth(getConstrainedPanelWidth(newWidth));
-      }
-    },
-    [isResizing]
-  );
-
-  useEffect(() => {
-    const constrainToViewport = () => {
-      setWidth((currentWidth) => getConstrainedPanelWidth(currentWidth));
-    };
-
-    constrainToViewport();
-    window.addEventListener('resize', constrainToViewport);
-    return () => window.removeEventListener('resize', constrainToViewport);
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("mousemove", resize);
-    window.addEventListener("mouseup", stopResizing);
-    return () => {
-      window.removeEventListener("mousemove", resize);
-      window.removeEventListener("mouseup", stopResizing);
-    };
-  }, [resize, stopResizing]);
 
   // Effect to handle pending expression injection from drag & drop
   // MUST be before any early returns to follow Rules of Hooks
@@ -1596,16 +1542,9 @@ export default function PropertiesPanel({
   if (!selectedNode) {
     return (
       <div
-        className={cn("relative bg-background h-full min-w-0 max-w-full overflow-hidden flex flex-col transition-all duration-150", !debugMode && "border-l border-border/60")}
-        style={{ width: debugMode ? '100%' : width, flexShrink: debugMode ? 1 : 0, boxSizing: 'border-box' }}
+        className={cn("relative bg-background h-full overflow-hidden flex flex-col", !debugMode && "border-l border-border/60")}
+        style={{ width: debugMode ? '100%' : PROPERTIES_PANEL_WIDTH, flexShrink: 0, boxSizing: 'border-box' }}
       >
-        {/* Resize Handle — hidden in debugMode */}
-        {!debugMode && (
-          <div
-            className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-border transition-colors duration-150 z-40"
-            onMouseDown={startResizing}
-          />
-        )}
 
         {/* Header with Professional Segmented Toggle */}
         <div className="px-4 py-3 border-b border-border/40">
@@ -2200,19 +2139,9 @@ export default function PropertiesPanel({
 
   return (
     <div
-      className={cn("relative bg-background h-full min-w-0 max-w-full overflow-hidden flex flex-col transition-all duration-150", !debugMode && "border-l border-border/60")}
-      style={{ width: debugMode ? '100%' : width, flexShrink: debugMode ? 1 : 0, boxSizing: 'border-box' }}
+      className={cn("relative bg-background h-full overflow-hidden flex flex-col", !debugMode && "border-l border-border/60")}
+      style={{ width: debugMode ? '100%' : PROPERTIES_PANEL_WIDTH, flexShrink: 0, boxSizing: 'border-box' }}
     >
-      {/* Resize Handle — hidden in debugMode since the panel fills its container */}
-      {!debugMode && (
-        <div
-          className={cn(
-            "absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize transition-colors duration-150 z-40",
-            isResizing ? 'bg-border' : 'hover:bg-border'
-          )}
-          onMouseDown={startResizing}
-        />
-      )}
 
       {/* Header with Professional Segmented Toggle */}
       <div className="px-4 py-3 border-b border-border/40 flex min-w-0 items-center justify-between gap-3">
@@ -2795,30 +2724,36 @@ export default function PropertiesPanel({
                             }
 
                             const backendFieldDescription = String((backendSchema?.inputSchema as Record<string, any> | undefined)?.[field.key]?.description || '');
-                            const contextualHelpText = buildContextualFieldHelp({
+                            const resolvedFieldHelp = resolveFieldHelp({
                               nodeType: selectedNode.data.type,
                               nodeLabel: canonicalTypeDisplayName,
+                              fieldName: field.key,
                               fieldKey: field.key,
                               fieldLabel: field.label,
                               fieldType: field.type,
-                              fieldDescription: backendFieldDescription,
+                              description: backendFieldDescription,
                               placeholder: field.placeholder,
                               options: field.options,
                               config: selectedNode.data.config || {},
-                              fallbackHelpText: field.helpText,
+                              helpText: field.helpText,
+                              helpCategory: field.helpCategory,
+                              docsUrl: field.docsUrl,
+                              exampleValue: field.exampleValue,
+                              operation: (selectedNode.data.config || {}).operation,
+                              resource: (selectedNode.data.config || {}).resource,
                             });
-
-                            // Get dynamic helpText for Instagram operation field
+                            const contextualHelpText = resolvedFieldHelp?.description || '';
                             let effectiveHelpText = contextualHelpText || field.helpText;
-                            if (selectedNode.data.type === 'instagram' && field.key === 'operation') {
-                              const operationValue = (selectedNode.data.config || {})[field.key] ?? field.defaultValue ?? 'create_image_post';
-                              effectiveHelpText = getInstagramOperationHelpText(String(operationValue));
-                            }
                             
-                            const helpInfo = effectiveHelpText ? parseHelpText(effectiveHelpText) : null;
+                            const helpInfo = resolvedFieldHelp
+                              ? {
+                                  title: resolvedFieldHelp.title,
+                                  steps: buildReadableHelpSteps(resolvedFieldHelp.description, field.placeholder),
+                                }
+                              : effectiveHelpText ? parseHelpText(effectiveHelpText) : null;
                             const hasHelpLink = helpInfo !== null;
                             const helpVerb = field.type === 'select' ? 'choose' : 'set';
-                            const fieldHelpTitle = `How to ${helpVerb} ${field.label}?`;
+                            const fieldHelpTitle = resolvedFieldHelp?.title || `How to ${helpVerb} ${field.label}?`;
 
                             // ✅ SCHEMA-DRIVEN UI: Get validation error for this field
                             const fieldError = validationErrors[field.key];
@@ -3085,6 +3020,9 @@ export default function PropertiesPanel({
                                                 helpCategory={field.helpCategory}
                                                 docsUrl={field.docsUrl}
                                                 exampleValue={field.exampleValue}
+                                                options={field.options}
+                                                config={selectedNode.data.config || {}}
+                                                resolvedHelpContent={resolvedFieldHelp}
                                               />
                                             )}
                                           </div>

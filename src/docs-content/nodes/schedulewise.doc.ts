@@ -29,7 +29,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Start date filter for getSchedules (ISO 8601, e.g. \"2024-01-01\"). Supports {{ }} expressions.",
-              "helpText": "What this field is: Start date filter for getSchedules (ISO 8601, e.g. \"2024-01-01\"). Supports {{ }} expressions. for ScheduleWise / Execute.\nHow to fill it: Enter the date from value requested by ScheduleWise, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dateFrom}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Start date filter for getSchedules . Supports {{ }} expressions..\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2024-01-01.\nTip: Use {{$json.dateFrom}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "2024-01-01",
               "example": "2024-01-01"
             },
@@ -39,7 +39,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "End date filter for getSchedules (ISO 8601). Supports {{ }} expressions.",
-              "helpText": "What this field is: End date filter for getSchedules (ISO 8601). Supports {{ }} expressions. for ScheduleWise / Execute.\nHow to fill it: Enter the date to value requested by ScheduleWise, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dateTo}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for End date filter for getSchedules . Supports {{ }} expressions..\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2024-01-31.\nTip: Use {{$json.dateTo}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "2024-01-31",
               "example": "2024-01-31"
             },
@@ -49,7 +49,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Patient identifier. Supports {{ }} expressions.",
-              "helpText": "What this field is: Patient identifier. Supports {{ }} expressions. for ScheduleWise / Execute.\nWhere to find it: Open the item in ScheduleWise and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.patientId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Patient identifier. Supports {{ }} expressions. that tells ScheduleWise which item to use.\nWhere to find it: Open the item in ScheduleWise and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: patient_123.\nTip: Use {{$json.patientId}} when an earlier ScheduleWise step provides this value.",
               "placeholder": "patient_123",
               "example": "patient_123"
             },
@@ -59,7 +59,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Staff member identifier. Supports {{ }} expressions.",
-              "helpText": "What this field is: Staff member identifier. Supports {{ }} expressions. for ScheduleWise / Execute.\nWhere to find it: Open the item in ScheduleWise and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.staffId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Staff member identifier. Supports {{ }} expressions. that tells ScheduleWise which item to use.\nWhere to find it: Open the item in ScheduleWise and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: staff_456.\nTip: Use {{$json.staffId}} when an earlier ScheduleWise step provides this value.",
               "placeholder": "staff_456",
               "example": "staff_456"
             },
@@ -69,7 +69,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Appointment identifier (required for updateAppointment and deleteAppointment). Supports {{ }} expressions.",
-              "helpText": "What this field is: Appointment identifier (required for updateAppointment and deleteAppointment). Supports {{ }} expressions. for ScheduleWise / Execute.\nWhere to find it: Open the item in ScheduleWise and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.appointmentId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Appointment identifier . Supports {{ }} expressions. that tells ScheduleWise which item to use.\nWhere to find it: Open the item in ScheduleWise and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: appt_789.\nTip: Use {{$json.appointmentId}} when an earlier ScheduleWise step provides this value.",
               "placeholder": "appt_789",
               "example": "appt_789"
             },
@@ -79,7 +79,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Appointment start date/time (ISO 8601). Supports {{ }} expressions.",
-              "helpText": "What this field is: Appointment start date/time (ISO 8601). Supports {{ }} expressions. for ScheduleWise / Execute.\nHow to fill it: Enter the start date time value requested by ScheduleWise, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.startDateTime}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Appointment start date/time . Supports {{ }} expressions..\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2024-01-15T09:00:00Z.\nTip: Use {{$json.startDateTime}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "2024-01-15T09:00:00Z",
               "example": "2024-01-15T09:00:00Z"
             },
@@ -89,7 +89,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Appointment end date/time (ISO 8601). Supports {{ }} expressions.",
-              "helpText": "What this field is: Appointment end date/time (ISO 8601). Supports {{ }} expressions. for ScheduleWise / Execute.\nHow to fill it: Enter the end date time value requested by ScheduleWise, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.endDateTime}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Appointment end date/time . Supports {{ }} expressions..\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 2024-01-15T10:00:00Z.\nTip: Use {{$json.endDateTime}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "2024-01-15T10:00:00Z",
               "example": "2024-01-15T10:00:00Z"
             },
@@ -99,7 +99,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Type of service for the appointment. Supports {{ }} expressions.",
-              "helpText": "What this field is: Type of service for the appointment. Supports {{ }} expressions. for ScheduleWise / Execute.\nHow to fill it: Enter the service type value requested by ScheduleWise, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.serviceType}} or pick the value from the data picker.",
+              "helpText": "What this field is: Type of service for the appointment. Supports {{ }} expressions..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: consultation.\nTip: Use {{$json.serviceType}} when this value comes from an earlier step.",
               "placeholder": "consultation",
               "example": "consultation"
             },
@@ -109,7 +109,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Additional notes for the appointment. Supports {{ }} expressions.",
-              "helpText": "What this field is: Additional notes for the appointment. Supports {{ }} expressions. for ScheduleWise / Execute.\nHow to fill it: Enter the notes value requested by ScheduleWise, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.notes}} or pick the value from the data picker.",
+              "helpText": "What this field is: Additional notes for the appointment. Supports {{ }} expressions..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Patient requested morning slot.\nTip: Use {{$json.notes}} when this value comes from an earlier step.",
               "placeholder": "Patient requested morning slot",
               "example": "Patient requested morning slot"
             },
@@ -119,7 +119,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Appointment status (for updateAppointment). Supports {{ }} expressions.",
-              "helpText": "What this field is: Appointment status (for updateAppointment). Supports {{ }} expressions. for ScheduleWise / Execute.\nHow to fill it: Enter the status value requested by ScheduleWise, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Appointment status . Supports {{ }} expressions..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: confirmed.\nTip: This field is used for updateAppointment. Leave it blank when this operation does not need it.",
               "placeholder": "confirmed",
               "example": "confirmed"
             },
@@ -129,7 +129,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of results to return for getSchedules.",
-              "helpText": "What this field is: A number used for limit in ScheduleWise / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Maximum number of results to return for getSchedules..\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10",
               "defaultValue": "50"
@@ -140,7 +140,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "When true, permanently deletes the appointment (appends ?hardDelete=true). Default is soft delete.",
-              "helpText": "What this field is: An on/off choice for hard delete in ScheduleWise / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want ScheduleWise to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for When true, permanently deletes the appointment . Default is soft delete..\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use hard delete; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -151,7 +151,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "HTTP request timeout in seconds. Default: 30.",
-              "helpText": "What this field is: A number used for timeout sec in ScheduleWise / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.timeoutSec}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for HTTP request timeout in seconds. Default: 30..\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 15.\nTip: Use {{$json.timeoutSec}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "15",
               "example": "15",
               "defaultValue": "30"
@@ -162,7 +162,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Number of retry attempts on 5xx or network errors (exponential backoff). Default: 0.",
-              "helpText": "What this field is: A number used for retries in ScheduleWise / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.retries}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Number of retry attempts on 5xx or network errors . Default: 0..\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 0.\nTip: Use {{$json.retries}} when the number comes from an earlier step.",
               "placeholder": "0",
               "example": "0",
               "defaultValue": "0"
@@ -173,7 +173,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Output format: \"json\" (default) or \"raw\" (unparsed response body).",
-              "helpText": "What this field is: Output format: \"json\" (default) or \"raw\" (unparsed response body). for ScheduleWise / Execute.\nHow to fill it: Enter the output format value requested by ScheduleWise, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.outputFormat}} or pick the value from the data picker.",
+              "helpText": "What this field is: Output format: \"json\" or \"raw\" ..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: json.\nTip: Use {{$json.outputFormat}} when this value comes from an earlier step.",
               "placeholder": "json",
               "example": "json",
               "defaultValue": "json"
@@ -184,7 +184,7 @@ export const schedulewiseDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "When true, returns synthetic data without calling the ScheduleWise API. Useful for testing.",
-              "helpText": "What this field is: An on/off choice for mock mode in ScheduleWise / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want ScheduleWise to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for When true, returns synthetic data without calling the ScheduleWise API. Useful for testing..\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use mock mode; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"

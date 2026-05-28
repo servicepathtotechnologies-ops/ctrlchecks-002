@@ -29,7 +29,7 @@ export const stopAndErrorDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Error message",
-              "helpText": "What this field is: Error message for Stop And Error / Execute.\nHow to fill it: Type the message, prompt, or content you want Stop And Error to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Error message.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Validation failed.\nTip: Use {{$json.errorMessage}} when this value comes from an earlier step.",
               "placeholder": "Validation failed",
               "example": "Validation failed"
             }

@@ -8,16 +8,12 @@ export const outlookDoc: NodeDoc = {
   "description": "Send/receive emails via Microsoft Outlook API (OAuth)",
   "credentialType": "Microsoft Credential",
   "credentialSetupSteps": [
-    "What this is: Microsoft uses an OAuth connection so CtrlChecks can safely access your Microsoft account.",
-    "Go to portal.azure.com and sign in with your Microsoft account.",
-    "Go to Azure Active Directory -> App registrations -> New registration.",
-    "Give it a name (e.g. CtrlChecks Email) -> set Redirect URI to: http://localhost:3001/api/oauth/microsoft/callback -> Register.",
-    "Copy the Application (client) ID and Directory (tenant) ID.",
-    "Go to Certificates & Secrets -> New client secret -> Add. Copy the secret VALUE immediately.",
-    "Go to API permissions -> Add a permission -> Microsoft Graph -> Delegated -> add Mail.ReadWrite and Mail.Send.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Outlook -> enter Client ID, Secret, and Tenant ID -> Connect with Microsoft -> authorize.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Microsoft node and select the saved connection."
+    "What this is: The Outlook connection lets CtrlChecks access your Outlook account safely without putting secrets in workflow fields.",
+    "Where to start: Outlook account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Outlook, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Outlook.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Outlook step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.microsoft.com/en-us/graph/api/resources/mail-api-overview",
   "resources": [
@@ -46,7 +42,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Email subject (required for send operation)",
-              "helpText": "What this field is: The email subject line.\nExample: Invoice #{{$json.invoiceNumber}} from Acme Corp",
+              "helpText": "What this field is: Email subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello.\nTip: This field is used for send. Leave it blank when this operation does not need it.",
               "placeholder": "Hello",
               "example": "Hello"
             },
@@ -56,7 +52,7 @@ export const outlookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Email body content (required for send operation)",
-              "helpText": "What this field is: The full email body content.\nExample: Dear {{$json.name}}, please find your invoice attached. Total due: ${{$json.amount}}.",
+              "helpText": "What this field is: Structured data for Email body content.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Outlook.\nExample: Email content.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "Email content",
               "example": "Email content"
             },
@@ -66,7 +62,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Sender email address (optional - uses OAuth account if not provided)",
-              "helpText": "What this field is: Sender email address (optional - uses OAuth account if not provided) for Outlook / Send.\nHow to fill it: Enter the from value requested by Outlook, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.from}} or pick the value from the data picker.",
+              "helpText": "What this field is: Sender email address.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: your-email@outlook.com.\nTip: Use {{$json.from}} when this value comes from an earlier step.",
               "placeholder": "your-email@outlook.com",
               "example": "your-email@outlook.com"
             },
@@ -76,7 +72,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 Access Token for Outlook (if using OAuth authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Outlook.\nWhere to get it: Open the Outlook dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Outlook token, a secret password that lets CtrlChecks talk to Outlook safely.\nWhere to find it: Outlook account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Outlook.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-outlook-oauth-token",
               "example": "your-outlook-oauth-token"
             },
@@ -86,7 +82,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Outlook message ID (required for get operation)",
-              "helpText": "What this field is: Outlook message ID (required for get operation) for Outlook / Send.\nHow to fill it: Type the message, prompt, or content you want Outlook to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: The Outlook message ID that tells Outlook which item to use.\nWhere to find it: Open the item in Outlook and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: abc123def456.\nTip: Use {{$json.messageId}} when an earlier Outlook step provides this value.",
               "placeholder": "abc123def456",
               "example": "abc123def456"
             },
@@ -96,7 +92,7 @@ export const outlookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Outlook search query (for list/search operations)",
-              "helpText": "What this field is: Outlook search query (for list/search operations) for Outlook / Send.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Outlook which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Outlook search query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Outlook.\nExample: from:example@outlook.com.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "from:example@outlook.com",
               "example": "from:example@outlook.com"
             },
@@ -106,7 +102,7 @@ export const outlookDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of results (for list/search)",
-              "helpText": "What this field is: A number used for max results in Outlook / Send.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: A number used for max results in Outlook / Send.\nHow to fill it: Maximum number of emails to return for List and Search operations. Default 10.\nExample: 20 to return the 20 most recent matching emails.",
               "placeholder": "10",
               "example": "10",
               "defaultValue": "10"
@@ -150,7 +146,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Email subject (required for send operation)",
-              "helpText": "What this field is: Email subject (required for send operation) for Outlook / List.\nHow to fill it: Enter the subject value requested by Outlook, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Email subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello.\nTip: This field is used for send. Leave it blank when this operation does not need it.",
               "placeholder": "Hello",
               "example": "Hello"
             },
@@ -160,7 +156,7 @@ export const outlookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Email body content (required for send operation)",
-              "helpText": "What this field is: Email body content (required for send operation) for Outlook / List.\nHow to fill it: Type the message, prompt, or content you want Outlook to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Email body content.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Outlook.\nExample: Email content.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "Email content",
               "example": "Email content"
             },
@@ -170,7 +166,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Sender email address (optional - uses OAuth account if not provided)",
-              "helpText": "What this field is: Sender email address (optional - uses OAuth account if not provided) for Outlook / List.\nHow to fill it: Enter the from value requested by Outlook, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.from}} or pick the value from the data picker.",
+              "helpText": "What this field is: Sender email address.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: your-email@outlook.com.\nTip: Use {{$json.from}} when this value comes from an earlier step.",
               "placeholder": "your-email@outlook.com",
               "example": "your-email@outlook.com"
             },
@@ -180,7 +176,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 Access Token for Outlook (if using OAuth authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Outlook.\nWhere to get it: Open the Outlook dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Outlook token, a secret password that lets CtrlChecks talk to Outlook safely.\nWhere to find it: Outlook account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Outlook.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-outlook-oauth-token",
               "example": "your-outlook-oauth-token"
             },
@@ -190,7 +186,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Outlook message ID (required for get operation)",
-              "helpText": "What this field is: Outlook message ID (required for get operation) for Outlook / List.\nHow to fill it: Type the message, prompt, or content you want Outlook to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: The Outlook message ID that tells Outlook which item to use.\nWhere to find it: Open the item in Outlook and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: abc123def456.\nTip: Use {{$json.messageId}} when an earlier Outlook step provides this value.",
               "placeholder": "abc123def456",
               "example": "abc123def456"
             },
@@ -200,7 +196,7 @@ export const outlookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Outlook search query (for list/search operations)",
-              "helpText": "What this field is: Outlook search query (for list/search operations) for Outlook / List.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Outlook which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Outlook search query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Outlook.\nExample: from:example@outlook.com.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "from:example@outlook.com",
               "example": "from:example@outlook.com"
             },
@@ -210,7 +206,7 @@ export const outlookDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of results (for list/search)",
-              "helpText": "What this field is: A number used for max results in Outlook / List.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: A number used for max results in Outlook / List.\nHow to fill it: Maximum number of emails to return for List and Search operations. Default 10.\nExample: 20 to return the 20 most recent matching emails.",
               "placeholder": "10",
               "example": "10",
               "defaultValue": "10"
@@ -262,7 +258,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Email subject (required for send operation)",
-              "helpText": "What this field is: Email subject (required for send operation) for Outlook / Get.\nHow to fill it: Enter the subject value requested by Outlook, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Email subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello.\nTip: This field is used for send. Leave it blank when this operation does not need it.",
               "placeholder": "Hello",
               "example": "Hello"
             },
@@ -272,7 +268,7 @@ export const outlookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Email body content (required for send operation)",
-              "helpText": "What this field is: Email body content (required for send operation) for Outlook / Get.\nHow to fill it: Type the message, prompt, or content you want Outlook to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Email body content.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Outlook.\nExample: Email content.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "Email content",
               "example": "Email content"
             },
@@ -282,7 +278,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Sender email address (optional - uses OAuth account if not provided)",
-              "helpText": "What this field is: Sender email address (optional - uses OAuth account if not provided) for Outlook / Get.\nHow to fill it: Enter the from value requested by Outlook, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.from}} or pick the value from the data picker.",
+              "helpText": "What this field is: Sender email address.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: your-email@outlook.com.\nTip: Use {{$json.from}} when this value comes from an earlier step.",
               "placeholder": "your-email@outlook.com",
               "example": "your-email@outlook.com"
             },
@@ -292,7 +288,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 Access Token for Outlook (if using OAuth authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Outlook.\nWhere to get it: Open the Outlook dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Outlook token, a secret password that lets CtrlChecks talk to Outlook safely.\nWhere to find it: Outlook account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Outlook.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-outlook-oauth-token",
               "example": "your-outlook-oauth-token"
             },
@@ -302,7 +298,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Outlook message ID (required for get operation)",
-              "helpText": "What this field is: The unique ID of an Outlook email.\nWhere to find it: Run an Outlook List or Search operation first — the output includes a messageId for each email.\nTip: Use {{$json.messageId}} from the previous step.",
+              "helpText": "What this field is: The Outlook message ID that tells Outlook which item to use.\nWhere to find it: Open the item in Outlook and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: abc123def456.\nTip: Use {{$json.messageId}} when an earlier Outlook step provides this value.",
               "placeholder": "abc123def456",
               "example": "abc123def456"
             },
@@ -312,7 +308,7 @@ export const outlookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Outlook search query (for list/search operations)",
-              "helpText": "What this field is: Outlook search query (for list/search operations) for Outlook / Get.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Outlook which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Outlook search query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Outlook.\nExample: from:example@outlook.com.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "from:example@outlook.com",
               "example": "from:example@outlook.com"
             },
@@ -322,7 +318,7 @@ export const outlookDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of results (for list/search)",
-              "helpText": "What this field is: A number used for max results in Outlook / Get.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: A number used for max results in Outlook / Get.\nHow to fill it: Maximum number of emails to return for List and Search operations. Default 10.\nExample: 20 to return the 20 most recent matching emails.",
               "placeholder": "10",
               "example": "10",
               "defaultValue": "10"
@@ -367,7 +363,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Email subject (required for send operation)",
-              "helpText": "What this field is: Email subject (required for send operation) for Outlook / Search.\nHow to fill it: Enter the subject value requested by Outlook, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Email subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello.\nTip: This field is used for send. Leave it blank when this operation does not need it.",
               "placeholder": "Hello",
               "example": "Hello"
             },
@@ -377,7 +373,7 @@ export const outlookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Email body content (required for send operation)",
-              "helpText": "What this field is: Email body content (required for send operation) for Outlook / Search.\nHow to fill it: Type the message, prompt, or content you want Outlook to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Email body content.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Outlook.\nExample: Email content.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "Email content",
               "example": "Email content"
             },
@@ -387,7 +383,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Sender email address (optional - uses OAuth account if not provided)",
-              "helpText": "What this field is: Sender email address (optional - uses OAuth account if not provided) for Outlook / Search.\nHow to fill it: Enter the from value requested by Outlook, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.from}} or pick the value from the data picker.",
+              "helpText": "What this field is: Sender email address.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: your-email@outlook.com.\nTip: Use {{$json.from}} when this value comes from an earlier step.",
               "placeholder": "your-email@outlook.com",
               "example": "your-email@outlook.com"
             },
@@ -397,7 +393,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 Access Token for Outlook (if using OAuth authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Outlook.\nWhere to get it: Open the Outlook dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Outlook token, a secret password that lets CtrlChecks talk to Outlook safely.\nWhere to find it: Outlook account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Outlook.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-outlook-oauth-token",
               "example": "your-outlook-oauth-token"
             },
@@ -407,7 +403,7 @@ export const outlookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Outlook message ID (required for get operation)",
-              "helpText": "What this field is: Outlook message ID (required for get operation) for Outlook / Search.\nHow to fill it: Type the message, prompt, or content you want Outlook to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: The Outlook message ID that tells Outlook which item to use.\nWhere to find it: Open the item in Outlook and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: abc123def456.\nTip: Use {{$json.messageId}} when an earlier Outlook step provides this value.",
               "placeholder": "abc123def456",
               "example": "abc123def456"
             },
@@ -417,7 +413,7 @@ export const outlookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Outlook search query (for list/search operations)",
-              "helpText": "What this field is: Outlook search query (for list/search operations) for Outlook / Search.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Outlook which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.query}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Outlook search query.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Outlook.\nExample: from:example@outlook.com.\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "from:example@outlook.com",
               "example": "from:example@outlook.com"
             },
@@ -427,7 +423,7 @@ export const outlookDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of results (for list/search)",
-              "helpText": "What this field is: A number used for max results in Outlook / Search.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.maxResults}} or pick the value from the data picker.",
+              "helpText": "What this field is: A number used for max results in Outlook / Search.\nHow to fill it: Maximum number of emails to return for List and Search operations. Default 10.\nExample: 20 to return the 20 most recent matching emails.",
               "placeholder": "10",
               "example": "10",
               "defaultValue": "10"

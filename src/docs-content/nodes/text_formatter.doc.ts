@@ -29,7 +29,7 @@ export const textFormatterDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Text template with placeholders (e.g., \"Hello {{name}}\")",
-              "helpText": "What this field is: Text template with placeholders (e.g., \"Hello {{name}}\") for Text Formatter / Execute.\nHow to fill it: Type the message, prompt, or content you want Text Formatter to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Text template with placeholders.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.template}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}",
               "example": "Hello {{$json.name}}"
             },
@@ -39,7 +39,7 @@ export const textFormatterDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Values to substitute in template (optional if using $json syntax)",
-              "helpText": "What this field is: Values to substitute in template (optional if using $json syntax) for Text Formatter / Execute.\nHow to fill it: Enter valid JSON in the format Text Formatter expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.values}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Values to substitute in template.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Text Formatter.\nExample: {\"name\":\"John\",\"orderId\":\"12345\"}.\nTip: Use {{$json.values}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"John\",\"orderId\":\"12345\"}",
               "example": "{\"name\":\"John\",\"orderId\":\"12345\"}"
             }

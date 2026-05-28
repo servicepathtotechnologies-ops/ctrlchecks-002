@@ -8,16 +8,12 @@ export const intuitSmesDoc: NodeDoc = {
   "description": "Intuit SME integration for managing customer data and financial operations via Intuit APIs",
   "credentialType": "Intuit Credential",
   "credentialSetupSteps": [
-    "What this is: Intuit uses an OAuth connection so CtrlChecks can safely access your Intuit account.",
-    "Go to developer.intuit.com and sign in with your Intuit/QuickBooks account.",
-    "Click Dashboard -> Create an app -> select \"QuickBooks Online and Payments\".",
-    "Give it a name (e.g. CtrlChecks) -> Create app.",
-    "Under \"Keys & OAuth\", note the Client ID and Client Secret.",
-    "Click \"Add URI\" under Redirect URIs and enter: http://localhost:3001/api/oauth/intuit/callback -> Save.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> QuickBooks -> click \"Connect with Intuit\" -> sign in -> authorize.",
-    "Run a test step (e.g. list customers) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Intuit node and select the saved connection."
+    "What this is: The Intuit - SME'S connection lets CtrlChecks access your Intuit - SME'S account safely without putting secrets in workflow fields.",
+    "Where to start: Intuit - SME'S account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Intuit - SME'S, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Intuit - SME'S.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Intuit - SME'S step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developer.intuit.com/app/developer/qbo/docs/get-started",
   "resources": [
@@ -36,7 +32,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Intuit API Key or Access Token (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Intuit - SME'S.\nWhere to get it: Open the Intuit - SME'S dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Intuit - SME'S token, a secret password that lets CtrlChecks talk to Intuit - SME'S safely.\nWhere to find it: Intuit - SME'S account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Intuit - SME'S.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-intuit-api-key",
               "example": "your-intuit-api-key",
               "notes": "Stored and displayed as a masked credential value."
@@ -47,7 +43,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Intuit OAuth2 Access Token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Intuit - SME'S.\nWhere to get it: Open the Intuit - SME'S dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Intuit - SME'S token, a secret password that lets CtrlChecks talk to Intuit - SME'S safely.\nWhere to find it: Intuit - SME'S account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Intuit - SME'S.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -57,7 +53,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer ID (required for customer-specific operations)",
-              "helpText": "What this field is: Customer ID (required for customer-specific operations) for Intuit - SME'S / GetCustomers.\nWhere to find it: Open the item in Intuit - SME'S and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.customerId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Customer ID that tells Intuit - SME'S which item to use.\nWhere to find it: Open the item in Intuit - SME'S and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: CUST-123.\nTip: Use {{$json.customerId}} when an earlier Intuit - SME'S step provides this value.",
               "placeholder": "CUST-123",
               "example": "CUST-123"
             },
@@ -67,7 +63,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer name (for createCustomer operation)",
-              "helpText": "What this field is: Customer name (for createCustomer operation) for Intuit - SME'S / GetCustomers.\nHow to fill it: Enter the name value requested by Intuit - SME'S, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.name}} or pick the value from the data picker.",
+              "helpText": "What this field is: Customer name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Acme Corp.\nTip: This field is used for createCustomer. Leave it blank when this operation does not need it.",
               "placeholder": "Acme Corp",
               "example": "Acme Corp"
             },
@@ -87,7 +83,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Invoice amount (for createInvoice operation)",
-              "helpText": "What this field is: A number used for amount in Intuit - SME'S / GetCustomers.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.amount}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Invoice amount.\nHow to fill it: Enter digits only, using the unit expected by Intuit - SME'S. Check whether the service expects cents or a normal decimal amount.\nExample: 1000.\nTip: Use {{$json.amount}} when an earlier order, invoice, or form provides the amount.",
               "placeholder": "1000",
               "example": "1000"
             },
@@ -97,7 +93,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Additional data for create/update operations",
-              "helpText": "What this field is: Additional data for create/update operations for Intuit - SME'S / GetCustomers.\nHow to fill it: Enter valid JSON in the format Intuit - SME'S expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Additional data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Intuit - SME'S.\nExample: {\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}",
               "example": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}"
             }
@@ -137,7 +133,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Intuit API Key or Access Token (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Intuit - SME'S.\nWhere to get it: Open the Intuit - SME'S dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Intuit - SME'S token, a secret password that lets CtrlChecks talk to Intuit - SME'S safely.\nWhere to find it: Intuit - SME'S account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Intuit - SME'S.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-intuit-api-key",
               "example": "your-intuit-api-key",
               "notes": "Stored and displayed as a masked credential value."
@@ -148,7 +144,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Intuit OAuth2 Access Token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Intuit - SME'S.\nWhere to get it: Open the Intuit - SME'S dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Intuit - SME'S token, a secret password that lets CtrlChecks talk to Intuit - SME'S safely.\nWhere to find it: Intuit - SME'S account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Intuit - SME'S.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -158,7 +154,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer ID (required for customer-specific operations)",
-              "helpText": "What this field is: Customer ID (required for customer-specific operations) for Intuit - SME'S / CreateInvoice.\nWhere to find it: Open the item in Intuit - SME'S and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.customerId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Customer ID that tells Intuit - SME'S which item to use.\nWhere to find it: Open the item in Intuit - SME'S and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: CUST-123.\nTip: Use {{$json.customerId}} when an earlier Intuit - SME'S step provides this value.",
               "placeholder": "CUST-123",
               "example": "CUST-123"
             },
@@ -168,7 +164,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer name (for createCustomer operation)",
-              "helpText": "What this field is: Customer name (for createCustomer operation) for Intuit - SME'S / CreateInvoice.\nHow to fill it: Enter the name value requested by Intuit - SME'S, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.name}} or pick the value from the data picker.",
+              "helpText": "What this field is: Customer name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Acme Corp.\nTip: This field is used for createCustomer. Leave it blank when this operation does not need it.",
               "placeholder": "Acme Corp",
               "example": "Acme Corp"
             },
@@ -188,7 +184,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Invoice amount (for createInvoice operation)",
-              "helpText": "What this field is: A number used for amount in Intuit - SME'S / CreateInvoice.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.amount}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Invoice amount.\nHow to fill it: Enter digits only, using the unit expected by Intuit - SME'S. Check whether the service expects cents or a normal decimal amount.\nExample: 1000.\nTip: Use {{$json.amount}} when an earlier order, invoice, or form provides the amount.",
               "placeholder": "1000",
               "example": "1000"
             },
@@ -198,7 +194,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Additional data for create/update operations",
-              "helpText": "What this field is: Additional data for create/update operations for Intuit - SME'S / CreateInvoice.\nHow to fill it: Enter valid JSON in the format Intuit - SME'S expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Additional data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Intuit - SME'S.\nExample: {\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}",
               "example": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}"
             }
@@ -238,7 +234,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Intuit API Key or Access Token (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Intuit - SME'S.\nWhere to get it: Open the Intuit - SME'S dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Intuit - SME'S token, a secret password that lets CtrlChecks talk to Intuit - SME'S safely.\nWhere to find it: Intuit - SME'S account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Intuit - SME'S.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-intuit-api-key",
               "example": "your-intuit-api-key",
               "notes": "Stored and displayed as a masked credential value."
@@ -249,7 +245,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Intuit OAuth2 Access Token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Intuit - SME'S.\nWhere to get it: Open the Intuit - SME'S dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Intuit - SME'S token, a secret password that lets CtrlChecks talk to Intuit - SME'S safely.\nWhere to find it: Intuit - SME'S account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Intuit - SME'S.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -259,7 +255,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer ID (required for customer-specific operations)",
-              "helpText": "What this field is: Customer ID (required for customer-specific operations) for Intuit - SME'S / GetInvoices.\nWhere to find it: Open the item in Intuit - SME'S and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.customerId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Customer ID that tells Intuit - SME'S which item to use.\nWhere to find it: Open the item in Intuit - SME'S and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: CUST-123.\nTip: Use {{$json.customerId}} when an earlier Intuit - SME'S step provides this value.",
               "placeholder": "CUST-123",
               "example": "CUST-123"
             },
@@ -269,7 +265,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer name (for createCustomer operation)",
-              "helpText": "What this field is: Customer name (for createCustomer operation) for Intuit - SME'S / GetInvoices.\nHow to fill it: Enter the name value requested by Intuit - SME'S, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.name}} or pick the value from the data picker.",
+              "helpText": "What this field is: Customer name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Acme Corp.\nTip: This field is used for createCustomer. Leave it blank when this operation does not need it.",
               "placeholder": "Acme Corp",
               "example": "Acme Corp"
             },
@@ -289,7 +285,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Invoice amount (for createInvoice operation)",
-              "helpText": "What this field is: A number used for amount in Intuit - SME'S / GetInvoices.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.amount}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Invoice amount.\nHow to fill it: Enter digits only, using the unit expected by Intuit - SME'S. Check whether the service expects cents or a normal decimal amount.\nExample: 1000.\nTip: Use {{$json.amount}} when an earlier order, invoice, or form provides the amount.",
               "placeholder": "1000",
               "example": "1000"
             },
@@ -299,7 +295,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Additional data for create/update operations",
-              "helpText": "What this field is: Additional data for create/update operations for Intuit - SME'S / GetInvoices.\nHow to fill it: Enter valid JSON in the format Intuit - SME'S expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Additional data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Intuit - SME'S.\nExample: {\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}",
               "example": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}"
             }
@@ -339,7 +335,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Intuit API Key or Access Token (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Intuit - SME'S.\nWhere to get it: Open the Intuit - SME'S dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Intuit - SME'S token, a secret password that lets CtrlChecks talk to Intuit - SME'S safely.\nWhere to find it: Intuit - SME'S account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Intuit - SME'S.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-intuit-api-key",
               "example": "your-intuit-api-key",
               "notes": "Stored and displayed as a masked credential value."
@@ -350,7 +346,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Intuit OAuth2 Access Token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Intuit - SME'S.\nWhere to get it: Open the Intuit - SME'S dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Intuit - SME'S token, a secret password that lets CtrlChecks talk to Intuit - SME'S safely.\nWhere to find it: Intuit - SME'S account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Intuit - SME'S.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -360,7 +356,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer ID (required for customer-specific operations)",
-              "helpText": "What this field is: Customer ID (required for customer-specific operations) for Intuit - SME'S / CreateCustomer.\nWhere to find it: Open the item in Intuit - SME'S and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.customerId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Customer ID that tells Intuit - SME'S which item to use.\nWhere to find it: Open the item in Intuit - SME'S and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: CUST-123.\nTip: Use {{$json.customerId}} when an earlier Intuit - SME'S step provides this value.",
               "placeholder": "CUST-123",
               "example": "CUST-123"
             },
@@ -370,7 +366,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer name (for createCustomer operation)",
-              "helpText": "What this field is: Customer name (for createCustomer operation) for Intuit - SME'S / CreateCustomer.\nHow to fill it: Enter the name value requested by Intuit - SME'S, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.name}} or pick the value from the data picker.",
+              "helpText": "What this field is: Customer name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Acme Corp.\nTip: This field is used for createCustomer. Leave it blank when this operation does not need it.",
               "placeholder": "Acme Corp",
               "example": "Acme Corp"
             },
@@ -390,7 +386,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Invoice amount (for createInvoice operation)",
-              "helpText": "What this field is: A number used for amount in Intuit - SME'S / CreateCustomer.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.amount}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Invoice amount.\nHow to fill it: Enter digits only, using the unit expected by Intuit - SME'S. Check whether the service expects cents or a normal decimal amount.\nExample: 1000.\nTip: Use {{$json.amount}} when an earlier order, invoice, or form provides the amount.",
               "placeholder": "1000",
               "example": "1000"
             },
@@ -400,7 +396,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Additional data for create/update operations",
-              "helpText": "What this field is: Additional data for create/update operations for Intuit - SME'S / CreateCustomer.\nHow to fill it: Enter valid JSON in the format Intuit - SME'S expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Additional data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Intuit - SME'S.\nExample: {\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}",
               "example": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}"
             }
@@ -440,7 +436,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Intuit API Key or Access Token (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Intuit - SME'S.\nWhere to get it: Open the Intuit - SME'S dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Intuit - SME'S token, a secret password that lets CtrlChecks talk to Intuit - SME'S safely.\nWhere to find it: Intuit - SME'S account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Intuit - SME'S.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-intuit-api-key",
               "example": "your-intuit-api-key",
               "notes": "Stored and displayed as a masked credential value."
@@ -451,7 +447,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Intuit OAuth2 Access Token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Intuit - SME'S.\nWhere to get it: Open the Intuit - SME'S dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Intuit - SME'S token, a secret password that lets CtrlChecks talk to Intuit - SME'S safely.\nWhere to find it: Intuit - SME'S account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Intuit - SME'S.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -461,7 +457,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer ID (required for customer-specific operations)",
-              "helpText": "What this field is: Customer ID (required for customer-specific operations) for Intuit - SME'S / UpdateCustomer.\nWhere to find it: Open the item in Intuit - SME'S and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.customerId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Customer ID that tells Intuit - SME'S which item to use.\nWhere to find it: Open the item in Intuit - SME'S and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: CUST-123.\nTip: Use {{$json.customerId}} when an earlier Intuit - SME'S step provides this value.",
               "placeholder": "CUST-123",
               "example": "CUST-123"
             },
@@ -471,7 +467,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer name (for createCustomer operation)",
-              "helpText": "What this field is: Customer name (for createCustomer operation) for Intuit - SME'S / UpdateCustomer.\nHow to fill it: Enter the name value requested by Intuit - SME'S, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.name}} or pick the value from the data picker.",
+              "helpText": "What this field is: Customer name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Acme Corp.\nTip: This field is used for createCustomer. Leave it blank when this operation does not need it.",
               "placeholder": "Acme Corp",
               "example": "Acme Corp"
             },
@@ -491,7 +487,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Invoice amount (for createInvoice operation)",
-              "helpText": "What this field is: A number used for amount in Intuit - SME'S / UpdateCustomer.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.amount}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Invoice amount.\nHow to fill it: Enter digits only, using the unit expected by Intuit - SME'S. Check whether the service expects cents or a normal decimal amount.\nExample: 1000.\nTip: Use {{$json.amount}} when an earlier order, invoice, or form provides the amount.",
               "placeholder": "1000",
               "example": "1000"
             },
@@ -501,7 +497,7 @@ export const intuitSmesDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Additional data for create/update operations",
-              "helpText": "What this field is: Additional data for create/update operations for Intuit - SME'S / UpdateCustomer.\nHow to fill it: Enter valid JSON in the format Intuit - SME'S expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Additional data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Intuit - SME'S.\nExample: {\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}",
               "example": "{\"name\":\"Acme Corp\",\"email\":\"contact@acme.com\"}"
             }

@@ -30,9 +30,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preselectedCredentialTypeId?: string;
+  onSaved?: () => void;
 }
 
-export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTypeId }: Props) {
+export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTypeId, onSaved }: Props) {
   const { toast } = useToast();
   const { data: types = [] } = useCredentialTypes();
   const { data: connections = [] } = useConnections();
@@ -96,6 +97,7 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
       toast({ title: 'Connection saved', description: `${connectionName} is ready to use.` });
       onOpenChange(false);
       reset();
+      onSaved?.();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to save connection';
       getAIGuidance(
@@ -113,6 +115,7 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
     toast({ title: 'Connected!', description: `${selectedType?.displayName} connected successfully.` });
     onOpenChange(false);
     reset();
+    onSaved?.();
   }
 
   function reset() {

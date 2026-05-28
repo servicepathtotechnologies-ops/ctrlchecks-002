@@ -8,15 +8,12 @@ export const dropboxDoc: NodeDoc = {
   "description": "Dropbox file operations",
   "credentialType": "Dropbox Credential",
   "credentialSetupSteps": [
-    "What this is: Dropbox uses an OAuth connection so CtrlChecks can safely access your Dropbox account.",
-    "Go to dropbox.com/developers/apps and sign in with your Dropbox account.",
-    "Click \"Create app\" -> choose \"Scoped access\" -> \"Full Dropbox\" -> give it a name (e.g. CtrlChecks) -> Create app.",
-    "Under the \"Permissions\" tab, enable: files.metadata.read, files.content.read, files.content.write.",
-    "Under the \"Settings\" tab, add this Redirect URI: http://localhost:3001/api/oauth/dropbox/callback -> Add.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Dropbox -> click \"Connect with Dropbox\" -> sign in -> Allow.",
-    "Run a test step (e.g. list files in a folder) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Dropbox node and select the saved connection."
+    "What this is: The Dropbox connection lets CtrlChecks access your Dropbox account safely without putting secrets in workflow fields.",
+    "Where to start: Dropbox account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Dropbox, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Dropbox.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Dropbox step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.dropbox.com/oauth-guide",
   "resources": [
@@ -35,7 +32,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: The destination file path within your Dropbox.\nExample: /Reports/2025/January/report.pdf or /Uploads/{{$json.fileName}}",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             },
@@ -45,7 +42,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base64 payload for upload (alternative to data)",
-              "helpText": "What this field is: Base64 payload for upload (alternative to data) for Dropbox / Upload.\nHow to fill it: Enter the data base64 value requested by Dropbox, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dataBase64}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Base64 payload for upload that tells Dropbox which item to use.\nWhere to find it: Open the item in Dropbox and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: {{$json.dataBase64}}.\nTip: Use {{$json.dataBase64}} when an earlier Dropbox step provides this value.",
               "placeholder": "{{$json.dataBase64}}",
               "example": "{{$json.dataBase64}}"
             },
@@ -55,7 +52,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Base64 payload for upload",
-              "helpText": "What this field is: Base64 payload for upload for Dropbox / Upload.\nHow to fill it: Enter the data value requested by Dropbox, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Base64 payload for upload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Dropbox.\nExample: {{$json.data}}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             },
@@ -65,7 +62,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "List recursively (list operation)",
-              "helpText": "What this field is: An on/off choice for recursive in Dropbox / Upload.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Dropbox to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for List recursively.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use recursive; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -105,7 +102,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: File path for Dropbox / Download.\nHow to fill it: Enter the path value requested by Dropbox, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.path}} or pick the value from the data picker.",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             },
@@ -115,7 +112,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base64 payload for upload (alternative to data)",
-              "helpText": "What this field is: Base64 payload for upload (alternative to data) for Dropbox / Download.\nHow to fill it: Enter the data base64 value requested by Dropbox, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dataBase64}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Base64 payload for upload that tells Dropbox which item to use.\nWhere to find it: Open the item in Dropbox and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: {{$json.dataBase64}}.\nTip: Use {{$json.dataBase64}} when an earlier Dropbox step provides this value.",
               "placeholder": "{{$json.dataBase64}}",
               "example": "{{$json.dataBase64}}"
             },
@@ -125,7 +122,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Base64 payload for upload",
-              "helpText": "What this field is: Base64 payload for upload for Dropbox / Download.\nHow to fill it: Enter the data value requested by Dropbox, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Base64 payload for upload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Dropbox.\nExample: {{$json.data}}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             },
@@ -135,7 +132,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "List recursively (list operation)",
-              "helpText": "What this field is: An on/off choice for recursive in Dropbox / Download.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Dropbox to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for List recursively.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use recursive; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -175,7 +172,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: File path for Dropbox / List.\nHow to fill it: Enter the path value requested by Dropbox, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.path}} or pick the value from the data picker.",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             },
@@ -185,7 +182,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Base64 payload for upload (alternative to data)",
-              "helpText": "What this field is: Base64 payload for upload (alternative to data) for Dropbox / List.\nHow to fill it: Enter the data base64 value requested by Dropbox, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.dataBase64}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Base64 payload for upload that tells Dropbox which item to use.\nWhere to find it: Open the item in Dropbox and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: {{$json.dataBase64}}.\nTip: Use {{$json.dataBase64}} when an earlier Dropbox step provides this value.",
               "placeholder": "{{$json.dataBase64}}",
               "example": "{{$json.dataBase64}}"
             },
@@ -195,7 +192,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Base64 payload for upload",
-              "helpText": "What this field is: Base64 payload for upload for Dropbox / List.\nHow to fill it: Enter the data value requested by Dropbox, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Base64 payload for upload.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Dropbox.\nExample: {{$json.data}}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             },
@@ -205,7 +202,7 @@ export const dropboxDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "List recursively (list operation)",
-              "helpText": "What this field is: An on/off choice for recursive in Dropbox / List.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Dropbox to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for List recursively.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use recursive; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"

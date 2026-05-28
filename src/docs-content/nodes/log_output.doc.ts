@@ -29,7 +29,7 @@ export const logOutputDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Log level",
-              "helpText": "What this field is: Log level for Log Output / Execute.\nHow to fill it: Enter the level value requested by Log Output, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.level}} or pick the value from the data picker.",
+              "helpText": "What this field is: Log level.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: info.\nTip: Use {{$json.level}} when this value comes from an earlier step.",
               "placeholder": "info",
               "example": "info",
               "defaultValue": "info"
@@ -40,7 +40,7 @@ export const logOutputDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Log message",
-              "helpText": "What this field is: Log message for Log Output / Execute.\nHow to fill it: Type the message, prompt, or content you want Log Output to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Log message.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.message}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             }
           ],

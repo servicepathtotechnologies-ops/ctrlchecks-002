@@ -8,16 +8,12 @@ export const microsoftDynamicsDoc: NodeDoc = {
   "description": "Manage CRM data in Microsoft Dynamics 365 (contacts, leads, accounts, opportunities, and more) via the Web API",
   "credentialType": "Microsoft Credential",
   "credentialSetupSteps": [
-    "What this is: Microsoft uses an OAuth connection so CtrlChecks can safely access your Microsoft account.",
-    "Go to portal.azure.com and sign in with your Microsoft account.",
-    "Go to Azure Active Directory -> App registrations -> New registration.",
-    "Give it a name (e.g. CtrlChecks Email) -> set Redirect URI to: http://localhost:3001/api/oauth/microsoft/callback -> Register.",
-    "Copy the Application (client) ID and Directory (tenant) ID.",
-    "Go to Certificates & Secrets -> New client secret -> Add. Copy the secret VALUE immediately.",
-    "Go to API permissions -> Add a permission -> Microsoft Graph -> Delegated -> add Mail.ReadWrite and Mail.Send.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Outlook -> enter Client ID, Secret, and Tenant ID -> Connect with Microsoft -> authorize.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Microsoft node and select the saved connection."
+    "What this is: The Microsoft Dynamics connection lets CtrlChecks access your Microsoft Dynamics account safely without putting secrets in workflow fields.",
+    "Where to start: Microsoft Dynamics account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Microsoft Dynamics, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Microsoft Dynamics.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Microsoft Dynamics step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.microsoft.com/en-us/graph/api/resources/mail-api-overview",
   "resources": [
@@ -36,7 +32,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "helpText": "What this field is: Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com) for Microsoft Dynamics / GetRecords.\nHow to fill it: Paste the full web address Microsoft Dynamics should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.instanceUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Microsoft Dynamics 365 instance URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://yourorg.crm.dynamics.com.\nTip: Use {{$json.instanceUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://yourorg.crm.dynamics.com",
               "example": "https://yourorg.crm.dynamics.com"
             },
@@ -46,7 +42,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Azure AD OAuth2 access token (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Microsoft Dynamics.\nWhere to get it: Open the Microsoft Dynamics dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Microsoft Dynamics token, a secret password that lets CtrlChecks talk to Microsoft Dynamics safely.\nWhere to find it: Microsoft Dynamics account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Microsoft Dynamics.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -55,7 +51,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
-              "helpText": "What this field is: Resource chooses the kind of Microsoft Dynamics item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Microsoft Dynamics.\nExample: In Microsoft Dynamics, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Dynamics 365 entity type to work with.\nOptions: contacts, leads, accounts, opportunities, cases, tasks, or custom (then fill in Custom Entity).\nExample: contacts\nTip: Use {{$json.resource}} to set dynamically.",
               "placeholder": "contacts",
               "example": "contacts",
               "defaultValue": "contacts"
@@ -66,7 +62,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "helpText": "What this field is: Custom entity logical name when resource is \"custom\" (e.g. new_customentity) for Microsoft Dynamics / GetRecords.\nHow to fill it: Enter the custom entity value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.customEntity}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom entity logical name when resource is \"custom\".\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: new_customentity.\nTip: Use {{$json.customEntity}} when this value comes from an earlier step.",
               "placeholder": "new_customentity",
               "example": "new_customentity"
             },
@@ -76,7 +72,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "helpText": "What this field is: Record GUID (required for getRecord, updateRecord, deleteRecord) for Microsoft Dynamics / GetRecords.\nWhere to find it: Open the item in Microsoft Dynamics and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record unique ID that tells Microsoft Dynamics which item to use.\nWhere to find it: Open the item in Microsoft Dynamics and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 00000000-0000-0000-0000-000000000000.\nTip: Use {{$json.id}} when an earlier Microsoft Dynamics step provides this value.",
               "placeholder": "00000000-0000-0000-0000-000000000000",
               "example": "00000000-0000-0000-0000-000000000000"
             },
@@ -86,7 +82,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "helpText": "What this field is: Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names) for Microsoft Dynamics / GetRecords.\nHow to fill it: Enter valid JSON in the format Microsoft Dynamics expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field map.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: {\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
               "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
@@ -96,7 +92,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
-              "helpText": "What this field is: FetchXML query string (required for fetchXml operation) for Microsoft Dynamics / GetRecords.\nHow to fill it: Enter the fetch xml value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fetchXml}} or pick the value from the data picker.",
+              "helpText": "What this field is: FetchXML query string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: <fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>.\nTip: This field is used for fetchXml. Leave it blank when this operation does not need it.",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
             },
@@ -106,7 +102,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $select — comma-separated field names to return",
-              "helpText": "What this field is: OData $select — comma-separated field names to return for Microsoft Dynamics / GetRecords.\nHow to fill it: Enter the select value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.select}} or pick the value from the data picker.",
+              "helpText": "What this field is: OData $select — comma-separated field names to return.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: fullname,emailaddress1,telephone1.\nTip: Use {{$json.select}} when this value comes from an earlier step.",
               "placeholder": "fullname,emailaddress1,telephone1",
               "example": "fullname,emailaddress1,telephone1"
             },
@@ -116,7 +112,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $filter expression to filter records",
-              "helpText": "What this field is: OData $filter expression to filter records for Microsoft Dynamics / GetRecords.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Microsoft Dynamics which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData $filter expression to filter records.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: emailaddress1 eq 'john@example.com'.\nTip: Use {{$json.filter}} when an earlier step already prepared this data.",
               "placeholder": "emailaddress1 eq 'john@example.com'",
               "example": "emailaddress1 eq 'john@example.com'"
             },
@@ -126,7 +122,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
-              "helpText": "What this field is: A number used for top in Microsoft Dynamics / GetRecords.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.top}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for OData $top — maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.top}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -167,7 +163,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "helpText": "What this field is: Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com) for Microsoft Dynamics / GetRecord.\nHow to fill it: Paste the full web address Microsoft Dynamics should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.instanceUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Microsoft Dynamics 365 instance URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://yourorg.crm.dynamics.com.\nTip: Use {{$json.instanceUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://yourorg.crm.dynamics.com",
               "example": "https://yourorg.crm.dynamics.com"
             },
@@ -177,7 +173,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Azure AD OAuth2 access token (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Microsoft Dynamics.\nWhere to get it: Open the Microsoft Dynamics dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Microsoft Dynamics token, a secret password that lets CtrlChecks talk to Microsoft Dynamics safely.\nWhere to find it: Microsoft Dynamics account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Microsoft Dynamics.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -186,7 +182,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
-              "helpText": "What this field is: Resource chooses the kind of Microsoft Dynamics item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Microsoft Dynamics.\nExample: In Microsoft Dynamics, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Dynamics 365 entity type to work with.\nOptions: contacts, leads, accounts, opportunities, cases, tasks, or custom (then fill in Custom Entity).\nExample: contacts\nTip: Use {{$json.resource}} to set dynamically.",
               "placeholder": "contacts",
               "example": "contacts",
               "defaultValue": "contacts"
@@ -197,7 +193,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "helpText": "What this field is: Custom entity logical name when resource is \"custom\" (e.g. new_customentity) for Microsoft Dynamics / GetRecord.\nHow to fill it: Enter the custom entity value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.customEntity}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom entity logical name when resource is \"custom\".\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: new_customentity.\nTip: Use {{$json.customEntity}} when this value comes from an earlier step.",
               "placeholder": "new_customentity",
               "example": "new_customentity"
             },
@@ -207,7 +203,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "helpText": "What this field is: Record GUID (required for getRecord, updateRecord, deleteRecord) for Microsoft Dynamics / GetRecord.\nWhere to find it: Open the item in Microsoft Dynamics and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record unique ID that tells Microsoft Dynamics which item to use.\nWhere to find it: Open the item in Microsoft Dynamics and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 00000000-0000-0000-0000-000000000000.\nTip: Use {{$json.id}} when an earlier Microsoft Dynamics step provides this value.",
               "placeholder": "00000000-0000-0000-0000-000000000000",
               "example": "00000000-0000-0000-0000-000000000000"
             },
@@ -217,7 +213,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "helpText": "What this field is: Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names) for Microsoft Dynamics / GetRecord.\nHow to fill it: Enter valid JSON in the format Microsoft Dynamics expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field map.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: {\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
               "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
@@ -227,7 +223,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
-              "helpText": "What this field is: FetchXML query string (required for fetchXml operation) for Microsoft Dynamics / GetRecord.\nHow to fill it: Enter the fetch xml value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fetchXml}} or pick the value from the data picker.",
+              "helpText": "What this field is: FetchXML query string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: <fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>.\nTip: This field is used for fetchXml. Leave it blank when this operation does not need it.",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
             },
@@ -237,7 +233,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $select — comma-separated field names to return",
-              "helpText": "What this field is: OData $select — comma-separated field names to return for Microsoft Dynamics / GetRecord.\nHow to fill it: Enter the select value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.select}} or pick the value from the data picker.",
+              "helpText": "What this field is: OData $select — comma-separated field names to return.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: fullname,emailaddress1,telephone1.\nTip: Use {{$json.select}} when this value comes from an earlier step.",
               "placeholder": "fullname,emailaddress1,telephone1",
               "example": "fullname,emailaddress1,telephone1"
             },
@@ -247,7 +243,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $filter expression to filter records",
-              "helpText": "What this field is: OData $filter expression to filter records for Microsoft Dynamics / GetRecord.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Microsoft Dynamics which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData $filter expression to filter records.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: emailaddress1 eq 'john@example.com'.\nTip: Use {{$json.filter}} when an earlier step already prepared this data.",
               "placeholder": "emailaddress1 eq 'john@example.com'",
               "example": "emailaddress1 eq 'john@example.com'"
             },
@@ -257,7 +253,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
-              "helpText": "What this field is: A number used for top in Microsoft Dynamics / GetRecord.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.top}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for OData $top — maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.top}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -298,7 +294,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "helpText": "What this field is: Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com) for Microsoft Dynamics / CreateRecord.\nHow to fill it: Paste the full web address Microsoft Dynamics should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.instanceUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Microsoft Dynamics 365 instance URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://yourorg.crm.dynamics.com.\nTip: Use {{$json.instanceUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://yourorg.crm.dynamics.com",
               "example": "https://yourorg.crm.dynamics.com"
             },
@@ -308,7 +304,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Azure AD OAuth2 access token (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Microsoft Dynamics.\nWhere to get it: Open the Microsoft Dynamics dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Microsoft Dynamics token, a secret password that lets CtrlChecks talk to Microsoft Dynamics safely.\nWhere to find it: Microsoft Dynamics account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Microsoft Dynamics.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -317,7 +313,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
-              "helpText": "What this field is: Resource chooses the kind of Microsoft Dynamics item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Microsoft Dynamics.\nExample: In Microsoft Dynamics, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Dynamics 365 entity type to work with.\nOptions: contacts, leads, accounts, opportunities, cases, tasks, or custom (then fill in Custom Entity).\nExample: contacts\nTip: Use {{$json.resource}} to set dynamically.",
               "placeholder": "contacts",
               "example": "contacts",
               "defaultValue": "contacts"
@@ -328,7 +324,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "helpText": "What this field is: Custom entity logical name when resource is \"custom\" (e.g. new_customentity) for Microsoft Dynamics / CreateRecord.\nHow to fill it: Enter the custom entity value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.customEntity}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom entity logical name when resource is \"custom\".\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: new_customentity.\nTip: Use {{$json.customEntity}} when this value comes from an earlier step.",
               "placeholder": "new_customentity",
               "example": "new_customentity"
             },
@@ -338,7 +334,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "helpText": "What this field is: Record GUID (required for getRecord, updateRecord, deleteRecord) for Microsoft Dynamics / CreateRecord.\nWhere to find it: Open the item in Microsoft Dynamics and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record unique ID that tells Microsoft Dynamics which item to use.\nWhere to find it: Open the item in Microsoft Dynamics and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 00000000-0000-0000-0000-000000000000.\nTip: Use {{$json.id}} when an earlier Microsoft Dynamics step provides this value.",
               "placeholder": "00000000-0000-0000-0000-000000000000",
               "example": "00000000-0000-0000-0000-000000000000"
             },
@@ -348,7 +344,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "helpText": "What this field is: Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names) for Microsoft Dynamics / CreateRecord.\nHow to fill it: Enter valid JSON in the format Microsoft Dynamics expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field map.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: {\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
               "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
@@ -358,7 +354,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
-              "helpText": "What this field is: FetchXML query string (required for fetchXml operation) for Microsoft Dynamics / CreateRecord.\nHow to fill it: Enter the fetch xml value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fetchXml}} or pick the value from the data picker.",
+              "helpText": "What this field is: FetchXML query string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: <fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>.\nTip: This field is used for fetchXml. Leave it blank when this operation does not need it.",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
             },
@@ -368,7 +364,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $select — comma-separated field names to return",
-              "helpText": "What this field is: OData $select — comma-separated field names to return for Microsoft Dynamics / CreateRecord.\nHow to fill it: Enter the select value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.select}} or pick the value from the data picker.",
+              "helpText": "What this field is: OData $select — comma-separated field names to return.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: fullname,emailaddress1,telephone1.\nTip: Use {{$json.select}} when this value comes from an earlier step.",
               "placeholder": "fullname,emailaddress1,telephone1",
               "example": "fullname,emailaddress1,telephone1"
             },
@@ -378,7 +374,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $filter expression to filter records",
-              "helpText": "What this field is: OData $filter expression to filter records for Microsoft Dynamics / CreateRecord.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Microsoft Dynamics which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData $filter expression to filter records.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: emailaddress1 eq 'john@example.com'.\nTip: Use {{$json.filter}} when an earlier step already prepared this data.",
               "placeholder": "emailaddress1 eq 'john@example.com'",
               "example": "emailaddress1 eq 'john@example.com'"
             },
@@ -388,7 +384,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
-              "helpText": "What this field is: A number used for top in Microsoft Dynamics / CreateRecord.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.top}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for OData $top — maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.top}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -429,7 +425,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "helpText": "What this field is: Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com) for Microsoft Dynamics / UpdateRecord.\nHow to fill it: Paste the full web address Microsoft Dynamics should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.instanceUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Microsoft Dynamics 365 instance URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://yourorg.crm.dynamics.com.\nTip: Use {{$json.instanceUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://yourorg.crm.dynamics.com",
               "example": "https://yourorg.crm.dynamics.com"
             },
@@ -439,7 +435,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Azure AD OAuth2 access token (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Microsoft Dynamics.\nWhere to get it: Open the Microsoft Dynamics dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Microsoft Dynamics token, a secret password that lets CtrlChecks talk to Microsoft Dynamics safely.\nWhere to find it: Microsoft Dynamics account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Microsoft Dynamics.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -448,7 +444,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
-              "helpText": "What this field is: Resource chooses the kind of Microsoft Dynamics item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Microsoft Dynamics.\nExample: In Microsoft Dynamics, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Dynamics 365 entity type to work with.\nOptions: contacts, leads, accounts, opportunities, cases, tasks, or custom (then fill in Custom Entity).\nExample: contacts\nTip: Use {{$json.resource}} to set dynamically.",
               "placeholder": "contacts",
               "example": "contacts",
               "defaultValue": "contacts"
@@ -459,7 +455,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "helpText": "What this field is: Custom entity logical name when resource is \"custom\" (e.g. new_customentity) for Microsoft Dynamics / UpdateRecord.\nHow to fill it: Enter the custom entity value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.customEntity}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom entity logical name when resource is \"custom\".\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: new_customentity.\nTip: Use {{$json.customEntity}} when this value comes from an earlier step.",
               "placeholder": "new_customentity",
               "example": "new_customentity"
             },
@@ -469,7 +465,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "helpText": "What this field is: Record GUID (required for getRecord, updateRecord, deleteRecord) for Microsoft Dynamics / UpdateRecord.\nWhere to find it: Open the item in Microsoft Dynamics and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record unique ID that tells Microsoft Dynamics which item to use.\nWhere to find it: Open the item in Microsoft Dynamics and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 00000000-0000-0000-0000-000000000000.\nTip: Use {{$json.id}} when an earlier Microsoft Dynamics step provides this value.",
               "placeholder": "00000000-0000-0000-0000-000000000000",
               "example": "00000000-0000-0000-0000-000000000000"
             },
@@ -479,7 +475,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "helpText": "What this field is: Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names) for Microsoft Dynamics / UpdateRecord.\nHow to fill it: Enter valid JSON in the format Microsoft Dynamics expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field map.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: {\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
               "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
@@ -489,7 +485,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
-              "helpText": "What this field is: FetchXML query string (required for fetchXml operation) for Microsoft Dynamics / UpdateRecord.\nHow to fill it: Enter the fetch xml value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fetchXml}} or pick the value from the data picker.",
+              "helpText": "What this field is: FetchXML query string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: <fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>.\nTip: This field is used for fetchXml. Leave it blank when this operation does not need it.",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
             },
@@ -499,7 +495,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $select — comma-separated field names to return",
-              "helpText": "What this field is: OData $select — comma-separated field names to return for Microsoft Dynamics / UpdateRecord.\nHow to fill it: Enter the select value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.select}} or pick the value from the data picker.",
+              "helpText": "What this field is: OData $select — comma-separated field names to return.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: fullname,emailaddress1,telephone1.\nTip: Use {{$json.select}} when this value comes from an earlier step.",
               "placeholder": "fullname,emailaddress1,telephone1",
               "example": "fullname,emailaddress1,telephone1"
             },
@@ -509,7 +505,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $filter expression to filter records",
-              "helpText": "What this field is: OData $filter expression to filter records for Microsoft Dynamics / UpdateRecord.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Microsoft Dynamics which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData $filter expression to filter records.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: emailaddress1 eq 'john@example.com'.\nTip: Use {{$json.filter}} when an earlier step already prepared this data.",
               "placeholder": "emailaddress1 eq 'john@example.com'",
               "example": "emailaddress1 eq 'john@example.com'"
             },
@@ -519,7 +515,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
-              "helpText": "What this field is: A number used for top in Microsoft Dynamics / UpdateRecord.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.top}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for OData $top — maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.top}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -560,7 +556,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "helpText": "What this field is: Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com) for Microsoft Dynamics / DeleteRecord.\nHow to fill it: Paste the full web address Microsoft Dynamics should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.instanceUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Microsoft Dynamics 365 instance URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://yourorg.crm.dynamics.com.\nTip: Use {{$json.instanceUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://yourorg.crm.dynamics.com",
               "example": "https://yourorg.crm.dynamics.com"
             },
@@ -570,7 +566,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Azure AD OAuth2 access token (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Microsoft Dynamics.\nWhere to get it: Open the Microsoft Dynamics dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Microsoft Dynamics token, a secret password that lets CtrlChecks talk to Microsoft Dynamics safely.\nWhere to find it: Microsoft Dynamics account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Microsoft Dynamics.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -579,7 +575,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
-              "helpText": "What this field is: Resource chooses the kind of Microsoft Dynamics item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Microsoft Dynamics.\nExample: In Microsoft Dynamics, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Dynamics 365 entity type to work with.\nOptions: contacts, leads, accounts, opportunities, cases, tasks, or custom (then fill in Custom Entity).\nExample: contacts\nTip: Use {{$json.resource}} to set dynamically.",
               "placeholder": "contacts",
               "example": "contacts",
               "defaultValue": "contacts"
@@ -590,7 +586,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "helpText": "What this field is: Custom entity logical name when resource is \"custom\" (e.g. new_customentity) for Microsoft Dynamics / DeleteRecord.\nHow to fill it: Enter the custom entity value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.customEntity}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom entity logical name when resource is \"custom\".\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: new_customentity.\nTip: Use {{$json.customEntity}} when this value comes from an earlier step.",
               "placeholder": "new_customentity",
               "example": "new_customentity"
             },
@@ -600,7 +596,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "helpText": "What this field is: Record GUID (required for getRecord, updateRecord, deleteRecord) for Microsoft Dynamics / DeleteRecord.\nWhere to find it: Open the item in Microsoft Dynamics and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record unique ID that tells Microsoft Dynamics which item to use.\nWhere to find it: Open the item in Microsoft Dynamics and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 00000000-0000-0000-0000-000000000000.\nTip: Use {{$json.id}} when an earlier Microsoft Dynamics step provides this value.",
               "placeholder": "00000000-0000-0000-0000-000000000000",
               "example": "00000000-0000-0000-0000-000000000000"
             },
@@ -610,7 +606,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "helpText": "What this field is: Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names) for Microsoft Dynamics / DeleteRecord.\nHow to fill it: Enter valid JSON in the format Microsoft Dynamics expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field map.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: {\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
               "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
@@ -620,7 +616,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
-              "helpText": "What this field is: FetchXML query string (required for fetchXml operation) for Microsoft Dynamics / DeleteRecord.\nHow to fill it: Enter the fetch xml value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fetchXml}} or pick the value from the data picker.",
+              "helpText": "What this field is: FetchXML query string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: <fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>.\nTip: This field is used for fetchXml. Leave it blank when this operation does not need it.",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
             },
@@ -630,7 +626,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $select — comma-separated field names to return",
-              "helpText": "What this field is: OData $select — comma-separated field names to return for Microsoft Dynamics / DeleteRecord.\nHow to fill it: Enter the select value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.select}} or pick the value from the data picker.",
+              "helpText": "What this field is: OData $select — comma-separated field names to return.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: fullname,emailaddress1,telephone1.\nTip: Use {{$json.select}} when this value comes from an earlier step.",
               "placeholder": "fullname,emailaddress1,telephone1",
               "example": "fullname,emailaddress1,telephone1"
             },
@@ -640,7 +636,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $filter expression to filter records",
-              "helpText": "What this field is: OData $filter expression to filter records for Microsoft Dynamics / DeleteRecord.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Microsoft Dynamics which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData $filter expression to filter records.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: emailaddress1 eq 'john@example.com'.\nTip: Use {{$json.filter}} when an earlier step already prepared this data.",
               "placeholder": "emailaddress1 eq 'john@example.com'",
               "example": "emailaddress1 eq 'john@example.com'"
             },
@@ -650,7 +646,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
-              "helpText": "What this field is: A number used for top in Microsoft Dynamics / DeleteRecord.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.top}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for OData $top — maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.top}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -691,7 +687,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com)",
-              "helpText": "What this field is: Microsoft Dynamics 365 instance URL (e.g. https://yourorg.crm.dynamics.com) for Microsoft Dynamics / FetchXml.\nHow to fill it: Paste the full web address Microsoft Dynamics should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.instanceUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Microsoft Dynamics 365 instance URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://yourorg.crm.dynamics.com.\nTip: Use {{$json.instanceUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://yourorg.crm.dynamics.com",
               "example": "https://yourorg.crm.dynamics.com"
             },
@@ -701,7 +697,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Azure AD OAuth2 access token (stored as credential)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Microsoft Dynamics.\nWhere to get it: Open the Microsoft Dynamics dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Microsoft Dynamics token, a secret password that lets CtrlChecks talk to Microsoft Dynamics safely.\nWhere to find it: Microsoft Dynamics account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Microsoft Dynamics.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "token_..."
             },
             {
@@ -710,7 +706,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Dynamics 365 entity logical name (e.g. contacts, leads, accounts)",
-              "helpText": "What this field is: Resource chooses the kind of Microsoft Dynamics item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Microsoft Dynamics.\nExample: In Microsoft Dynamics, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Dynamics 365 entity type to work with.\nOptions: contacts, leads, accounts, opportunities, cases, tasks, or custom (then fill in Custom Entity).\nExample: contacts\nTip: Use {{$json.resource}} to set dynamically.",
               "placeholder": "contacts",
               "example": "contacts",
               "defaultValue": "contacts"
@@ -721,7 +717,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom entity logical name when resource is \"custom\" (e.g. new_customentity)",
-              "helpText": "What this field is: Custom entity logical name when resource is \"custom\" (e.g. new_customentity) for Microsoft Dynamics / FetchXml.\nHow to fill it: Enter the custom entity value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.customEntity}} or pick the value from the data picker.",
+              "helpText": "What this field is: Custom entity logical name when resource is \"custom\".\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: new_customentity.\nTip: Use {{$json.customEntity}} when this value comes from an earlier step.",
               "placeholder": "new_customentity",
               "example": "new_customentity"
             },
@@ -731,7 +727,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Record GUID (required for getRecord, updateRecord, deleteRecord)",
-              "helpText": "What this field is: Record GUID (required for getRecord, updateRecord, deleteRecord) for Microsoft Dynamics / FetchXml.\nWhere to find it: Open the item in Microsoft Dynamics and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Record unique ID that tells Microsoft Dynamics which item to use.\nWhere to find it: Open the item in Microsoft Dynamics and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 00000000-0000-0000-0000-000000000000.\nTip: Use {{$json.id}} when an earlier Microsoft Dynamics step provides this value.",
               "placeholder": "00000000-0000-0000-0000-000000000000",
               "example": "00000000-0000-0000-0000-000000000000"
             },
@@ -741,7 +737,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names)",
-              "helpText": "What this field is: Field map for createRecord/updateRecord operations (use Dynamics 365 logical field names) for Microsoft Dynamics / FetchXml.\nHow to fill it: Enter valid JSON in the format Microsoft Dynamics expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field map.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: {\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}",
               "example": "{\"firstname\":\"John\",\"lastname\":\"Doe\",\"emailaddress1\":\"john@example.com\"}"
             },
@@ -751,7 +747,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "FetchXML query string (required for fetchXml operation)",
-              "helpText": "What this field is: FetchXML query string (required for fetchXml operation) for Microsoft Dynamics / FetchXml.\nHow to fill it: Enter the fetch xml value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.fetchXml}} or pick the value from the data picker.",
+              "helpText": "What this field is: FetchXML query string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: <fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>.\nTip: This field is used for fetchXml. Leave it blank when this operation does not need it.",
               "placeholder": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>",
               "example": "<fetch><entity name=\"contact\"><attribute name=\"fullname\"/></entity></fetch>"
             },
@@ -761,7 +757,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $select — comma-separated field names to return",
-              "helpText": "What this field is: OData $select — comma-separated field names to return for Microsoft Dynamics / FetchXml.\nHow to fill it: Enter the select value requested by Microsoft Dynamics, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.select}} or pick the value from the data picker.",
+              "helpText": "What this field is: OData $select — comma-separated field names to return.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: fullname,emailaddress1,telephone1.\nTip: Use {{$json.select}} when this value comes from an earlier step.",
               "placeholder": "fullname,emailaddress1,telephone1",
               "example": "fullname,emailaddress1,telephone1"
             },
@@ -771,7 +767,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OData $filter expression to filter records",
-              "helpText": "What this field is: OData $filter expression to filter records for Microsoft Dynamics / FetchXml.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Microsoft Dynamics which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for OData $filter expression to filter records.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Microsoft Dynamics.\nExample: emailaddress1 eq 'john@example.com'.\nTip: Use {{$json.filter}} when an earlier step already prepared this data.",
               "placeholder": "emailaddress1 eq 'john@example.com'",
               "example": "emailaddress1 eq 'john@example.com'"
             },
@@ -781,7 +777,7 @@ export const microsoftDynamicsDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "OData $top — maximum number of records to return (max 5000)",
-              "helpText": "What this field is: A number used for top in Microsoft Dynamics / FetchXml.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.top}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for OData $top — maximum number of records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.top}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"

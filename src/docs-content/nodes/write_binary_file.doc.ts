@@ -29,7 +29,7 @@ export const writeBinaryFileDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "File path",
-              "helpText": "What this field is: Where to save the file, including the full path and filename.\nExample: /output/reports/summary.pdf or /tmp/export-{{$json.date}}.csv",
+              "helpText": "What this field is: The File path that tells Write Binary File which item to use.\nWhere to find it: Open the item in Write Binary File and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: /path/to/file.pdf.\nTip: Use {{$json.filePath}} when an earlier Write Binary File step provides this value.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             },
@@ -39,7 +39,7 @@ export const writeBinaryFileDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Binary data (base64)",
-              "helpText": "What this field is: Binary data (base64) for Write Binary File / Execute.\nHow to fill it: Enter the data value requested by Write Binary File, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Binary data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Write Binary File.\nExample: {{$json.data}}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             }

@@ -29,7 +29,7 @@ export const aiAgentDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "User input or prompt for the AI node",
-              "helpText": "What this field is: User input or prompt for the AI node for AI Agent / Execute.\nHow to fill it: Enter the user input value requested by AI Agent, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.userInput}} or pick the value from the data picker.",
+              "helpText": "What this field is: User input or prompt for the AI node.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Process this data.\nTip: Use {{$json.userInput}} when this value comes from an earlier step.",
               "placeholder": "Process this data",
               "example": "Process this data"
             },
@@ -39,7 +39,7 @@ export const aiAgentDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "LLM model selection",
-              "helpText": "What this field is: LLM model selection for AI Agent / Execute.\nHow to fill it: Enter the model value requested by AI Agent, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.model}} or pick the value from the data picker.",
+              "helpText": "What this field is: LLM model selection.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: gemini-3.5-flash.\nTip: Use {{$json.model}} when this value comes from an earlier step.",
               "placeholder": "gemini-3.5-flash",
               "example": "gemini-3.5-flash",
               "defaultValue": "gemini-3.5-flash"
@@ -50,7 +50,7 @@ export const aiAgentDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional memory configuration (disabled by default)",
-              "helpText": "What this field is: Optional memory configuration (disabled by default) for AI Agent / Execute.\nHow to fill it: Enter valid JSON in the format AI Agent expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.memory}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for memory configuration.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by AI Agent.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.memory}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             },
@@ -60,7 +60,7 @@ export const aiAgentDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional tool configuration (disabled by default)",
-              "helpText": "What this field is: Optional tool configuration (disabled by default) for AI Agent / Execute.\nHow to fill it: Enter valid JSON in the format AI Agent expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.tool}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for tool configuration.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by AI Agent.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.tool}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }

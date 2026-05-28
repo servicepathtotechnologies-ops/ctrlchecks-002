@@ -8,16 +8,12 @@ export const whatsappTriggerDoc: NodeDoc = {
   "description": "Trigger workflows on WhatsApp events: message received, delivered, read, conversation created",
   "credentialType": "Meta App Credentials",
   "credentialSetupSteps": [
-    "What this is: Meta Apps uses an OAuth connection so CtrlChecks can safely access your Meta Apps account.",
-    "Go to developers.facebook.com/apps and sign in with your Facebook account.",
-    "Click \"Create App\" -> select \"Business\" type -> Next -> give it a name -> Create App.",
-    "Under \"Add Products to Your App\", click \"Set Up\" on Facebook Login.",
-    "Go to Facebook Login -> Settings -> add this URL to \"Valid OAuth Redirect URIs\": http://localhost:3001/api/oauth/facebook/callback -> Save Changes.",
-    "Copy the App ID and App Secret from Settings -> Basic.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Facebook -> click \"Connect with Facebook\" -> sign in and authorize.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Meta Apps node and select the saved connection."
+    "What this is: The WhatsApp Trigger connection lets CtrlChecks access your WhatsApp Trigger account safely without putting secrets in workflow fields.",
+    "Where to start: Meta for Developers -> your app -> WhatsApp -> API Setup.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> WhatsApp Trigger, then sign in or paste the secret value requested there.",
+    "Example: the access token shown by Meta.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple WhatsApp Trigger step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.facebook.com/docs/facebook-login/web",
   "resources": [
@@ -36,7 +32,7 @@ export const whatsappTriggerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp event type",
-              "helpText": "What this field is: WhatsApp event type for WhatsApp Trigger / Execute.\nHow to fill it: Enter the event value requested by WhatsApp Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.event}} or pick the value from the data picker.",
+              "helpText": "What this field is: The type of WhatsApp event that will fire this trigger.\nOptions: message.received (incoming text), message.delivered, message.read, conversation.created.\nExample: message.received — the workflow starts when someone sends your business a WhatsApp message.",
               "placeholder": "message.received",
               "example": "message.received",
               "defaultValue": "message.received"
@@ -47,7 +43,7 @@ export const whatsappTriggerDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "WhatsApp Phone Number ID to listen on",
-              "helpText": "What this field is: WhatsApp Phone Number ID to listen on for WhatsApp Trigger / Execute.\nWhere to find it: Open the item in WhatsApp Trigger and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.phoneNumberId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The WhatsApp Phone Number ID to listen on that tells WhatsApp Trigger which item to use.\nWhere to find it: Open the item in WhatsApp Trigger and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.phoneNumberId}} when an earlier WhatsApp Trigger step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }

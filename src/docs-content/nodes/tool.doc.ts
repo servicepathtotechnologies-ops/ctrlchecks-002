@@ -29,7 +29,7 @@ export const toolDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Tool name",
-              "helpText": "What this field is: Tool name for Tool / Execute.\nHow to fill it: Enter the tool name value requested by Tool, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.toolName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Tool name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: http_request.\nTip: Use {{$json.toolName}} when this value comes from an earlier step.",
               "placeholder": "http_request",
               "example": "http_request"
             }

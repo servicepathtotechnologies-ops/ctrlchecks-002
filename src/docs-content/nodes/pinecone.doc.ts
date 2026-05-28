@@ -8,15 +8,12 @@ export const pineconeDoc: NodeDoc = {
   "description": "Upsert, query, and delete vectors in a Pinecone vector database index.",
   "credentialType": "Pinecone API Key",
   "credentialSetupSteps": [
-    "What this is: Pinecone uses an API key or account connection so CtrlChecks can safely access your Pinecone account.",
-    "Go to app.pinecone.io and sign in (or create a free account).",
-    "Click \"API Keys\" in the left sidebar -> \"Create API Key\".",
-    "Give it a name (e.g. CtrlChecks) and copy the key.",
-    "Also note your Pinecone environment (e.g. us-east-1-aws or gcp-starter) - shown on your index page.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Pinecone -> paste the API key and enter your environment -> Save.",
-    "Run a test step (e.g. list indexes) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Pinecone node and select the saved connection."
+    "What this is: The Pinecone connection lets CtrlChecks access your Pinecone account safely without putting secrets in workflow fields.",
+    "Where to start: Pinecone console -> API keys.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Pinecone, then sign in or paste the secret value requested there.",
+    "Example: the key shown by Pinecone.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Pinecone step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.pinecone.io/guides/getting-started/quickstart",
   "resources": [
@@ -35,7 +32,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Pinecone index name or host URL",
-              "helpText": "What this field is: Pinecone index name or host URL for Pinecone / Upsert.\nHow to fill it: Enter the index value requested by Pinecone, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.index}} or pick the value from the data picker.",
+              "helpText": "What this field is: Pinecone index name or host URL.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Index value.\nTip: Use {{$json.index}} when this value comes from an earlier step.",
               "placeholder": "Enter Index"
             },
             {
@@ -44,7 +41,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Pinecone API key",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Pinecone.\nWhere to get it: Open the Pinecone dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Pinecone API key, a secret password that lets CtrlChecks talk to Pinecone safely.\nWhere to find it: Pinecone console -> API keys.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the key shown by Pinecone.\nImportant: Treat this like a bank password. Use an API key that can access the target index.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -54,7 +51,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Embedding array of floats",
-              "helpText": "What this field is: Embedding array of floats for Pinecone / Upsert.\nHow to fill it: Enter valid JSON in the format Pinecone expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.vector}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Embedding array of floats.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pinecone.\nExample: [].\nTip: Use {{$json.vector}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]",
               "defaultValue": "[]"
@@ -65,7 +62,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Nearest-neighbor results count",
-              "helpText": "What this field is: A number used for top k in Pinecone / Upsert.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.topK}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Nearest-neighbor results count.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5.\nTip: Use {{$json.topK}} when the number comes from an earlier step.",
               "placeholder": "5",
               "example": "5",
               "defaultValue": "5"
@@ -76,7 +73,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Vector ID",
-              "helpText": "What this field is: Vector ID for Pinecone / Upsert.\nWhere to find it: Open the item in Pinecone and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Vector ID that tells Pinecone which item to use.\nWhere to find it: Open the item in Pinecone and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.id}} when an earlier Pinecone step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -86,7 +83,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Key-value metadata for upsert",
-              "helpText": "What this field is: Key-value metadata for upsert for Pinecone / Upsert.\nHow to fill it: Enter valid JSON in the format Pinecone expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.metadata}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Key-value metadata for upsert.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pinecone.\nExample: {}.\nTip: Use {{$json.metadata}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -97,7 +94,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Pinecone namespace",
-              "helpText": "What this field is: An optional namespace to organize vectors within an index.\nLeave blank to use the default namespace. Example: production or test",
+              "helpText": "What this field is: Pinecone namespace.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Namespace value.\nTip: Use {{$json.namespace}} when this value comes from an earlier step.",
               "placeholder": "Enter Namespace"
             }
           ],
@@ -134,7 +131,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Pinecone index name or host URL",
-              "helpText": "What this field is: Pinecone index name or host URL for Pinecone / Query.\nHow to fill it: Enter the index value requested by Pinecone, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.index}} or pick the value from the data picker.",
+              "helpText": "What this field is: Pinecone index name or host URL.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Index value.\nTip: Use {{$json.index}} when this value comes from an earlier step.",
               "placeholder": "Enter Index"
             },
             {
@@ -143,7 +140,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Pinecone API key",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Pinecone.\nWhere to get it: Open the Pinecone dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Pinecone API key, a secret password that lets CtrlChecks talk to Pinecone safely.\nWhere to find it: Pinecone console -> API keys.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the key shown by Pinecone.\nImportant: Treat this like a bank password. Use an API key that can access the target index.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -153,7 +150,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Embedding array of floats",
-              "helpText": "What this field is: The query vector — an array of numbers representing your search query.\nExample: [0.1,0.2,0.3,...] — usually generated by an AI embedding model from your search text.",
+              "helpText": "What this field is: Structured data for Embedding array of floats.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pinecone.\nExample: [].\nTip: Use {{$json.vector}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]",
               "defaultValue": "[]"
@@ -164,7 +161,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Nearest-neighbor results count",
-              "helpText": "What this field is: How many similar results to return.\nExample: 5 returns the 5 most similar vectors.",
+              "helpText": "What this field is: The number used for Nearest-neighbor results count.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5.\nTip: Use {{$json.topK}} when the number comes from an earlier step.",
               "placeholder": "5",
               "example": "5",
               "defaultValue": "5"
@@ -175,7 +172,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Vector ID",
-              "helpText": "What this field is: Vector ID for Pinecone / Query.\nWhere to find it: Open the item in Pinecone and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Vector ID that tells Pinecone which item to use.\nWhere to find it: Open the item in Pinecone and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.id}} when an earlier Pinecone step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -185,7 +182,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Key-value metadata for upsert",
-              "helpText": "What this field is: Key-value metadata for upsert for Pinecone / Query.\nHow to fill it: Enter valid JSON in the format Pinecone expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.metadata}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Key-value metadata for upsert.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pinecone.\nExample: {}.\nTip: Use {{$json.metadata}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -196,7 +193,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Pinecone namespace",
-              "helpText": "What this field is: An optional namespace to organize vectors within an index.\nLeave blank to use the default namespace. Example: production or test",
+              "helpText": "What this field is: Pinecone namespace.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Namespace value.\nTip: Use {{$json.namespace}} when this value comes from an earlier step.",
               "placeholder": "Enter Namespace"
             }
           ],
@@ -233,7 +230,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Pinecone index name or host URL",
-              "helpText": "What this field is: Pinecone index name or host URL for Pinecone / Delete.\nHow to fill it: Enter the index value requested by Pinecone, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.index}} or pick the value from the data picker.",
+              "helpText": "What this field is: Pinecone index name or host URL.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Index value.\nTip: Use {{$json.index}} when this value comes from an earlier step.",
               "placeholder": "Enter Index"
             },
             {
@@ -242,7 +239,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Pinecone API key",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Pinecone.\nWhere to get it: Open the Pinecone dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Pinecone API key, a secret password that lets CtrlChecks talk to Pinecone safely.\nWhere to find it: Pinecone console -> API keys.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the key shown by Pinecone.\nImportant: Treat this like a bank password. Use an API key that can access the target index.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -252,7 +249,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Embedding array of floats",
-              "helpText": "What this field is: Embedding array of floats for Pinecone / Delete.\nHow to fill it: Enter valid JSON in the format Pinecone expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.vector}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Embedding array of floats.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pinecone.\nExample: [].\nTip: Use {{$json.vector}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]",
               "defaultValue": "[]"
@@ -263,7 +260,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Nearest-neighbor results count",
-              "helpText": "What this field is: A number used for top k in Pinecone / Delete.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.topK}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Nearest-neighbor results count.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 5.\nTip: Use {{$json.topK}} when the number comes from an earlier step.",
               "placeholder": "5",
               "example": "5",
               "defaultValue": "5"
@@ -274,7 +271,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Vector ID",
-              "helpText": "What this field is: Vector ID for Pinecone / Delete.\nWhere to find it: Open the item in Pinecone and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Vector ID that tells Pinecone which item to use.\nWhere to find it: Open the item in Pinecone and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.id}} when an earlier Pinecone step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -284,7 +281,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Key-value metadata for upsert",
-              "helpText": "What this field is: Key-value metadata for upsert for Pinecone / Delete.\nHow to fill it: Enter valid JSON in the format Pinecone expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.metadata}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Key-value metadata for upsert.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Pinecone.\nExample: {}.\nTip: Use {{$json.metadata}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -295,7 +292,7 @@ export const pineconeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Pinecone namespace",
-              "helpText": "What this field is: An optional namespace to organize vectors within an index.\nLeave blank to use the default namespace. Example: production or test",
+              "helpText": "What this field is: Pinecone namespace.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Namespace value.\nTip: Use {{$json.namespace}} when this value comes from an earlier step.",
               "placeholder": "Enter Namespace"
             }
           ],

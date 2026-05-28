@@ -8,16 +8,13 @@ export const slackMessageDoc: NodeDoc = {
   "description": "Send messages to Slack channels or users",
   "credentialType": "Slack OAuth",
   "credentialSetupSteps": [
-    "What this is: Slack uses an OAuth connection so CtrlChecks can safely access your Slack account.",
-    "Go to api.slack.com/apps and sign in with your Slack account.",
-    "Click \"Create New App\" -> \"From scratch\" -> give it a name (e.g. CtrlChecks Bot) -> pick your workspace -> Create App.",
-    "In the left menu, click \"OAuth & Permissions\" -> scroll to \"Scopes\" -> \"Bot Token Scopes\" -> Add: chat:write (to post messages), channels:read (to list channels).",
-    "Scroll up and click \"Install to Workspace\" -> Allow.",
-    "Copy the \"Bot User OAuth Token\" - it starts with xoxb-. This is your Slack credential.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Slack -> paste the xoxb- token -> Save.",
-    "In your Slack workspace, open the channel you want to post to -> type /invite @YourBotName -> Enter. Then run a test step in CtrlChecks to confirm.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Slack node and select the saved connection."
+    "What this is: The Slack connection lets CtrlChecks access your Slack account safely without putting secrets in workflow fields.",
+    "Where to start: api.slack.com/apps -> your app -> OAuth & Permissions -> Bot User OAuth Token.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Slack, then sign in or paste the secret value requested there.",
+    "Example: xoxb-....",
+    "Important: In Slack, invite the bot to each private channel with /invite @YourBotName before sending messages.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Slack step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://api.slack.com/authentication/basics",
   "resources": [
@@ -36,7 +33,7 @@ export const slackMessageDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Slack channel or user ID",
-              "helpText": "What this field is: The Slack channel where the message will be posted.\nHow to fill it: Use the channel name with # like #general, or the channel ID like C01234567.\nWhere to find the channel ID: Right-click the channel name in Slack → View channel details → scroll to the bottom — the ID is shown there. It is safer to use the ID in case the channel is renamed.\nExample: #notifications or C01234567",
+              "helpText": "What this field is: The Slack channel where the message will be posted.\nWhere to find it: In Slack, open the channel, choose View channel details, and copy the channel ID from the About section.\nHow to fill it: Use a channel name like #general, or a channel ID like C1234567890.\nExample: #notifications or C1234567890.\nTip: Use the ID when the channel might be renamed.",
               "placeholder": "#general",
               "example": "#general"
             },
@@ -46,7 +43,7 @@ export const slackMessageDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Slack blocks JSON (optional)",
-              "helpText": "What this field is: Slack blocks JSON (optional) for Slack / Execute.\nHow to fill it: Enter the blocks value requested by Slack, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.blocks}} or pick the value from the data picker.",
+              "helpText": "What this field is: Slack Block Kit content for rich message layouts with sections, buttons, images, or dividers.\nHow to fill it: Enter a structured data array in [ ] brackets using Slack Block Kit format.\nExample: [{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*New lead:* {{$json.name}}\"}}].\nTip: Use app.slack.com/block-kit-builder to design the layout, then paste the result here.",
               "placeholder": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]",
               "example": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]"
             },
@@ -56,7 +53,7 @@ export const slackMessageDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Message text (alias for message)",
-              "helpText": "What this field is: The message text that will appear in the Slack channel.\nExample: New lead from {{$json.name}} ({{$json.email}}) — signed up at {{$json.createdAt}}.\nFormatting tips: *bold text*, _italic text_, `code`, and line breaks work in Slack messages.",
+              "helpText": "What this field is: The Slack message text.\nHow to fill it: Type the message. Slack supports simple formatting such as *bold*, _italic_, and line breaks.\nExample: New lead from {{$json.name}} ({{$json.email}}).\nTip: Use this field even when using Blocks so Slack has fallback text for notifications.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -65,7 +62,7 @@ export const slackMessageDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Bot username",
-              "helpText": "What this field is: Bot username for Slack / Execute.\nHow to fill it: Enter the username value requested by Slack, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.username}} or pick the value from the data picker.",
+              "helpText": "What this field is: The sender name Slack shows for this message.\nHow to fill it: Type a short display name, or leave blank to use the bot default name.\nExample: CtrlChecks Bot or Deployment Alert.\nTip: Some Slack apps do not allow overriding the bot name.",
               "placeholder": "Enter Username"
             },
             {
@@ -74,7 +71,7 @@ export const slackMessageDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Icon emoji",
-              "helpText": "What this field is: Icon emoji for Slack / Execute.\nHow to fill it: Enter the icon emoji value requested by Slack, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.iconEmoji}} or pick the value from the data picker.",
+              "helpText": "What this field is: The emoji Slack shows as the bot icon for this message.\nHow to fill it: Type a Slack emoji code with colons on both sides.\nExample: :rocket: or :warning:.\nTip: Leave blank to use the bot default icon.",
               "placeholder": "Enter Icon Emoji"
             }
           ],

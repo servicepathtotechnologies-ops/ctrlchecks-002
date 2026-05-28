@@ -8,15 +8,12 @@ export const mailchimpDoc: NodeDoc = {
   "description": "Mailchimp email marketing operations",
   "credentialType": "Mailchimp API Key",
   "credentialSetupSteps": [
-    "What this is: Mailchimp uses an API key or account connection so CtrlChecks can safely access your Mailchimp account.",
-    "Log in to your Mailchimp account at mailchimp.com.",
-    "Click your profile name (bottom left) -> Account & billing -> Extras -> API keys.",
-    "Click \"Create A Key\" -> give it a name (e.g. CtrlChecks) -> Generate Key.",
-    "Copy the API key shown - it ends with a datacenter code like -us21.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Mailchimp -> paste the API key -> Save.",
-    "Run a test step (e.g. list your audiences) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Mailchimp node and select the saved connection."
+    "What this is: The Mailchimp connection lets CtrlChecks access your Mailchimp account safely without putting secrets in workflow fields.",
+    "Where to start: Mailchimp account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Mailchimp, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Mailchimp.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Mailchimp step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://mailchimp.com/developer/marketing/guides/quick-start/",
   "resources": [
@@ -35,7 +32,7 @@ export const mailchimpDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Mailchimp list ID",
-              "helpText": "What this field is: Mailchimp list ID for Mailchimp / Subscribe.\nWhere to find it: Open the item in Mailchimp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Mailchimp list ID that tells Mailchimp which item to use.\nWhere to find it: Open the item in Mailchimp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: list-id.\nTip: Use {{$json.listId}} when an earlier Mailchimp step provides this value.",
               "placeholder": "list-id",
               "example": "list-id"
             },
@@ -82,7 +79,7 @@ export const mailchimpDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Mailchimp list ID",
-              "helpText": "What this field is: Mailchimp list ID for Mailchimp / Unsubscribe.\nWhere to find it: Open the item in Mailchimp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Mailchimp list ID that tells Mailchimp which item to use.\nWhere to find it: Open the item in Mailchimp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: list-id.\nTip: Use {{$json.listId}} when an earlier Mailchimp step provides this value.",
               "placeholder": "list-id",
               "example": "list-id"
             },
@@ -129,7 +126,7 @@ export const mailchimpDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Mailchimp list ID",
-              "helpText": "What this field is: Mailchimp list ID for Mailchimp / Send.\nWhere to find it: Open the item in Mailchimp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.listId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Mailchimp list ID that tells Mailchimp which item to use.\nWhere to find it: Open the item in Mailchimp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: list-id.\nTip: Use {{$json.listId}} when an earlier Mailchimp step provides this value.",
               "placeholder": "list-id",
               "example": "list-id"
             },

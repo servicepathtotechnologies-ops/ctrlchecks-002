@@ -29,7 +29,7 @@ export const chatTriggerDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional channel/context to filter incoming chat events",
-              "helpText": "What this field is: The channel or conversation where Chat Trigger sends or reads data during Execute.\nWhere to find it: Open the service, choose the channel/conversation, and copy its visible name or ID from details.\nExample: #alerts or C01234567",
+              "helpText": "What this field is: The channel or conversation this chat trigger watches.\nWhere to find it: Open your chat service, choose the channel or conversation, and copy the visible name or ID from its details page.\nExample: #alerts or support-chat.\nTip: Use {{$json.channel}} when an earlier step provides the channel name.",
               "placeholder": "#support",
               "example": "#support"
             },
@@ -39,7 +39,7 @@ export const chatTriggerDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional allowlist of senders/usernames/IDs",
-              "helpText": "What this field is: Optional allowlist of senders/usernames/IDs for Chat Trigger / Execute.\nHow to fill it: Enter valid JSON in the format Chat Trigger expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.allowedSenders}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for allowlist of senders/usernames/IDs.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: [\"user1\",\"user2\"].\nTip: Use {{$json.allowedSenders}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "[\"user1\",\"user2\"]",
               "example": "[\"user1\",\"user2\"]"
             },
@@ -49,7 +49,7 @@ export const chatTriggerDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Incoming chat message",
-              "helpText": "What this field is: Incoming chat message for Chat Trigger / Execute.\nHow to fill it: Type the message, prompt, or content you want Chat Trigger to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Incoming chat message.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.message}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             }
           ],

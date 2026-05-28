@@ -8,16 +8,12 @@ export const jenkinsDoc: NodeDoc = {
   "description": "Jenkins CI/CD operations",
   "credentialType": "Jenkins API Key",
   "credentialSetupSteps": [
-    "What this is: Jenkins uses an API key or account connection so CtrlChecks can safely access your Jenkins account.",
-    "Log in to your Jenkins server (usually at http://yourserver:8080).",
-    "Click your username in the top right -> Configure (or go to /user/your-username/configure).",
-    "Scroll down to \"API Token\" section -> click \"Add new Token\" -> give it a name -> Generate.",
-    "Copy the token - it is a long string of letters and numbers, shown only once.",
-    "Note your Jenkins URL (e.g. http://yourserver:8080) and username.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Jenkins -> enter Jenkins URL, username, and API token -> Save.",
-    "Run a test step (e.g. trigger a build) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Jenkins node and select the saved connection."
+    "What this is: The Jenkins connection lets CtrlChecks access your Jenkins account safely without putting secrets in workflow fields.",
+    "Where to start: Jenkins account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Jenkins, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Jenkins.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Jenkins step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://www.jenkins.io/doc/book/using/remote-access-api/",
   "resources": [
@@ -36,7 +32,7 @@ export const jenkinsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Jenkins job name",
-              "helpText": "What this field is: Jenkins job name for Jenkins / Build.\nHow to fill it: Enter the job name value requested by Jenkins, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jobName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Jenkins job name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: my-job.\nTip: Use {{$json.jobName}} when this value comes from an earlier step.",
               "placeholder": "my-job",
               "example": "my-job"
             }
@@ -72,7 +68,7 @@ export const jenkinsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Jenkins job name",
-              "helpText": "What this field is: Jenkins job name for Jenkins / Status.\nHow to fill it: Enter the job name value requested by Jenkins, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jobName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Jenkins job name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: my-job.\nTip: Use {{$json.jobName}} when this value comes from an earlier step.",
               "placeholder": "my-job",
               "example": "my-job"
             }
@@ -108,7 +104,7 @@ export const jenkinsDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Jenkins job name",
-              "helpText": "What this field is: Jenkins job name for Jenkins / Cancel.\nHow to fill it: Enter the job name value requested by Jenkins, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.jobName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Jenkins job name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: my-job.\nTip: Use {{$json.jobName}} when this value comes from an earlier step.",
               "placeholder": "my-job",
               "example": "my-job"
             }

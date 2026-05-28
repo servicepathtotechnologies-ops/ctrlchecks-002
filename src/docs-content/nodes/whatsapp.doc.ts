@@ -8,16 +8,12 @@ export const whatsappDoc: NodeDoc = {
   "description": "Send messages, manage contacts and conversations via WhatsApp Business API",
   "credentialType": "Meta App Credentials",
   "credentialSetupSteps": [
-    "What this is: Meta Apps uses an OAuth connection so CtrlChecks can safely access your Meta Apps account.",
-    "Go to developers.facebook.com/apps and sign in with your Facebook account.",
-    "Click \"Create App\" -> select \"Business\" type -> Next -> give it a name -> Create App.",
-    "Under \"Add Products to Your App\", click \"Set Up\" on Facebook Login.",
-    "Go to Facebook Login -> Settings -> add this URL to \"Valid OAuth Redirect URIs\": http://localhost:3001/api/oauth/facebook/callback -> Save Changes.",
-    "Copy the App ID and App Secret from Settings -> Basic.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Facebook -> click \"Connect with Facebook\" -> sign in and authorize.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Meta Apps node and select the saved connection."
+    "What this is: The WhatsApp connection lets CtrlChecks access your WhatsApp account safely without putting secrets in workflow fields.",
+    "Where to start: Meta for Developers -> your app -> WhatsApp -> API Setup.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> WhatsApp, then sign in or paste the secret value requested there.",
+    "Example: the access token shown by Meta.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple WhatsApp step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.facebook.com/docs/facebook-login/web",
   "resources": [
@@ -36,7 +32,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "helpText": "What this field is: The type of WhatsApp action this node will perform.\nHow to choose: Pick the action that matches what you want to do — send a text message, send a template, or send media.\nExample: Choose \"send_text\" to send a regular WhatsApp text message.",
+              "helpText": "What this field is: WhatsApp resource.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: message.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "message",
               "example": "message",
               "defaultValue": "message"
@@ -57,7 +53,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "WhatsApp Business Account ID",
-              "helpText": "What this field is: WhatsApp Business Account ID for WhatsApp / SendText.\nWhere to find it: Open the item in WhatsApp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.businessAccountId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The WhatsApp Business Account ID that tells WhatsApp which item to use.\nWhere to find it: Open the item in WhatsApp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.businessAccountId}} when an earlier WhatsApp step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -67,7 +63,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The WhatsApp phone number of the person you want to message.\nFormat: Must include country code with + sign. No spaces, no dashes, no brackets.\nExamples:\n  +14155552671   →  USA number\n  +919876543210  →  India number\n  +447911123456  →  UK number\n  +61412345678   →  Australia number\nHow to format: + then country code then the number. For USA: +1 then the 10-digit number.\nTip: Use {{$json.phone}} if the number comes from an earlier step like a form or database.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: alice@example.com.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "alice@example.com"
             },
             {
@@ -85,7 +81,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Enable URL preview",
-              "helpText": "What this field is: Enable URL preview for WhatsApp / SendText.\nHow to fill it: Paste the full web address WhatsApp should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.previewUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Enable URL preview.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: false.\nTip: Use {{$json.previewUrl}} when the URL comes from an earlier step.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -126,7 +122,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "helpText": "What this field is: The type of WhatsApp action this node will perform.\nHow to choose: Pick the action that matches what you want to do — send a text message, send a template, or send media.\nExample: Choose \"send_text\" to send a regular WhatsApp text message.",
+              "helpText": "What this field is: WhatsApp resource.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: message.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "message",
               "example": "message",
               "defaultValue": "message"
@@ -147,7 +143,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "WhatsApp Business Account ID",
-              "helpText": "What this field is: WhatsApp Business Account ID for WhatsApp / SendMedia.\nWhere to find it: Open the item in WhatsApp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.businessAccountId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The WhatsApp Business Account ID that tells WhatsApp which item to use.\nWhere to find it: Open the item in WhatsApp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.businessAccountId}} when an earlier WhatsApp step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -157,7 +153,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The WhatsApp phone number of the person you want to message.\nFormat: Must include country code with + sign. No spaces, no dashes, no brackets.\nExamples:\n  +14155552671   →  USA number\n  +919876543210  →  India number\n  +447911123456  →  UK number\n  +61412345678   →  Australia number\nHow to format: + then country code then the number. For USA: +1 then the 10-digit number.\nTip: Use {{$json.phone}} if the number comes from an earlier step like a form or database.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: alice@example.com.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "alice@example.com"
             },
             {
@@ -166,7 +162,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Media type",
-              "helpText": "What this field is: Media type for WhatsApp / SendMedia.\nHow to fill it: Enter the media type value requested by WhatsApp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.mediaType}} or pick the value from the data picker.",
+              "helpText": "What this field is: The type of media file to send.\nOptions: image, video, audio, document, sticker.\nExample: image for a JPEG or PNG; document for a PDF; video for an MP4.",
               "placeholder": "image",
               "example": "image"
             },
@@ -176,7 +172,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Media URL",
-              "helpText": "What this field is: Media URL for WhatsApp / SendMedia.\nHow to fill it: Paste the full web address WhatsApp should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.mediaUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Media URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com.\nTip: Use {{$json.mediaUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com",
               "example": "https://api.example.com"
             },
@@ -186,7 +182,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Media ID",
-              "helpText": "What this field is: Media ID for WhatsApp / SendMedia.\nWhere to find it: Open the item in WhatsApp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.mediaId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Media ID that tells WhatsApp which item to use.\nWhere to find it: Open the item in WhatsApp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.mediaId}} when an earlier WhatsApp step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -196,7 +192,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Media caption",
-              "helpText": "What this field is: Media caption for WhatsApp / SendMedia.\nHow to fill it: Enter the caption value requested by WhatsApp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.caption}} or pick the value from the data picker.",
+              "helpText": "What this field is: Media caption.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Caption value.\nTip: Use {{$json.caption}} when this value comes from an earlier step.",
               "placeholder": "Enter Caption"
             }
           ],
@@ -235,7 +231,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "helpText": "What this field is: The type of WhatsApp action this node will perform.\nHow to choose: Pick the action that matches what you want to do — send a text message, send a template, or send media.\nExample: Choose \"send_text\" to send a regular WhatsApp text message.",
+              "helpText": "What this field is: WhatsApp resource.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: message.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "message",
               "example": "message",
               "defaultValue": "message"
@@ -256,7 +252,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "WhatsApp Business Account ID",
-              "helpText": "What this field is: WhatsApp Business Account ID for WhatsApp / SendLocation.\nWhere to find it: Open the item in WhatsApp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.businessAccountId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The WhatsApp Business Account ID that tells WhatsApp which item to use.\nWhere to find it: Open the item in WhatsApp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.businessAccountId}} when an earlier WhatsApp step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -266,7 +262,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The WhatsApp phone number of the person you want to message.\nFormat: Must include country code with + sign. No spaces, no dashes, no brackets.\nExamples:\n  +14155552671   →  USA number\n  +919876543210  →  India number\n  +447911123456  →  UK number\n  +61412345678   →  Australia number\nHow to format: + then country code then the number. For USA: +1 then the 10-digit number.\nTip: Use {{$json.phone}} if the number comes from an earlier step like a form or database.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: alice@example.com.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "alice@example.com"
             },
             {
@@ -275,7 +271,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Location latitude",
-              "helpText": "What this field is: A number used for latitude in WhatsApp / SendLocation.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.latitude}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Location latitude.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.latitude}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -285,7 +281,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Location longitude",
-              "helpText": "What this field is: A number used for longitude in WhatsApp / SendLocation.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.longitude}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Location longitude.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.longitude}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -295,7 +291,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Location name",
-              "helpText": "What this field is: Location name for WhatsApp / SendLocation.\nHow to fill it: Enter the location name value requested by WhatsApp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.locationName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Location name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Location Name value.\nTip: Use {{$json.locationName}} when this value comes from an earlier step.",
               "placeholder": "Enter Location Name"
             },
             {
@@ -304,7 +300,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Location address",
-              "helpText": "What this field is: Location address for WhatsApp / SendLocation.\nHow to fill it: Enter the address value requested by WhatsApp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.address}} or pick the value from the data picker.",
+              "helpText": "What this field is: Location address.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Address value.\nTip: Use {{$json.address}} when this value comes from an earlier step.",
               "placeholder": "Enter Address"
             }
           ],
@@ -343,7 +339,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "helpText": "What this field is: The type of WhatsApp action this node will perform.\nHow to choose: Pick the action that matches what you want to do — send a text message, send a template, or send media.\nExample: Choose \"send_text\" to send a regular WhatsApp text message.",
+              "helpText": "What this field is: WhatsApp resource.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: message.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "message",
               "example": "message",
               "defaultValue": "message"
@@ -364,7 +360,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "WhatsApp Business Account ID",
-              "helpText": "What this field is: WhatsApp Business Account ID for WhatsApp / SendContact.\nWhere to find it: Open the item in WhatsApp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.businessAccountId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The WhatsApp Business Account ID that tells WhatsApp which item to use.\nWhere to find it: Open the item in WhatsApp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.businessAccountId}} when an earlier WhatsApp step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -374,7 +370,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The WhatsApp phone number of the person you want to message.\nFormat: Must include country code with + sign. No spaces, no dashes, no brackets.\nExamples:\n  +14155552671   →  USA number\n  +919876543210  →  India number\n  +447911123456  →  UK number\n  +61412345678   →  Australia number\nHow to format: + then country code then the number. For USA: +1 then the 10-digit number.\nTip: Use {{$json.phone}} if the number comes from an earlier step like a form or database.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: alice@example.com.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "alice@example.com"
             },
             {
@@ -383,7 +379,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Contact objects",
-              "helpText": "What this field is: Contact data that WhatsApp sends as a contact card during WhatsApp / SendContact.\nHow to fill it: Provide a JSON array of contact objects with name and phone information.\nExample: [{\"name\":{\"formatted_name\":\"Alice Kumar\",\"first_name\":\"Alice\"},\"phones\":[{\"phone\":\"+919876543210\",\"type\":\"MOBILE\"}]}]\nWhat the user sees: The recipient receives a WhatsApp contact card they can save on their phone.",
+              "helpText": "What this field is: Structured data for Contact objects.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by WhatsApp.\nExample: [{\"name\":{\"formatted_name\":\"Alice Kumar\",\"first_name\":\"Alice\"},\"phones\":[{\"phone\":\"+919876543210\",\"type\":\"MOBILE\"}]}].\nTip: Use {{$json.contacts}} when an earlier step already prepared this data.",
               "placeholder": "[{\"name\":{\"formatted_name\":\"Alice Kumar\",\"first_name\":\"Alice\"},\"phones\":[{\"phone\":\"+919876543210\",\"type\":\"MOBILE\"}]}]",
               "example": "[{\"name\":{\"formatted_name\":\"Alice Kumar\",\"first_name\":\"Alice\"},\"phones\":[{\"phone\":\"+919876543210\",\"type\":\"MOBILE\"}]}]"
             }
@@ -423,7 +419,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "helpText": "What this field is: The type of WhatsApp action this node will perform.\nHow to choose: Pick the action that matches what you want to do — send a text message, send a template, or send media.\nExample: Choose \"send_text\" to send a regular WhatsApp text message.",
+              "helpText": "What this field is: WhatsApp resource.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: message.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "message",
               "example": "message",
               "defaultValue": "message"
@@ -444,7 +440,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "WhatsApp Business Account ID",
-              "helpText": "What this field is: WhatsApp Business Account ID for WhatsApp / SendTemplate.\nWhere to find it: Open the item in WhatsApp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.businessAccountId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The WhatsApp Business Account ID that tells WhatsApp which item to use.\nWhere to find it: Open the item in WhatsApp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.businessAccountId}} when an earlier WhatsApp step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -454,7 +450,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The WhatsApp phone number of the person you want to message.\nFormat: Must include country code with + sign. No spaces, no dashes, no brackets.\nExamples:\n  +14155552671   →  USA number\n  +919876543210  →  India number\n  +447911123456  →  UK number\n  +61412345678   →  Australia number\nHow to format: + then country code then the number. For USA: +1 then the 10-digit number.\nTip: Use {{$json.phone}} if the number comes from an earlier step like a form or database.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: alice@example.com.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "alice@example.com"
             },
             {
@@ -463,7 +459,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Template name",
-              "helpText": "What this field is: The name of a pre-written and pre-approved WhatsApp message template.\nImportant: You cannot send free-form messages to new contacts on WhatsApp — you must use an approved template.\nWhere to find your templates: Meta Business Suite (business.facebook.com) → WhatsApp → Message Templates. The \"Template Name\" column shows the exact name to enter here.\nExample: order_confirmation or welcome_message or appointment_reminder",
+              "helpText": "What this field is: Template name.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Template Name value.\nTip: Use {{$json.templateName}} when this value comes from an earlier step.",
               "placeholder": "Enter Template Name"
             },
             {
@@ -472,7 +468,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Template language code",
-              "helpText": "What this field is: Template language code for WhatsApp / SendTemplate.\nHow to fill it: Enter the language value requested by WhatsApp, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.language}} or pick the value from the data picker.",
+              "helpText": "What this field is: The language code of the WhatsApp template you are sending.\nExample: en_US for US English, pt_BR for Brazilian Portuguese, ar for Arabic.\nWhere to find it: Meta Business Suite → WhatsApp → Message Templates — the Language column shows the code.",
               "placeholder": "Enter Language"
             },
             {
@@ -481,7 +477,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Template components",
-              "helpText": "What this field is: Template components for WhatsApp / SendTemplate.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Template components.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: [\"item\"].\nTip: Use {{$json.templateComponents}} when this value comes from an earlier step.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             }
@@ -521,7 +517,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "helpText": "What this field is: The type of WhatsApp action this node will perform.\nHow to choose: Pick the action that matches what you want to do — send a text message, send a template, or send media.\nExample: Choose \"send_text\" to send a regular WhatsApp text message.",
+              "helpText": "What this field is: WhatsApp resource.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: message.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "message",
               "example": "message",
               "defaultValue": "message"
@@ -542,7 +538,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "WhatsApp Business Account ID",
-              "helpText": "What this field is: WhatsApp Business Account ID for WhatsApp / SendInteractiveButtons.\nWhere to find it: Open the item in WhatsApp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.businessAccountId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The WhatsApp Business Account ID that tells WhatsApp which item to use.\nWhere to find it: Open the item in WhatsApp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.businessAccountId}} when an earlier WhatsApp step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -552,7 +548,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The WhatsApp phone number of the person you want to message.\nFormat: Must include country code with + sign. No spaces, no dashes, no brackets.\nExamples:\n  +14155552671   →  USA number\n  +919876543210  →  India number\n  +447911123456  →  UK number\n  +61412345678   →  Australia number\nHow to format: + then country code then the number. For USA: +1 then the 10-digit number.\nTip: Use {{$json.phone}} if the number comes from an earlier step like a form or database.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: alice@example.com.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "alice@example.com"
             },
             {
@@ -561,7 +557,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Interactive message body text",
-              "helpText": "What this field is: Interactive message body text for WhatsApp / SendInteractiveButtons.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Interactive message body text.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by WhatsApp.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.bodyText}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -570,7 +566,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Interactive message header text",
-              "helpText": "What this field is: Interactive message header text for WhatsApp / SendInteractiveButtons.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Interactive message header text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.headerText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -579,7 +575,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Interactive message footer text",
-              "helpText": "What this field is: Interactive message footer text for WhatsApp / SendInteractiveButtons.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Interactive message footer text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.footerText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -588,7 +584,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Interactive buttons",
-              "helpText": "What this field is: Interactive buttons for WhatsApp / SendInteractiveButtons.\nHow to fill it: Enter valid JSON in the format WhatsApp expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.buttons}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Interactive buttons.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by WhatsApp.\nExample: [\"item\"].\nTip: Use {{$json.buttons}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             }
@@ -628,7 +624,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "helpText": "What this field is: The type of WhatsApp action this node will perform.\nHow to choose: Pick the action that matches what you want to do — send a text message, send a template, or send media.\nExample: Choose \"send_text\" to send a regular WhatsApp text message.",
+              "helpText": "What this field is: WhatsApp resource.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: message.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "message",
               "example": "message",
               "defaultValue": "message"
@@ -649,7 +645,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "WhatsApp Business Account ID",
-              "helpText": "What this field is: WhatsApp Business Account ID for WhatsApp / SendInteractiveList.\nWhere to find it: Open the item in WhatsApp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.businessAccountId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The WhatsApp Business Account ID that tells WhatsApp which item to use.\nWhere to find it: Open the item in WhatsApp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.businessAccountId}} when an earlier WhatsApp step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -659,7 +655,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The WhatsApp phone number of the person you want to message.\nFormat: Must include country code with + sign. No spaces, no dashes, no brackets.\nExamples:\n  +14155552671   →  USA number\n  +919876543210  →  India number\n  +447911123456  →  UK number\n  +61412345678   →  Australia number\nHow to format: + then country code then the number. For USA: +1 then the 10-digit number.\nTip: Use {{$json.phone}} if the number comes from an earlier step like a form or database.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: alice@example.com.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "alice@example.com"
             },
             {
@@ -668,7 +664,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Interactive message body text",
-              "helpText": "What this field is: Interactive message body text for WhatsApp / SendInteractiveList.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Interactive message body text.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by WhatsApp.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.bodyText}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -677,7 +673,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Interactive message header text",
-              "helpText": "What this field is: Interactive message header text for WhatsApp / SendInteractiveList.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Interactive message header text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.headerText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -686,7 +682,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Interactive message footer text",
-              "helpText": "What this field is: Interactive message footer text for WhatsApp / SendInteractiveList.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Interactive message footer text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.footerText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -695,7 +691,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "List button text",
-              "helpText": "What this field is: List button text for WhatsApp / SendInteractiveList.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: List button text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.buttonText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -704,7 +700,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "List sections",
-              "helpText": "What this field is: List sections for WhatsApp / SendInteractiveList.\nHow to fill it: Enter valid JSON in the format WhatsApp expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.sections}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for List sections.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by WhatsApp.\nExample: [\"item\"].\nTip: Use {{$json.sections}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             }
@@ -744,7 +740,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "helpText": "What this field is: The type of WhatsApp action this node will perform.\nHow to choose: Pick the action that matches what you want to do — send a text message, send a template, or send media.\nExample: Choose \"send_text\" to send a regular WhatsApp text message.",
+              "helpText": "What this field is: WhatsApp resource.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: message.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "message",
               "example": "message",
               "defaultValue": "message"
@@ -765,7 +761,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "WhatsApp Business Account ID",
-              "helpText": "What this field is: WhatsApp Business Account ID for WhatsApp / SendInteractiveCTA.\nWhere to find it: Open the item in WhatsApp and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.businessAccountId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The WhatsApp Business Account ID that tells WhatsApp which item to use.\nWhere to find it: Open the item in WhatsApp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.businessAccountId}} when an earlier WhatsApp step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -775,7 +771,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The WhatsApp phone number of the person you want to message.\nFormat: Must include country code with + sign. No spaces, no dashes, no brackets.\nExamples:\n  +14155552671   →  USA number\n  +919876543210  →  India number\n  +447911123456  →  UK number\n  +61412345678   →  Australia number\nHow to format: + then country code then the number. For USA: +1 then the 10-digit number.\nTip: Use {{$json.phone}} if the number comes from an earlier step like a form or database.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: alice@example.com.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "alice@example.com"
             },
             {
@@ -784,7 +780,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Interactive message body text",
-              "helpText": "What this field is: Interactive message body text for WhatsApp / SendInteractiveCTA.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Interactive message body text.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by WhatsApp.\nExample: {\"name\":\"{{$json.name}}\"}.\nTip: Use {{$json.bodyText}} when an earlier step already prepared this data.",
               "placeholder": "{\"name\":\"{{$json.name}}\"}"
             },
             {
@@ -793,7 +789,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Interactive message header text",
-              "helpText": "What this field is: Interactive message header text for WhatsApp / SendInteractiveCTA.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Interactive message header text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.headerText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -802,7 +798,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Interactive message footer text",
-              "helpText": "What this field is: Interactive message footer text for WhatsApp / SendInteractiveCTA.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Interactive message footer text.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.footerText}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             },
             {
@@ -811,7 +807,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "CTA URL object",
-              "helpText": "What this field is: CTA URL object for WhatsApp / SendInteractiveCTA.\nHow to fill it: Paste the full web address WhatsApp should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.ctaUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for CTA URL object.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com.\nTip: Use {{$json.ctaUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com",
               "example": "https://api.example.com"
             }
@@ -851,7 +847,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "WhatsApp resource",
-              "helpText": "What this field is: The type of WhatsApp action this node will perform.\nHow to choose: Pick the action that matches what you want to do — send a text message, send a template, or send media.\nExample: Choose \"send_text\" to send a regular WhatsApp text message.",
+              "helpText": "What this field is: WhatsApp resource.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: message.\nTip: Use {{$json.resource}} when this value comes from an earlier step.",
               "placeholder": "message",
               "example": "message",
               "defaultValue": "message"
@@ -872,7 +868,7 @@ export const whatsappDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Message ID",
-              "helpText": "What this field is: Message ID for WhatsApp / MarkAsRead.\nHow to fill it: Type the message, prompt, or content you want WhatsApp to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: The Message ID that tells WhatsApp which item to use.\nWhere to find it: Open the item in WhatsApp and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.messageId}} when an earlier WhatsApp step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }

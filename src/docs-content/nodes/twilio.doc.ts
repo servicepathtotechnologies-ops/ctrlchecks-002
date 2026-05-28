@@ -8,15 +8,12 @@ export const twilioDoc: NodeDoc = {
   "description": "Send SMS/Voice via Twilio",
   "credentialType": "Twilio Credential",
   "credentialSetupSteps": [
-    "What this is: Twilio uses an OAuth connection so CtrlChecks can safely access your Twilio account.",
-    "Go to console.twilio.com and sign in (or create a free trial account - you get free credits to start).",
-    "On the main dashboard, you will see \"Account Info\". Copy the Account SID (starts with AC) and Auth Token. Click \"Show\" next to the Auth Token to reveal it.",
-    "For your \"From\" phone number (the number SMS will be sent from): go to Phone Numbers -> Manage -> Active Numbers. Copy one of your Twilio numbers.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Twilio -> enter Account SID and Auth Token -> Save.",
-    "Run a test step to send an SMS to your own phone number to confirm it works.",
-    "Note: Twilio free trial accounts can only send to verified numbers. To send to any number, upgrade your Twilio account.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Twilio node and select the saved connection."
+    "What this is: The Twilio connection lets CtrlChecks access your Twilio account safely without putting secrets in workflow fields.",
+    "Where to start: Twilio Console -> Account -> API keys and tokens.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Twilio, then sign in or paste the secret value requested there.",
+    "Example: the auth token Twilio shows.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Twilio step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://www.twilio.com/docs/usage/api",
   "resources": [
@@ -35,7 +32,7 @@ export const twilioDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The phone number of the person who will receive the SMS.\nFormat: E.164 international format — + sign, then country code, then the number. No spaces, dashes, or brackets.\nExamples:\n  +14155552671  →  USA\n  +919876543210 →  India\n  +447911123456 →  UK\nTip: Use {{$json.phone}} if the number comes from a form or database in an earlier step.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: +1234567890.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "+1234567890",
               "example": "+1234567890"
             },
@@ -45,7 +42,7 @@ export const twilioDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SMS message text",
-              "helpText": "What this field is: SMS message text for Twilio / Execute.\nHow to fill it: Type the message, prompt, or content you want Twilio to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: SMS message text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.message}}.\nTip: Use {{$json.message}} when this value comes from an earlier step.",
               "placeholder": "{{$json.message}}",
               "example": "{{$json.message}}"
             },

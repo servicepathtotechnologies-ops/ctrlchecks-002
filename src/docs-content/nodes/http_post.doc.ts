@@ -29,7 +29,7 @@ export const httpPostDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "URL to POST to",
-              "helpText": "What this field is: The API endpoint URL to POST data to.\nExample: https://api.example.com/webhook or https://api.example.com/v1/events",
+              "helpText": "What this field is: The web address for URL to POST to.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com/data.\nTip: Use {{$json.url}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com/data",
               "example": "https://api.example.com/data"
             },
@@ -39,7 +39,7 @@ export const httpPostDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "POST body data",
-              "helpText": "What this field is: The data to send in the request body.\nFormat: JSON object.\nExample: {\"event\":\"user_signup\",\"userId\":\"{{$json.userId}}\",\"email\":\"{{$json.email}}\",\"timestamp\":\"{{$json.createdAt}}\"}",
+              "helpText": "What this field is: Structured data for POST body data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by HTTP POST.\nExample: {{$json.data}}.\nTip: Use {{$json.body}} when an earlier step already prepared this data.",
               "placeholder": "{{$json.data}}",
               "example": "{{$json.data}}"
             },
@@ -49,7 +49,7 @@ export const httpPostDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "HTTP headers",
-              "helpText": "What this field is: HTTP headers for HTTP POST / Execute.\nHow to fill it: Enter valid JSON in the format HTTP POST expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.headers}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for HTTP headers.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by HTTP POST.\nExample: {\"Content-Type\":\"application/json\"}.\nTip: Use {{$json.headers}} when an earlier step already prepared this data.",
               "placeholder": "{\"Content-Type\":\"application/json\"}",
               "example": "{\"Content-Type\":\"application/json\"}"
             }

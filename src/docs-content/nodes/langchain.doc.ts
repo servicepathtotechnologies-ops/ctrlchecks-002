@@ -29,7 +29,7 @@ export const langchainDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "LLM provider",
-              "helpText": "What this field is: LLM provider for LangChain / Run chain.\nWhere to find it: Open the item in LangChain and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567",
+              "helpText": "Options: Choose the provider value this LangChain step should use.\nHow to choose it: Pick the option that matches what you want this step to do.\nExample: OpenAI.\nTip: Use {{$json.provider}} only when an earlier step already provides a valid option value.",
               "placeholder": "openai",
               "example": "openai",
               "defaultValue": "openai",
@@ -44,7 +44,7 @@ export const langchainDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Input prompt or task description",
-              "helpText": "What this field is: Input prompt or task description for LangChain / Run chain.\nHow to fill it: Type the message, prompt, or content you want LangChain to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Input prompt or task description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Summarize {{$json.text}}.\nTip: Use {{$json.prompt}} when this value comes from an earlier step.",
               "placeholder": "Summarize {{$json.text}}"
             },
             {
@@ -53,7 +53,7 @@ export const langchainDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Tool definitions for agent mode",
-              "helpText": "What this field is: Tool definitions for agent mode for LangChain / Run chain.\nHow to fill it: Enter valid JSON in the format LangChain expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.tools}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Tool definitions for agent mode.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by LangChain.\nExample: [].\nTip: Use {{$json.tools}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]",
               "defaultValue": "[]"
@@ -64,7 +64,7 @@ export const langchainDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable conversation memory",
-              "helpText": "What this field is: An on/off choice for memory in LangChain / Run chain.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want LangChain to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable conversation memory.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use memory; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -75,7 +75,7 @@ export const langchainDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "API key for LLM provider",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access LangChain.\nWhere to get it: Open the LangChain dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: LangChain token, a secret password that lets CtrlChecks talk to LangChain safely.\nWhere to find it: LangChain account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by LangChain.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             }
@@ -113,7 +113,7 @@ export const langchainDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "LLM provider",
-              "helpText": "What this field is: LLM provider for LangChain / Run agent.\nWhere to find it: Open the item in LangChain and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567",
+              "helpText": "Options: Choose the provider value this LangChain step should use.\nHow to choose it: Pick the option that matches what you want this step to do.\nExample: OpenAI.\nTip: Use {{$json.provider}} only when an earlier step already provides a valid option value.",
               "placeholder": "openai",
               "example": "openai",
               "defaultValue": "openai",
@@ -128,7 +128,7 @@ export const langchainDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Input prompt or task description",
-              "helpText": "What this field is: Input prompt or task description for LangChain / Run agent.\nHow to fill it: Type the message, prompt, or content you want LangChain to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Input prompt or task description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Summarize {{$json.text}}.\nTip: Use {{$json.prompt}} when this value comes from an earlier step.",
               "placeholder": "Summarize {{$json.text}}"
             },
             {
@@ -137,7 +137,7 @@ export const langchainDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Tool definitions for agent mode",
-              "helpText": "What this field is: Tool definitions for agent mode for LangChain / Run agent.\nHow to fill it: Enter valid JSON in the format LangChain expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.tools}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Tool definitions for agent mode.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by LangChain.\nExample: [].\nTip: Use {{$json.tools}} when an earlier step already prepared this data.",
               "placeholder": "[]",
               "example": "[]",
               "defaultValue": "[]"
@@ -148,7 +148,7 @@ export const langchainDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Enable conversation memory",
-              "helpText": "What this field is: An on/off choice for memory in LangChain / Run agent.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want LangChain to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Enable conversation memory.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use memory; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"
@@ -159,7 +159,7 @@ export const langchainDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "API key for LLM provider",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access LangChain.\nWhere to get it: Open the LangChain dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: LangChain token, a secret password that lets CtrlChecks talk to LangChain safely.\nWhere to find it: LangChain account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by LangChain.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "sk_...",
               "notes": "Stored and displayed as a masked credential value."
             }

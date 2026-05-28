@@ -8,15 +8,12 @@ export const firebaseDoc: NodeDoc = {
   "description": "Interact with Firebase Firestore and Realtime Database",
   "credentialType": "Firebase Credential",
   "credentialSetupSteps": [
-    "What this is: Firebase uses an OAuth connection so CtrlChecks can safely access your Firebase account.",
-    "Go to console.firebase.google.com and sign in -> open your project.",
-    "Click the gear icon (top left) -> Project Settings -> Service Accounts tab.",
-    "Click \"Generate new private key\" -> Generate key -> confirm. A JSON file downloads to your computer.",
-    "Open the JSON file and copy its entire contents (the whole JSON object from { to }).",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Firebase -> paste the service account JSON -> Save.",
-    "Run a test step (e.g. read a document from Firestore) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Firebase node and select the saved connection."
+    "What this is: The Firebase connection lets CtrlChecks access your Firebase account safely without putting secrets in workflow fields.",
+    "Where to start: Firebase account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Firebase, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Firebase.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Firebase step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://firebase.google.com/docs/admin/setup",
   "resources": [
@@ -35,7 +32,7 @@ export const firebaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Firestore collection name",
-              "helpText": "What this field is: The Firestore collection name — like a folder of related documents.\nExample: users or orders or messages or products",
+              "helpText": "What this field is: Firestore collection name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Collection value.\nTip: Use {{$json.collection}} when this value comes from an earlier step.",
               "placeholder": "Enter Collection"
             },
             {
@@ -54,7 +51,7 @@ export const firebaseDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Data for add/update/realtime_set",
-              "helpText": "What this field is: Data for add/update/realtime_set for Firebase / Execute.\nHow to fill it: Enter valid JSON in the format Firebase expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.data}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Data.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Firebase.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             },
@@ -64,7 +61,7 @@ export const firebaseDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Query filter conditions",
-              "helpText": "What this field is: Query filter conditions for Firebase / Execute.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Firebase which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Query filter conditions.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Firebase.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.filter}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             },
@@ -74,7 +71,7 @@ export const firebaseDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max documents to return for query",
-              "helpText": "What this field is: A number used for limit in Firebase / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max documents to return for query.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10"
             },
@@ -84,7 +81,7 @@ export const firebaseDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Realtime Database URL",
-              "helpText": "What this field is: Realtime Database URL for Firebase / Execute.\nHow to fill it: Paste the full web address Firebase should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.databaseUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Realtime Database URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com.\nTip: Use {{$json.databaseUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com",
               "example": "https://api.example.com"
             }

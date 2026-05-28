@@ -37,6 +37,7 @@ import type { CapabilitySelectionValidationResult } from '@/lib/capability-selec
 import type { CapabilityContainer, NodeSelectionMap } from '../../types/capability-selection';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
 import { generateFieldGuide } from './guideGenerator';
+import { resolveFieldHelpContent } from '@/lib/resolve-field-help-content';
 import { FieldOwnershipHelpPanel } from './FieldOwnershipHelpPanel';
 import {
     resolveEffectiveFieldFillMode,
@@ -95,7 +96,7 @@ import {
     markAttachInputsPayloadPersisted,
     wasAttachInputsPayloadRecentlyPersisted,
 } from '@/lib/attach-inputs-payload';
-import { nodesBySlug } from '@/docs-content';
+import { findFieldDocField } from '@/lib/field-doc-resolver';
 import { GuidedStatusCard } from '@/components/ui/guided-status-card';
 import { mapWorkflowIssueToGuidance, type GuidedStatusContent } from '@/lib/workflow-guidance';
 import { prepareActionableFieldExample } from '@/lib/actionable-field-example';
@@ -288,28 +289,18 @@ function humanizeFieldName(fieldName: string): string {
 
 function findFieldDocForQuestion(question: Record<string, any>): any | null {
     const nodeType = String(question.nodeType || '').trim();
-    const fieldName = String(question.fieldName || '').trim().toLowerCase();
+    const fieldName = String(question.fieldName || '').trim();
     if (!nodeType || !fieldName) return null;
-    const doc = nodesBySlug[nodeType];
-    if (!doc) return null;
-    const operations = (doc.resources || []).flatMap((resource: any) => resource.operations || []);
-    const requestedOperation = String(
-        question.operation || question.action || question.resource || question.operationValue || ''
-    ).trim().toLowerCase();
-    const matches = operations.flatMap((operation: any) =>
-        (operation.fields || [])
-            .filter((field: any) => {
-                const internalKey = String(field.internalKey || '').trim().toLowerCase();
-                const name = String(field.name || '').trim().toLowerCase();
-                return internalKey === fieldName || name === fieldName;
-            })
-            .map((field: any) => ({ field, operationValue: String(operation.value || '').toLowerCase() }))
-    );
-    if (requestedOperation) {
-        const exact = matches.find((m: any) => m.operationValue === requestedOperation);
-        if (exact) return exact.field;
-    }
-    return matches[0]?.field || null;
+    return findFieldDocField({
+        nodeType,
+        fieldKey: fieldName,
+        operation: question.operation || question.action || question.operationValue,
+        resource: question.resource,
+        config: question.config || question.nodeConfig || {
+            operation: question.operation || question.action || question.operationValue,
+            resource: question.resource,
+        },
+    });
 }
 
 function buildDeterministicFieldExample(question: Record<string, any>, fieldDoc: any | null): string {
@@ -6847,11 +6838,11 @@ export function AutonomousAgentWizard() {
                                                             <HelpTooltip
                                                                 helpText={{
                                                                     title: guide.title,
-                                                                    description: guide.steps.slice(0, 4).join('\n'),
+                                                                    description: guide.steps.filter(Boolean).join('\n'),
                                                                     example: guide.example,
                                                                 }}
                                                                 ariaLabel={`Help for ${credLabel}`}
-                                                                side="left"
+                                                                side="top"
                                                             />
                                                         </div>
                                                         <Input
@@ -7689,19 +7680,36 @@ export function AutonomousAgentWizard() {
                                                                         {questionLabel}
                                                                         {question.required && <span className={requiredSectionStyles.configuration.requiredIndicatorClass}>*</span>}
                                                                     </Label>
-                                                                    {(question.helpText || question.description || question.example) ? (
-                                                                        <HelpTooltip
-                                                                            helpText={{
-                                                                                title: `What is "${questionLabel}"?`,
-                                                                                description: String(question.helpText || question.description || '').trim(),
-                                                                                example: question.example
-                                                                                    ? (typeof question.example === 'string' ? question.example : JSON.stringify(question.example))
-                                                                                    : undefined,
-                                                                            }}
-                                                                            ariaLabel={`Help for ${questionLabel}`}
-                                                                            side="left"
-                                                                        />
-                                                                    ) : null}
+                                                                    {(() => {
+                                                                        const fieldHelp = resolveFieldHelpContent({
+                                                                            nodeType: String(question.nodeType || ''),
+                                                                            fieldName: String(question.fieldName || ''),
+                                                                            fieldLabel: questionLabel,
+                                                                            fieldType: String(question.type || 'text'),
+                                                                            placeholder: question.placeholder ? String(question.placeholder) : undefined,
+                                                                            description: question.description ? String(question.description) : undefined,
+                                                                            helpText: (question as any).helpText ? String((question as any).helpText) : undefined,
+                                                                            helpCategory: (question as any).helpCategory ? String((question as any).helpCategory) : undefined,
+                                                                            docsUrl: (question as any).docsUrl ? String((question as any).docsUrl) : undefined,
+                                                                            exampleValue: (question as any).exampleValue ? String((question as any).exampleValue) : undefined,
+                                                                            example: question.example,
+                                                                            options: question.options,
+                                                                            nodeLabel: question.nodeLabel ? String(question.nodeLabel) : undefined,
+                                                                            config: (question as any).config || (question as any).nodeConfig || {
+                                                                                operation: (question as any).operation || (question as any).action || (question as any).operationValue,
+                                                                                resource: (question as any).resource,
+                                                                            },
+                                                                            operation: (question as any).operation || (question as any).action || (question as any).operationValue,
+                                                                            resource: (question as any).resource,
+                                                                        });
+                                                                        return fieldHelp ? (
+                                                                            <HelpTooltip
+                                                                                helpText={fieldHelp}
+                                                                                ariaLabel={`Help for ${questionLabel}`}
+                                                                                side="top"
+                                                                            />
+                                                                        ) : null;
+                                                                    })()}
                                                                 </div>
                                                                 {question.description && (
                                                                     <p className="text-sm text-muted-foreground mt-1">{question.description}</p>

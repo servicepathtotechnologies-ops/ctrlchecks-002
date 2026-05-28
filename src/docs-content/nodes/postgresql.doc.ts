@@ -8,14 +8,12 @@ export const postgresqlDoc: NodeDoc = {
   "description": "Execute SQL queries on PostgreSQL database",
   "credentialType": "PostgreSQL Credential",
   "credentialSetupSteps": [
-    "What this is: PostgreSQL uses an OAuth connection so CtrlChecks can safely access your PostgreSQL account.",
-    "Make sure your PostgreSQL database is running and can be reached from the internet (or your local network).",
-    "You need: the server address (hostname or IP), port (default is 5432), database name, username, and password.",
-    "For AWS RDS: go to AWS Console -> RDS -> your database -> Connectivity & security. The \"Endpoint\" field is your hostname.",
-    "Make sure the database firewall allows connections from CtrlChecks. For AWS RDS: add the server IP to the security group inbound rules on port 5432.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> PostgreSQL -> enter Host, Port, Database name, Username, Password -> Test Connection -> Save.",
-    "Run a simple SELECT query in the PostgreSQL node to confirm CtrlChecks can read from your database.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields."
+    "What this is: The PostgreSQL connection lets CtrlChecks access your PostgreSQL account safely without putting secrets in workflow fields.",
+    "Where to start: PostgreSQL account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> PostgreSQL, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by PostgreSQL.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple PostgreSQL step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://www.postgresql.org/docs/current/tutorial-accessdb.html",
   "resources": [
@@ -34,7 +32,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment.",
-              "helpText": "What this field is: Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment. for PostgreSQL / Query.\nHow to fill it: Enter the connection string value requested by PostgreSQL, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Database connection string . If omitted, uses DATABASE_URL from environment..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: postgresql://user:pass@host:5432/dbname.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "postgresql://user:pass@host:5432/dbname",
               "example": "postgresql://user:pass@host:5432/dbname"
             },
@@ -44,7 +42,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "SQL query to execute",
-              "helpText": "What this field is: The SQL query to run against your database.\nExample: SELECT * FROM customers WHERE status = 'active' AND created_at > '2025-01-01'\nUse $1, $2 for variable values (safer): SELECT * FROM orders WHERE user_id = $1 AND status = $2\nThen put the actual values in the \"Parameters\" field below.\nWarning: Never put passwords or user-entered values directly in the query text — always use parameters.",
+              "helpText": "What this field is: Structured data for SQL query to execute.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by PostgreSQL.\nExample: INSERT INTO users (name, email) VALUES ($1, $2).\nTip: Use {{$json.query}} when an earlier step already prepared this data.",
               "placeholder": "INSERT INTO users (name, email) VALUES ($1, $2)",
               "example": "INSERT INTO users (name, email) VALUES ($1, $2)"
             },
@@ -54,7 +52,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Query parameters",
-              "helpText": "What this field is: The values for $1, $2 etc. placeholders in your SQL query.\nFormat: JSON array — one value per placeholder in order.\nExample: [\"active\",\"2025-01-01\"] for a query with WHERE status = $1 AND date > $2\nWhy use it: Prevents SQL injection attacks — much safer than building the query string yourself.",
+              "helpText": "What this field is: Structured data for Query parameters.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by PostgreSQL.\nExample: [\"item\"].\nTip: Use {{$json.parameters}} when an earlier step already prepared this data.",
               "placeholder": "[\"item\"]",
               "example": "[\"item\"]"
             }
@@ -92,7 +90,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment.",
-              "helpText": "What this field is: Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment. for PostgreSQL / Insert.\nHow to fill it: Enter the connection string value requested by PostgreSQL, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Database connection string . If omitted, uses DATABASE_URL from environment..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: postgresql://user:pass@host:5432/dbname.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "postgresql://user:pass@host:5432/dbname",
               "example": "postgresql://user:pass@host:5432/dbname"
             },
@@ -102,7 +100,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database table name",
-              "helpText": "What this field is: The name of the database table to insert a new record into.\nExample: customers or orders or public.user_events (use schema.table if not in the default schema)",
+              "helpText": "What this field is: The Database table name that tells PostgreSQL which item to use.\nWhere to find it: Open the item in PostgreSQL and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier PostgreSQL step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -111,7 +109,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Row data to write as JSON",
-              "helpText": "What this field is: The new record as a JSON object. Keys must exactly match your database column names.\nExample: {\"name\":\"Alice Kumar\",\"email\":\"alice@example.com\",\"status\":\"active\",\"plan\":\"pro\"}\nTip: Use {{$json}} or {{$json.formData}} to pass data from an earlier node.",
+              "helpText": "What this field is: Structured data for Row data to write as structured data in { } brackets.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by PostgreSQL.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}"
             }
           ],
@@ -148,7 +146,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment.",
-              "helpText": "What this field is: Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment. for PostgreSQL / Update.\nHow to fill it: Enter the connection string value requested by PostgreSQL, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Database connection string . If omitted, uses DATABASE_URL from environment..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: postgresql://user:pass@host:5432/dbname.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "postgresql://user:pass@host:5432/dbname",
               "example": "postgresql://user:pass@host:5432/dbname"
             },
@@ -158,7 +156,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database table name",
-              "helpText": "What this field is: The database table where you want to update records.\nExample: customers",
+              "helpText": "What this field is: The Database table name that tells PostgreSQL which item to use.\nWhere to find it: Open the item in PostgreSQL and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier PostgreSQL step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -167,7 +165,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Row data to write as JSON",
-              "helpText": "What this field is: The new values to set, as a JSON object.\nExample: {\"status\":\"premium\",\"updated_at\":\"2025-01-15\"}",
+              "helpText": "What this field is: Structured data for Row data to write as structured data in { } brackets.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by PostgreSQL.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.data}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}"
             },
             {
@@ -176,7 +174,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Filter condition for update/delete",
-              "helpText": "What this field is: The condition that identifies which rows to update.\nExample: {\"id\": 42} updates the single row where id = 42.\nExample: {\"email\": \"alice@example.com\"} updates the row with that email.\nWarning: Without a specific where condition, ALL rows in the table could be updated.",
+              "helpText": "What this field is: Structured data for Filter condition.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by PostgreSQL.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.where}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}"
             }
           ],
@@ -212,7 +210,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment.",
-              "helpText": "What this field is: Database connection string (PostgreSQL). If omitted, uses DATABASE_URL from environment. for PostgreSQL / Delete.\nHow to fill it: Enter the connection string value requested by PostgreSQL, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Database connection string . If omitted, uses DATABASE_URL from environment..\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: postgresql://user:pass@host:5432/dbname.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "postgresql://user:pass@host:5432/dbname",
               "example": "postgresql://user:pass@host:5432/dbname"
             },
@@ -222,7 +220,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Database table name",
-              "helpText": "What this field is: The database table to delete from.\nExample: old_sessions",
+              "helpText": "What this field is: The Database table name that tells PostgreSQL which item to use.\nWhere to find it: Open the item in PostgreSQL and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier PostgreSQL step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -231,7 +229,7 @@ export const postgresqlDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Filter condition for update/delete",
-              "helpText": "What this field is: The condition that identifies which rows to delete.\nExample: {\"id\": 42} deletes only the row where id = 42.\nWarning: Without a specific where condition, ALL rows in the table could be deleted.",
+              "helpText": "What this field is: Structured data for Filter condition.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by PostgreSQL.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.where}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}"
             }
           ],

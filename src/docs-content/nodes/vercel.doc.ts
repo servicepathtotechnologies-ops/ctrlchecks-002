@@ -8,15 +8,12 @@ export const vercelDoc: NodeDoc = {
   "description": "Deploy projects and manage deployments on Vercel",
   "credentialType": "Vercel API Key",
   "credentialSetupSteps": [
-    "What this is: Vercel uses an API key or account connection so CtrlChecks can safely access your Vercel account.",
-    "Go to vercel.com and sign in to your account.",
-    "Click your profile photo (top right) -> Account Settings -> Tokens.",
-    "Click \"Create\" -> give it a name (e.g. CtrlChecks) -> set scope to \"Full Account\" or a specific team -> set an expiry -> Create Token.",
-    "Copy the token immediately - it is shown only once.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Vercel -> paste the token -> Save.",
-    "Run a test step (e.g. list your deployments) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Vercel node and select the saved connection."
+    "What this is: The Vercel connection lets CtrlChecks access your Vercel account safely without putting secrets in workflow fields.",
+    "Where to start: Vercel -> Account Settings -> Tokens.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Vercel, then sign in or paste the secret value requested there.",
+    "Example: the token Vercel shows when you create it.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Vercel step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://vercel.com/docs/rest-api",
   "resources": [
@@ -35,7 +32,7 @@ export const vercelDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Vercel project name (required for deploy operation). Can use template syntax like {{$json.projectName}}",
-              "helpText": "What this field is: Vercel project name (required for deploy operation). Can use template syntax like {{$json.projectName}} for Vercel / Deploy.\nHow to fill it: Enter the project name value requested by Vercel, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.projectName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Vercel project name . Can use template syntax like {{$json.projectName}}.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: my-app.\nTip: This field is used for deploy. Leave it blank when this operation does not need it.",
               "placeholder": "my-app",
               "example": "my-app"
             },
@@ -45,7 +42,7 @@ export const vercelDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Vercel API token (Bearer token). Use credential selection or template syntax like {{$credentials.vercel.token}}",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Vercel.\nWhere to get it: Open the Vercel dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Vercel access token, a secret password that lets CtrlChecks talk to Vercel safely.\nWhere to find it: Vercel -> Account Settings -> Tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token Vercel shows when you create it.\nImportant: Treat this like a bank password. Use a token from an account with access to the project.",
               "placeholder": "vercel_***",
               "example": "vercel_***",
               "notes": "Stored and displayed as a masked credential value."
@@ -83,7 +80,7 @@ export const vercelDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Vercel API token (Bearer token). Use credential selection or template syntax like {{$credentials.vercel.token}}",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Vercel.\nWhere to get it: Open the Vercel dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Vercel access token, a secret password that lets CtrlChecks talk to Vercel safely.\nWhere to find it: Vercel -> Account Settings -> Tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token Vercel shows when you create it.\nImportant: Treat this like a bank password. Use a token from an account with access to the project.",
               "placeholder": "vercel_***",
               "example": "vercel_***",
               "notes": "Stored and displayed as a masked credential value."

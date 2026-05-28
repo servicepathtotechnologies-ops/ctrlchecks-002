@@ -8,16 +8,13 @@ export const notionDoc: NodeDoc = {
   "description": "Read, write, update, or delete pages, databases, and blocks in Notion",
   "credentialType": "Notion API Key",
   "credentialSetupSteps": [
-    "What this is: Notion uses an API key or account connection so CtrlChecks can safely access your Notion account.",
-    "Go to notion.so/my-integrations and sign in with your Notion account.",
-    "Click \"+ New integration\" -> give it a name (e.g. CtrlChecks) -> select your workspace.",
-    "Under \"Capabilities\", enable: Read content, Update content, Insert content.",
-    "Click Submit. Copy the \"Internal Integration Token\" - it starts with secret_.",
-    "Share your Notion database with the integration: open the database in Notion -> click Share (top right) -> Invite -> search for your integration name -> Invite.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Notion -> paste the secret_ token -> Save.",
-    "Run a test step (e.g. create a page in the database) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Notion node and select the saved connection."
+    "What this is: The Notion connection lets CtrlChecks access your Notion account safely without putting secrets in workflow fields.",
+    "Where to start: notion.so/my-integrations -> your integration -> Configuration -> Internal Integration Token.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Notion, then sign in or paste the secret value requested there.",
+    "Example: secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    "Important: In Notion, share each page or database with your integration from the page menu before running the node.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Notion step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.notion.com/docs/getting-started",
   "resources": [
@@ -36,7 +33,7 @@ export const notionDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Notion API key (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Notion.\nWhere to get it: Open the Notion dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Notion integration token, a secret password that lets CtrlChecks talk to Notion safely.\nWhere to find it: notion.so/my-integrations -> your integration -> Configuration -> Internal Integration Token.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\nImportant: Treat this like a bank password. Share each page or database with the integration before running the node.",
               "placeholder": "secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "example": "secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
@@ -47,7 +44,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion OAuth access token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Notion.\nWhere to get it: Open the Notion dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Notion integration token, a secret password that lets CtrlChecks talk to Notion safely.\nWhere to find it: notion.so/my-integrations -> your integration -> Configuration -> Internal Integration Token.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\nImportant: Treat this like a bank password. Share each page or database with the integration before running the node.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -57,7 +54,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Notion resource: page, database, block, user, comment, search",
-              "helpText": "What this field is: Resource chooses the kind of Notion item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Notion.\nExample: In Notion, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Notion resource type to work with.\nOptions: page, database, block, user, comment, search.\nExample: page to read/write Notion pages, database to query a Notion database.\nTip: The resource determines which Notion API endpoint is called.",
               "placeholder": "page",
               "example": "page",
               "defaultValue": "page"
@@ -68,7 +65,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion Page ID (for get, update, archive, restore)",
-              "helpText": "What this field is: Notion Page ID (for get, update, archive, restore) for Notion / Read.\nWhere to find it: Open the item in Notion and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.pageId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The unique ID of the Notion page you want to read, update, archive, or restore.\nWhere to find it: Open the page in Notion and copy the link. The page ID is the 32-character code near the end of the URL, before any ? character.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nTip: Use {{$json.pageId}} if an earlier Notion step returned the page ID.",
               "placeholder": "page-id",
               "example": "page-id"
             },
@@ -78,7 +75,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion Database ID (for query, get, or creating a page as a database row)",
-              "helpText": "What this field is: The unique ID of your Notion database.\nWhere to find it: Open the database in Notion → click Share at the top → Copy link. The ID is the 32-character string in the URL before the ?.\nExample URL: notion.so/myworkspace/1234abcd5678ef90abcd1234ef567890?v=...\nThe ID is: 1234abcd5678ef90abcd1234ef567890",
+              "helpText": "What this field is: The unique ID of the Notion database you want to query or add rows to.\nWhere to find it: Open the database in Notion and copy the link. The database ID is the 32-character code before ?v=.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nImportant: Share the database with your Notion integration from the Notion page menu: ... -> Connections -> add your integration.\nTip: Use {{$json.databaseId}} from a previous step when available.",
               "placeholder": "database-id",
               "example": "database-id"
             },
@@ -88,7 +85,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Parent Page ID — where the new page will be created (required for page › create and database › create)",
-              "helpText": "What this field is: Parent Page ID — where the new page will be created (required for page › create and database › create) for Notion / Read.\nWhere to find it: Open the item in Notion and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.parentPageId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Notion page or database where the new page will be created.\nWhere to find it: Open the parent page or database in Notion and copy the ID from its URL.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nTip: For database rows, use the database ID as the parent.",
               "placeholder": "parent-page-id",
               "example": "parent-page-id"
             },
@@ -98,7 +95,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Page or database title (plain text)",
-              "helpText": "What this field is: Page or database title (plain text) for Notion / Read.\nHow to fill it: Enter the title value requested by Notion, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: The title of the Notion page or database entry (the main heading/name).\nHow to fill it: Type the title text directly, or use data from an earlier step.\nExample: Monthly Report — {{$json.month}} {{$json.year}}\nNote: Notion page titles are plain text — Markdown formatting does not apply in this field.",
               "placeholder": "My Page",
               "example": "My Page"
             },
@@ -108,7 +105,7 @@ export const notionDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Page body content (plain text — added as a paragraph block)",
-              "helpText": "What this field is: Page body content (plain text — added as a paragraph block) for Notion / Read.\nHow to fill it: Type the message, prompt, or content you want Notion to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: The body text of the Notion page, added as a Paragraph block.\nHow to fill it: Type the page content in plain text. Use {{$json.fieldName}} to insert data from earlier steps.\nExample: This report covers {{$json.startDate}} to {{$json.endDate}}. Total orders: {{$json.orderCount}}.\nNote: For richer formatting like headings or bullet lists, you would need to use the Notion blocks API structure.",
               "placeholder": "This is the page content.",
               "example": "This is the page content."
             },
@@ -118,7 +115,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Page properties as simple JSON key:value pairs (for database rows). Example: {\"Status\":\"In Progress\",\"Priority\":\"High\"}",
-              "helpText": "What this field is: Page properties as simple JSON key:value pairs (for database rows). Example: {\"Status\":\"In Progress\",\"Priority\":\"High\"} for Notion / Read.\nHow to fill it: Enter the properties value requested by Notion, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.properties}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Notion database property values for the page or row.\nHow to fill it: Enter structured data in { } brackets. Use exact Notion column names, including capital letters and spaces.\nExample: {\"Status\":\"In Progress\",\"Priority\":\"High\",\"Due Date\":\"2026-06-01\"}.\nTip: Copy column names from the Notion database header. \"Status\" and \"status\" are different.",
               "placeholder": "{\"Status\":\"Done\",\"Count\":3}",
               "example": "{\"Status\":\"Done\",\"Count\":3}"
             },
@@ -128,7 +125,7 @@ export const notionDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional filter for database queries/search",
-              "helpText": "What this field is: Optional filter for database queries/search for Notion / Read.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Notion which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: A filter that limits which Notion database rows are returned.\nHow to fill it: Enter a Notion filter as structured data in { } brackets. Leave blank to return all rows allowed by the limit.\nExample: {\"property\":\"Status\",\"select\":{\"equals\":\"In Progress\"}}.\nTip: Build the filter around the exact Notion property name.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -168,7 +165,7 @@ export const notionDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Notion API key (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Notion.\nWhere to get it: Open the Notion dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Notion integration token, a secret password that lets CtrlChecks talk to Notion safely.\nWhere to find it: notion.so/my-integrations -> your integration -> Configuration -> Internal Integration Token.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\nImportant: Treat this like a bank password. Share each page or database with the integration before running the node.",
               "placeholder": "secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "example": "secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
@@ -179,7 +176,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion OAuth access token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Notion.\nWhere to get it: Open the Notion dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Notion integration token, a secret password that lets CtrlChecks talk to Notion safely.\nWhere to find it: notion.so/my-integrations -> your integration -> Configuration -> Internal Integration Token.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\nImportant: Treat this like a bank password. Share each page or database with the integration before running the node.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -189,7 +186,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Notion resource: page, database, block, user, comment, search",
-              "helpText": "What this field is: Resource chooses the kind of Notion item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Notion.\nExample: In Notion, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Notion resource type to work with.\nOptions: page, database, block, user, comment, search.\nExample: page to read/write Notion pages, database to query a Notion database.\nTip: The resource determines which Notion API endpoint is called.",
               "placeholder": "page",
               "example": "page",
               "defaultValue": "page"
@@ -200,7 +197,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion Page ID (for get, update, archive, restore)",
-              "helpText": "What this field is: Notion Page ID (for get, update, archive, restore) for Notion / Create.\nWhere to find it: Open the item in Notion and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.pageId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The unique ID of the Notion page you want to read, update, archive, or restore.\nWhere to find it: Open the page in Notion and copy the link. The page ID is the 32-character code near the end of the URL, before any ? character.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nTip: Use {{$json.pageId}} if an earlier Notion step returned the page ID.",
               "placeholder": "page-id",
               "example": "page-id"
             },
@@ -210,7 +207,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion Database ID (for query, get, or creating a page as a database row)",
-              "helpText": "What this field is: The unique ID of your Notion database.\nWhere to find it: Open the database in Notion → click Share at the top → Copy link. The ID is the 32-character string in the URL before the ?.\nExample URL: notion.so/myworkspace/1234abcd5678ef90abcd1234ef567890?v=...\nThe ID is: 1234abcd5678ef90abcd1234ef567890",
+              "helpText": "What this field is: The unique ID of the Notion database you want to query or add rows to.\nWhere to find it: Open the database in Notion and copy the link. The database ID is the 32-character code before ?v=.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nImportant: Share the database with your Notion integration from the Notion page menu: ... -> Connections -> add your integration.\nTip: Use {{$json.databaseId}} from a previous step when available.",
               "placeholder": "database-id",
               "example": "database-id"
             },
@@ -220,7 +217,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Parent Page ID — where the new page will be created (required for page › create and database › create)",
-              "helpText": "What this field is: Parent Page ID — where the new page will be created (required for page › create and database › create) for Notion / Create.\nWhere to find it: Open the item in Notion and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.parentPageId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Notion page or database where the new page will be created.\nWhere to find it: Open the parent page or database in Notion and copy the ID from its URL.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nTip: For database rows, use the database ID as the parent.",
               "placeholder": "parent-page-id",
               "example": "parent-page-id"
             },
@@ -230,7 +227,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Page or database title (plain text)",
-              "helpText": "What this field is: Page or database title (plain text) for Notion / Create.\nHow to fill it: Enter the title value requested by Notion, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Page or database title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: My Page.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "My Page",
               "example": "My Page"
             },
@@ -240,7 +237,7 @@ export const notionDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Page body content (plain text — added as a paragraph block)",
-              "helpText": "What this field is: Page body content (plain text — added as a paragraph block) for Notion / Create.\nHow to fill it: Type the message, prompt, or content you want Notion to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Page body content.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: This is the page content..\nTip: Use {{$json.content}} when this value comes from an earlier step.",
               "placeholder": "This is the page content.",
               "example": "This is the page content."
             },
@@ -250,7 +247,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Page properties as simple JSON key:value pairs (for database rows). Example: {\"Status\":\"In Progress\",\"Priority\":\"High\"}",
-              "helpText": "What this field is: The values for each property (column) in your Notion database.\nFormat: JSON object — Notion uses a specific format per property type.\nTitle property example: {\"Name\":{\"title\":[{\"text\":{\"content\":\"Meeting Notes\"}}]}}\nSelect property: {\"Status\":{\"select\":{\"name\":\"In Progress\"}}}\nDate property: {\"Due Date\":{\"date\":{\"start\":\"2025-01-15\"}}}\nNumber property: {\"Revenue\":{\"number\":50000}}\nFull example: {\"Name\":{\"title\":[{\"text\":{\"content\":\"New Task\"}}]},\"Status\":{\"select\":{\"name\":\"Todo\"}},\"Due Date\":{\"date\":{\"start\":\"2025-06-01\"}}}",
+              "helpText": "What this field is: The Notion database property values for the page or row.\nHow to fill it: Enter structured data in { } brackets. Use exact Notion column names, including capital letters and spaces.\nExample: {\"Status\":\"In Progress\",\"Priority\":\"High\",\"Due Date\":\"2026-06-01\"}.\nTip: Copy column names from the Notion database header. \"Status\" and \"status\" are different.",
               "placeholder": "{\"Status\":\"Done\",\"Count\":3}",
               "example": "{\"Status\":\"Done\",\"Count\":3}"
             },
@@ -260,7 +257,7 @@ export const notionDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional filter for database queries/search",
-              "helpText": "What this field is: Optional filter for database queries/search for Notion / Create.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Notion which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: A filter that limits which Notion database rows are returned.\nHow to fill it: Enter a Notion filter as structured data in { } brackets. Leave blank to return all rows allowed by the limit.\nExample: {\"property\":\"Status\",\"select\":{\"equals\":\"In Progress\"}}.\nTip: Build the filter around the exact Notion property name.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -300,7 +297,7 @@ export const notionDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Notion API key (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Notion.\nWhere to get it: Open the Notion dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Notion integration token, a secret password that lets CtrlChecks talk to Notion safely.\nWhere to find it: notion.so/my-integrations -> your integration -> Configuration -> Internal Integration Token.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\nImportant: Treat this like a bank password. Share each page or database with the integration before running the node.",
               "placeholder": "secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "example": "secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
@@ -311,7 +308,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion OAuth access token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Notion.\nWhere to get it: Open the Notion dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Notion integration token, a secret password that lets CtrlChecks talk to Notion safely.\nWhere to find it: notion.so/my-integrations -> your integration -> Configuration -> Internal Integration Token.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\nImportant: Treat this like a bank password. Share each page or database with the integration before running the node.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -321,7 +318,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Notion resource: page, database, block, user, comment, search",
-              "helpText": "What this field is: Resource chooses the kind of Notion item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Notion.\nExample: In Notion, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Notion resource type to work with.\nOptions: page, database, block, user, comment, search.\nExample: page to read/write Notion pages, database to query a Notion database.\nTip: The resource determines which Notion API endpoint is called.",
               "placeholder": "page",
               "example": "page",
               "defaultValue": "page"
@@ -332,7 +329,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion Page ID (for get, update, archive, restore)",
-              "helpText": "What this field is: Notion Page ID (for get, update, archive, restore) for Notion / Update.\nWhere to find it: Open the item in Notion and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.pageId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The unique ID of the Notion page you want to read, update, archive, or restore.\nWhere to find it: Open the page in Notion and copy the link. The page ID is the 32-character code near the end of the URL, before any ? character.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nTip: Use {{$json.pageId}} if an earlier Notion step returned the page ID.",
               "placeholder": "page-id",
               "example": "page-id"
             },
@@ -342,7 +339,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion Database ID (for query, get, or creating a page as a database row)",
-              "helpText": "What this field is: The unique ID of your Notion database.\nWhere to find it: Open the database in Notion → click Share at the top → Copy link. The ID is the 32-character string in the URL before the ?.\nExample URL: notion.so/myworkspace/1234abcd5678ef90abcd1234ef567890?v=...\nThe ID is: 1234abcd5678ef90abcd1234ef567890",
+              "helpText": "What this field is: The unique ID of the Notion database you want to query or add rows to.\nWhere to find it: Open the database in Notion and copy the link. The database ID is the 32-character code before ?v=.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nImportant: Share the database with your Notion integration from the Notion page menu: ... -> Connections -> add your integration.\nTip: Use {{$json.databaseId}} from a previous step when available.",
               "placeholder": "database-id",
               "example": "database-id"
             },
@@ -352,7 +349,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Parent Page ID — where the new page will be created (required for page › create and database › create)",
-              "helpText": "What this field is: Parent Page ID — where the new page will be created (required for page › create and database › create) for Notion / Update.\nWhere to find it: Open the item in Notion and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.parentPageId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Notion page or database where the new page will be created.\nWhere to find it: Open the parent page or database in Notion and copy the ID from its URL.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nTip: For database rows, use the database ID as the parent.",
               "placeholder": "parent-page-id",
               "example": "parent-page-id"
             },
@@ -362,7 +359,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Page or database title (plain text)",
-              "helpText": "What this field is: Page or database title (plain text) for Notion / Update.\nHow to fill it: Enter the title value requested by Notion, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Page or database title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: My Page.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "My Page",
               "example": "My Page"
             },
@@ -372,7 +369,7 @@ export const notionDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Page body content (plain text — added as a paragraph block)",
-              "helpText": "What this field is: Page body content (plain text — added as a paragraph block) for Notion / Update.\nHow to fill it: Type the message, prompt, or content you want Notion to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Page body content.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: This is the page content..\nTip: Use {{$json.content}} when this value comes from an earlier step.",
               "placeholder": "This is the page content.",
               "example": "This is the page content."
             },
@@ -382,7 +379,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Page properties as simple JSON key:value pairs (for database rows). Example: {\"Status\":\"In Progress\",\"Priority\":\"High\"}",
-              "helpText": "What this field is: Page properties as simple JSON key:value pairs (for database rows). Example: {\"Status\":\"In Progress\",\"Priority\":\"High\"} for Notion / Update.\nHow to fill it: Enter the properties value requested by Notion, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.properties}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Notion database property values for the page or row.\nHow to fill it: Enter structured data in { } brackets. Use exact Notion column names, including capital letters and spaces.\nExample: {\"Status\":\"In Progress\",\"Priority\":\"High\",\"Due Date\":\"2026-06-01\"}.\nTip: Copy column names from the Notion database header. \"Status\" and \"status\" are different.",
               "placeholder": "{\"Status\":\"Done\",\"Count\":3}",
               "example": "{\"Status\":\"Done\",\"Count\":3}"
             },
@@ -392,7 +389,7 @@ export const notionDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional filter for database queries/search",
-              "helpText": "What this field is: Optional filter for database queries/search for Notion / Update.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Notion which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: A filter that limits which Notion database rows are returned.\nHow to fill it: Enter a Notion filter as structured data in { } brackets. Leave blank to return all rows allowed by the limit.\nExample: {\"property\":\"Status\",\"select\":{\"equals\":\"In Progress\"}}.\nTip: Build the filter around the exact Notion property name.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }
@@ -432,7 +429,7 @@ export const notionDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Notion API key (required for authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Notion.\nWhere to get it: Open the Notion dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Notion integration token, a secret password that lets CtrlChecks talk to Notion safely.\nWhere to find it: notion.so/my-integrations -> your integration -> Configuration -> Internal Integration Token.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\nImportant: Treat this like a bank password. Share each page or database with the integration before running the node.",
               "placeholder": "secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "example": "secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
@@ -443,7 +440,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion OAuth access token (alternative to API key)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Notion.\nWhere to get it: Open the Notion dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Notion integration token, a secret password that lets CtrlChecks talk to Notion safely.\nWhere to find it: notion.so/my-integrations -> your integration -> Configuration -> Internal Integration Token.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\nImportant: Treat this like a bank password. Share each page or database with the integration before running the node.",
               "placeholder": "your-oauth-access-token",
               "example": "your-oauth-access-token"
             },
@@ -453,7 +450,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Notion resource: page, database, block, user, comment, search",
-              "helpText": "What this field is: Resource chooses the kind of Notion item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Notion.\nExample: In Notion, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Notion resource type to work with.\nOptions: page, database, block, user, comment, search.\nExample: page to read/write Notion pages, database to query a Notion database.\nTip: The resource determines which Notion API endpoint is called.",
               "placeholder": "page",
               "example": "page",
               "defaultValue": "page"
@@ -464,7 +461,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion Page ID (for get, update, archive, restore)",
-              "helpText": "What this field is: Notion Page ID (for get, update, archive, restore) for Notion / Delete.\nWhere to find it: Open the item in Notion and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.pageId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The unique ID of the Notion page you want to read, update, archive, or restore.\nWhere to find it: Open the page in Notion and copy the link. The page ID is the 32-character code near the end of the URL, before any ? character.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nTip: Use {{$json.pageId}} if an earlier Notion step returned the page ID.",
               "placeholder": "page-id",
               "example": "page-id"
             },
@@ -474,7 +471,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Notion Database ID (for query, get, or creating a page as a database row)",
-              "helpText": "What this field is: The unique ID of your Notion database.\nWhere to find it: Open the database in Notion → click Share at the top → Copy link. The ID is the 32-character string in the URL before the ?.\nExample URL: notion.so/myworkspace/1234abcd5678ef90abcd1234ef567890?v=...\nThe ID is: 1234abcd5678ef90abcd1234ef567890",
+              "helpText": "What this field is: The unique ID of the Notion database you want to query or add rows to.\nWhere to find it: Open the database in Notion and copy the link. The database ID is the 32-character code before ?v=.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nImportant: Share the database with your Notion integration from the Notion page menu: ... -> Connections -> add your integration.\nTip: Use {{$json.databaseId}} from a previous step when available.",
               "placeholder": "database-id",
               "example": "database-id"
             },
@@ -484,7 +481,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Parent Page ID — where the new page will be created (required for page › create and database › create)",
-              "helpText": "What this field is: Parent Page ID — where the new page will be created (required for page › create and database › create) for Notion / Delete.\nWhere to find it: Open the item in Notion and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.parentPageId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Notion page or database where the new page will be created.\nWhere to find it: Open the parent page or database in Notion and copy the ID from its URL.\nExample: a1b2c3d4e5f67890abcd1234567890ab.\nTip: For database rows, use the database ID as the parent.",
               "placeholder": "parent-page-id",
               "example": "parent-page-id"
             },
@@ -494,7 +491,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Page or database title (plain text)",
-              "helpText": "What this field is: Page or database title (plain text) for Notion / Delete.\nHow to fill it: Enter the title value requested by Notion, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Page or database title.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: My Page.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "My Page",
               "example": "My Page"
             },
@@ -504,7 +501,7 @@ export const notionDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Page body content (plain text — added as a paragraph block)",
-              "helpText": "What this field is: Page body content (plain text — added as a paragraph block) for Notion / Delete.\nHow to fill it: Type the message, prompt, or content you want Notion to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Page body content.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: This is the page content..\nTip: Use {{$json.content}} when this value comes from an earlier step.",
               "placeholder": "This is the page content.",
               "example": "This is the page content."
             },
@@ -514,7 +511,7 @@ export const notionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Page properties as simple JSON key:value pairs (for database rows). Example: {\"Status\":\"In Progress\",\"Priority\":\"High\"}",
-              "helpText": "What this field is: Page properties as simple JSON key:value pairs (for database rows). Example: {\"Status\":\"In Progress\",\"Priority\":\"High\"} for Notion / Delete.\nHow to fill it: Enter the properties value requested by Notion, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.properties}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Notion database property values for the page or row.\nHow to fill it: Enter structured data in { } brackets. Use exact Notion column names, including capital letters and spaces.\nExample: {\"Status\":\"In Progress\",\"Priority\":\"High\",\"Due Date\":\"2026-06-01\"}.\nTip: Copy column names from the Notion database header. \"Status\" and \"status\" are different.",
               "placeholder": "{\"Status\":\"Done\",\"Count\":3}",
               "example": "{\"Status\":\"Done\",\"Count\":3}"
             },
@@ -524,7 +521,7 @@ export const notionDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Optional filter for database queries/search",
-              "helpText": "What this field is: Optional filter for database queries/search for Notion / Delete.\nHow to fill it: Enter the search, filter, SQL, or API query that tells Notion which records to return or affect.\nLeave it blank only when you really want all available records and the node allows it.\nExample: status = active or from:billing@example.com\nTip: To use data from an earlier node, type {{$json.filter}} or pick the value from the data picker.",
+              "helpText": "What this field is: A filter that limits which Notion database rows are returned.\nHow to fill it: Enter a Notion filter as structured data in { } brackets. Leave blank to return all rows allowed by the limit.\nExample: {\"property\":\"Status\",\"select\":{\"equals\":\"In Progress\"}}.\nTip: Build the filter around the exact Notion property name.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }

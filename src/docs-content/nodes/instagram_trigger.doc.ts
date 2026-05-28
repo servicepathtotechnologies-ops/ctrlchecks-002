@@ -8,16 +8,12 @@ export const instagramTriggerDoc: NodeDoc = {
   "description": "Trigger workflows on Instagram events: new DM, comment, mention, postback",
   "credentialType": "Meta App Credentials",
   "credentialSetupSteps": [
-    "What this is: Meta Apps uses an OAuth connection so CtrlChecks can safely access your Meta Apps account.",
-    "Go to developers.facebook.com/apps and sign in with your Facebook account.",
-    "Click \"Create App\" -> select \"Business\" type -> Next -> give it a name -> Create App.",
-    "Under \"Add Products to Your App\", click \"Set Up\" on Facebook Login.",
-    "Go to Facebook Login -> Settings -> add this URL to \"Valid OAuth Redirect URIs\": http://localhost:3001/api/oauth/facebook/callback -> Save Changes.",
-    "Copy the App ID and App Secret from Settings -> Basic.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Facebook -> click \"Connect with Facebook\" -> sign in and authorize.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Meta Apps node and select the saved connection."
+    "What this is: The Instagram Trigger connection lets CtrlChecks access your Instagram Trigger account safely without putting secrets in workflow fields.",
+    "Where to start: Meta for Developers -> your app -> Instagram API setup.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Instagram Trigger, then sign in or paste the secret value requested there.",
+    "Example: the access token shown by Meta.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Instagram Trigger step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.facebook.com/docs/facebook-login/web",
   "resources": [
@@ -36,7 +32,7 @@ export const instagramTriggerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Instagram event type",
-              "helpText": "What this field is: Instagram event type for Instagram Trigger / Execute.\nHow to fill it: Enter the event value requested by Instagram Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.event}} or pick the value from the data picker.",
+              "helpText": "What this field is: Instagram event type.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: message.received.\nTip: Use {{$json.event}} when this value comes from an earlier step.",
               "placeholder": "message.received",
               "example": "message.received",
               "defaultValue": "message.received"
@@ -47,7 +43,7 @@ export const instagramTriggerDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Instagram Business Account ID to listen on",
-              "helpText": "What this field is: Instagram Business Account ID to listen on for Instagram Trigger / Execute.\nWhere to find it: Open the item in Instagram Trigger and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.instagramBusinessAccountId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Instagram Business Account ID to listen on that tells Instagram Trigger which item to use.\nWhere to find it: Open the item in Instagram Trigger and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.instagramBusinessAccountId}} when an earlier Instagram Trigger step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             }

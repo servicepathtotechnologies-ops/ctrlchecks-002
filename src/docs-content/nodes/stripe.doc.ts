@@ -8,16 +8,13 @@ export const stripeDoc: NodeDoc = {
   "description": "Stripe payment processing",
   "credentialType": "Stripe API Key",
   "credentialSetupSteps": [
-    "What this is: Stripe uses an API key or account connection so CtrlChecks can safely access your Stripe account.",
-    "Go to dashboard.stripe.com and sign in to your Stripe account.",
-    "Click \"Developers\" in the top right corner -> API keys.",
-    "Copy the \"Secret key\" - use sk_test_ (starts with sk_test_) while building and testing, sk_live_ for real payments.",
-    "Keep this key secret - anyone with it can charge your customers or process refunds.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Stripe -> paste the sk_ key -> Save.",
-    "Run a test step using sk_test_ (e.g. create a test customer) to confirm it works before switching to the live key.",
-    "Important: amounts in Stripe are in the smallest currency unit. $20.00 = 2000 (cents). Enter 2000, not 20.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Stripe node and select the saved connection."
+    "What this is: The Stripe connection lets CtrlChecks access your Stripe account safely without putting secrets in workflow fields.",
+    "Where to start: Stripe Dashboard -> Developers -> API keys -> Secret key.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Stripe, then sign in or paste the secret value requested there.",
+    "Example: sk_test_... for testing or sk_live_... for real payments.",
+    "Tip: Use sk_test_ keys while building and testing. Switch to sk_live_ only when you are ready for real payments.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Stripe step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://stripe.com/docs/keys",
   "resources": [
@@ -36,7 +33,7 @@ export const stripeDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Stripe secret key (optional if stored in vault under key \"stripe\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Stripe.\nWhere to get it: Open the Stripe dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Stripe secret key, a secret password that lets CtrlChecks talk to Stripe safely.\nWhere to find it: Stripe Dashboard -> Developers -> API keys -> Secret key.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: sk_test_... for testing or sk_live_... for real payments.\nImportant: Treat this like a bank password. Use test keys while building so no real money moves.",
               "placeholder": "sk_live_...",
               "example": "sk_live_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -47,7 +44,7 @@ export const stripeDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Payment amount (in cents)",
-              "helpText": "What this field is: The payment amount in the SMALLEST unit of the currency.\nFor USD (cents): 2000 means $20.00 (multiply dollars by 100)\nFor EUR (cents): 1500 means €15.00\nFor JPY (no decimal): 2000 means ¥2000 (no multiplication needed)\nFor GBP (pence): 4999 means £49.99\nExample: To charge $49.99 USD, enter 4999. To charge $100.00, enter 10000.",
+              "helpText": "What this field is: The payment amount in the smallest unit of the currency, not dollars or euros directly.\nHow to fill it: For USD, EUR, GBP, INR, and most currencies, multiply the main amount by 100. For JPY, enter the yen amount as-is.\nExample: 4999 charges $49.99 USD. 2000 refunds $20.00 USD.\nTip: Use {{$json.amount}} from an order, form, or Stripe event after converting it to the smallest currency unit.",
               "placeholder": "1000",
               "example": "1000"
             },
@@ -57,7 +54,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Currency (default: usd)",
-              "helpText": "What this field is: The 3-letter ISO currency code for the payment.\nMust be lowercase.\nExamples: usd (US Dollar), eur (Euro), gbp (British Pound), inr (Indian Rupee), cad (Canadian Dollar), aud (Australian Dollar), jpy (Japanese Yen), sgd (Singapore Dollar).\nMust match a currency supported by your Stripe account.",
+              "helpText": "What this field is: The three-letter currency code for the Stripe payment.\nHow to fill it: Use lowercase letters and a currency your Stripe account supports.\nExample: usd, eur, gbp, inr, aud, cad, jpy.\nTip: The refund currency must match the original payment currency.",
               "placeholder": "usd",
               "example": "usd",
               "defaultValue": "usd"
@@ -68,7 +65,7 @@ export const stripeDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Description for the charge/payment",
-              "helpText": "What this field is: Description for the charge/payment for Stripe / Charge.\nHow to fill it: Type the message, prompt, or content you want Stripe to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -77,7 +74,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Legacy charge source token (for /v1/charges)",
-              "helpText": "What this field is: Legacy charge source token (for /v1/charges) for Stripe / Charge.\nHow to fill it: Enter the source value requested by Stripe, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.source}} or pick the value from the data picker.",
+              "helpText": "What this field is: A legacy Stripe source token for older charge flows.\nHow to fill it: Use a token that starts with tok_ only when your workflow still uses Stripe Charges.\nExample: tok_visa for Stripe test mode.\nTip: For new payment flows, prefer Payment Method ID or PaymentIntent-based workflows.",
               "placeholder": "tok_visa",
               "example": "tok_visa"
             },
@@ -87,7 +84,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Payment method ID (for PaymentIntents)",
-              "helpText": "What this field is: Payment method ID (for PaymentIntents) for Stripe / Charge.\nWhere to find it: Open the item in Stripe and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.paymentMethodId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Stripe Payment Method ID for the card or payment method.\nWhere to find it: It is returned by Stripe Checkout, Payment Element, or a previous Stripe step. It starts with pm_.\nExample: pm_1NabcDEF234567890.\nTip: Use {{$json.paymentMethodId}} from a Stripe webhook or checkout-session output.",
               "placeholder": "pm_...",
               "example": "pm_..."
             },
@@ -117,7 +114,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer name (for createCustomer)",
-              "helpText": "What this field is: Customer name (for createCustomer) for Stripe / Charge.\nHow to fill it: Enter the name value requested by Stripe, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.name}} or pick the value from the data picker.",
+              "helpText": "What this field is: Customer name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Name value.\nTip: This field is used for createCustomer. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Name"
             },
             {
@@ -126,7 +123,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Charge ID (for refund)",
-              "helpText": "What this field is: Charge ID (for refund) for Stripe / Charge.\nWhere to find it: Open the item in Stripe and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.chargeId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Stripe charge ID to refund or look up.\nWhere to find it: Open Stripe Dashboard -> Payments -> choose a payment. The charge ID starts with ch_.\nExample: ch_3Nf9mX2eZvKYlo2C0abc1234.\nTip: Use {{$json.id}} from a previous Charge step when it returns a charge ID.",
               "placeholder": "ch_...",
               "example": "ch_..."
             },
@@ -136,7 +133,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "PaymentIntent ID (for refund)",
-              "helpText": "What this field is: PaymentIntent ID (for refund) for Stripe / Charge.\nWhere to find it: Open the item in Stripe and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.paymentIntentId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Stripe PaymentIntent ID to refund or look up.\nWhere to find it: Open the payment in Stripe Dashboard or use the payment_intent value from a Stripe webhook. It starts with pi_.\nExample: pi_3Nf9mX2eZvKYlo2C0abc1234.\nTip: Use {{$json.payment_intent}} from a checkout or payment webhook.",
               "placeholder": "pi_...",
               "example": "pi_..."
             }
@@ -172,7 +169,7 @@ export const stripeDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Stripe secret key (optional if stored in vault under key \"stripe\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Stripe.\nWhere to get it: Open the Stripe dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Stripe secret key, a secret password that lets CtrlChecks talk to Stripe safely.\nWhere to find it: Stripe Dashboard -> Developers -> API keys -> Secret key.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: sk_test_... for testing or sk_live_... for real payments.\nImportant: Treat this like a bank password. Use test keys while building so no real money moves.",
               "placeholder": "sk_live_...",
               "example": "sk_live_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -183,7 +180,7 @@ export const stripeDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Payment amount (in cents)",
-              "helpText": "What this field is: A number used for amount in Stripe / Refund.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.amount}} or pick the value from the data picker.",
+              "helpText": "What this field is: The refund amount in the smallest unit of the currency, not dollars or euros directly.\nHow to fill it: For USD, EUR, GBP, INR, and most currencies, multiply the main amount by 100. For JPY, enter the yen amount as-is.\nExample: 4999 charges $49.99 USD. 2000 refunds $20.00 USD.\nTip: Use {{$json.amount}} from an order, form, or Stripe event after converting it to the smallest currency unit.",
               "placeholder": "1000",
               "example": "1000"
             },
@@ -193,7 +190,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Currency (default: usd)",
-              "helpText": "What this field is: Currency (default: usd) for Stripe / Refund.\nHow to fill it: Enter the currency value requested by Stripe, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.currency}} or pick the value from the data picker.",
+              "helpText": "What this field is: The three-letter currency code for the Stripe payment.\nHow to fill it: Use lowercase letters and a currency your Stripe account supports.\nExample: usd, eur, gbp, inr, aud, cad, jpy.\nTip: The refund currency must match the original payment currency.",
               "placeholder": "usd",
               "example": "usd",
               "defaultValue": "usd"
@@ -204,7 +201,7 @@ export const stripeDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Description for the charge/payment",
-              "helpText": "What this field is: Description for the charge/payment for Stripe / Refund.\nHow to fill it: Type the message, prompt, or content you want Stripe to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -213,7 +210,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Legacy charge source token (for /v1/charges)",
-              "helpText": "What this field is: Legacy charge source token (for /v1/charges) for Stripe / Refund.\nHow to fill it: Enter the source value requested by Stripe, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.source}} or pick the value from the data picker.",
+              "helpText": "What this field is: A legacy Stripe source token for older charge flows.\nHow to fill it: Use a token that starts with tok_ only when your workflow still uses Stripe Charges.\nExample: tok_visa for Stripe test mode.\nTip: For new payment flows, prefer Payment Method ID or PaymentIntent-based workflows.",
               "placeholder": "tok_visa",
               "example": "tok_visa"
             },
@@ -223,7 +220,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Payment method ID (for PaymentIntents)",
-              "helpText": "What this field is: Payment method ID (for PaymentIntents) for Stripe / Refund.\nWhere to find it: Open the item in Stripe and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.paymentMethodId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Stripe Payment Method ID for the card or payment method.\nWhere to find it: It is returned by Stripe Checkout, Payment Element, or a previous Stripe step. It starts with pm_.\nExample: pm_1NabcDEF234567890.\nTip: Use {{$json.paymentMethodId}} from a Stripe webhook or checkout-session output.",
               "placeholder": "pm_...",
               "example": "pm_..."
             },
@@ -253,7 +250,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer name (for createCustomer)",
-              "helpText": "What this field is: Customer name (for createCustomer) for Stripe / Refund.\nHow to fill it: Enter the name value requested by Stripe, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.name}} or pick the value from the data picker.",
+              "helpText": "What this field is: Customer name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Name value.\nTip: This field is used for createCustomer. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Name"
             },
             {
@@ -262,7 +259,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Charge ID (for refund)",
-              "helpText": "What this field is: Charge ID (for refund) for Stripe / Refund.\nWhere to find it: Open the item in Stripe and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.chargeId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Stripe charge ID to refund or look up.\nWhere to find it: Open Stripe Dashboard -> Payments -> choose a payment. The charge ID starts with ch_.\nExample: ch_3Nf9mX2eZvKYlo2C0abc1234.\nTip: Use {{$json.id}} from a previous Charge step when it returns a charge ID.",
               "placeholder": "ch_...",
               "example": "ch_..."
             },
@@ -272,7 +269,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "PaymentIntent ID (for refund)",
-              "helpText": "What this field is: PaymentIntent ID (for refund) for Stripe / Refund.\nWhere to find it: Open the item in Stripe and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.paymentIntentId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Stripe PaymentIntent ID to refund or look up.\nWhere to find it: Open the payment in Stripe Dashboard or use the payment_intent value from a Stripe webhook. It starts with pi_.\nExample: pi_3Nf9mX2eZvKYlo2C0abc1234.\nTip: Use {{$json.payment_intent}} from a checkout or payment webhook.",
               "placeholder": "pi_...",
               "example": "pi_..."
             }
@@ -312,7 +309,7 @@ export const stripeDoc: NodeDoc = {
               "type": "password",
               "required": false,
               "description": "Stripe secret key (optional if stored in vault under key \"stripe\")",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Stripe.\nWhere to get it: Open the Stripe dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Stripe secret key, a secret password that lets CtrlChecks talk to Stripe safely.\nWhere to find it: Stripe Dashboard -> Developers -> API keys -> Secret key.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: sk_test_... for testing or sk_live_... for real payments.\nImportant: Treat this like a bank password. Use test keys while building so no real money moves.",
               "placeholder": "sk_live_...",
               "example": "sk_live_...",
               "notes": "Stored and displayed as a masked credential value."
@@ -323,7 +320,7 @@ export const stripeDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Payment amount (in cents)",
-              "helpText": "What this field is: A number used for amount in Stripe / CreateCustomer.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.amount}} or pick the value from the data picker.",
+              "helpText": "What this field is: The payment amount in the smallest unit of the currency, not dollars or euros directly.\nHow to fill it: For USD, EUR, GBP, INR, and most currencies, multiply the main amount by 100. For JPY, enter the yen amount as-is.\nExample: 4999 charges $49.99 USD. 2000 refunds $20.00 USD.\nTip: Use {{$json.amount}} from an order, form, or Stripe event after converting it to the smallest currency unit.",
               "placeholder": "1000",
               "example": "1000"
             },
@@ -333,7 +330,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Currency (default: usd)",
-              "helpText": "What this field is: Currency (default: usd) for Stripe / CreateCustomer.\nHow to fill it: Enter the currency value requested by Stripe, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.currency}} or pick the value from the data picker.",
+              "helpText": "What this field is: The three-letter currency code for the Stripe payment.\nHow to fill it: Use lowercase letters and a currency your Stripe account supports.\nExample: usd, eur, gbp, inr, aud, cad, jpy.\nTip: The refund currency must match the original payment currency.",
               "placeholder": "usd",
               "example": "usd",
               "defaultValue": "usd"
@@ -344,7 +341,7 @@ export const stripeDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Description for the charge/payment",
-              "helpText": "What this field is: Description for the charge/payment for Stripe / CreateCustomer.\nHow to fill it: Type the message, prompt, or content you want Stripe to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Description.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -353,7 +350,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Legacy charge source token (for /v1/charges)",
-              "helpText": "What this field is: Legacy charge source token (for /v1/charges) for Stripe / CreateCustomer.\nHow to fill it: Enter the source value requested by Stripe, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.source}} or pick the value from the data picker.",
+              "helpText": "What this field is: A legacy Stripe source token for older charge flows.\nHow to fill it: Use a token that starts with tok_ only when your workflow still uses Stripe Charges.\nExample: tok_visa for Stripe test mode.\nTip: For new payment flows, prefer Payment Method ID or PaymentIntent-based workflows.",
               "placeholder": "tok_visa",
               "example": "tok_visa"
             },
@@ -363,7 +360,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Payment method ID (for PaymentIntents)",
-              "helpText": "What this field is: Payment method ID (for PaymentIntents) for Stripe / CreateCustomer.\nWhere to find it: Open the item in Stripe and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.paymentMethodId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Stripe Payment Method ID for the card or payment method.\nWhere to find it: It is returned by Stripe Checkout, Payment Element, or a previous Stripe step. It starts with pm_.\nExample: pm_1NabcDEF234567890.\nTip: Use {{$json.paymentMethodId}} from a Stripe webhook or checkout-session output.",
               "placeholder": "pm_...",
               "example": "pm_..."
             },
@@ -383,7 +380,7 @@ export const stripeDoc: NodeDoc = {
               "type": "email",
               "required": false,
               "description": "Customer email (for createCustomer)",
-              "helpText": "What this field is: The customer's email address — Stripe uses this to identify customers and send receipts.\nExample: alice@example.com\nTip: Use {{$json.email}} from a form submission or signup step.",
+              "helpText": "What this field is: The email address for Customer email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -393,7 +390,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Customer name (for createCustomer)",
-              "helpText": "What this field is: The customer's full name as it appears in your Stripe dashboard.\nExample: Alice Kumar or Acme Corp (for business accounts)",
+              "helpText": "What this field is: Customer name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Name value.\nTip: This field is used for createCustomer. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Name"
             },
             {
@@ -402,7 +399,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Charge ID (for refund)",
-              "helpText": "What this field is: Charge ID (for refund) for Stripe / CreateCustomer.\nWhere to find it: Open the item in Stripe and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.chargeId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Stripe charge ID to refund or look up.\nWhere to find it: Open Stripe Dashboard -> Payments -> choose a payment. The charge ID starts with ch_.\nExample: ch_3Nf9mX2eZvKYlo2C0abc1234.\nTip: Use {{$json.id}} from a previous Charge step when it returns a charge ID.",
               "placeholder": "ch_...",
               "example": "ch_..."
             },
@@ -412,7 +409,7 @@ export const stripeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "PaymentIntent ID (for refund)",
-              "helpText": "What this field is: PaymentIntent ID (for refund) for Stripe / CreateCustomer.\nWhere to find it: Open the item in Stripe and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.paymentIntentId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Stripe PaymentIntent ID to refund or look up.\nWhere to find it: Open the payment in Stripe Dashboard or use the payment_intent value from a Stripe webhook. It starts with pi_.\nExample: pi_3Nf9mX2eZvKYlo2C0abc1234.\nTip: Use {{$json.payment_intent}} from a checkout or payment webhook.",
               "placeholder": "pi_...",
               "example": "pi_..."
             }

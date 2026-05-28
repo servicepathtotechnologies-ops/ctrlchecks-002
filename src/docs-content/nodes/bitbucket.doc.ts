@@ -8,16 +8,12 @@ export const bitbucketDoc: NodeDoc = {
   "description": "Bitbucket repository operations",
   "credentialType": "Atlassian API Key",
   "credentialSetupSteps": [
-    "What this is: Atlassian uses an API key or account connection so CtrlChecks can safely access your Atlassian account.",
-    "Go to id.atlassian.com and sign in with your Atlassian account.",
-    "Click \"Security\" tab -> scroll to \"API tokens\" -> Create API token.",
-    "Give it a label (e.g. CtrlChecks) and click Create. Copy the token shown.",
-    "Your Jira base URL is: https://yourcompany.atlassian.net (replace \"yourcompany\" with your organization name shown in your Jira URL).",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Jira -> enter your Jira URL (https://yourcompany.atlassian.net), your email address, and the API token -> Save.",
-    "To find your project key: open any Jira project - the key is shown in brackets next to the project name (e.g. PROJ).",
-    "Run a test step (e.g. create a test issue) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Atlassian node and select the saved connection."
+    "What this is: The Bitbucket connection lets CtrlChecks access your Bitbucket account safely without putting secrets in workflow fields.",
+    "Where to start: Bitbucket account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Bitbucket, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Bitbucket.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Bitbucket step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/",
   "resources": [
@@ -36,7 +32,7 @@ export const bitbucketDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Repository name",
-              "helpText": "What this field is: Repository name for Bitbucket / Create.\nHow to fill it: Enter the repo value requested by Bitbucket, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Repository name that tells Bitbucket which item to use.\nWhere to find it: Open the item in Bitbucket and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: owner/repo.\nTip: Use {{$json.repo}} when an earlier Bitbucket step provides this value.",
               "placeholder": "owner/repo",
               "example": "owner/repo"
             }
@@ -72,7 +68,7 @@ export const bitbucketDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Repository name",
-              "helpText": "What this field is: Repository name for Bitbucket / Read.\nHow to fill it: Enter the repo value requested by Bitbucket, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Repository name that tells Bitbucket which item to use.\nWhere to find it: Open the item in Bitbucket and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: owner/repo.\nTip: Use {{$json.repo}} when an earlier Bitbucket step provides this value.",
               "placeholder": "owner/repo",
               "example": "owner/repo"
             }
@@ -108,7 +104,7 @@ export const bitbucketDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Repository name",
-              "helpText": "What this field is: Repository name for Bitbucket / Update.\nHow to fill it: Enter the repo value requested by Bitbucket, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Repository name that tells Bitbucket which item to use.\nWhere to find it: Open the item in Bitbucket and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: owner/repo.\nTip: Use {{$json.repo}} when an earlier Bitbucket step provides this value.",
               "placeholder": "owner/repo",
               "example": "owner/repo"
             }
@@ -144,7 +140,7 @@ export const bitbucketDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Repository name",
-              "helpText": "What this field is: Repository name for Bitbucket / Delete.\nHow to fill it: Enter the repo value requested by Bitbucket, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.repo}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Repository name that tells Bitbucket which item to use.\nWhere to find it: Open the item in Bitbucket and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: owner/repo.\nTip: Use {{$json.repo}} when an earlier Bitbucket step provides this value.",
               "placeholder": "owner/repo",
               "example": "owner/repo"
             }

@@ -8,14 +8,12 @@ export const activecampaignDoc: NodeDoc = {
   "description": "ActiveCampaign marketing automation",
   "credentialType": "ActiveCampaign API Key",
   "credentialSetupSteps": [
-    "What this is: ActiveCampaign uses an API key or account connection so CtrlChecks can safely access your ActiveCampaign account.",
-    "Log in to your ActiveCampaign account.",
-    "Click Settings (gear icon, bottom left) -> Developer.",
-    "You will see your API URL (e.g. https://youracccount.api-us1.com) and API Key. Copy both.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> ActiveCampaign -> enter the API URL and API Key -> Save.",
-    "Run a test step (e.g. list contacts) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the ActiveCampaign node and select the saved connection."
+    "What this is: The ActiveCampaign connection lets CtrlChecks access your ActiveCampaign account safely without putting secrets in workflow fields.",
+    "Where to start: ActiveCampaign account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> ActiveCampaign, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by ActiveCampaign.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple ActiveCampaign step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.activecampaign.com/reference/url",
   "resources": [
@@ -34,7 +32,7 @@ export const activecampaignDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Contact ID",
-              "helpText": "What this field is: Contact ID for ActiveCampaign / Add.\nWhere to find it: Open the item in ActiveCampaign and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.contactId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Contact ID that tells ActiveCampaign which item to use.\nWhere to find it: Open the item in ActiveCampaign and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: contact-id.\nTip: Use {{$json.contactId}} when an earlier ActiveCampaign step provides this value.",
               "placeholder": "contact-id",
               "example": "contact-id"
             }
@@ -70,7 +68,7 @@ export const activecampaignDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Contact ID",
-              "helpText": "What this field is: Contact ID for ActiveCampaign / Update.\nWhere to find it: Open the item in ActiveCampaign and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.contactId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Contact ID that tells ActiveCampaign which item to use.\nWhere to find it: Open the item in ActiveCampaign and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: contact-id.\nTip: Use {{$json.contactId}} when an earlier ActiveCampaign step provides this value.",
               "placeholder": "contact-id",
               "example": "contact-id"
             }
@@ -106,7 +104,7 @@ export const activecampaignDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Contact ID",
-              "helpText": "What this field is: Contact ID for ActiveCampaign / Delete.\nWhere to find it: Open the item in ActiveCampaign and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.contactId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Contact ID that tells ActiveCampaign which item to use.\nWhere to find it: Open the item in ActiveCampaign and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: contact-id.\nTip: Use {{$json.contactId}} when an earlier ActiveCampaign step provides this value.",
               "placeholder": "contact-id",
               "example": "contact-id"
             }

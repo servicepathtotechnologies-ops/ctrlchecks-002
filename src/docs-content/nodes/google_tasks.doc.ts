@@ -8,16 +8,12 @@ export const googleTasksDoc: NodeDoc = {
   "description": "Manage Google Tasks",
   "credentialType": "Google OAuth",
   "credentialSetupSteps": [
-    "What this is: Google uses an OAuth connection so CtrlChecks can safely access your Google account.",
-    "Open the Google Cloud developer page at: https://console.cloud.google.com/apis/credentials",
-    "Create a new app or project and give it a clear name such as \"CtrlChecks\".",
-    "Enable the required API or permission scope: Required Google Workspace API scopes.",
-    "Create OAuth credentials. The provider will show a Client ID and Client Secret - copy both.",
-    "Add this redirect URI exactly: http://localhost:3001/api/oauth/google/callback",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Google -> connect and approve access.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Google node and select the saved connection."
+    "What this is: The Google Tasks connection lets CtrlChecks access your Google Tasks account safely without putting secrets in workflow fields.",
+    "Where to start: Google Tasks account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Google Tasks, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Google Tasks.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Google Tasks step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://console.cloud.google.com/apis/credentials",
   "resources": [
@@ -36,7 +32,7 @@ export const googleTasksDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID (for update/delete)",
-              "helpText": "What this field is: Task ID (for update/delete) for Google Tasks / Create.\nWhere to find it: Open the item in Google Tasks and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID that tells Google Tasks which item to use.\nWhere to find it: Open the item in Google Tasks and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: task-id.\nTip: Use {{$json.taskId}} when an earlier Google Tasks step provides this value.",
               "placeholder": "task-id",
               "example": "task-id"
             }
@@ -69,7 +65,7 @@ export const googleTasksDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID (for update/delete)",
-              "helpText": "What this field is: Task ID (for update/delete) for Google Tasks / Read.\nWhere to find it: Open the item in Google Tasks and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID that tells Google Tasks which item to use.\nWhere to find it: Open the item in Google Tasks and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: task-id.\nTip: Use {{$json.taskId}} when an earlier Google Tasks step provides this value.",
               "placeholder": "task-id",
               "example": "task-id"
             }
@@ -102,7 +98,7 @@ export const googleTasksDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID (for update/delete)",
-              "helpText": "What this field is: Task ID (for update/delete) for Google Tasks / Update.\nWhere to find it: Open the item in Google Tasks and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID that tells Google Tasks which item to use.\nWhere to find it: Open the item in Google Tasks and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: task-id.\nTip: Use {{$json.taskId}} when an earlier Google Tasks step provides this value.",
               "placeholder": "task-id",
               "example": "task-id"
             }
@@ -135,7 +131,7 @@ export const googleTasksDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Task ID (for update/delete)",
-              "helpText": "What this field is: Task ID (for update/delete) for Google Tasks / Delete.\nWhere to find it: Open the item in Google Tasks and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.taskId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Task ID that tells Google Tasks which item to use.\nWhere to find it: Open the item in Google Tasks and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: task-id.\nTip: Use {{$json.taskId}} when an earlier Google Tasks step provides this value.",
               "placeholder": "task-id",
               "example": "task-id"
             }

@@ -8,14 +8,12 @@ export const tallyDoc: NodeDoc = {
   "description": "Interact with Tally ERP / TallyPrime via XML API to fetch or push accounting data",
   "credentialType": "Tally API Key",
   "credentialSetupSteps": [
-    "What this is: Tally uses an API key or account connection so CtrlChecks can safely access your Tally account.",
-    "Log in to your Tally account at tally.so.",
-    "Go to Settings -> API -> Generate new access token.",
-    "Give it a name and copy the token.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Tally -> paste the token -> Save.",
-    "Run a test step (e.g. list your forms) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Tally node and select the saved connection."
+    "What this is: The Tally Solutions connection lets CtrlChecks access your Tally Solutions account safely without putting secrets in workflow fields.",
+    "Where to start: Tally Solutions account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Tally Solutions, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Tally Solutions.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Tally Solutions step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://tallyforms.notion.site/Tally-API-Documentation",
   "resources": [
@@ -34,7 +32,7 @@ export const tallyDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Tally XML API server URL",
-              "helpText": "What this field is: Tally XML API server URL for Tally Solutions / Get ledger.\nHow to fill it: Paste the full web address Tally Solutions should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.endpoint}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Tally XML API server URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: http://localhost:9000.\nTip: Use {{$json.endpoint}} when the URL comes from an earlier step.",
               "placeholder": "http://localhost:9000",
               "example": "http://localhost:9000",
               "defaultValue": "http://localhost:9000"
@@ -45,7 +43,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom XML request body (overrides the default template for the selected operation)",
-              "helpText": "What this field is: Custom XML request body (overrides the default template for the selected operation) for Tally Solutions / Get ledger.\nHow to fill it: Enter the payload value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Custom XML request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Tally Solutions.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "Enter Payload"
             },
             {
@@ -54,7 +52,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Tally company name to scope requests",
-              "helpText": "What this field is: Tally company name to scope requests for Tally Solutions / Get ledger.\nHow to fill it: Enter the company name value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.companyName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Tally company name to scope requests.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: My Company Ltd.\nTip: Use {{$json.companyName}} when this value comes from an earlier step.",
               "placeholder": "My Company Ltd",
               "example": "My Company Ltd"
             },
@@ -64,7 +62,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ledger name (required for get_ledger operation)",
-              "helpText": "What this field is: Ledger name (required for get_ledger operation) for Tally Solutions / Get ledger.\nHow to fill it: Enter the ledger name value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.ledgerName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ledger name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Cash.\nTip: This field is used for get_ledger. Leave it blank when this operation does not need it.",
               "placeholder": "Cash",
               "example": "Cash"
             },
@@ -74,7 +72,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Voucher ID or number (required for get_voucher operation)",
-              "helpText": "What this field is: Voucher ID or number (required for get_voucher operation) for Tally Solutions / Get ledger.\nWhere to find it: Open the item in Tally Solutions and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.voucherId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Voucher ID or number that tells Tally Solutions which item to use.\nWhere to find it: Open the item in Tally Solutions and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: VCH-001.\nTip: Use {{$json.voucherId}} when an earlier Tally Solutions step provides this value.",
               "placeholder": "VCH-001",
               "example": "VCH-001"
             }
@@ -114,7 +112,7 @@ export const tallyDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Tally XML API server URL",
-              "helpText": "What this field is: Tally XML API server URL for Tally Solutions / Get voucher.\nHow to fill it: Paste the full web address Tally Solutions should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.endpoint}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Tally XML API server URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: http://localhost:9000.\nTip: Use {{$json.endpoint}} when the URL comes from an earlier step.",
               "placeholder": "http://localhost:9000",
               "example": "http://localhost:9000",
               "defaultValue": "http://localhost:9000"
@@ -125,7 +123,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom XML request body (overrides the default template for the selected operation)",
-              "helpText": "What this field is: Custom XML request body (overrides the default template for the selected operation) for Tally Solutions / Get voucher.\nHow to fill it: Enter the payload value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Custom XML request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Tally Solutions.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "Enter Payload"
             },
             {
@@ -134,7 +132,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Tally company name to scope requests",
-              "helpText": "What this field is: Tally company name to scope requests for Tally Solutions / Get voucher.\nHow to fill it: Enter the company name value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.companyName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Tally company name to scope requests.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: My Company Ltd.\nTip: Use {{$json.companyName}} when this value comes from an earlier step.",
               "placeholder": "My Company Ltd",
               "example": "My Company Ltd"
             },
@@ -144,7 +142,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ledger name (required for get_ledger operation)",
-              "helpText": "What this field is: Ledger name (required for get_ledger operation) for Tally Solutions / Get voucher.\nHow to fill it: Enter the ledger name value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.ledgerName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ledger name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Cash.\nTip: This field is used for get_ledger. Leave it blank when this operation does not need it.",
               "placeholder": "Cash",
               "example": "Cash"
             },
@@ -154,7 +152,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Voucher ID or number (required for get_voucher operation)",
-              "helpText": "What this field is: Voucher ID or number (required for get_voucher operation) for Tally Solutions / Get voucher.\nWhere to find it: Open the item in Tally Solutions and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.voucherId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Voucher ID or number that tells Tally Solutions which item to use.\nWhere to find it: Open the item in Tally Solutions and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: VCH-001.\nTip: Use {{$json.voucherId}} when an earlier Tally Solutions step provides this value.",
               "placeholder": "VCH-001",
               "example": "VCH-001"
             }
@@ -194,7 +192,7 @@ export const tallyDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Tally XML API server URL",
-              "helpText": "What this field is: Tally XML API server URL for Tally Solutions / Create voucher.\nHow to fill it: Paste the full web address Tally Solutions should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.endpoint}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Tally XML API server URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: http://localhost:9000.\nTip: Use {{$json.endpoint}} when the URL comes from an earlier step.",
               "placeholder": "http://localhost:9000",
               "example": "http://localhost:9000",
               "defaultValue": "http://localhost:9000"
@@ -205,7 +203,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom XML request body (overrides the default template for the selected operation)",
-              "helpText": "What this field is: Custom XML request body (overrides the default template for the selected operation) for Tally Solutions / Create voucher.\nHow to fill it: Enter the payload value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Custom XML request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Tally Solutions.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "Enter Payload"
             },
             {
@@ -214,7 +212,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Tally company name to scope requests",
-              "helpText": "What this field is: Tally company name to scope requests for Tally Solutions / Create voucher.\nHow to fill it: Enter the company name value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.companyName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Tally company name to scope requests.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: My Company Ltd.\nTip: Use {{$json.companyName}} when this value comes from an earlier step.",
               "placeholder": "My Company Ltd",
               "example": "My Company Ltd"
             },
@@ -224,7 +222,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ledger name (required for get_ledger operation)",
-              "helpText": "What this field is: Ledger name (required for get_ledger operation) for Tally Solutions / Create voucher.\nHow to fill it: Enter the ledger name value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.ledgerName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ledger name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Cash.\nTip: This field is used for get_ledger. Leave it blank when this operation does not need it.",
               "placeholder": "Cash",
               "example": "Cash"
             },
@@ -234,7 +232,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Voucher ID or number (required for get_voucher operation)",
-              "helpText": "What this field is: Voucher ID or number (required for get_voucher operation) for Tally Solutions / Create voucher.\nWhere to find it: Open the item in Tally Solutions and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.voucherId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Voucher ID or number that tells Tally Solutions which item to use.\nWhere to find it: Open the item in Tally Solutions and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: VCH-001.\nTip: Use {{$json.voucherId}} when an earlier Tally Solutions step provides this value.",
               "placeholder": "VCH-001",
               "example": "VCH-001"
             }
@@ -274,7 +272,7 @@ export const tallyDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Tally XML API server URL",
-              "helpText": "What this field is: Tally XML API server URL for Tally Solutions / Get stock items.\nHow to fill it: Paste the full web address Tally Solutions should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.endpoint}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Tally XML API server URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: http://localhost:9000.\nTip: Use {{$json.endpoint}} when the URL comes from an earlier step.",
               "placeholder": "http://localhost:9000",
               "example": "http://localhost:9000",
               "defaultValue": "http://localhost:9000"
@@ -285,7 +283,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom XML request body (overrides the default template for the selected operation)",
-              "helpText": "What this field is: Custom XML request body (overrides the default template for the selected operation) for Tally Solutions / Get stock items.\nHow to fill it: Enter the payload value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Custom XML request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Tally Solutions.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "Enter Payload"
             },
             {
@@ -294,7 +292,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Tally company name to scope requests",
-              "helpText": "What this field is: Tally company name to scope requests for Tally Solutions / Get stock items.\nHow to fill it: Enter the company name value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.companyName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Tally company name to scope requests.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: My Company Ltd.\nTip: Use {{$json.companyName}} when this value comes from an earlier step.",
               "placeholder": "My Company Ltd",
               "example": "My Company Ltd"
             },
@@ -304,7 +302,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ledger name (required for get_ledger operation)",
-              "helpText": "What this field is: Ledger name (required for get_ledger operation) for Tally Solutions / Get stock items.\nHow to fill it: Enter the ledger name value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.ledgerName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ledger name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Cash.\nTip: This field is used for get_ledger. Leave it blank when this operation does not need it.",
               "placeholder": "Cash",
               "example": "Cash"
             },
@@ -314,7 +312,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Voucher ID or number (required for get_voucher operation)",
-              "helpText": "What this field is: Voucher ID or number (required for get_voucher operation) for Tally Solutions / Get stock items.\nWhere to find it: Open the item in Tally Solutions and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.voucherId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Voucher ID or number that tells Tally Solutions which item to use.\nWhere to find it: Open the item in Tally Solutions and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: VCH-001.\nTip: Use {{$json.voucherId}} when an earlier Tally Solutions step provides this value.",
               "placeholder": "VCH-001",
               "example": "VCH-001"
             }
@@ -354,7 +352,7 @@ export const tallyDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Tally XML API server URL",
-              "helpText": "What this field is: Tally XML API server URL for Tally Solutions / Get company info.\nHow to fill it: Paste the full web address Tally Solutions should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.endpoint}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Tally XML API server URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: http://localhost:9000.\nTip: Use {{$json.endpoint}} when the URL comes from an earlier step.",
               "placeholder": "http://localhost:9000",
               "example": "http://localhost:9000",
               "defaultValue": "http://localhost:9000"
@@ -365,7 +363,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Custom XML request body (overrides the default template for the selected operation)",
-              "helpText": "What this field is: Custom XML request body (overrides the default template for the selected operation) for Tally Solutions / Get company info.\nHow to fill it: Enter the payload value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Custom XML request body.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Tally Solutions.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "Enter Payload"
             },
             {
@@ -374,7 +372,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Tally company name to scope requests",
-              "helpText": "What this field is: Tally company name to scope requests for Tally Solutions / Get company info.\nHow to fill it: Enter the company name value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.companyName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Tally company name to scope requests.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: My Company Ltd.\nTip: Use {{$json.companyName}} when this value comes from an earlier step.",
               "placeholder": "My Company Ltd",
               "example": "My Company Ltd"
             },
@@ -384,7 +382,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ledger name (required for get_ledger operation)",
-              "helpText": "What this field is: Ledger name (required for get_ledger operation) for Tally Solutions / Get company info.\nHow to fill it: Enter the ledger name value requested by Tally Solutions, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.ledgerName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ledger name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Cash.\nTip: This field is used for get_ledger. Leave it blank when this operation does not need it.",
               "placeholder": "Cash",
               "example": "Cash"
             },
@@ -394,7 +392,7 @@ export const tallyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Voucher ID or number (required for get_voucher operation)",
-              "helpText": "What this field is: Voucher ID or number (required for get_voucher operation) for Tally Solutions / Get company info.\nWhere to find it: Open the item in Tally Solutions and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.voucherId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Voucher ID or number that tells Tally Solutions which item to use.\nWhere to find it: Open the item in Tally Solutions and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: VCH-001.\nTip: Use {{$json.voucherId}} when an earlier Tally Solutions step provides this value.",
               "placeholder": "VCH-001",
               "example": "VCH-001"
             }

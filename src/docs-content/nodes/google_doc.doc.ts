@@ -8,16 +8,12 @@ export const googleDocDoc: NodeDoc = {
   "description": "Read, write, create, or append content in Google Docs documents",
   "credentialType": "Google Docs OAuth",
   "credentialSetupSteps": [
-    "What this is: Google Docs uses an OAuth connection so CtrlChecks can safely access your Google Docs account.",
-    "Open the Google Cloud developer page at: https://console.cloud.google.com/apis/credentials",
-    "Create a new app or project and give it a clear name such as \"CtrlChecks\".",
-    "Enable the required API or permission scope: Google Docs API: documents.",
-    "Create OAuth credentials. The provider will show a Client ID and Client Secret - copy both.",
-    "Add this redirect URI exactly: http://localhost:3001/api/oauth/google/callback",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Google Docs -> connect and approve access.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Google Docs node and select the saved connection."
+    "What this is: The Google Docs connection lets CtrlChecks access your Google Docs account safely without putting secrets in workflow fields.",
+    "Where to start: Google Docs account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Google Docs, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Google Docs.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Google Docs step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://console.cloud.google.com/apis/credentials",
   "resources": [
@@ -36,7 +32,7 @@ export const googleDocDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Google Docs document ID (extract from URL: /d/DOCUMENT_ID/edit)",
-              "helpText": "What this field is: Google Docs document ID (extract from URL: /d/DOCUMENT_ID/edit) for Google Docs / Read.\nWhere to find it: Open the item in Google Docs and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.documentId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Google Docs document ID that tells Google Docs which item to use.\nWhere to find it: Open the item in Google Docs and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 1a2b3c4d5e6f7g8h9i0j.\nTip: Use {{$json.documentId}} when an earlier Google Docs step provides this value.",
               "placeholder": "1a2b3c4d5e6f7g8h9i0j",
               "example": "1a2b3c4d5e6f7g8h9i0j"
             },
@@ -46,7 +42,7 @@ export const googleDocDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Full Google Docs URL — paste the URL from your browser (alternative to Document ID)",
-              "helpText": "What this field is: Full Google Docs URL — paste the URL from your browser (alternative to Document ID) for Google Docs / Read.\nHow to fill it: Paste the full web address Google Docs should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.documentUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Full Google Docs URL — paste the URL from your browser.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://docs.google.com/document/d/DOCUMENT_ID/edit.\nTip: Use {{$json.documentUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://docs.google.com/document/d/DOCUMENT_ID/edit",
               "example": "https://docs.google.com/document/d/DOCUMENT_ID/edit"
             },
@@ -56,7 +52,7 @@ export const googleDocDoc: NodeDoc = {
               "type": "select",
               "required": false,
               "description": "Output format for read operations",
-              "helpText": "What this field is: A list of allowed choices for format in Google Docs / Read.\nHow to fill it: Pick the option that matches what Google Docs should do. Do not type a custom value unless the UI allows it.\nAvailable choices: Plain text (text), Markdown (markdown).",
+              "helpText": "Options: Choose the format value this Google Docs step should use.\nHow to choose it: Pick the option that matches what you want this step to do.\nExample: Plain text.\nTip: Use {{$json.format}} only when an earlier step already provides a valid option value.",
               "placeholder": "text",
               "example": "text",
               "defaultValue": "text",
@@ -106,7 +102,7 @@ export const googleDocDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Full Google Docs URL — paste the URL from your browser (alternative to Document ID)",
-              "helpText": "What this field is: Full Google Docs URL — paste the URL from your browser (alternative to Document ID) for Google Docs / Write.\nHow to fill it: Paste the full web address Google Docs should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.documentUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Full Google Docs URL — paste the URL from your browser.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://docs.google.com/document/d/DOCUMENT_ID/edit.\nTip: Use {{$json.documentUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://docs.google.com/document/d/DOCUMENT_ID/edit",
               "example": "https://docs.google.com/document/d/DOCUMENT_ID/edit"
             },
@@ -116,7 +112,7 @@ export const googleDocDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Content to write into the document (for write, create, append)",
-              "helpText": "What this field is: Content to write into the document (for write, create, append) for Google Docs / Write.\nHow to fill it: Type the message, prompt, or content you want Google Docs to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Content to write into the document.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.content}}.\nTip: This field is used for write, create, append. Leave it blank when this operation does not need it.",
               "placeholder": "{{$json.content}}",
               "example": "{{$json.content}}"
             }
@@ -153,7 +149,7 @@ export const googleDocDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Document title for the new document",
-              "helpText": "What this field is: Document title for the new document for Google Docs / Create.\nHow to fill it: Enter the title value requested by Google Docs, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.title}} or pick the value from the data picker.",
+              "helpText": "What this field is: Document title for the new document.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: My Document.\nTip: Use {{$json.title}} when this value comes from an earlier step.",
               "placeholder": "My Document",
               "example": "My Document"
             },
@@ -163,7 +159,7 @@ export const googleDocDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Content to write into the document (for write, create, append)",
-              "helpText": "What this field is: Content to write into the document (for write, create, append) for Google Docs / Create.\nHow to fill it: Type the message, prompt, or content you want Google Docs to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Content to write into the document.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.content}}.\nTip: This field is used for write, create, append. Leave it blank when this operation does not need it.",
               "placeholder": "{{$json.content}}",
               "example": "{{$json.content}}"
             }
@@ -195,7 +191,7 @@ export const googleDocDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Full Google Docs URL — paste the URL from your browser (alternative to Document ID)",
-              "helpText": "What this field is: Full Google Docs URL — paste the URL from your browser (alternative to Document ID) for Google Docs / Append.\nHow to fill it: Paste the full web address Google Docs should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.documentUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Full Google Docs URL — paste the URL from your browser.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://docs.google.com/document/d/DOCUMENT_ID/edit.\nTip: Use {{$json.documentUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://docs.google.com/document/d/DOCUMENT_ID/edit",
               "example": "https://docs.google.com/document/d/DOCUMENT_ID/edit"
             },
@@ -205,7 +201,7 @@ export const googleDocDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Content to write into the document (for write, create, append)",
-              "helpText": "What this field is: Content to write into the document (for write, create, append) for Google Docs / Append.\nHow to fill it: Type the message, prompt, or content you want Google Docs to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Content to write into the document.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.content}}.\nTip: This field is used for write, create, append. Leave it blank when this operation does not need it.",
               "placeholder": "{{$json.content}}",
               "example": "{{$json.content}}"
             }

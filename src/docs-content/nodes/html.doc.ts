@@ -29,7 +29,7 @@ export const htmlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "HTML content",
-              "helpText": "What this field is: HTML content for HTML / Parse.\nHow to fill it: Type the message, prompt, or content you want HTML to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: HTML content.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.html}}.\nTip: Use {{$json.html}} when this value comes from an earlier step.",
               "placeholder": "{{$json.html}}",
               "example": "{{$json.html}}"
             }
@@ -66,7 +66,7 @@ export const htmlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "HTML content",
-              "helpText": "What this field is: HTML content for HTML / Extract.\nHow to fill it: Type the message, prompt, or content you want HTML to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: HTML content.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.html}}.\nTip: Use {{$json.html}} when this value comes from an earlier step.",
               "placeholder": "{{$json.html}}",
               "example": "{{$json.html}}"
             }
@@ -96,7 +96,7 @@ export const htmlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "HTML content",
-              "helpText": "What this field is: HTML content for HTML / Clean.\nHow to fill it: Type the message, prompt, or content you want HTML to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: HTML content.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.html}}.\nTip: Use {{$json.html}} when this value comes from an earlier step.",
               "placeholder": "{{$json.html}}",
               "example": "{{$json.html}}"
             }

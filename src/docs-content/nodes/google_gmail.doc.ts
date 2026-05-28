@@ -8,16 +8,12 @@ export const googleGmailDoc: NodeDoc = {
   "description": "Send/receive emails via Gmail API (OAuth)",
   "credentialType": "Gmail OAuth",
   "credentialSetupSteps": [
-    "What this is: Gmail uses an OAuth connection so CtrlChecks can safely access your Gmail account.",
-    "Open the Google Cloud developer page at: https://console.cloud.google.com/apis/credentials",
-    "Create a new app or project and give it a clear name such as \"CtrlChecks\".",
-    "Enable the required API or permission scope: Gmail API: gmail.send, gmail.readonly, gmail.modify.",
-    "Create OAuth credentials. The provider will show a Client ID and Client Secret - copy both.",
-    "Add this redirect URI exactly: http://localhost:3001/api/oauth/google/callback",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Gmail -> connect and approve access.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Gmail node and select the saved connection."
+    "What this is: The Gmail connection lets CtrlChecks access your Gmail account safely without putting secrets in workflow fields.",
+    "Where to start: Gmail account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Gmail, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Gmail.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Gmail step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://console.cloud.google.com/apis/credentials",
   "resources": [
@@ -56,7 +52,7 @@ export const googleGmailDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Email body content (required for send operation)",
-              "helpText": "What this field is: The full email content — everything the recipient reads after opening.\nHow to fill it: Type the email text. You can use HTML for formatting (bold, links, etc.).\nExample: Hi {{$json.name}}, thank you for your purchase! Your order will arrive in 3–5 business days.\nTip: Anything inside {{ }} is replaced with real data from an earlier step. Example: {{$json.name}} becomes \"Alice\".",
+              "helpText": "What this field is: The full email content the recipient reads after opening the message.\nHow to fill it: Type the email text. You can use simple HTML tags for formatting when needed.\nExample: Hi {{$json.name}}, thank you for your purchase. Your order will arrive in 3 to 5 business days.\nTip: Use values like {{$json.name}} from an earlier step to personalize the email.",
               "placeholder": "Email content",
               "example": "Email content"
             },
@@ -101,7 +97,7 @@ export const googleGmailDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of results (for list/search)",
-              "helpText": "What this field is: The maximum number of emails to return.\nExample: 10 returns the 10 most recent matching emails. 50 returns up to 50.\nLeave blank for the default (up to 100 emails).",
+              "helpText": "What this field is: The number used for Maximum number of results.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.maxResults}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10",
               "defaultValue": "10"
@@ -188,7 +184,7 @@ export const googleGmailDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Maximum number of results (for list/search)",
-              "helpText": "What this field is: The maximum number of emails to return.\nExample: 10 for the first 10 results. Leave blank for up to 100.",
+              "helpText": "What this field is: The number used for Maximum number of results.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.maxResults}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10",
               "defaultValue": "10"

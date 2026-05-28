@@ -29,7 +29,7 @@ export const workflowTriggerDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "ID of the workflow that is allowed to trigger this workflow",
-              "helpText": "What this field is: ID of the workflow that is allowed to trigger this workflow for Workflow Trigger / Execute.\nWhere to find it: Open the item in Workflow Trigger and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.source_workflow_id}} or pick the value from the data picker.",
+              "helpText": "What this field is: The ID of the workflow that is allowed to trigger this workflow that tells Workflow Trigger which item to use.\nWhere to find it: Open the item in Workflow Trigger and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: workflow_123.\nTip: Use {{$json.source_workflow_id}} when an earlier Workflow Trigger step provides this value.",
               "placeholder": "workflow_123",
               "example": "workflow_123"
             }

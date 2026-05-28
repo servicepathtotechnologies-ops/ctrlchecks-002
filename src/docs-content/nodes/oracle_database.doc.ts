@@ -8,12 +8,12 @@ export const oracleDatabaseDoc: NodeDoc = {
   "description": "Execute SQL and perform select, insert, update, upsert, and delete operations on Oracle Database.",
   "credentialType": "Oracle Credential",
   "credentialSetupSteps": [
-    "What this is: Oracle uses an OAuth connection so CtrlChecks can safely access your Oracle account.",
-    "Ask your Oracle database administrator for the connection details: Host (server address), Port (default 1521), Service Name or SID, Username, and Password.",
-    "Make sure the Oracle server firewall allows connections from CtrlChecks on port 1521.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Oracle Database -> enter Host, Port, Service Name, Username, Password -> Test Connection -> Save.",
-    "Run a simple SELECT query to confirm CtrlChecks can read from your Oracle database.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields."
+    "What this is: The Oracle Database connection lets CtrlChecks access your Oracle Database account safely without putting secrets in workflow fields.",
+    "Where to start: Oracle Database account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Oracle Database, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Oracle Database.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Oracle Database step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.oracle.com/en/database/oracle/oracle-database/19/netag/index.html",
   "resources": [
@@ -32,7 +32,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle username",
-              "helpText": "What this field is: Oracle username for Oracle Database / Select.\nHow to fill it: Enter the user value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.user}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: User value.\nTip: Use {{$json.user}} when this value comes from an earlier step.",
               "placeholder": "Enter User"
             },
             {
@@ -41,7 +41,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "helpText": "What this field is: Oracle password for Oracle Database / Select.\nHow to fill it: Enter the password value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle Database token, a secret password that lets CtrlChecks talk to Oracle Database safely.\nWhere to find it: Oracle Database account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Oracle Database.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -51,7 +51,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle connection string",
-              "helpText": "What this field is: Oracle connection string for Oracle Database / Select.\nHow to fill it: Enter the connection string value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle connection string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Connection String value.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "Enter Connection String"
             },
             {
@@ -60,7 +60,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Oracle schema",
-              "helpText": "What this field is: Oracle schema for Oracle Database / Select.\nHow to fill it: Enter the schema value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.schema}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle schema.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Schema value.\nTip: Use {{$json.schema}} when this value comes from an earlier step.",
               "placeholder": "Enter Schema"
             },
             {
@@ -69,7 +69,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for Oracle Database / Select.\nHow to fill it: Enter the table value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells Oracle Database which item to use.\nWhere to find it: Open the item in Oracle Database and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier Oracle Database step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -78,7 +78,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SQL statement for execute_sql",
-              "helpText": "What this field is: SQL statement for execute_sql for Oracle Database / Select.\nHow to fill it: Enter the statement value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.statement}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL statement for execute_sql.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Statement value.\nTip: Use {{$json.statement}} when this value comes from an earlier step.",
               "placeholder": "Enter Statement"
             },
             {
@@ -87,7 +87,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max rows to return",
-              "helpText": "What this field is: A number used for limit in Oracle Database / Select.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max rows to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -126,7 +126,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle username",
-              "helpText": "What this field is: Oracle username for Oracle Database / Insert.\nHow to fill it: Enter the user value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.user}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: User value.\nTip: Use {{$json.user}} when this value comes from an earlier step.",
               "placeholder": "Enter User"
             },
             {
@@ -135,7 +135,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "helpText": "What this field is: Oracle password for Oracle Database / Insert.\nHow to fill it: Enter the password value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle Database token, a secret password that lets CtrlChecks talk to Oracle Database safely.\nWhere to find it: Oracle Database account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Oracle Database.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -145,7 +145,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle connection string",
-              "helpText": "What this field is: Oracle connection string for Oracle Database / Insert.\nHow to fill it: Enter the connection string value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle connection string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Connection String value.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "Enter Connection String"
             },
             {
@@ -154,7 +154,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Oracle schema",
-              "helpText": "What this field is: Oracle schema for Oracle Database / Insert.\nHow to fill it: Enter the schema value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.schema}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle schema.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Schema value.\nTip: Use {{$json.schema}} when this value comes from an earlier step.",
               "placeholder": "Enter Schema"
             },
             {
@@ -163,7 +163,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for Oracle Database / Insert.\nHow to fill it: Enter the table value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells Oracle Database which item to use.\nWhere to find it: Open the item in Oracle Database and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier Oracle Database step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -172,7 +172,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SQL statement for execute_sql",
-              "helpText": "What this field is: SQL statement for execute_sql for Oracle Database / Insert.\nHow to fill it: Enter the statement value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.statement}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL statement for execute_sql.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Statement value.\nTip: Use {{$json.statement}} when this value comes from an earlier step.",
               "placeholder": "Enter Statement"
             },
             {
@@ -181,7 +181,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max rows to return",
-              "helpText": "What this field is: A number used for limit in Oracle Database / Insert.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max rows to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -220,7 +220,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle username",
-              "helpText": "What this field is: Oracle username for Oracle Database / Update.\nHow to fill it: Enter the user value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.user}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: User value.\nTip: Use {{$json.user}} when this value comes from an earlier step.",
               "placeholder": "Enter User"
             },
             {
@@ -229,7 +229,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "helpText": "What this field is: Oracle password for Oracle Database / Update.\nHow to fill it: Enter the password value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle Database token, a secret password that lets CtrlChecks talk to Oracle Database safely.\nWhere to find it: Oracle Database account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Oracle Database.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -239,7 +239,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle connection string",
-              "helpText": "What this field is: Oracle connection string for Oracle Database / Update.\nHow to fill it: Enter the connection string value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle connection string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Connection String value.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "Enter Connection String"
             },
             {
@@ -248,7 +248,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Oracle schema",
-              "helpText": "What this field is: Oracle schema for Oracle Database / Update.\nHow to fill it: Enter the schema value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.schema}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle schema.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Schema value.\nTip: Use {{$json.schema}} when this value comes from an earlier step.",
               "placeholder": "Enter Schema"
             },
             {
@@ -257,7 +257,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for Oracle Database / Update.\nHow to fill it: Enter the table value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells Oracle Database which item to use.\nWhere to find it: Open the item in Oracle Database and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier Oracle Database step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -266,7 +266,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SQL statement for execute_sql",
-              "helpText": "What this field is: SQL statement for execute_sql for Oracle Database / Update.\nHow to fill it: Enter the statement value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.statement}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL statement for execute_sql.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Statement value.\nTip: Use {{$json.statement}} when this value comes from an earlier step.",
               "placeholder": "Enter Statement"
             },
             {
@@ -275,7 +275,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max rows to return",
-              "helpText": "What this field is: A number used for limit in Oracle Database / Update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max rows to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -314,7 +314,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle username",
-              "helpText": "What this field is: Oracle username for Oracle Database / Insert or update.\nHow to fill it: Enter the user value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.user}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: User value.\nTip: Use {{$json.user}} when this value comes from an earlier step.",
               "placeholder": "Enter User"
             },
             {
@@ -323,7 +323,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "helpText": "What this field is: Oracle password for Oracle Database / Insert or update.\nHow to fill it: Enter the password value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle Database token, a secret password that lets CtrlChecks talk to Oracle Database safely.\nWhere to find it: Oracle Database account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Oracle Database.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -333,7 +333,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle connection string",
-              "helpText": "What this field is: Oracle connection string for Oracle Database / Insert or update.\nHow to fill it: Enter the connection string value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle connection string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Connection String value.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "Enter Connection String"
             },
             {
@@ -342,7 +342,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Oracle schema",
-              "helpText": "What this field is: Oracle schema for Oracle Database / Insert or update.\nHow to fill it: Enter the schema value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.schema}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle schema.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Schema value.\nTip: Use {{$json.schema}} when this value comes from an earlier step.",
               "placeholder": "Enter Schema"
             },
             {
@@ -351,7 +351,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for Oracle Database / Insert or update.\nHow to fill it: Enter the table value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells Oracle Database which item to use.\nWhere to find it: Open the item in Oracle Database and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier Oracle Database step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -360,7 +360,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SQL statement for execute_sql",
-              "helpText": "What this field is: SQL statement for execute_sql for Oracle Database / Insert or update.\nHow to fill it: Enter the statement value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.statement}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL statement for execute_sql.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Statement value.\nTip: Use {{$json.statement}} when this value comes from an earlier step.",
               "placeholder": "Enter Statement"
             },
             {
@@ -369,7 +369,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max rows to return",
-              "helpText": "What this field is: A number used for limit in Oracle Database / Insert or update.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max rows to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -408,7 +408,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle username",
-              "helpText": "What this field is: Oracle username for Oracle Database / Delete.\nHow to fill it: Enter the user value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.user}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: User value.\nTip: Use {{$json.user}} when this value comes from an earlier step.",
               "placeholder": "Enter User"
             },
             {
@@ -417,7 +417,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "helpText": "What this field is: Oracle password for Oracle Database / Delete.\nHow to fill it: Enter the password value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle Database token, a secret password that lets CtrlChecks talk to Oracle Database safely.\nWhere to find it: Oracle Database account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Oracle Database.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -427,7 +427,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle connection string",
-              "helpText": "What this field is: Oracle connection string for Oracle Database / Delete.\nHow to fill it: Enter the connection string value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle connection string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Connection String value.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "Enter Connection String"
             },
             {
@@ -436,7 +436,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Oracle schema",
-              "helpText": "What this field is: Oracle schema for Oracle Database / Delete.\nHow to fill it: Enter the schema value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.schema}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle schema.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Schema value.\nTip: Use {{$json.schema}} when this value comes from an earlier step.",
               "placeholder": "Enter Schema"
             },
             {
@@ -445,7 +445,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for Oracle Database / Delete.\nHow to fill it: Enter the table value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells Oracle Database which item to use.\nWhere to find it: Open the item in Oracle Database and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier Oracle Database step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -454,7 +454,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SQL statement for execute_sql",
-              "helpText": "What this field is: SQL statement for execute_sql for Oracle Database / Delete.\nHow to fill it: Enter the statement value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.statement}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL statement for execute_sql.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Statement value.\nTip: Use {{$json.statement}} when this value comes from an earlier step.",
               "placeholder": "Enter Statement"
             },
             {
@@ -463,7 +463,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max rows to return",
-              "helpText": "What this field is: A number used for limit in Oracle Database / Delete.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max rows to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"
@@ -502,7 +502,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle username",
-              "helpText": "What this field is: Oracle username for Oracle Database / Execute sql.\nHow to fill it: Enter the user value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.user}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle username.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: User value.\nTip: Use {{$json.user}} when this value comes from an earlier step.",
               "placeholder": "Enter User"
             },
             {
@@ -511,7 +511,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Oracle password",
-              "helpText": "What this field is: Oracle password for Oracle Database / Execute sql.\nHow to fill it: Enter the password value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.password}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle Database token, a secret password that lets CtrlChecks talk to Oracle Database safely.\nWhere to find it: Oracle Database account settings or developer settings.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the token format shown by Oracle Database.\nImportant: Treat this like a bank password. Use CtrlChecks Connections when possible.",
               "placeholder": "Enter Password",
               "notes": "Stored and displayed as a masked credential value."
             },
@@ -521,7 +521,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Oracle connection string",
-              "helpText": "What this field is: Oracle connection string for Oracle Database / Execute sql.\nHow to fill it: Enter the connection string value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.connectionString}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle connection string.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Connection String value.\nTip: Use {{$json.connectionString}} when this value comes from an earlier step.",
               "placeholder": "Enter Connection String"
             },
             {
@@ -530,7 +530,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Oracle schema",
-              "helpText": "What this field is: Oracle schema for Oracle Database / Execute sql.\nHow to fill it: Enter the schema value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.schema}} or pick the value from the data picker.",
+              "helpText": "What this field is: Oracle schema.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Schema value.\nTip: Use {{$json.schema}} when this value comes from an earlier step.",
               "placeholder": "Enter Schema"
             },
             {
@@ -539,7 +539,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Table name",
-              "helpText": "What this field is: Table name for Oracle Database / Execute sql.\nHow to fill it: Enter the table value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.table}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Table name that tells Oracle Database which item to use.\nWhere to find it: Open the item in Oracle Database and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: customers.\nTip: Use {{$json.table}} when an earlier Oracle Database step provides this value.",
               "placeholder": "customers"
             },
             {
@@ -548,7 +548,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "SQL statement for execute_sql",
-              "helpText": "What this field is: SQL statement for execute_sql for Oracle Database / Execute sql.\nHow to fill it: Enter the statement value requested by Oracle Database, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.statement}} or pick the value from the data picker.",
+              "helpText": "What this field is: SQL statement for execute_sql.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Statement value.\nTip: Use {{$json.statement}} when this value comes from an earlier step.",
               "placeholder": "Enter Statement"
             },
             {
@@ -557,7 +557,7 @@ export const oracleDatabaseDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max rows to return",
-              "helpText": "What this field is: A number used for limit in Oracle Database / Execute sql.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max rows to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 50.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "50",
               "example": "50",
               "defaultValue": "50"

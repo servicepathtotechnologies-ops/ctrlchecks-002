@@ -8,15 +8,12 @@ export const supabaseDoc: NodeDoc = {
   "description": "Interact with Supabase (PostgreSQL + realtime + storage) Use this node when a workflow needs supabase behavior with schema-driven inputs from the CtrlChecks node registry.",
   "credentialType": "Supabase Credential",
   "credentialSetupSteps": [
-    "What this is: Supabase uses an OAuth connection so CtrlChecks can safely access your Supabase account.",
-    "Go to supabase.com and sign in to your Supabase account.",
-    "Open your project -> click \"Settings\" (gear icon) in the left sidebar -> API.",
-    "Under \"Project URL\", copy the URL (looks like https://xxxx.supabase.co). Under \"Project API keys\", copy the \"anon/public\" key or \"service_role\" key depending on your needs.",
-    "Note: \"anon\" key has limited access (respects row-level security); \"service_role\" key has full access - keep it secret.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Supabase -> paste the Project URL and API key -> Save.",
-    "Run a test step to query a table and confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Supabase node and select the saved connection."
+    "What this is: The Supabase connection lets CtrlChecks access your Supabase account safely without putting secrets in workflow fields.",
+    "Where to start: Supabase project -> Settings -> API.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Supabase, then sign in or paste the secret value requested there.",
+    "Example: anon public key for browser-safe reads, or service role key for trusted server workflows.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Supabase step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://supabase.com/docs/guides/getting-started/quickstarts",
   "resources": [

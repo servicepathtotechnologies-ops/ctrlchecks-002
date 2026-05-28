@@ -29,7 +29,7 @@ export const renameKeysDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Key mappings: { oldKey: \"newKey\" }",
-              "helpText": "What this field is: Key mappings: { oldKey: \"newKey\" } for Rename Keys / Execute.\nHow to fill it: Enter valid JSON in the format Rename Keys expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.mappings}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Key mappings: { oldKey: \"newKey\" }.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Rename Keys.\nExample: {\"oldName\":\"newName\",\"oldEmail\":\"newEmail\"}.\nTip: Use {{$json.mappings}} when an earlier step already prepared this data.",
               "placeholder": "{\"oldName\":\"newName\",\"oldEmail\":\"newEmail\"}",
               "example": "{\"oldName\":\"newName\",\"oldEmail\":\"newEmail\"}"
             }

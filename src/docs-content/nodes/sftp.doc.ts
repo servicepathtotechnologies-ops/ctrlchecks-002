@@ -8,13 +8,12 @@ export const sftpDoc: NodeDoc = {
   "description": "SFTP file operations",
   "credentialType": "SFTP Credential",
   "credentialSetupSteps": [
-    "What this is: SFTP uses an OAuth connection so CtrlChecks can safely access your SFTP account.",
-    "Get SFTP connection details from your server administrator: Host (server address or IP), Port (usually 22), Username, and either Password or SSH private key.",
-    "Make sure the server firewall allows SSH/SFTP connections (port 22) from CtrlChecks.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> SFTP -> enter Host, Port, Username, and your authentication (password or private key).",
-    "If using a private key: paste the full key content including the -----BEGIN and -----END lines.",
-    "Click Test Connection -> Save. Run a test step to confirm file transfer works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields."
+    "What this is: The SFTP connection lets CtrlChecks access your SFTP account safely without putting secrets in workflow fields.",
+    "Where to start: SFTP account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> SFTP, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by SFTP.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple SFTP step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://en.wikipedia.org/wiki/SSH_File_Transfer_Protocol",
   "resources": [
@@ -33,7 +32,7 @@ export const sftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SFTP host",
-              "helpText": "What this field is: The SFTP server hostname or IP address.\nExample: sftp.yourcompany.com or 192.168.1.100",
+              "helpText": "What this field is: SFTP host.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: sftp.example.com.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "sftp.example.com",
               "example": "sftp.example.com"
             },
@@ -43,7 +42,7 @@ export const sftpDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: The file path on the SFTP server.\nExample: /home/user/uploads/report.pdf",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             }
@@ -80,7 +79,7 @@ export const sftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SFTP host",
-              "helpText": "What this field is: The SFTP server hostname or IP address.\nExample: sftp.yourcompany.com or 192.168.1.100",
+              "helpText": "What this field is: SFTP host.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: sftp.example.com.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "sftp.example.com",
               "example": "sftp.example.com"
             },
@@ -90,7 +89,7 @@ export const sftpDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: The file path on the SFTP server.\nExample: /home/user/uploads/report.pdf",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             }
@@ -127,7 +126,7 @@ export const sftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "SFTP host",
-              "helpText": "What this field is: The SFTP server hostname or IP address.\nExample: sftp.yourcompany.com or 192.168.1.100",
+              "helpText": "What this field is: SFTP host.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: sftp.example.com.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "sftp.example.com",
               "example": "sftp.example.com"
             },
@@ -137,7 +136,7 @@ export const sftpDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: The file path on the SFTP server.\nExample: /home/user/uploads/report.pdf",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             }

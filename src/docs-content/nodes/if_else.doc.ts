@@ -29,7 +29,7 @@ export const ifElseDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Conditions to evaluate. Each condition should have: field (string), operator (equals|not_equals|greater_than|less_than|greater_than_or_equal|less_than_or_equal|contains|not_contains), value (string|number|boolean)",
-              "helpText": "What this field is: The rule that decides which path (TRUE or FALSE) the workflow takes after this step.\nFormat: JSON array of condition objects. Each condition has:\n  field    →  the value to check (use {{$json.fieldName}} to check a value from the previous step)\n  operator →  how to compare (equals, not_equals, greater_than, less_than, contains, not_contains, is_empty)\n  value    →  what to compare against\nExample (single condition): [{\"field\":\"{{$json.orderTotal}}\",\"operator\":\"greater_than\",\"value\":100}]\nThis means: if the order total is greater than 100, go down the TRUE path. Otherwise go down the FALSE path.\nExample (multiple): [{\"field\":\"{{$json.country}}\",\"operator\":\"equals\",\"value\":\"US\"},{\"field\":\"{{$json.plan}}\",\"operator\":\"equals\",\"value\":\"pro\"}]\nUse the \"Combine Operation\" field to set AND (all must match) or OR (any one match is enough).",
+              "helpText": "What this field is: Structured data for Conditions to evaluate. Each condition should have: field , operator , value.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by If/Else.\nExample: [{\"field\":\"$json.age\",\"operator\":\"greater_than_or_equal\",\"value\":18}].\nTip: Use {{$json.conditions}} when an earlier step already prepared this data.",
               "placeholder": "[{\"field\":\"$json.age\",\"operator\":\"greater_than_or_equal\",\"value\":18}]",
               "example": "[{\"field\":\"$json.age\",\"operator\":\"greater_than_or_equal\",\"value\":18}]"
             },
@@ -39,7 +39,7 @@ export const ifElseDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "How to combine conditions",
-              "helpText": "What this field is: How to combine multiple conditions (when you have more than one condition in the list).\nAND = ALL conditions must be true for the workflow to take the TRUE path.\nOR  = ANY one condition being true sends the workflow down the TRUE path.\nExample: AND — use when you need the order to be BOTH over $100 AND from a US customer.",
+              "helpText": "What this field is: How to combine conditions.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: AND.\nTip: Use {{$json.combineOperation}} when this value comes from an earlier step.",
               "placeholder": "AND",
               "example": "AND",
               "defaultValue": "AND"

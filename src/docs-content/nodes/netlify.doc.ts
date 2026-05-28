@@ -8,15 +8,12 @@ export const netlifyDoc: NodeDoc = {
   "description": "Deploy sites, manage builds, and query site/deploy data through the Netlify REST API.",
   "credentialType": "Netlify API Key",
   "credentialSetupSteps": [
-    "What this is: Netlify uses an API key or account connection so CtrlChecks can safely access your Netlify account.",
-    "Go to app.netlify.com and sign in to your account.",
-    "Click your profile photo (top right) -> User settings -> Applications.",
-    "Under \"Personal access tokens\", click \"New access token\" -> give it a description -> Generate token.",
-    "Copy the token shown - it is only displayed once.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Netlify -> paste the token -> Save.",
-    "Run a test step (e.g. list your sites) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Netlify node and select the saved connection."
+    "What this is: The Netlify connection lets CtrlChecks access your Netlify account safely without putting secrets in workflow fields.",
+    "Where to start: Netlify -> User settings -> Applications -> Personal access tokens.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Netlify, then sign in or paste the secret value requested there.",
+    "Example: nfp_... or the token Netlify shows.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Netlify step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.netlify.com/api/get-started/",
   "resources": [
@@ -35,7 +32,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Netlify Personal Access Token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Netlify.\nWhere to get it: Open the Netlify dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Netlify personal access token, a secret password that lets CtrlChecks talk to Netlify safely.\nWhere to find it: Netlify -> User settings -> Applications -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: nfp_... or the token Netlify shows.\nImportant: Treat this like a bank password. Use a token from an account that can access the site.",
               "placeholder": "token_..."
             },
             {
@@ -44,7 +41,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "Netlify resource",
-              "helpText": "What this field is: Resource chooses the kind of Netlify item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Netlify.\nExample: In Netlify, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Netlify entity type to work with.\nOptions: Sites, Deploys, Forms.\nExample: Sites to list or query sites, Deploys to trigger or monitor deployments.\nTip: The resource determines which Netlify API endpoint is called.",
               "placeholder": "sites",
               "example": "sites",
               "defaultValue": "sites",
@@ -60,7 +57,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Site ID",
-              "helpText": "What this field is: Site ID for Netlify / List sites.\nWhere to find it: Open the item in Netlify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.siteId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Site ID that tells Netlify which item to use.\nWhere to find it: Open the item in Netlify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.siteId}} when an earlier Netlify step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -70,7 +67,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Deploy ID",
-              "helpText": "What this field is: Deploy ID for Netlify / List sites.\nWhere to find it: Open the item in Netlify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.deployId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Deploy ID that tells Netlify which item to use.\nWhere to find it: Open the item in Netlify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.deployId}} when an earlier Netlify step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -80,7 +77,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for create_deploy",
-              "helpText": "What this field is: Request body for create_deploy for Netlify / List sites.\nHow to fill it: Enter valid JSON in the format Netlify expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body for create_deploy.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Netlify.\nExample: {}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -91,7 +88,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max records to return",
-              "helpText": "What this field is: A number used for limit in Netlify / List sites.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"
@@ -130,7 +127,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Netlify Personal Access Token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Netlify.\nWhere to get it: Open the Netlify dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Netlify personal access token, a secret password that lets CtrlChecks talk to Netlify safely.\nWhere to find it: Netlify -> User settings -> Applications -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: nfp_... or the token Netlify shows.\nImportant: Treat this like a bank password. Use a token from an account that can access the site.",
               "placeholder": "token_..."
             },
             {
@@ -139,7 +136,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "Netlify resource",
-              "helpText": "What this field is: Resource chooses the kind of Netlify item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Netlify.\nExample: In Netlify, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Netlify entity type to work with.\nOptions: Sites, Deploys, Forms.\nExample: Sites to list or query sites, Deploys to trigger or monitor deployments.\nTip: The resource determines which Netlify API endpoint is called.",
               "placeholder": "sites",
               "example": "sites",
               "defaultValue": "sites",
@@ -155,7 +152,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Site ID",
-              "helpText": "What this field is: Site ID for Netlify / Get site.\nWhere to find it: Open the item in Netlify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.siteId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Site ID that tells Netlify which item to use.\nWhere to find it: Open the item in Netlify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.siteId}} when an earlier Netlify step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -165,7 +162,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Deploy ID",
-              "helpText": "What this field is: Deploy ID for Netlify / Get site.\nWhere to find it: Open the item in Netlify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.deployId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Deploy ID that tells Netlify which item to use.\nWhere to find it: Open the item in Netlify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.deployId}} when an earlier Netlify step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -175,7 +172,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for create_deploy",
-              "helpText": "What this field is: Request body for create_deploy for Netlify / Get site.\nHow to fill it: Enter valid JSON in the format Netlify expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body for create_deploy.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Netlify.\nExample: {}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -186,7 +183,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max records to return",
-              "helpText": "What this field is: A number used for limit in Netlify / Get site.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"
@@ -225,7 +222,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Netlify Personal Access Token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Netlify.\nWhere to get it: Open the Netlify dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Netlify personal access token, a secret password that lets CtrlChecks talk to Netlify safely.\nWhere to find it: Netlify -> User settings -> Applications -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: nfp_... or the token Netlify shows.\nImportant: Treat this like a bank password. Use a token from an account that can access the site.",
               "placeholder": "token_..."
             },
             {
@@ -234,7 +231,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "Netlify resource",
-              "helpText": "What this field is: Resource chooses the kind of Netlify item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Netlify.\nExample: In Netlify, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Netlify entity type to work with.\nOptions: Sites, Deploys, Forms.\nExample: Sites to list or query sites, Deploys to trigger or monitor deployments.\nTip: The resource determines which Netlify API endpoint is called.",
               "placeholder": "sites",
               "example": "sites",
               "defaultValue": "sites",
@@ -250,7 +247,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Site ID",
-              "helpText": "What this field is: Site ID for Netlify / Create deploy.\nWhere to find it: Open the item in Netlify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.siteId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Site ID that tells Netlify which item to use.\nWhere to find it: Open the item in Netlify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.siteId}} when an earlier Netlify step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -260,7 +257,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Deploy ID",
-              "helpText": "What this field is: Deploy ID for Netlify / Create deploy.\nWhere to find it: Open the item in Netlify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.deployId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Deploy ID that tells Netlify which item to use.\nWhere to find it: Open the item in Netlify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.deployId}} when an earlier Netlify step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -270,7 +267,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for create_deploy",
-              "helpText": "What this field is: Request body for create_deploy for Netlify / Create deploy.\nHow to fill it: Enter valid JSON in the format Netlify expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body for create_deploy.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Netlify.\nExample: {}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -281,7 +278,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max records to return",
-              "helpText": "What this field is: A number used for limit in Netlify / Create deploy.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"
@@ -320,7 +317,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Netlify Personal Access Token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Netlify.\nWhere to get it: Open the Netlify dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Netlify personal access token, a secret password that lets CtrlChecks talk to Netlify safely.\nWhere to find it: Netlify -> User settings -> Applications -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: nfp_... or the token Netlify shows.\nImportant: Treat this like a bank password. Use a token from an account that can access the site.",
               "placeholder": "token_..."
             },
             {
@@ -329,7 +326,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "Netlify resource",
-              "helpText": "What this field is: Resource chooses the kind of Netlify item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Netlify.\nExample: In Netlify, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Netlify entity type to work with.\nOptions: Sites, Deploys, Forms.\nExample: Sites to list or query sites, Deploys to trigger or monitor deployments.\nTip: The resource determines which Netlify API endpoint is called.",
               "placeholder": "sites",
               "example": "sites",
               "defaultValue": "sites",
@@ -345,7 +342,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Site ID",
-              "helpText": "What this field is: Site ID for Netlify / List deploys.\nWhere to find it: Open the item in Netlify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.siteId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Site ID that tells Netlify which item to use.\nWhere to find it: Open the item in Netlify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.siteId}} when an earlier Netlify step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -355,7 +352,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Deploy ID",
-              "helpText": "What this field is: Deploy ID for Netlify / List deploys.\nWhere to find it: Open the item in Netlify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.deployId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Deploy ID that tells Netlify which item to use.\nWhere to find it: Open the item in Netlify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.deployId}} when an earlier Netlify step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -365,7 +362,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for create_deploy",
-              "helpText": "What this field is: Request body for create_deploy for Netlify / List deploys.\nHow to fill it: Enter valid JSON in the format Netlify expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body for create_deploy.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Netlify.\nExample: {}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -376,7 +373,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max records to return",
-              "helpText": "What this field is: A number used for limit in Netlify / List deploys.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"
@@ -415,7 +412,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Netlify Personal Access Token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Netlify.\nWhere to get it: Open the Netlify dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Netlify personal access token, a secret password that lets CtrlChecks talk to Netlify safely.\nWhere to find it: Netlify -> User settings -> Applications -> Personal access tokens.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: nfp_... or the token Netlify shows.\nImportant: Treat this like a bank password. Use a token from an account that can access the site.",
               "placeholder": "token_..."
             },
             {
@@ -424,7 +421,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "select",
               "required": true,
               "description": "Netlify resource",
-              "helpText": "What this field is: Resource chooses the kind of Netlify item this node works with.\nHow to fill it: Pick the service object you want, such as contact, company, deal, message, file, row, issue, or another choice shown by Netlify.\nExample: In Netlify, pick the type of record you want to work with, such as contact, message, order, or another type shown in this node.\nTip: Choose the resource first, then choose the operation that should happen to that resource.",
+              "helpText": "What this field is: The Netlify entity type to work with.\nOptions: Sites, Deploys, Forms.\nExample: Sites to list or query sites, Deploys to trigger or monitor deployments.\nTip: The resource determines which Netlify API endpoint is called.",
               "placeholder": "sites",
               "example": "sites",
               "defaultValue": "sites",
@@ -440,7 +437,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Site ID",
-              "helpText": "What this field is: Site ID for Netlify / Get deploy.\nWhere to find it: Open the item in Netlify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.siteId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Site ID that tells Netlify which item to use.\nWhere to find it: Open the item in Netlify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.siteId}} when an earlier Netlify step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -450,7 +447,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Deploy ID",
-              "helpText": "What this field is: Deploy ID for Netlify / Get deploy.\nWhere to find it: Open the item in Netlify and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.deployId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Deploy ID that tells Netlify which item to use.\nWhere to find it: Open the item in Netlify and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.deployId}} when an earlier Netlify step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -460,7 +457,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Request body for create_deploy",
-              "helpText": "What this field is: Request body for create_deploy for Netlify / Get deploy.\nHow to fill it: Enter valid JSON in the format Netlify expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.payload}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Request body for create_deploy.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Netlify.\nExample: {}.\nTip: Use {{$json.payload}} when an earlier step already prepared this data.",
               "placeholder": "{}",
               "example": "{}",
               "defaultValue": "{}"
@@ -471,7 +468,7 @@ export const netlifyDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Max records to return",
-              "helpText": "What this field is: A number used for limit in Netlify / Get deploy.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Max records to return.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"

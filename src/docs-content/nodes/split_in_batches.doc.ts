@@ -29,7 +29,7 @@ export const splitInBatchesDoc: NodeDoc = {
               "type": "number",
               "required": true,
               "description": "Batch size",
-              "helpText": "What this field is: A number used for batch size in Split In Batches / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.batchSize}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Batch size.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 10.\nTip: Use {{$json.batchSize}} when the number comes from an earlier step.",
               "placeholder": "10",
               "example": "10",
               "defaultValue": "10"

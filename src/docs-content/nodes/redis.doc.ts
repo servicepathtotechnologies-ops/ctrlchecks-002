@@ -8,14 +8,12 @@ export const redisDoc: NodeDoc = {
   "description": "Redis cache operations",
   "credentialType": "Redis Credential",
   "credentialSetupSteps": [
-    "What this is: Redis uses an OAuth connection so CtrlChecks can safely access your Redis account.",
-    "Make sure your Redis server is running (default port is 6379).",
-    "Your Redis connection URL format: redis://localhost:6379 (local, no password) or redis://:yourpassword@yourhost:6379 (with password).",
-    "For Redis Cloud (Upstash, Redis Cloud): log in and copy the connection URL from your database settings.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Redis -> paste the Redis URL -> Save.",
-    "Run a test step (e.g. set a key with a short TTL) to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Redis node and select the saved connection."
+    "What this is: The Redis connection lets CtrlChecks access your Redis account safely without putting secrets in workflow fields.",
+    "Where to start: Redis account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Redis, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Redis.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Redis step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://redis.io/docs/connect/clients/nodejs/",
   "resources": [
@@ -34,7 +32,7 @@ export const redisDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Redis key",
-              "helpText": "What this field is: The exact name of the stored value to retrieve.\nMust match the key used when the value was stored — exactly, including capitalization.\nExample: user:1234:session\nTip: Use user:{{$json.userId}}:session to look up the key for the current user.",
+              "helpText": "What this field is: The Redis key that tells Redis which item to use.\nWhere to find it: Open the item in Redis and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: user:123.\nTip: Use {{$json.key}} when an earlier Redis step provides this value.",
               "placeholder": "user:123",
               "example": "user:123"
             },
@@ -44,7 +42,7 @@ export const redisDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value (for set)",
-              "helpText": "What this field is: Value (for set) for Redis / Get.\nHow to fill it: Enter the value value requested by Redis, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.value}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.value}}.\nTip: This field is used for set. Leave it blank when this operation does not need it.",
               "placeholder": "{{$json.value}}",
               "example": "{{$json.value}}"
             }
@@ -81,7 +79,7 @@ export const redisDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Redis key",
-              "helpText": "What this field is: The name you are giving to this stored value — like a label on a jar.\nNaming tip: Use colons to organize keys by category.\nExamples:\n  user:1234:session       →  session data for user 1234\n  cart:abc123:items       →  shopping cart items\n  rate_limit:192.168.1.1  →  rate limit counter for an IP\nExample: user:{{$json.userId}}:lastLogin",
+              "helpText": "What this field is: The Redis key that tells Redis which item to use.\nWhere to find it: Open the item in Redis and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: user:123.\nTip: Use {{$json.key}} when an earlier Redis step provides this value.",
               "placeholder": "user:123",
               "example": "user:123"
             },
@@ -91,7 +89,7 @@ export const redisDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value (for set)",
-              "helpText": "What this field is: The data to store in Redis.\nCan be: plain text (active), a number (42), or JSON ({\"cartItems\":3,\"total\":99.99}).\nExample: {\"theme\":\"dark\",\"language\":\"en\",\"notifications\":true}\nTip: Use {{$json.userPreferences}} to store data from an earlier step.",
+              "helpText": "What this field is: Value.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.value}}.\nTip: This field is used for set. Leave it blank when this operation does not need it.",
               "placeholder": "{{$json.value}}",
               "example": "{{$json.value}}"
             }
@@ -128,7 +126,7 @@ export const redisDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Redis key",
-              "helpText": "What this field is: Redis key for Redis / Delete.\nHow to fill it: Enter the key value requested by Redis, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.key}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Redis key that tells Redis which item to use.\nWhere to find it: Open the item in Redis and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: user:123.\nTip: Use {{$json.key}} when an earlier Redis step provides this value.",
               "placeholder": "user:123",
               "example": "user:123"
             },
@@ -138,7 +136,7 @@ export const redisDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value (for set)",
-              "helpText": "What this field is: Value (for set) for Redis / Delete.\nHow to fill it: Enter the value value requested by Redis, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.value}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json.value}}.\nTip: This field is used for set. Leave it blank when this operation does not need it.",
               "placeholder": "{{$json.value}}",
               "example": "{{$json.value}}"
             }

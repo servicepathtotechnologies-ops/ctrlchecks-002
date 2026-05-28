@@ -29,7 +29,7 @@ export const mergeDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Merge mode",
-              "helpText": "What this field is: Merge mode for Merge / Execute.\nHow to fill it: Enter the mode value requested by Merge, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.mode}} or pick the value from the data picker.",
+              "helpText": "What this field is: How the branches are combined.\nOptions: append (add all items into one array), combine (merge objects from branches by index), join (SQL-style join on a shared key field).\nExample: Use append to collect results from parallel API calls into one list.\nExample: Use join with joinBy=id to merge user data from two sources.",
               "placeholder": "append",
               "example": "append"
             },
@@ -39,7 +39,7 @@ export const mergeDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Field to join on (for join mode)",
-              "helpText": "What this field is: Field to join on (for join mode) for Merge / Execute.\nHow to fill it: Enter the join by value requested by Merge, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.joinBy}} or pick the value from the data picker.",
+              "helpText": "What this field is: Field to join on.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Join By value.\nTip: This field is used for join mode. Leave it blank when this operation does not need it.",
               "placeholder": "Enter Join By"
             }
           ],

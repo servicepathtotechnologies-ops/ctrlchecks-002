@@ -29,7 +29,7 @@ export const xmlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "XML content",
-              "helpText": "What this field is: XML content for XML / Parse.\nHow to fill it: Type the message, prompt, or content you want XML to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: XML content.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.xml}}.\nTip: Use {{$json.xml}} when this value comes from an earlier step.",
               "placeholder": "{{$json.xml}}",
               "example": "{{$json.xml}}"
             }
@@ -69,7 +69,7 @@ export const xmlDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "XML content",
-              "helpText": "What this field is: XML content for XML / Extract.\nHow to fill it: Type the message, prompt, or content you want XML to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: XML content.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.xml}}.\nTip: Use {{$json.xml}} when this value comes from an earlier step.",
               "placeholder": "{{$json.xml}}",
               "example": "{{$json.xml}}"
             }

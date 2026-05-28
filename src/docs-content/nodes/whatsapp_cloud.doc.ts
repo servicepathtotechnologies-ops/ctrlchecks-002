@@ -8,16 +8,12 @@ export const whatsappCloudDoc: NodeDoc = {
   "description": "Send messages via WhatsApp Cloud API",
   "credentialType": "Meta App Credentials",
   "credentialSetupSteps": [
-    "What this is: Meta Apps uses an OAuth connection so CtrlChecks can safely access your Meta Apps account.",
-    "Go to developers.facebook.com/apps and sign in with your Facebook account.",
-    "Click \"Create App\" -> select \"Business\" type -> Next -> give it a name -> Create App.",
-    "Under \"Add Products to Your App\", click \"Set Up\" on Facebook Login.",
-    "Go to Facebook Login -> Settings -> add this URL to \"Valid OAuth Redirect URIs\": http://localhost:3001/api/oauth/facebook/callback -> Save Changes.",
-    "Copy the App ID and App Secret from Settings -> Basic.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Facebook -> click \"Connect with Facebook\" -> sign in and authorize.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Meta Apps node and select the saved connection."
+    "What this is: The WhatsApp Cloud connection lets CtrlChecks access your WhatsApp Cloud account safely without putting secrets in workflow fields.",
+    "Where to start: Meta for Developers -> your app -> WhatsApp -> API Setup.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> WhatsApp Cloud, then sign in or paste the secret value requested there.",
+    "Example: the access token shown by Meta.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple WhatsApp Cloud step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.facebook.com/docs/facebook-login/web",
   "resources": [
@@ -57,7 +53,7 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: +1234567890.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "+1234567890",
               "example": "+1234567890"
             },
@@ -67,7 +63,7 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Text content (for sendText)",
-              "helpText": "What this field is: The message content the recipient will receive.\nExample: Hi {{$json.name}}, your order #{{$json.orderId}} has been confirmed and will ship in 2 days.",
+              "helpText": "What this field is: Text content.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.message}}.\nTip: This field is used for sendText. Leave it blank when this operation does not need it.",
               "placeholder": "{{$json.message}}",
               "example": "{{$json.message}}"
             },
@@ -77,7 +73,7 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Alias for text (legacy)",
-              "helpText": "What this field is: Alias for text (legacy) for WhatsApp Cloud / SendText.\nHow to fill it: Type the message, prompt, or content you want WhatsApp Cloud to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Alias for text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Hello {{$json.name}}.\nTip: Use {{$json.message}} when this value comes from an earlier step.",
               "placeholder": "Hello {{$json.name}}"
             }
           ],
@@ -138,7 +134,7 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: +1234567890.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "+1234567890",
               "example": "+1234567890"
             },
@@ -148,7 +144,7 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "url",
               "required": false,
               "description": "Media URL (for sendMedia)",
-              "helpText": "What this field is: Media URL (for sendMedia) for WhatsApp Cloud / SendMedia.\nHow to fill it: Paste the full web address WhatsApp Cloud should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.mediaUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The web address for Media URL.\nHow to fill it: Paste the full URL, including https:// when it is an external service.\nExample: https://api.example.com.\nTip: Use {{$json.mediaUrl}} when the URL comes from an earlier step.",
               "placeholder": "https://api.example.com",
               "example": "https://api.example.com"
             }
@@ -210,7 +206,7 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: +1234567890.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "+1234567890",
               "example": "+1234567890"
             }
@@ -272,7 +268,7 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: +1234567890.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "+1234567890",
               "example": "+1234567890"
             }
@@ -334,7 +330,7 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: +1234567890.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "+1234567890",
               "example": "+1234567890"
             }
@@ -396,7 +392,7 @@ export const whatsappCloudDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient phone number",
-              "helpText": "What this field is: The recipient's WhatsApp phone number with country code.\nFormat: + country code + number, no spaces or dashes.\nExamples: +14155552671 (USA), +919876543210 (India), +447911123456 (UK)\nTip: Use {{$json.phone}} from an earlier step.",
+              "helpText": "What this field is: Recipient phone number.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: +1234567890.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "+1234567890",
               "example": "+1234567890"
             }

@@ -8,14 +8,12 @@ export const googleGeminiDoc: NodeDoc = {
   "description": "Google Gemini chat completion",
   "credentialType": "Google Gemini API Key",
   "credentialSetupSteps": [
-    "What this is: Google Gemini uses an API key or account connection so CtrlChecks can safely access your Google Gemini account.",
-    "Go to aistudio.google.com/app/apikey and sign in with your Google account.",
-    "Click \"Create API Key\" -> select or create a Google Cloud project -> Create API key in existing project.",
-    "Copy the generated API key - it is a long string of letters and numbers.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Google Gemini -> paste the API key -> Save.",
-    "Run a test step with a simple prompt to confirm Gemini responds correctly.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Google Gemini node and select the saved connection."
+    "What this is: The Gemini connection lets CtrlChecks access your Gemini account safely without putting secrets in workflow fields.",
+    "Where to start: Google AI Studio -> Get API key.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Gemini, then sign in or paste the secret value requested there.",
+    "Example: the key shown by Google AI Studio.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Gemini step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://ai.google.dev/tutorials/setup",
   "resources": [
@@ -34,7 +32,7 @@ export const googleGeminiDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Model name",
-              "helpText": "What this field is: Which Gemini model to use.\nOptions:\n  gemini-3.5-flash  →  fast and affordable, good for most tasks\n  gemini-1.5-pro    →  more capable, better at complex reasoning\nRecommended: gemini-3.5-flash for most tasks.",
+              "helpText": "What this field is: Model name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: gemini-3.1-pro-preview.\nTip: Use {{$json.model}} when this value comes from an earlier step.",
               "placeholder": "gemini-3.1-pro-preview",
               "example": "gemini-3.1-pro-preview"
             },
@@ -44,7 +42,7 @@ export const googleGeminiDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Gemini API key (node-level, required for this node to run)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Gemini.\nWhere to get it: Open the Gemini dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Google AI API key, a secret password that lets CtrlChecks talk to Gemini safely.\nWhere to find it: Google AI Studio -> Get API key.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the key shown by Google AI Studio.\nImportant: Treat this like a bank password. Keep this key private and rotate it if it is exposed.",
               "placeholder": "AIza...",
               "example": "AIza...",
               "notes": "Stored and displayed as a masked credential value."
@@ -55,7 +53,7 @@ export const googleGeminiDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Prompt text",
-              "helpText": "What this field is: The instruction or question for Google Gemini AI.\nExample: Extract all names, email addresses, and phone numbers from the following text and return them as a JSON array: {{$json.rawText}}",
+              "helpText": "What this field is: Prompt text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.prompt}}.\nTip: Use {{$json.prompt}} when this value comes from an earlier step.",
               "placeholder": "{{$json.prompt}}",
               "example": "{{$json.prompt}}"
             }

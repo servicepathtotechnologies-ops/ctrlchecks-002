@@ -8,16 +8,12 @@ export const mailgunDoc: NodeDoc = {
   "description": "Send transactional emails using the Mailgun API.",
   "credentialType": "Mailgun API Key",
   "credentialSetupSteps": [
-    "What this is: Mailgun uses an API key or account connection so CtrlChecks can safely access your Mailgun account.",
-    "Go to mailgun.com and sign in to your account.",
-    "Go to Sending -> Domains. If you do not have a domain yet, click \"Add New Domain\" and follow the DNS setup instructions (takes a few minutes to verify).",
-    "Go to Settings -> API Keys -> click \"Create API Key\" (or \"Add new key\"). Give it a name and copy the Private API Key - it starts with key-.",
-    "Note your verified sending domain (e.g. mg.yourcompany.com) - you will need this in the node.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Mailgun -> paste the key- API key -> Save.",
-    "When using the node, set the Domain field to your verified domain and the From field to an address on that domain (e.g. hello@mg.yourcompany.com).",
-    "Run a test to send an email to yourself to confirm it works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Mailgun node and select the saved connection."
+    "What this is: The Mailgun connection lets CtrlChecks access your Mailgun account safely without putting secrets in workflow fields.",
+    "Where to start: Mailgun -> Account settings -> API keys.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Mailgun, then sign in or paste the secret value requested there.",
+    "Example: key-... or the private API key Mailgun shows.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Mailgun step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://documentation.mailgun.com/en/latest/api_reference.html",
   "resources": [
@@ -46,7 +42,7 @@ export const mailgunDoc: NodeDoc = {
               "type": "password",
               "required": true,
               "description": "Mailgun Private API Key",
-              "helpText": "What this field is: Your Mailgun API Key that gives CtrlChecks permission to send emails.\nWhere to find it: mailgun.com → Settings → API Keys → Private API Key.\nIt starts with key- and is a long string of letters and numbers.\nKeep it secret — do not share or publish it.",
+              "helpText": "What this field is: Mailgun API key, a secret password that lets CtrlChecks talk to Mailgun safely.\nWhere to find it: Mailgun -> Account settings -> API keys.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: key-... or the private API key Mailgun shows.\nImportant: Treat this like a bank password. Use the sending domain that matches your From address.",
               "placeholder": "key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "example": "key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
               "notes": "Stored and displayed as a masked credential value."
@@ -57,7 +53,7 @@ export const mailgunDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Sender email address (must be from your verified Mailgun domain)",
-              "helpText": "What this field is: The email address that will appear as the sender.\nImportant: Must use your verified Mailgun domain.\nExample: noreply@mg.yourcompany.com or support@mg.yourcompany.com",
+              "helpText": "What this field is: Sender email address.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: noreply@mg.yourdomain.com.\nTip: Use {{$json.from}} when this value comes from an earlier step.",
               "placeholder": "noreply@mg.yourdomain.com",
               "example": "noreply@mg.yourdomain.com"
             },
@@ -67,7 +63,7 @@ export const mailgunDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Recipient email address(es), comma-separated",
-              "helpText": "What this field is: The recipient's email address.\nExample: customer@example.com\nTip: Use {{$json.email}} from a form or database step.",
+              "helpText": "What this field is: Recipient email address , comma-separated.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: user@example.com.\nTip: Use {{$json.to}} when this value comes from an earlier step.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -77,7 +73,7 @@ export const mailgunDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Email subject line",
-              "helpText": "What this field is: The email subject line.\nExample: Your account has been activated — welcome to {{$json.companyName}}!",
+              "helpText": "What this field is: Email subject line.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello!.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Hello!",
               "example": "Hello!"
             },
@@ -87,7 +83,7 @@ export const mailgunDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Plain text body of the email",
-              "helpText": "What this field is: Plain text body of the email for Mailgun / Send email.\nHow to fill it: Type the message, prompt, or content you want Mailgun to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Plain text body of the email.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Your message here.\nTip: Use {{$json.text}} when this value comes from an earlier step.",
               "placeholder": "Your message here",
               "example": "Your message here"
             },
@@ -97,7 +93,7 @@ export const mailgunDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "HTML body of the email (overrides plain text for HTML clients)",
-              "helpText": "What this field is: HTML body of the email (overrides plain text for HTML clients) for Mailgun / Send email.\nHow to fill it: Type the message, prompt, or content you want Mailgun to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: HTML body of the email.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: <p>Your message</p>.\nTip: Use {{$json.html}} when this value comes from an earlier step.",
               "placeholder": "<p>Your message</p>",
               "example": "<p>Your message</p>"
             }

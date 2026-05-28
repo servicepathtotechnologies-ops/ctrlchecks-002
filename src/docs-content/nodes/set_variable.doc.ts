@@ -29,7 +29,7 @@ export const setVariableDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Variable name (must be a valid identifier)",
-              "helpText": "What this field is: The name you are giving to this variable so you can refer to it later.\nRules: Use letters and numbers only, no spaces. Recommended style: camelCase.\nExamples: customerEmail, totalRevenue, isApproved, orderCount",
+              "helpText": "What this field is: Variable name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: myVariable.\nTip: Use {{$json.name}} when this value comes from an earlier step.",
               "placeholder": "myVariable",
               "example": "myVariable"
             },
@@ -39,7 +39,7 @@ export const setVariableDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Variable value (supports template expressions like {{input.field}})",
-              "helpText": "What this field is: The value to store in this variable.\nCan be: static text (alice@example.com), a number (42), or a dynamic expression from an earlier step.\nExample: alice@example.com (static) or {{$json.email}} (uses the email from the previous step)",
+              "helpText": "What this field is: Variable value.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Hello World.\nTip: Use {{$json.value}} when this value comes from an earlier step.",
               "placeholder": "Hello World",
               "example": "Hello World"
             },
@@ -49,7 +49,7 @@ export const setVariableDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Array of field assignments (legacy format)",
-              "helpText": "What this field is: Array of field assignments (legacy format) for Set Variable / Execute.\nHow to fill it: Enter valid JSON in the format Set Variable expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.values}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Array of field assignments.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Set Variable.\nExample: [{\"name\":\"fullName\",\"value\":\"{{$json.firstName}} {{$json.lastName}}\"}].\nTip: Use {{$json.values}} when an earlier step already prepared this data.",
               "placeholder": "[{\"name\":\"fullName\",\"value\":\"{{$json.firstName}} {{$json.lastName}}\"}]",
               "example": "[{\"name\":\"fullName\",\"value\":\"{{$json.firstName}} {{$json.lastName}}\"}]"
             },
@@ -59,7 +59,7 @@ export const setVariableDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Keep original fields",
-              "helpText": "What this field is: An on/off choice for keep source in Set Variable / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Set Variable to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Keep original fields.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use keep source; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"

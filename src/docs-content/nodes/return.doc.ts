@@ -29,7 +29,7 @@ export const returnDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Value to return (can be a template or static value)",
-              "helpText": "What this field is: Value to return (can be a template or static value) for Return / Execute.\nHow to fill it: Enter the value value requested by Return, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.value}} or pick the value from the data picker.",
+              "helpText": "What this field is: Value to return.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: {{$json}}.\nTip: Use {{$json.value}} when this value comes from an earlier step.",
               "placeholder": "{{$json}}",
               "example": "{{$json}}"
             },
@@ -39,7 +39,7 @@ export const returnDoc: NodeDoc = {
               "type": "boolean",
               "required": false,
               "description": "Include the input data in the return value",
-              "helpText": "What this field is: An on/off choice for include input in Return / Execute.\nHow to fill it: Turn it on for Yes/True, or off for No/False.\nExample: Turn it on only when you want Return to use this optional behavior.",
+              "helpText": "What this field is: An on/off switch for Include the input data in the return value.\nHow to fill it: Turn ON to enable this option. Turn OFF to leave it disabled.\nExample: Turn ON when this workflow should use include input; turn OFF for the default behavior.",
               "placeholder": "false",
               "example": "false",
               "defaultValue": "false"

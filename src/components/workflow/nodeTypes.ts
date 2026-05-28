@@ -1223,20 +1223,24 @@ export const NODE_TYPES: NodeTypeDefinition[] = [
         required: true,
         helpText: 'Read: Retrieve data from sheet. Write: Replace data in range (requires Data to Write). Append: Add rows to end of sheet. Update: Modify existing cells (requires Data to Write and Range)',
       },
-      { 
-        key: 'spreadsheetId', 
-        label: 'Spreadsheet ID', 
-        type: 'text', 
-        placeholder: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms', 
+      {
+        key: 'spreadsheetId',
+        label: 'Spreadsheet ID',
+        type: 'text',
+        placeholder: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
         required: true,
         helpText: 'The ID from the Google Sheets URL (the long string between /d/ and /edit)',
+        helpCategory: 'spreadsheet_id',
+        exampleValue: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
       },
-      { 
-        key: 'sheetName', 
-        label: 'Sheet Name (Tab)', 
-        type: 'text', 
+      {
+        key: 'sheetName',
+        label: 'Sheet Name (Tab)',
+        type: 'text',
         placeholder: 'Sheet1',
         helpText: 'Leave empty to use the first sheet',
+        helpCategory: 'sheet_name',
+        exampleValue: 'Sheet1',
       },
       { 
         key: 'range', 

@@ -8,16 +8,12 @@ export const microsoftTeamsDoc: NodeDoc = {
   "description": "Send messages to Microsoft Teams",
   "credentialType": "Microsoft Credential",
   "credentialSetupSteps": [
-    "What this is: Microsoft uses an OAuth connection so CtrlChecks can safely access your Microsoft account.",
-    "Go to portal.azure.com and sign in with your Microsoft account.",
-    "Go to Azure Active Directory -> App registrations -> New registration.",
-    "Give it a name (e.g. CtrlChecks Email) -> set Redirect URI to: http://localhost:3001/api/oauth/microsoft/callback -> Register.",
-    "Copy the Application (client) ID and Directory (tenant) ID.",
-    "Go to Certificates & Secrets -> New client secret -> Add. Copy the secret VALUE immediately.",
-    "Go to API permissions -> Add a permission -> Microsoft Graph -> Delegated -> add Mail.ReadWrite and Mail.Send.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Outlook -> enter Client ID, Secret, and Tenant ID -> Connect with Microsoft -> authorize.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Microsoft node and select the saved connection."
+    "What this is: The Microsoft Teams connection lets CtrlChecks access your Microsoft Teams account safely without putting secrets in workflow fields.",
+    "Where to start: Microsoft Teams account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Microsoft Teams, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by Microsoft Teams.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Microsoft Teams step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.microsoft.com/en-us/graph/api/resources/mail-api-overview",
   "resources": [
@@ -36,7 +32,7 @@ export const microsoftTeamsDoc: NodeDoc = {
               "type": "url",
               "required": true,
               "description": "Teams webhook URL",
-              "helpText": "What this field is: Teams webhook URL for Microsoft Teams / Execute.\nHow to fill it: Paste the full web address Microsoft Teams should use, starting with https:// whenever possible.\nExample: https://api.example.com/customers\nTip: To use data from an earlier node, type {{$json.webhookUrl}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Incoming Webhook URL for the Microsoft Teams channel you want to post to.\nWhere to find it: In Teams → right-click the channel → Connectors → Incoming Webhook → Configure → copy the URL.\nExample: https://outlook.office.com/webhook/xxx.../IncomingWebhook/...",
               "placeholder": "https://outlook.office.com/webhook/...",
               "example": "https://outlook.office.com/webhook/..."
             },
@@ -46,7 +42,7 @@ export const microsoftTeamsDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Message text",
-              "helpText": "What this field is: Message text for Microsoft Teams / Execute.\nHow to fill it: Type the message, prompt, or content you want Microsoft Teams to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Message text.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.message}}.\nTip: Use {{$json.message}} when this value comes from an earlier step.",
               "placeholder": "{{$json.message}}",
               "example": "{{$json.message}}"
             }

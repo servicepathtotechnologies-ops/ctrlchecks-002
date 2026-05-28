@@ -8,16 +8,12 @@ export const anthropicClaudeDoc: NodeDoc = {
   "description": "Anthropic Claude chat completion",
   "credentialType": "Anthropic API Key",
   "credentialSetupSteps": [
-    "What this is: Anthropic uses an API key or account connection so CtrlChecks can safely access your Anthropic account.",
-    "Go to console.anthropic.com and sign in (or create an account).",
-    "Click \"API Keys\" in the left menu -> Create Key.",
-    "Give it a name (e.g. CtrlChecks) and click Create.",
-    "Copy the key immediately - it starts with sk-ant-. Save it somewhere safe - it is shown only once.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Anthropic Claude -> paste the sk-ant- key -> Save.",
-    "Check that your Anthropic account has API credits: console.anthropic.com/settings/billing.",
-    "Run a test step with a simple prompt (e.g. \"Say hello\") to confirm Claude responds correctly.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Anthropic node and select the saved connection."
+    "What this is: The Claude connection lets CtrlChecks access your Claude account safely without putting secrets in workflow fields.",
+    "Where to start: console.anthropic.com -> Settings -> API Keys.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Claude, then sign in or paste the secret value requested there.",
+    "Example: sk-ant-....",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Claude step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://docs.anthropic.com/en/api/getting-started",
   "resources": [
@@ -36,7 +32,7 @@ export const anthropicClaudeDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Model name",
-              "helpText": "What this field is: Which Claude model to use.\nOptions:\n  claude-opus-4-7    →  most powerful, best for complex analysis and reasoning\n  claude-sonnet-4-6  →  balanced quality and speed — recommended for most tasks\n  claude-haiku-4-5   →  fastest and most affordable — good for simple tasks or high volume\nRecommended: claude-sonnet-4-6 for most use cases.",
+              "helpText": "What this field is: Model name.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: claude-3-opus.\nTip: Use {{$json.model}} when this value comes from an earlier step.",
               "placeholder": "claude-3-opus",
               "example": "claude-3-opus"
             },
@@ -46,7 +42,7 @@ export const anthropicClaudeDoc: NodeDoc = {
               "type": "json",
               "required": true,
               "description": "Chat messages",
-              "helpText": "What this field is: Chat messages for Claude / Execute.\nHow to fill it: Type the message, prompt, or content you want Claude to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Structured data for Chat messages.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Claude.\nExample: [\"{{$json.messages}}\"].\nTip: Use {{$json.messages}} when an earlier step already prepared this data.",
               "placeholder": "[\"{{$json.messages}}\"]",
               "example": "[\"{{$json.messages}}\"]"
             },
@@ -56,7 +52,7 @@ export const anthropicClaudeDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Prompt to send to Claude",
-              "helpText": "What this field is: The message or task you want Claude AI to work on.\nHow to write it: Be clear and specific. Tell Claude exactly what you need and in what format.\nExample: Review this email draft and suggest 3 improvements for clarity and professional tone. Return your suggestions as a numbered list: {{$json.emailDraft}}\nTip: Use {{$json.content}} to send text from an earlier step (like a database record or form input) to Claude.",
+              "helpText": "What this field is: Prompt to send to Claude.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Summarize {{$json.text}}.\nTip: Use {{$json.prompt}} when this value comes from an earlier step.",
               "placeholder": "Summarize {{$json.text}}"
             }
           ],

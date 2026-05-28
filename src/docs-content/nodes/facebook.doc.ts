@@ -8,16 +8,12 @@ export const facebookDoc: NodeDoc = {
   "description": "Post content to Facebook pages",
   "credentialType": "Meta App Credentials",
   "credentialSetupSteps": [
-    "What this is: Meta Apps uses an OAuth connection so CtrlChecks can safely access your Meta Apps account.",
-    "Go to developers.facebook.com/apps and sign in with your Facebook account.",
-    "Click \"Create App\" -> select \"Business\" type -> Next -> give it a name -> Create App.",
-    "Under \"Add Products to Your App\", click \"Set Up\" on Facebook Login.",
-    "Go to Facebook Login -> Settings -> add this URL to \"Valid OAuth Redirect URIs\": http://localhost:3001/api/oauth/facebook/callback -> Save Changes.",
-    "Copy the App ID and App Secret from Settings -> Basic.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Facebook -> click \"Connect with Facebook\" -> sign in and authorize.",
-    "Run a test step to confirm the connection works.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Meta Apps node and select the saved connection."
+    "What this is: The Facebook connection lets CtrlChecks access your Facebook account safely without putting secrets in workflow fields.",
+    "Where to start: Meta for Developers -> your app -> Tools or API Setup.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Facebook, then sign in or paste the secret value requested there.",
+    "Example: the access token shown by Meta.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Facebook step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developers.facebook.com/docs/facebook-login/web",
   "resources": [
@@ -36,7 +32,7 @@ export const facebookDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Post message",
-              "helpText": "What this field is: Post message for Facebook / Execute.\nHow to fill it: Type the message, prompt, or content you want Facebook to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Post message.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json.message}}.\nTip: Use {{$json.message}} when this value comes from an earlier step.",
               "placeholder": "{{$json.message}}",
               "example": "{{$json.message}}"
             },
@@ -46,7 +42,7 @@ export const facebookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Facebook page ID",
-              "helpText": "What this field is: Facebook page ID for Facebook / Execute.\nWhere to find it: Open the item in Facebook and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.pageId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Facebook page ID that tells Facebook which item to use.\nWhere to find it: Open the item in Facebook and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.pageId}} when an earlier Facebook step provides this value.",
               "placeholder": "page-id",
               "example": "page-id"
             },
@@ -56,7 +52,7 @@ export const facebookDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "OAuth2 Access Token for Facebook (if using OAuth authentication)",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Facebook.\nWhere to get it: Open the Facebook dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Meta access token, a secret password that lets CtrlChecks talk to Facebook safely.\nWhere to find it: Meta for Developers -> your app -> Tools or API Setup.\nHow to fill it: Store this secret in CtrlChecks Connections when possible. Paste it here only when this field is explicitly asking for the token.\nExample: the access token shown by Meta.\nImportant: Treat this like a bank password. Use the least permissions needed for this workflow.",
               "placeholder": "your-facebook-oauth-token",
               "example": "your-facebook-oauth-token"
             }

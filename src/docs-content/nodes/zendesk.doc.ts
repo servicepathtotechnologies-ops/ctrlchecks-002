@@ -8,15 +8,12 @@ export const zendeskDoc: NodeDoc = {
   "description": "Create, read, update, and delete Zendesk support tickets and manage users.",
   "credentialType": "Zendesk API Key",
   "credentialSetupSteps": [
-    "What this is: Zendesk uses an API key or account connection so CtrlChecks can safely access your Zendesk account.",
-    "Log in to your Zendesk admin panel at yoursubdomain.zendesk.com.",
-    "Click Admin Center (gear icon, bottom left) -> Apps and Integrations -> APIs -> Zendesk API.",
-    "Make sure \"Token Access\" is enabled (toggle it on if not). Click \"+ Add API token\" -> give it a description.",
-    "Copy the API token shown. Note your Zendesk subdomain - it is the part before .zendesk.com (e.g. if URL is acme.zendesk.com, subdomain is acme).",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> Zendesk -> enter subdomain, your admin email address, and the API token -> Save.",
-    "Run a test step (e.g. create a test ticket) to confirm it appears in Zendesk.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields.",
-    "After saving, click Test Connection if it is available, then return to the Zendesk node and select the saved connection."
+    "What this is: The Zendesk connection lets CtrlChecks access your Zendesk account safely without putting secrets in workflow fields.",
+    "Where to start: Zendesk Admin Center -> Apps and integrations -> APIs -> Zendesk API.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> Zendesk, then sign in or paste the secret value requested there.",
+    "Example: the token Zendesk shows when you create it.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple Zendesk step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://developer.zendesk.com/documentation/ticketing/getting-started/hands-on-with-the-zendesk-api/",
   "resources": [
@@ -35,7 +32,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk subdomain",
-              "helpText": "What this field is: Your Zendesk subdomain — the part before .zendesk.com in your URL.\nExample: If your Zendesk is at acme.zendesk.com, enter acme.",
+              "helpText": "What this field is: The Zendesk subdomain that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.subdomain}} when an earlier Zendesk step provides this value.",
               "placeholder": "Enter Subdomain"
             },
             {
@@ -44,7 +41,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "email",
               "required": true,
               "description": "Agent email",
-              "helpText": "What this field is: The email address that Zendesk should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "helpText": "What this field is: The email address for Agent email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -54,7 +51,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk API token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zendesk.\nWhere to get it: Open the Zendesk dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zendesk API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: Use {{$json.apiToken}} when this value comes from an earlier step.",
               "placeholder": "token_..."
             },
             {
@@ -63,7 +60,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket ID",
-              "helpText": "What this field is: Ticket ID for Zendesk / Get tickets.\nWhere to find it: Open the item in Zendesk and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.ticketId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Ticket ID that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.ticketId}} when an earlier Zendesk step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -73,7 +70,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Ticket subject",
-              "helpText": "What this field is: Ticket subject for Zendesk / Get tickets.\nHow to fill it: Enter the subject value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Welcome, {{$json.name}}.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Welcome, {{$json.name}}"
             },
             {
@@ -82,7 +79,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Ticket body",
-              "helpText": "What this field is: Ticket body for Zendesk / Get tickets.\nHow to fill it: Type the message, prompt, or content you want Zendesk to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Ticket body.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -91,7 +88,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket status",
-              "helpText": "What this field is: Ticket status for Zendesk / Get tickets.\nHow to fill it: Enter the status value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: open.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "open",
               "example": "open",
               "defaultValue": "open"
@@ -102,7 +99,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket priority",
-              "helpText": "What this field is: Ticket priority for Zendesk / Get tickets.\nHow to fill it: Enter the priority value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: normal.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "normal",
               "example": "normal",
               "defaultValue": "normal"
@@ -113,7 +110,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Records per page",
-              "helpText": "What this field is: A number used for limit in Zendesk / Get tickets.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Records per page.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"
@@ -152,7 +149,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk subdomain",
-              "helpText": "What this field is: Your Zendesk subdomain — the part before .zendesk.com in your URL.\nExample: If your Zendesk is at acme.zendesk.com, enter acme.",
+              "helpText": "What this field is: The Zendesk subdomain that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.subdomain}} when an earlier Zendesk step provides this value.",
               "placeholder": "Enter Subdomain"
             },
             {
@@ -161,7 +158,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "email",
               "required": true,
               "description": "Agent email",
-              "helpText": "What this field is: The email address that Zendesk should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "helpText": "What this field is: The email address for Agent email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -171,7 +168,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk API token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zendesk.\nWhere to get it: Open the Zendesk dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zendesk API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: Use {{$json.apiToken}} when this value comes from an earlier step.",
               "placeholder": "token_..."
             },
             {
@@ -180,7 +177,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket ID",
-              "helpText": "What this field is: Ticket ID for Zendesk / Get ticket.\nWhere to find it: Open the item in Zendesk and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.ticketId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Ticket ID that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.ticketId}} when an earlier Zendesk step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -190,7 +187,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Ticket subject",
-              "helpText": "What this field is: Ticket subject for Zendesk / Get ticket.\nHow to fill it: Enter the subject value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Welcome, {{$json.name}}.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Welcome, {{$json.name}}"
             },
             {
@@ -199,7 +196,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Ticket body",
-              "helpText": "What this field is: Ticket body for Zendesk / Get ticket.\nHow to fill it: Type the message, prompt, or content you want Zendesk to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Ticket body.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -208,7 +205,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket status",
-              "helpText": "What this field is: Ticket status for Zendesk / Get ticket.\nHow to fill it: Enter the status value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: open.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "open",
               "example": "open",
               "defaultValue": "open"
@@ -219,7 +216,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket priority",
-              "helpText": "What this field is: Ticket priority for Zendesk / Get ticket.\nHow to fill it: Enter the priority value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: normal.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "normal",
               "example": "normal",
               "defaultValue": "normal"
@@ -230,7 +227,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Records per page",
-              "helpText": "What this field is: A number used for limit in Zendesk / Get ticket.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Records per page.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"
@@ -269,7 +266,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk subdomain",
-              "helpText": "What this field is: Your Zendesk subdomain — the part before .zendesk.com in your URL.\nExample: If your Zendesk is at acme.zendesk.com, enter acme.",
+              "helpText": "What this field is: The Zendesk subdomain that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.subdomain}} when an earlier Zendesk step provides this value.",
               "placeholder": "Enter Subdomain"
             },
             {
@@ -278,7 +275,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "email",
               "required": true,
               "description": "Agent email",
-              "helpText": "What this field is: The email address that Zendesk should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "helpText": "What this field is: The email address for Agent email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -288,7 +285,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk API token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zendesk.\nWhere to get it: Open the Zendesk dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zendesk API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: Use {{$json.apiToken}} when this value comes from an earlier step.",
               "placeholder": "token_..."
             },
             {
@@ -297,7 +294,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket ID",
-              "helpText": "What this field is: Ticket ID for Zendesk / Create ticket.\nWhere to find it: Open the item in Zendesk and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.ticketId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Ticket ID that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.ticketId}} when an earlier Zendesk step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -307,7 +304,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Ticket subject",
-              "helpText": "What this field is: Ticket subject for Zendesk / Create ticket.\nHow to fill it: Enter the subject value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Welcome, {{$json.name}}.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Welcome, {{$json.name}}"
             },
             {
@@ -316,7 +313,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Ticket body",
-              "helpText": "What this field is: Ticket body for Zendesk / Create ticket.\nHow to fill it: Type the message, prompt, or content you want Zendesk to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Ticket body.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -325,7 +322,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket status",
-              "helpText": "What this field is: Ticket status for Zendesk / Create ticket.\nHow to fill it: Enter the status value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: open.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "open",
               "example": "open",
               "defaultValue": "open"
@@ -336,7 +333,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket priority",
-              "helpText": "What this field is: Ticket priority for Zendesk / Create ticket.\nHow to fill it: Enter the priority value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: normal.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "normal",
               "example": "normal",
               "defaultValue": "normal"
@@ -347,7 +344,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Records per page",
-              "helpText": "What this field is: A number used for limit in Zendesk / Create ticket.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Records per page.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"
@@ -386,7 +383,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk subdomain",
-              "helpText": "What this field is: Your Zendesk subdomain — the part before .zendesk.com in your URL.\nExample: If your Zendesk is at acme.zendesk.com, enter acme.",
+              "helpText": "What this field is: The Zendesk subdomain that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.subdomain}} when an earlier Zendesk step provides this value.",
               "placeholder": "Enter Subdomain"
             },
             {
@@ -395,7 +392,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "email",
               "required": true,
               "description": "Agent email",
-              "helpText": "What this field is: The email address that Zendesk should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "helpText": "What this field is: The email address for Agent email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -405,7 +402,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk API token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zendesk.\nWhere to get it: Open the Zendesk dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zendesk API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: Use {{$json.apiToken}} when this value comes from an earlier step.",
               "placeholder": "token_..."
             },
             {
@@ -414,7 +411,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket ID",
-              "helpText": "What this field is: Ticket ID for Zendesk / Update ticket.\nWhere to find it: Open the item in Zendesk and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.ticketId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Ticket ID that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.ticketId}} when an earlier Zendesk step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -424,7 +421,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Ticket subject",
-              "helpText": "What this field is: Ticket subject for Zendesk / Update ticket.\nHow to fill it: Enter the subject value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Welcome, {{$json.name}}.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Welcome, {{$json.name}}"
             },
             {
@@ -433,7 +430,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Ticket body",
-              "helpText": "What this field is: Ticket body for Zendesk / Update ticket.\nHow to fill it: Type the message, prompt, or content you want Zendesk to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Ticket body.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -442,7 +439,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket status",
-              "helpText": "What this field is: Ticket status for Zendesk / Update ticket.\nHow to fill it: Enter the status value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: open.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "open",
               "example": "open",
               "defaultValue": "open"
@@ -453,7 +450,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket priority",
-              "helpText": "What this field is: Ticket priority for Zendesk / Update ticket.\nHow to fill it: Enter the priority value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: normal.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "normal",
               "example": "normal",
               "defaultValue": "normal"
@@ -464,7 +461,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Records per page",
-              "helpText": "What this field is: A number used for limit in Zendesk / Update ticket.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Records per page.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"
@@ -503,7 +500,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk subdomain",
-              "helpText": "What this field is: Your Zendesk subdomain — the part before .zendesk.com in your URL.\nExample: If your Zendesk is at acme.zendesk.com, enter acme.",
+              "helpText": "What this field is: The Zendesk subdomain that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.subdomain}} when an earlier Zendesk step provides this value.",
               "placeholder": "Enter Subdomain"
             },
             {
@@ -512,7 +509,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "email",
               "required": true,
               "description": "Agent email",
-              "helpText": "What this field is: The email address that Zendesk should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "helpText": "What this field is: The email address for Agent email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -522,7 +519,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk API token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zendesk.\nWhere to get it: Open the Zendesk dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zendesk API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: Use {{$json.apiToken}} when this value comes from an earlier step.",
               "placeholder": "token_..."
             },
             {
@@ -531,7 +528,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket ID",
-              "helpText": "What this field is: Ticket ID for Zendesk / Delete ticket.\nWhere to find it: Open the item in Zendesk and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.ticketId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Ticket ID that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.ticketId}} when an earlier Zendesk step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -541,7 +538,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Ticket subject",
-              "helpText": "What this field is: Ticket subject for Zendesk / Delete ticket.\nHow to fill it: Enter the subject value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Welcome, {{$json.name}}.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Welcome, {{$json.name}}"
             },
             {
@@ -550,7 +547,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Ticket body",
-              "helpText": "What this field is: Ticket body for Zendesk / Delete ticket.\nHow to fill it: Type the message, prompt, or content you want Zendesk to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Ticket body.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -559,7 +556,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket status",
-              "helpText": "What this field is: Ticket status for Zendesk / Delete ticket.\nHow to fill it: Enter the status value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: open.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "open",
               "example": "open",
               "defaultValue": "open"
@@ -570,7 +567,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket priority",
-              "helpText": "What this field is: Ticket priority for Zendesk / Delete ticket.\nHow to fill it: Enter the priority value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: normal.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "normal",
               "example": "normal",
               "defaultValue": "normal"
@@ -581,7 +578,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Records per page",
-              "helpText": "What this field is: A number used for limit in Zendesk / Delete ticket.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Records per page.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"
@@ -620,7 +617,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk subdomain",
-              "helpText": "What this field is: Your Zendesk subdomain — the part before .zendesk.com in your URL.\nExample: If your Zendesk is at acme.zendesk.com, enter acme.",
+              "helpText": "What this field is: The Zendesk subdomain that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.subdomain}} when an earlier Zendesk step provides this value.",
               "placeholder": "Enter Subdomain"
             },
             {
@@ -629,7 +626,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "email",
               "required": true,
               "description": "Agent email",
-              "helpText": "What this field is: The email address that Zendesk should use for email.\nHow to fill it: Type one email address, or multiple addresses separated by commas if the field supports several recipients.\nExample: alice@example.com\nDynamic example: {{$json.email}} uses the email value from an earlier node.",
+              "helpText": "What this field is: The email address for Agent email.\nHow to fill it: Type one valid email address unless the field says it accepts several.\nExample: alice@example.com.\nTip: Use {{$json.email}} when an earlier form, sheet, or database row provides the email address.",
               "placeholder": "user@example.com",
               "example": "user@example.com"
             },
@@ -639,7 +636,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Zendesk API token",
-              "helpText": "What this field is: A private key or token that lets CtrlChecks access Zendesk.\nWhere to get it: Open the Zendesk dashboard, go to API Keys, Developers, Apps, or Settings, then create or copy the key/token.\nImportant: Keep this value private. Do not paste it into normal text fields unless the node specifically asks for it.\nExample format: sk_live_..., xoxb-..., or token_...",
+              "helpText": "What this field is: Zendesk API token.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: token_....\nTip: Use {{$json.apiToken}} when this value comes from an earlier step.",
               "placeholder": "token_..."
             },
             {
@@ -648,7 +645,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket ID",
-              "helpText": "What this field is: Ticket ID for Zendesk / Get users.\nWhere to find it: Open the item in Zendesk and copy its ID from the URL, details page, API response, or earlier node output.\nExample: abc123, cus_123, msg_123, or C01234567\nTip: To use data from an earlier node, type {{$json.ticketId}} or pick the value from the data picker.",
+              "helpText": "What this field is: The Ticket ID that tells Zendesk which item to use.\nWhere to find it: Open the item in Zendesk and copy the ID, name, or URL part shown by that service. You can also use the value returned by a previous step.\nExample: 123456789.\nTip: Use {{$json.ticketId}} when an earlier Zendesk step provides this value.",
               "placeholder": "abc123",
               "example": "abc123"
             },
@@ -658,7 +655,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Ticket subject",
-              "helpText": "What this field is: Ticket subject for Zendesk / Get users.\nHow to fill it: Enter the subject value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.subject}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket subject.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: Welcome, {{$json.name}}.\nTip: Use {{$json.subject}} when this value comes from an earlier step.",
               "placeholder": "Welcome, {{$json.name}}"
             },
             {
@@ -667,7 +664,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "textarea",
               "required": false,
               "description": "Ticket body",
-              "helpText": "What this field is: Ticket body for Zendesk / Get users.\nHow to fill it: Type the message, prompt, or content you want Zendesk to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Ticket body.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Description value.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Enter Description"
             },
             {
@@ -676,7 +673,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket status",
-              "helpText": "What this field is: Ticket status for Zendesk / Get users.\nHow to fill it: Enter the status value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.status}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket status.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: open.\nTip: Use {{$json.status}} when this value comes from an earlier step.",
               "placeholder": "open",
               "example": "open",
               "defaultValue": "open"
@@ -687,7 +684,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Ticket priority",
-              "helpText": "What this field is: Ticket priority for Zendesk / Get users.\nHow to fill it: Enter the priority value requested by Zendesk, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.priority}} or pick the value from the data picker.",
+              "helpText": "What this field is: Ticket priority.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: normal.\nTip: Use {{$json.priority}} when this value comes from an earlier step.",
               "placeholder": "normal",
               "example": "normal",
               "defaultValue": "normal"
@@ -698,7 +695,7 @@ export const zendeskDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Records per page",
-              "helpText": "What this field is: A number used for limit in Zendesk / Get users.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.limit}} or pick the value from the data picker.",
+              "helpText": "What this field is: The number used for Records per page.\nHow to fill it: Type digits only. Do not add words unless this field says they are allowed.\nExample: 25.\nTip: Use {{$json.limit}} when the number comes from an earlier step.",
               "placeholder": "25",
               "example": "25",
               "defaultValue": "25"

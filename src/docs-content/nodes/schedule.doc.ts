@@ -29,7 +29,7 @@ export const scheduleDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Cron expression (e.g., \"0 9 * * *\" for daily at 9 AM)",
-              "helpText": "What this field is: Cron expression (e.g., \"0 9 * * *\" for daily at 9 AM) for Schedule Trigger / Execute.\nHow to fill it: Enter the cron value requested by Schedule Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.cron}} or pick the value from the data picker.",
+              "helpText": "What this field is: Cron expression.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: 0 9 * * *.\nTip: Use {{$json.cron}} when this value comes from an earlier step.",
               "placeholder": "0 9 * * *",
               "example": "0 9 * * *"
             },
@@ -39,7 +39,7 @@ export const scheduleDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Timezone for schedule",
-              "helpText": "What this field is: Timezone for schedule for Schedule Trigger / Execute.\nHow to fill it: Enter the timezone value requested by Schedule Trigger, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.timezone}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Timezone for schedule.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: UTC.\nTip: Use {{$json.timezone}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "UTC",
               "example": "UTC",
               "defaultValue": "UTC"

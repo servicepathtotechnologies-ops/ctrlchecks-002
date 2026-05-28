@@ -29,7 +29,7 @@ export const queuePushDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Name of the queue",
-              "helpText": "What this field is: Name of the queue for Queue Push / Execute.\nHow to fill it: Enter the queue name value requested by Queue Push, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.queueName}} or pick the value from the data picker.",
+              "helpText": "What this field is: Name of the queue.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: tasks.\nTip: Use {{$json.queueName}} when this value comes from an earlier step.",
               "placeholder": "tasks",
               "example": "tasks"
             },
@@ -39,7 +39,7 @@ export const queuePushDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Message to push (can be any JSON-serializable value)",
-              "helpText": "What this field is: Message to push (can be any JSON-serializable value) for Queue Push / Execute.\nHow to fill it: Type the message, prompt, or content you want Queue Push to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Message to push.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: {{$json}}.\nTip: Use {{$json.message}} when this value comes from an earlier step.",
               "placeholder": "{{$json}}",
               "example": "{{$json}}"
             },
@@ -49,7 +49,7 @@ export const queuePushDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Additional Bull options (delay, priority, etc.)",
-              "helpText": "What this field is: Additional Bull options (delay, priority, etc.) for Queue Push / Execute.\nHow to fill it: Enter valid JSON in the format Queue Push expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.options}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Additional Bull options.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Queue Push.\nExample: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}.\nTip: Use {{$json.options}} when an earlier step already prepared this data.",
               "placeholder": "{\"key\":\"value\"}",
               "example": "{\"key\":\"value\"}"
             }

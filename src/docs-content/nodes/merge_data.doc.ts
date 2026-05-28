@@ -29,7 +29,7 @@ export const mergeDataDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "Merge mode: append, join, overwrite",
-              "helpText": "What this field is: Merge mode: append, join, overwrite for Merge Data / Execute.\nHow to fill it: Enter the mode value requested by Merge Data, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.mode}} or pick the value from the data picker.",
+              "helpText": "What this field is: How two data sources are combined.\nOptions: append (combine all items into one array), join (match items by a shared key field), overwrite (replace input A fields with input B values).\nDefault: append.\nExample: Use join with joinBy=id when merging user profile data from two API responses.",
               "placeholder": "append",
               "example": "append",
               "defaultValue": "append"
@@ -40,7 +40,7 @@ export const mergeDataDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Field to join by (for join mode)",
-              "helpText": "What this field is: Field to join by (for join mode) for Merge Data / Execute.\nHow to fill it: Enter the join by value requested by Merge Data, or map it from the previous workflow step.\nTip: To use data from an earlier node, type {{$json.joinBy}} or pick the value from the data picker.",
+              "helpText": "What this field is: Field to join by.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: id.\nTip: This field is used for join mode. Leave it blank when this operation does not need it.",
               "placeholder": "id",
               "example": "id"
             }

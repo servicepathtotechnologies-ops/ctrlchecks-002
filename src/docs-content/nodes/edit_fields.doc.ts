@@ -29,7 +29,7 @@ export const editFieldsDoc: NodeDoc = {
               "type": "json",
               "required": false,
               "description": "Field mappings and transformations",
-              "helpText": "What this field is: Field mappings and transformations for Edit Fields / Execute.\nHow to fill it: Enter valid JSON in the format Edit Fields expects. Use { } for one object, or [ ] for a list.\nExample object: {\"name\":\"Alice\",\"email\":\"alice@example.com\"}\nExample list: [{\"name\":\"Alice\"},{\"name\":\"Bob\"}]\nTip: To use data from an earlier node, type {{$json.fields}} or pick the value from the data picker.",
+              "helpText": "What this field is: Structured data for Field mappings and transformations.\nHow to fill it: Enter data in { } brackets for an object or [ ] brackets for a list. Use exact field names expected by Edit Fields.\nExample: {\"oldField\":\"{{$json.newField}}\",\"rename\":{\"old\":\"new\"}}.\nTip: Use {{$json.fields}} when an earlier step already prepared this data.",
               "placeholder": "{\"oldField\":\"{{$json.newField}}\",\"rename\":{\"old\":\"new\"}}",
               "example": "{\"oldField\":\"{{$json.newField}}\",\"rename\":{\"old\":\"new\"}}"
             }

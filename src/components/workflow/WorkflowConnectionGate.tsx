@@ -7,15 +7,18 @@ import type { WorkflowMissingConnection } from '@/hooks/useWorkflowConnectionSta
 interface Props {
   missingConnections: WorkflowMissingConnection[];
   workflowId: string;
+  workflowName?: string;
   isLoading: boolean;
   onDismiss: () => void;
 }
 
-export function WorkflowConnectionGate({ missingConnections, workflowId, isLoading, onDismiss }: Props) {
+export function WorkflowConnectionGate({ missingConnections, workflowId, workflowName, isLoading, onDismiss }: Props) {
   const navigate = useNavigate();
 
   const handleSetUp = () => {
-    navigate(`/connections?returnTo=${encodeURIComponent(`/workflow/${workflowId}`)}`);
+    const params = new URLSearchParams({ returnTo: `/workflow/${workflowId}` });
+    if (workflowName) params.set('workflowName', workflowName);
+    navigate(`/connections?${params.toString()}`);
   };
 
   return (

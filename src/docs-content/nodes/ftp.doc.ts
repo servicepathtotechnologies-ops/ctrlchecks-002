@@ -8,12 +8,12 @@ export const ftpDoc: NodeDoc = {
   "description": "FTP file operations",
   "credentialType": "FTP Credential",
   "credentialSetupSteps": [
-    "What this is: FTP uses an OAuth connection so CtrlChecks can safely access your FTP account.",
-    "Get FTP connection details from your hosting provider: Host (server address), Port (usually 21), Username, Password, and the remote directory path.",
-    "Confirm the FTP server allows connections from CtrlChecks on port 21.",
-    "In CtrlChecks -> left menu -> Connections -> Add Connection -> FTP -> enter Host, Port, Username, and Password -> Test Connection -> Save.",
-    "Tip: Use SFTP instead of FTP whenever your provider supports it - SFTP is encrypted and much more secure.",
-    "Safety note: Treat secrets, tokens, passwords, and client secrets like passwords. Only paste them into CtrlChecks Connections, not into regular workflow text fields."
+    "What this is: The FTP connection lets CtrlChecks access your FTP account safely without putting secrets in workflow fields.",
+    "Where to start: FTP account settings or developer settings.",
+    "How to connect: In CtrlChecks, open Connections -> Add Connection -> FTP, then sign in or paste the secret value requested there.",
+    "Example: the token format shown by FTP.",
+    "Important: Treat tokens, passwords, API keys, and client secrets like bank passwords. Store them in Connections, not in regular workflow fields.",
+    "Test it: Save the connection, run a simple FTP step, and confirm CtrlChecks can reach the account."
   ],
   "credentialDocsUrl": "https://en.wikipedia.org/wiki/File_Transfer_Protocol",
   "resources": [
@@ -32,7 +32,7 @@ export const ftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "FTP host",
-              "helpText": "What this field is: The FTP server address.\nExample: ftp.yourcompany.com or 192.168.1.100",
+              "helpText": "What this field is: FTP host.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: ftp.example.com.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "ftp.example.com",
               "example": "ftp.example.com"
             },
@@ -42,7 +42,7 @@ export const ftpDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: The file path on the FTP server.\nExample: /public_html/uploads/report.pdf",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             }
@@ -79,7 +79,7 @@ export const ftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "FTP host",
-              "helpText": "What this field is: The FTP server address.\nExample: ftp.yourcompany.com or 192.168.1.100",
+              "helpText": "What this field is: FTP host.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: ftp.example.com.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "ftp.example.com",
               "example": "ftp.example.com"
             },
@@ -89,7 +89,7 @@ export const ftpDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: The file path on the FTP server.\nExample: /public_html/uploads/report.pdf",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             }
@@ -126,7 +126,7 @@ export const ftpDoc: NodeDoc = {
               "type": "string",
               "required": true,
               "description": "FTP host",
-              "helpText": "What this field is: The FTP server address.\nExample: ftp.yourcompany.com or 192.168.1.100",
+              "helpText": "What this field is: FTP host.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: ftp.example.com.\nTip: Use {{$json.host}} when this value comes from an earlier step.",
               "placeholder": "ftp.example.com",
               "example": "ftp.example.com"
             },
@@ -136,7 +136,7 @@ export const ftpDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "File path",
-              "helpText": "What this field is: The file path on the FTP server.\nExample: /public_html/uploads/report.pdf",
+              "helpText": "What this field is: File path.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: /path/to/file.pdf.\nTip: Use {{$json.path}} when this value comes from an earlier step.",
               "placeholder": "/path/to/file.pdf",
               "example": "/path/to/file.pdf"
             }

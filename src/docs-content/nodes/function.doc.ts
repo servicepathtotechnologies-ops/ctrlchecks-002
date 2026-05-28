@@ -29,7 +29,7 @@ export const functionDoc: NodeDoc = {
               "type": "textarea",
               "required": true,
               "description": "Description of what this function should do",
-              "helpText": "What this field is: Description of what this function should do for Function / Execute.\nHow to fill it: Type the message, prompt, or content you want Function to send or process.\nExample: Hello {{$json.name}}, your report is ready.\nTip: Anything inside {{ }} can come from an earlier workflow step.",
+              "helpText": "What this field is: Description of what this function should do.\nHow to fill it: Type the text to send or save. You can include values from earlier workflow steps.\nExample: Transform contact data.\nTip: Use {{$json.description}} when this value comes from an earlier step.",
               "placeholder": "Transform contact data",
               "example": "Transform contact data"
             },
@@ -39,7 +39,7 @@ export const functionDoc: NodeDoc = {
               "type": "string",
               "required": false,
               "description": "Optional JavaScript code for the function",
-              "helpText": "What this field is: JavaScript code to process each item.\nThe current item is available as item.json.\nExample (combine fields):\n  return [{ json: { ...item.json, fullName: item.json.firstName + ' ' + item.json.lastName } }];",
+              "helpText": "What this field is: JavaScript code for the function.\nHow to fill it: Type the value exactly as it should be sent to the service.\nExample: return { ...$json, processed: true };.\nTip: Use {{$json.code}} when this value comes from an earlier step.",
               "placeholder": "return { ...$json, processed: true };",
               "example": "return { ...$json, processed: true };"
             },
@@ -49,7 +49,7 @@ export const functionDoc: NodeDoc = {
               "type": "number",
               "required": false,
               "description": "Execution timeout in milliseconds (max 30000)",
-              "helpText": "What this field is: A number used for timeout in Function / Execute.\nHow to fill it: Type digits only unless the field description says decimals are allowed.\nExample: 10\nTip: To use data from an earlier node, type {{$json.timeout}} or pick the value from the data picker.",
+              "helpText": "What this field is: The date or time value for Execution timeout in milliseconds.\nHow to fill it: Use a clear date such as 2026-06-01, or a full date and time with timezone when the service needs exact timing.\nExample: 5000.\nTip: Use {{$json.timeout}} when an earlier calendar, form, or database step provides the date.",
               "placeholder": "5000",
               "example": "5000",
               "defaultValue": "10000"
