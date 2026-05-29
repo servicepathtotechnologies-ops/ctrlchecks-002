@@ -6,7 +6,7 @@ import {
   springSoft,
 } from "@/components/landing/landing-motion";
 
-/** Slide 10 — product embedding & document-backed workflows (distinct from open-core dev path). */
+/** Slide 10 — product embedding & document-backed workflows (distinct from the developer platform path). */
 const tags = ["CRMs", "ERPs", "SaaS platforms", "Enterprise tools"];
 
 const rows = [

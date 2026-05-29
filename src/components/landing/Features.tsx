@@ -17,7 +17,7 @@ const betaFocus = [
 ];
 
 const whatToExpect = [
-  "Hybrid builder (prompt + visual), multi-agent orchestration, and open-core extensibility.",
+  "Hybrid builder (prompt + visual), multi-agent orchestration, and cloud-native extensibility via APIs and SDKs.",
   "Fast deployment with pre-built agents. Extend via SDKs, frameworks, and templates.",
 ];
 

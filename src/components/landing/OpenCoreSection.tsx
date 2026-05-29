@@ -5,17 +5,17 @@ import {
   springSoft,
 } from "@/components/landing/landing-motion";
 
-/** Slide 9 — developer / open-core path only (embedding lives in Plugins & APIs). */
+/** Slide 9 — developer platform path only (embedding lives in Plugins & APIs). */
 const blocks = [
-  { title: "Workflow engine", item: "Core components you can inspect and extend" },
+  { title: "Workflow engine", item: "Production-grade cloud infrastructure you can build on" },
   { title: "SDKs", item: "First-class developer tooling" },
   { title: "Integration frameworks", item: "Connection libraries for your stack" },
   { title: "Agent templates", item: "Reusable patterns to ship faster" },
 ];
 
 const developerPath = [
-  "Self-host or use cloud. Keep data and LLM access under your policy.",
-  "Fork-friendly core: debug, extend nodes, and contribute back where it fits.",
+  "Deploy on managed cloud or bring your own infrastructure. Data and LLM access stay under your policy.",
+  "Build and extend with first-class SDKs, APIs, and integration frameworks designed for your stack.",
   "Ship custom agents and internal tools without rebuilding an automation OS from scratch.",
 ];
 
@@ -23,7 +23,7 @@ export function OpenCoreSection() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section id="open-core" className="py-12 sm:py-16" aria-labelledby="open-core-heading">
+    <section id="developer-platform" className="py-12 sm:py-16" aria-labelledby="developer-platform-heading">
       <div className="container mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -33,15 +33,14 @@ export function OpenCoreSection() {
           className="mx-auto max-w-3xl text-center"
         >
           <h2
-            id="open-core-heading"
+            id="developer-platform-heading"
             className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
           >
-            Open core for{" "}
-            <span className="text-gradient">developers</span>
+            Developer platform{" "}
+            <span className="text-gradient">attributes</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
-            The engine, SDKs, frameworks, and templates you use to build. Not the same story as
-            embedding CtrlChecks inside another product (see Plugins and APIs).
+            The cloud infrastructure, SDKs, frameworks, and templates that define what you can build on CtrlChecks — and how fast you can ship it. Separate from embedding CtrlChecks inside another product (see Plugins and APIs).
           </p>
         </motion.div>
 
