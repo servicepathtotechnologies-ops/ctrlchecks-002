@@ -41,7 +41,7 @@ export function FaqSection() {
           <div className="flex justify-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/10 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md dark:border-white/10 dark:bg-white/5">
               <HelpCircle className="h-3.5 w-3.5 text-primary" aria-hidden />
-              Technical
+              Common questions
             </span>
           </div>
           <h2

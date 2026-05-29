@@ -20,11 +20,10 @@ export function IndustryVerticalsSection() {
             id="verticals-heading"
             className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
           >
-            Built for <span className="text-gradient">your sector</span>
+            Trusted across <span className="text-gradient">every industry</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Same engine, tailored outcomes. Replace placeholders in code when your client list is
-            final.
+            One powerful platform, shaped to the needs of your sector. The same AI engine — delivering outcomes that matter to your business.
           </p>
         </motion.div>
 

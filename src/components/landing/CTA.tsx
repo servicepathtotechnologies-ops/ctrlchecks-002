@@ -50,7 +50,7 @@ export function CTA() {
               transition={reduceMotion ? { duration: 0.4, delay: 0.05 } : { ...springSoft, delay: 0.08 }}
               className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl"
             >
-              AI automation OS
+              Your vision. Running in minutes.
             </motion.h2>
 
             <motion.p
@@ -60,7 +60,7 @@ export function CTA() {
               transition={reduceMotion ? { duration: 0.35, delay: 0.12 } : { ...springSoft, delay: 0.14 }}
               className="mt-4 text-base text-white/85 sm:text-lg"
             >
-              One OS for prompt-built workflows, agents, and integrations. On your infrastructure.
+              One platform for AI-driven workflows, intelligent agents, and all your integrations — wherever you run it.
             </motion.p>
 
             <motion.p
@@ -70,7 +70,7 @@ export function CTA() {
               transition={reduceMotion ? { duration: 0.35, delay: 0.16 } : { ...springSoft, delay: 0.18 }}
               className="mt-5 text-lg font-semibold text-white sm:text-xl"
             >
-              From Prompts to Production, Instantly
+              From a single prompt to production — instantly.
             </motion.p>
 
             <motion.div

@@ -7,7 +7,7 @@ const footerLinks = {
     { name: "How it works", href: "#how-it-works" },
     { name: "Trust & security", href: "#trust" },
     { name: "Developer platform", href: "#developer-platform" },
-    { name: "Plugins & APIs", href: "#plugins-api" },
+    { name: "Integrations", href: "#plugins-api" },
     { name: "Industries", href: "#verticals" },
     { name: "Why CtrlChecks", href: "#why-ctrlchecks" },
     { name: "Beta focus", href: "#features" },

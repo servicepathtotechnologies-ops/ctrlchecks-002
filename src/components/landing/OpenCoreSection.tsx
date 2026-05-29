@@ -5,18 +5,18 @@ import {
   springSoft,
 } from "@/components/landing/landing-motion";
 
-/** Slide 9 — developer platform path only (embedding lives in Plugins & APIs). */
+/** Slide 9 — platform capabilities for builders (embedding lives in Plugins & APIs). */
 const blocks = [
-  { title: "Workflow engine", item: "Production-grade cloud infrastructure you can build on" },
-  { title: "SDKs", item: "First-class developer tooling" },
-  { title: "Integration frameworks", item: "Connection libraries for your stack" },
-  { title: "Agent templates", item: "Reusable patterns to ship faster" },
+  { title: "Automation engine", item: "Reliable cloud infrastructure that runs your workflows at any scale" },
+  { title: "Builder toolkit", item: "Everything you need to create, extend, and customize the platform" },
+  { title: "Ready-made connectors", item: "Pre-built connections for the tools and systems your team already uses" },
+  { title: "Agent blueprints", item: "Pre-built AI agent templates to launch powerful automations in minutes" },
 ];
 
 const developerPath = [
-  "Deploy on managed cloud or bring your own infrastructure. Data and LLM access stay under your policy.",
-  "Build and extend with first-class SDKs, APIs, and integration frameworks designed for your stack.",
-  "Ship custom agents and internal tools without rebuilding an automation OS from scratch.",
+  "Run fully in the cloud or on your own servers. Your data stays under your control.",
+  "Connect your existing tools and expand what the platform can do — without starting from scratch.",
+  "Launch custom AI workflows and internal automations in days, not months.",
 ];
 
 export function OpenCoreSection() {
@@ -36,11 +36,11 @@ export function OpenCoreSection() {
             id="developer-platform-heading"
             className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
           >
-            Developer platform{" "}
-            <span className="text-gradient">attributes</span>
+            What you can{" "}
+            <span className="text-gradient">build with CtrlChecks</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
-            The cloud infrastructure, SDKs, frameworks, and templates that define what you can build on CtrlChecks — and how fast you can ship it. Separate from embedding CtrlChecks inside another product (see Plugins and APIs).
+            The automation engine, ready-made connectors, and AI agent blueprints that let any team build powerful workflows on CtrlChecks cloud — and ship them fast. Distinct from embedding CtrlChecks inside your own product (see Connect &amp; Extend).
           </p>
         </motion.div>
 

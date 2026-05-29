@@ -10,10 +10,10 @@ import {
 const tags = ["CRMs", "ERPs", "SaaS platforms", "Enterprise tools"];
 
 const rows = [
-  { title: "Scalable infrastructure" },
-  { title: "Developer-friendly APIs" },
-  { title: "Plugin SDK" },
-  { title: "Enterprise integration" },
+  { title: "Scales with your business" },
+  { title: "Simple integration APIs" },
+  { title: "Plug-and-play connectors" },
+  { title: "Enterprise-ready" },
 ];
 
 export function PluginsApiSection() {
@@ -35,7 +35,8 @@ export function PluginsApiSection() {
             transition={reduceMotion ? { duration: 0.4 } : springSoft}
             className="text-3xl font-bold tracking-tight sm:text-4xl"
           >
-            Plugins & APIs
+            Connect &amp; extend{" "}
+            <span className="text-gradient">anything</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 14 }}
@@ -44,7 +45,7 @@ export function PluginsApiSection() {
             transition={reduceMotion ? { duration: 0.35, delay: 0.05 } : { ...springSoft, delay: 0.06 }}
             className="mt-3 text-lg font-medium text-primary"
           >
-            An intelligence layer behind modern software
+            AI-powered automation embedded in the tools your team already uses
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
@@ -53,9 +54,7 @@ export function PluginsApiSection() {
             transition={reduceMotion ? { duration: 0.35, delay: 0.1 } : { ...springSoft, delay: 0.12 }}
             className="mt-4 text-muted-foreground"
           >
-            Embed CtrlChecks into your product so CRMs, ERPs, and internal tools can trigger
-            workflows, sync documents, and hand off to AI agents. No separate
-            automation UI exposed to every end user.
+            Bring CtrlChecks intelligence into your existing products — so your CRM, ERP, or internal tools can trigger workflows, process documents, and hand off tasks to AI agents, all without a separate interface.
           </motion.p>
         </div>
 
@@ -68,9 +67,8 @@ export function PluginsApiSection() {
         >
           <FileText className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
           <p>
-            <span className="font-medium text-foreground">Documents &amp; data in the loop.</span>{" "}
-            Connect the systems where records and files already live; let agents generate and run
-            workflows behind your existing screens.
+            <span className="font-medium text-foreground">Your data, already in the workflow.</span>{" "}
+            Connect the systems where your records and files already live. AI agents work behind the scenes — no new screens, no disruption to how your team operates.
           </p>
         </motion.div>
 
@@ -106,8 +104,8 @@ export function PluginsApiSection() {
           transition={reduceMotion ? { duration: 0.4, delay: 0.15 } : { ...springSoft, delay: 0.2 }}
           className="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-muted-foreground"
         >
-          Internal workflow generation · Agent execution · Automation that keeps running ·
-          Intelligence that improves with use
+          Workflows that run themselves · AI agents that take action · Automation that never stops ·
+          Intelligence that gets smarter over time
         </motion.p>
 
         <div className="mx-auto mt-12 grid max-w-3xl gap-3 sm:grid-cols-2">

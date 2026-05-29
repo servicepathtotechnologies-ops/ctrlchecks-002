@@ -10,11 +10,11 @@ import { LANDING_COMPARISON_SUMMARY, LANDING_MARKET_BRIDGE } from "@/components/
 
 /** Slides 11–13 merged. */
 const wins = [
-  "Autonomous workflow creation",
-  "Self-repairing automation graphs",
-  "Dynamic node registry",
-  "Multi-LLM orchestration",
-  "Enterprise-grade automation engine",
+  "Workflows that build themselves from a single prompt",
+  "Automation that detects and recovers from errors on its own",
+  "A flexible, extensible platform that grows with your needs",
+  "Works with any AI model — not locked to one provider",
+  "Enterprise-grade security and reliability, built in from day one",
 ];
 
 export function WhyCtrlChecksSection() {
@@ -34,7 +34,8 @@ export function WhyCtrlChecksSection() {
             id="why-heading"
             className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
           >
-            Why CtrlChecks
+            Why teams choose{" "}
+            <span className="text-gradient">CtrlChecks</span>
           </h2>
           <p className="mt-4 text-lg font-semibold text-foreground">{LANDING_MARKET_BRIDGE}</p>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
@@ -77,12 +78,12 @@ export function WhyCtrlChecksSection() {
         >
           <p className="text-sm font-semibold uppercase tracking-wide text-primary">CtrlChecks</p>
           <p className="mt-2 text-lg font-bold sm:text-xl">
-            AI automation infrastructure that bridges both worlds.
+            The AI platform that connects traditional automation with next-generation intelligence.
           </p>
         </motion.div>
 
         <p className="mx-auto mt-10 max-w-2xl text-center text-lg font-semibold text-foreground">
-          Why CtrlChecks wins and stays ahead
+          What makes CtrlChecks different
         </p>
         <ul className="mx-auto mt-8 grid max-w-xl gap-3">
           {wins.map((line, index) => (

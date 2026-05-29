@@ -18,7 +18,7 @@ export function Header() {
     { name: "How it works", href: "#how-it-works" },
     { name: "Trust", href: "#trust" },
     { name: "Developers", href: "#developer-platform" },
-    { name: "Plugins", href: "#plugins-api" },
+    { name: "Integrations", href: "#plugins-api" },
     { name: "Verticals", href: "#verticals" },
     { name: "Why us", href: "#why-ctrlchecks" },
     { name: "Beta", href: "#features" },

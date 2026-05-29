@@ -5,8 +5,8 @@
 
 /** Slide 1 / 12 — one line; used only in WhyCtrlChecksSection. */
 export const LANDING_COMPARISON_SUMMARY =
-  "Native prompt-to-workflow, cloud-native SaaS, native LLM and agent orchestration, and enterprise-grade security. Versus visual-only builders on traditional automation stacks.";
+  "CtrlChecks does in one prompt what Zapier, Make, and n8n require hours of manual setup to achieve — with AI agents, enterprise security, and a cloud platform built to scale.";
 
 /** Bridge statement — slide 11. */
 export const LANDING_MARKET_BRIDGE =
-  "AI automation infrastructure that sits between classic automation and agent frameworks.";
+  "The intelligent automation platform that connects the simplicity of traditional tools with the power of next-generation AI.";

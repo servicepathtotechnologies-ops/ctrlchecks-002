@@ -6,20 +6,20 @@ const steps = [
   {
     number: "1",
     icon: Target,
-    title: "Describe the outcome",
-    description: "Turn natural language into intent.",
+    title: "Describe what you need",
+    description: "Say it in plain language. No forms, no manual setup.",
   },
   {
     number: "2",
     icon: Bot,
-    title: "Agents execute",
-    description: "Infrastructure that builds itself.",
+    title: "AI builds and runs it",
+    description: "Workflows are generated, connected, and executed automatically.",
   },
   {
     number: "3",
     icon: Rocket,
-    title: "Immediate value",
-    description: "Faster innovation. Instant deployment.",
+    title: "Results, instantly",
+    description: "Go from idea to working automation without writing a line of code.",
   },
 ];
 
@@ -40,12 +40,11 @@ export function HowItWorks() {
             id="how-heading"
             className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
           >
-            One prompt{" "}
-            <span className="text-gradient">changes everything</span>
+            One sentence.{" "}
+            <span className="text-gradient">A complete workflow.</span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            The interface disappears. Organizations shift from manual workflow design to
-            intelligent generation.
+            Stop configuring tools manually. Just describe the outcome you want — CtrlChecks builds and runs it for you.
           </p>
         </motion.div>
 
