@@ -1174,9 +1174,13 @@ export default function WorkflowBuilder() {
 
   const handleCancel = useCallback(async () => {
     if (!activeExecutionId) return;
+    // Optimistic update — reflect cancelled state immediately before the network call
+    const cancelledExecutionId = activeExecutionId;
+    setIsRunning(false);
+    setActiveExecutionId(null);
     try {
       const { data: sessionData } = await awsClient.auth.getSession();
-      const res = await fetch(`${ENDPOINTS.itemBackend}/api/executions/${activeExecutionId}/cancel`, {
+      const res = await fetch(`${ENDPOINTS.itemBackend}/api/executions/${cancelledExecutionId}/cancel`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1186,14 +1190,18 @@ export default function WorkflowBuilder() {
         },
       });
       if (res.ok) {
-        setIsRunning(false);
-        setActiveExecutionId(null);
         toast({ title: 'Execution cancelled' });
       } else {
+        // Rollback optimistic update on failure
+        setIsRunning(true);
+        setActiveExecutionId(cancelledExecutionId);
         const err = await res.json().catch(() => ({}));
         getAIGuidance({ code: 'CANCEL_FAILED', message: err.error || 'Could not cancel the execution' }).then(setExecutionGuidance);
       }
     } catch {
+      // Rollback optimistic update on network error
+      setIsRunning(true);
+      setActiveExecutionId(cancelledExecutionId);
       getAIGuidance({ code: 'CANCEL_FAILED', message: 'Network error cancelling execution' }).then(setExecutionGuidance);
     }
   }, [activeExecutionId]);

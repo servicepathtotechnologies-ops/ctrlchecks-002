@@ -44,6 +44,7 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
   const [connectionName, setConnectionName] = useState('');
   const [activeFieldName, setActiveFieldName] = useState<string | null>(null);
   const [saveGuidance, setSaveGuidance] = useState<GuidedStatusContent | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // When types load and a preset is given, jump straight to the form step
   useEffect(() => {
@@ -87,7 +88,8 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
   }
 
   async function handleCredentialSubmit(credentials: Record<string, string>) {
-    if (!selectedType) return;
+    if (!selectedType || isSubmitting) return;
+    setIsSubmitting(true); // immediate feedback before any await
     try {
       await createMut.mutateAsync({
         name: connectionName || `My ${selectedType.displayName}`,
@@ -104,6 +106,8 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
         { code: 'SAVE_FAILED', message: msg, operation: 'save' } as any,
         { provider: selectedType?.provider, operation: 'connect' }
       ).then(setSaveGuidance);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -123,6 +127,7 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
     setSelectedType(null);
     setConnectionName('');
     setActiveFieldName(null);
+    setIsSubmitting(false);
   }
 
   function handleGuideFieldSelect(fieldName: string) {
@@ -208,7 +213,7 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
                         <CredentialFormRenderer
                           credentialType={selectedType}
                           onSubmit={handleCredentialSubmit}
-                          isSubmitting={createMut.isPending}
+                          isSubmitting={isSubmitting}
                           activeFieldName={activeFieldName}
                           onFieldFocus={setActiveFieldName}
                           apiError={credentialFormApiError}
@@ -227,7 +232,7 @@ export function NewConnectionModal({ open, onOpenChange, preselectedCredentialTy
                     <CredentialFormRenderer
                       credentialType={selectedType}
                       onSubmit={handleCredentialSubmit}
-                      isSubmitting={createMut.isPending}
+                      isSubmitting={isSubmitting}
                       submitLabel={selectedType.form.submitLabel ?? 'Save & Test Connection'}
                       activeFieldName={activeFieldName}
                       onFieldFocus={setActiveFieldName}

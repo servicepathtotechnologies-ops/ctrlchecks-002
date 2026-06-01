@@ -121,60 +121,37 @@ export default function WorkflowHeader({
 
     setIsExporting(true);
     try {
-      // Prepare base workflow data from store
-      const exportData: any = {
+      // Build local export data (synchronous) and fetch DB metadata in parallel
+      const localData: any = {
         name: workflowName || 'Untitled Workflow',
         nodes: nodes.map(node => {
-          // Remove execution status and other runtime data for clean export
           const { executionStatus, ...cleanData } = node.data;
-          return {
-            ...node,
-            data: cleanData,
-          };
+          return { ...node, data: cleanData };
         }),
         edges: edges.map(edge => {
-          // Remove style properties that are runtime-specific
           const { style, ...cleanEdge } = edge;
           return cleanEdge;
         }),
       };
 
-      // If workflow is saved, fetch additional metadata from database
-      if (workflowId) {
-        try {
-          const { data, error } = await awsClient
+      const dbMetadata = workflowId
+        ? await awsClient
             .from('workflows')
             .select('description, viewport, cron_expression, workflow_type, agent_config, memory_config')
             .eq('id', workflowId)
-            .single();
+            .single()
+            .then(({ data, error }) => (!error && data ? (data as any) : null))
+            .catch(() => null)
+        : null;
 
-          const workflowData = data as any;
-
-          if (!error && workflowData) {
-            // Add shareable metadata (exclude user-specific data)
-            if (workflowData.description) {
-              exportData.description = workflowData.description;
-            }
-            if (workflowData.viewport) {
-              exportData.viewport = workflowData.viewport;
-            }
-            if (workflowData.cron_expression) {
-              exportData.cron_expression = workflowData.cron_expression;
-            }
-            if (workflowData.workflow_type) {
-              exportData.workflow_type = workflowData.workflow_type;
-            }
-            if (workflowData.agent_config) {
-              exportData.agent_config = workflowData.agent_config;
-            }
-            if (workflowData.memory_config) {
-              exportData.memory_config = workflowData.memory_config;
-            }
-          }
-        } catch (error) {
-          console.warn('Could not fetch additional workflow metadata:', error);
-          // Continue with export even if metadata fetch fails
-        }
+      const exportData: any = { ...localData };
+      if (dbMetadata) {
+        if (dbMetadata.description) exportData.description = dbMetadata.description;
+        if (dbMetadata.viewport) exportData.viewport = dbMetadata.viewport;
+        if (dbMetadata.cron_expression) exportData.cron_expression = dbMetadata.cron_expression;
+        if (dbMetadata.workflow_type) exportData.workflow_type = dbMetadata.workflow_type;
+        if (dbMetadata.agent_config) exportData.agent_config = dbMetadata.agent_config;
+        if (dbMetadata.memory_config) exportData.memory_config = dbMetadata.memory_config;
       }
 
       // Add export metadata

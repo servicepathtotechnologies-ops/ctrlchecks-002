@@ -3857,12 +3857,27 @@ export function AutonomousAgentWizard() {
                                 message,
                                 details: errorData.details,
                             });
+
+                            // Non-recoverable failures (400/500): stop here — do NOT commit the workflow.
+                            // The workflow stays hidden (setup_completed=false) so it won't appear in the
+                            // UI in a broken state. The user can retry from the wizard.
+                            if (inputsResponse.status === 400 || inputsResponse.status === 500) {
+                                toast({
+                                    title: 'Could not save workflow configuration',
+                                    description: [code && `Code: ${code}`, message].filter(Boolean).join(' — ').slice(0, 500) ||
+                                        'Please try again. Your workflow draft is preserved.',
+                                    variant: 'destructive',
+                                });
+                                return; // isNavigating stays false — button re-enabled for retry
+                            }
+
+                            // Recoverable failures (409 executing, network errors): show warning, continue.
                             toast({
-                                title: 'Could not save workflow inputs',
-                                description: [code && `Code: ${code}`, message].filter(Boolean).join(' — ').slice(0, 500),
+                                title: 'Warning: some settings may not be saved',
+                                description: 'You can adjust field settings in the editor.',
                                 variant: 'destructive',
                             });
-                            // Non-blocking: continue to open workbench regardless
+                            // Continue to commitSetupWorkflow below
                         } else {
                             inputsResult = await inputsResponse.json();
                             markAttachInputsPayloadPersisted(savedWorkflow.id, combinedInputs);
