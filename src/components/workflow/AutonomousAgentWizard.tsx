@@ -9106,7 +9106,7 @@ export function AutonomousAgentWizard() {
                                     Your autonomous agent has successfully generated your workflow. All steps are complete and your workflow is ready to use.
                                 </motion.p>
                                 {buildStartTime && (
-                                    <motion.p 
+                                    <motion.p
                                         className="text-sm text-muted-foreground"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
@@ -9114,6 +9114,31 @@ export function AutonomousAgentWizard() {
                                     >
                                         Completed in {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
                                     </motion.p>
+                                )}
+                                {executionStatus === 'failed' && executionError && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.5 }}
+                                        className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2 max-w-md mx-auto text-left"
+                                    >
+                                        <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Test run failed</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5">{executionError}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">Your workflow was saved — open it to review and retry.</p>
+                                        </div>
+                                    </motion.div>
+                                )}
+                                {executionStatus === 'completed' && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.5 }}
+                                        className="mt-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg max-w-md mx-auto"
+                                    >
+                                        <p className="text-sm text-green-600 dark:text-green-400 font-medium">Test run completed successfully</p>
+                                    </motion.div>
                                 )}
                             </div>
                             <div className="flex gap-4 mt-4">
