@@ -1123,6 +1123,7 @@ export function AutonomousAgentWizard() {
     const [executionStatus, setExecutionStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
     const [executionResult, setExecutionResult] = useState<any>(null);
     const [executionError, setExecutionError] = useState<string | null>(null);
+    const [executionRequestId, setExecutionRequestId] = useState<string | null>(null);
     const [executionProgress, setExecutionProgress] = useState(0);
     const [guideSelectedField, setGuideSelectedField] = useState<{ nodeId: string; fieldName: string } | null>(null);
     const { toast } = useToast();
@@ -3404,6 +3405,7 @@ export function AutonomousAgentWizard() {
             setExecutionStatus('running');
             setExecutionProgress(0);
             setExecutionError(null);
+            setExecutionRequestId(null);
             setStep('executing');
 
             // Get auth token
@@ -3571,6 +3573,7 @@ export function AutonomousAgentWizard() {
             console.error('Error auto-executing workflow:', err);
             setExecutionStatus('failed');
             setExecutionError(err.message || 'Failed to execute workflow');
+            if (err.requestId) setExecutionRequestId(err.requestId);
             setStep('complete');
             toast({
                 title: 'Execution Failed',
@@ -9127,6 +9130,9 @@ export function AutonomousAgentWizard() {
                                             <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Test run failed</p>
                                             <p className="text-xs text-muted-foreground mt-0.5">{executionError}</p>
                                             <p className="text-xs text-muted-foreground mt-1">Your workflow was saved — open it to review and retry.</p>
+                                            {executionRequestId && (
+                                                <p className="text-xs text-muted-foreground/60 mt-1 font-mono">Ref: {executionRequestId}</p>
+                                            )}
                                         </div>
                                     </motion.div>
                                 )}

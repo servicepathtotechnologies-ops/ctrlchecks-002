@@ -32,6 +32,19 @@ const getApiBaseUrl = (): string => {
 
 const API_BASE_URL = getApiBaseUrl();
 
+export class ApiError extends Error {
+  status: number;
+  requestId?: string;
+  code?: string;
+  constructor(message: string, status: number, requestId?: string, code?: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.requestId = requestId;
+    this.code = code;
+  }
+}
+
 class APIClient {
   private baseUrl: string;
   private timeout: number = 30000; // 30 seconds
@@ -83,13 +96,19 @@ class APIClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
+        const requestId = response.headers.get('x-request-id') ?? undefined;
+        let errorBody: any = {};
         const errorText = await response.text();
-        // Only log errors for non-health-check requests
+        try { errorBody = JSON.parse(errorText); } catch {}
         if (!isHealthCheck) {
-          console.error(`❌ API Error ${response.status}: ${errorText}`);
+          console.error(`❌ API Error ${response.status} [${requestId ?? '-'}]: ${errorText}`);
         }
-        
-        throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+        throw new ApiError(
+          errorBody.error || errorText || response.statusText,
+          response.status,
+          requestId,
+          errorBody.code,
+        );
       }
       
       const data = await response.json();
