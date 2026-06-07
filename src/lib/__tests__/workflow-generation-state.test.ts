@@ -186,7 +186,7 @@ describe('WorkflowGenerationStateManager', () => {
       stateManager.confirmUnderstanding('test understanding');
       stateManager.startBuilding();
 
-      let result = stateManager.handleError('forced failure');
+      const result = stateManager.handleError('forced failure');
       expect(result.success).toBe(true);
       expect(stateManager.getCurrentState()).toBe(WorkflowGenerationState.STATE_ERROR_HANDLING);
       expect(stateManager.isTerminalState()).toBe(true);

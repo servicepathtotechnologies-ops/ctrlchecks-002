@@ -169,8 +169,10 @@ function isNonEmptyTrimmedString(v: unknown): v is string {
 /** Block control characters; vault keys never allow newlines. Display names allow newlines for rare multi-line labels. */
 function hasNoDisallowedCredentialChars(s: string, allowNewlines: boolean): boolean {
     if (allowNewlines) {
+        // eslint-disable-next-line no-control-regex
         return !/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(s);
     }
+    // eslint-disable-next-line no-control-regex
     return !/[\r\n\x00-\x1f]/.test(s);
 }
 
@@ -2644,9 +2646,9 @@ export function AutonomousAgentWizard() {
         }
 
         const sanitizedSelections = resolveCapabilitySelections(capabilityOptions, capabilitySelectionsByStep).byStep;
-        const missingRequiredStep = capabilityOptions.find((step) =>
-            step.selectionPolicy?.required !== false &&
-            !(sanitizedSelections[step.stepId]?.length > 0)
+        const missingRequiredStep = capabilityOptions.find((capStep) =>
+            capStep.selectionPolicy?.required !== false &&
+            !(sanitizedSelections[capStep.stepId]?.length > 0)
         );
         if (missingRequiredStep) {
             toast({
@@ -4772,10 +4774,10 @@ export function AutonomousAgentWizard() {
                                     const missing = update.discoveredCredentials.filter((c: any) => !c.satisfied);
                                     const satisfied = update.discoveredCredentials.filter((c: any) => c.satisfied);
                                     setBuildingLogs(prev => {
-                                        const lines: string[] = [];
-                                        if (satisfied.length > 0) lines.push(`? ${satisfied.length} credential(s) connected`);
-                                        if (missing.length > 0) lines.push(`?? ${missing.length} credential(s) required: ${missing.map((c: any) => c.displayName || c.vaultKey).join(', ')}`);
-                                        const newLines = lines.filter(l => !prev.includes(l));
+                                        const credLines: string[] = [];
+                                        if (satisfied.length > 0) credLines.push(`? ${satisfied.length} credential(s) connected`);
+                                        if (missing.length > 0) credLines.push(`?? ${missing.length} credential(s) required: ${missing.map((c: any) => c.displayName || c.vaultKey).join(', ')}`);
+                                        const newLines = credLines.filter(l => !prev.includes(l));
                                         return newLines.length > 0 ? [...prev, ...newLines] : prev;
                                     });
                                 }

@@ -433,8 +433,6 @@ describe('useFieldOwnership Hook', () => {
         json: async () => ({ error: 'Server error' }),
       });
 
-      const mockOnError = vi.fn();
-
       const { result } = renderHook(() =>
         useFieldOwnership({
           workflowId: 'wf_123',

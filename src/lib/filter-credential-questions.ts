@@ -115,7 +115,7 @@ export function applyCredentialStepIncludeOverrides(
     getFieldPlaneRow,
   } = params;
 
-  let out = strictFiltered.filter((q) => {
+  const out = strictFiltered.filter((q) => {
     const k = credentialPlaneKeyFromQuestion(q);
     const empty = isQuestionCredentialEmpty(q);
     const mode = getEffectiveFillMode?.(q) ?? 'manual_static';

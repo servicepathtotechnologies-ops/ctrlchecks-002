@@ -203,7 +203,7 @@ function buildLinearGraph(globalIndex: number): {
   edges: unknown[];
 } {
   const trig = TRIGGERS[globalIndex % TRIGGERS.length];
-  let a = MIDDLE_POOL[(globalIndex * 13) % MIDDLE_POOL.length];
+  const a = MIDDLE_POOL[(globalIndex * 13) % MIDDLE_POOL.length];
   let b = MIDDLE_POOL[(globalIndex * 37) % MIDDLE_POOL.length];
   if (a === b) {
     b = MIDDLE_POOL[(MIDDLE_POOL.indexOf(b as (typeof MIDDLE_POOL)[number]) + 1) % MIDDLE_POOL.length];

@@ -1320,7 +1320,6 @@ export default function PropertiesPanel({
 
         autoPersistInFlightRef.current = true;
         try {
-        const { awsClient } = await import('@/integrations/aws/client');
         const { data: sessionData } = await awsClient.auth.getSession();
         if (!sessionData?.session?.access_token) return;
 
@@ -2743,7 +2742,7 @@ export default function PropertiesPanel({
                               resource: (selectedNode.data.config || {}).resource,
                             });
                             const contextualHelpText = resolvedFieldHelp?.description || '';
-                            let effectiveHelpText = contextualHelpText || field.helpText;
+                            const effectiveHelpText = contextualHelpText || field.helpText;
                             
                             const helpInfo = resolvedFieldHelp
                               ? {

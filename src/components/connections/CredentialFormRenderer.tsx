@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { Eye, EyeOff, ExternalLink, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CredentialFieldSchema, CredentialTypeDefinition } from '@/lib/api/connections';
 

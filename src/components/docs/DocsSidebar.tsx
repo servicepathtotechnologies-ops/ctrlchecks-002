@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { nodeManifestByCategory } from '@/docs-content/manifest';

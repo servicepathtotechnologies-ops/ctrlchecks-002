@@ -1,10 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check, Sparkles, Zap, Shield, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import { useNavigate } from "react-router-dom";
 
 const plans = [
   {

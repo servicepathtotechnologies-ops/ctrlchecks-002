@@ -99,7 +99,7 @@ class APIClient {
         const requestId = response.headers.get('x-request-id') ?? undefined;
         let errorBody: any = {};
         const errorText = await response.text();
-        try { errorBody = JSON.parse(errorText); } catch {}
+        try { errorBody = JSON.parse(errorText); } catch { /* non-JSON body */ }
         if (!isHealthCheck) {
           console.error(`❌ API Error ${response.status} [${requestId ?? '-'}]: ${errorText}`);
         }

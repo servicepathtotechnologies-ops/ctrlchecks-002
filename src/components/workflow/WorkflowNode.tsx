@@ -1,9 +1,8 @@
 import { memo, useMemo } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { cn } from '@/lib/utils';
-import { NodeData } from '@/stores/workflowStore';
+import { NodeData, useWorkflowStore } from '@/stores/workflowStore';
 import { NODE_CATEGORIES } from './nodeTypes';
-import { useWorkflowStore } from '@/stores/workflowStore';
 import { useDebugStore } from '@/stores/debugStore';
 import { useTheme } from '@/hooks/useTheme';
 import { ThemedBorderGlow } from '@/components/ui/themed-border-glow';
@@ -35,6 +34,34 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
   const isAiEditedHighlight = useWorkflowStore((s) => s.aiEditedNodeIds.includes(id));
   const { theme } = useTheme();
   const isLight = theme === 'light';
+
+  const status = data?.executionStatus || 'idle';
+  const glowOverrides = useMemo(() => {
+    let colors: string[] | undefined;
+    let glowColor: string | undefined;
+    let glowIntensity: number | undefined;
+    let animated = false;
+
+    if (status === 'running') {
+      colors = isLight
+        ? ['#1e40af', '#2563eb', '#0284c7']
+        : ['#2563eb', '#3b82f6', '#60a5fa'];
+      glowColor = isLight ? '217 91 40' : '217 91 68';
+      glowIntensity = 1.52;
+      animated = true;
+    } else if (status === 'success') {
+      colors = isLight
+        ? ['#166534', '#0f766e', '#15803d']
+        : ['#22c55e', '#2dd4bf', '#4ade80'];
+      glowColor = isLight ? '142 76 32' : '142 76 62';
+      glowIntensity = 1.42;
+    } else if (selected) {
+      glowIntensity = isLight ? 1.52 : 1.58;
+      glowColor = isLight ? '174 60 40' : '174 60 68';
+    }
+
+    return { colors, glowColor, glowIntensity, animated };
+  }, [status, selected, isLight]);
 
   // Skip rendering form nodes - they use custom FormTriggerNode component
   if (data?.type === 'form') {
@@ -110,37 +137,8 @@ const WorkflowNode = memo(({ data, selected, id }: NodeProps<WorkflowNodeProps>)
     ? JSON.stringify(switchCases.map(c => c.value).sort())
     : '';
 
-  const status = data.executionStatus || 'idle';
-
   const nodeWidth = 240;
   const nodeMinHeight = 70;
-
-  const glowOverrides = useMemo(() => {
-    let colors: string[] | undefined;
-    let glowColor: string | undefined;
-    let glowIntensity: number | undefined;
-    let animated = false;
-
-    if (status === 'running') {
-      colors = isLight
-        ? ['#1e40af', '#2563eb', '#0284c7']
-        : ['#2563eb', '#3b82f6', '#60a5fa'];
-      glowColor = isLight ? '217 91 40' : '217 91 68';
-      glowIntensity = 1.52;
-      animated = true;
-    } else if (status === 'success') {
-      colors = isLight
-        ? ['#166534', '#0f766e', '#15803d']
-        : ['#22c55e', '#2dd4bf', '#4ade80'];
-      glowColor = isLight ? '142 76 32' : '142 76 62';
-      glowIntensity = 1.42;
-    } else if (selected) {
-      glowIntensity = isLight ? 1.52 : 1.58;
-      glowColor = isLight ? '174 60 40' : '174 60 68';
-    }
-
-    return { colors, glowColor, glowIntensity, animated };
-  }, [status, selected, isLight]);
 
   return (
     <ThemedBorderGlow

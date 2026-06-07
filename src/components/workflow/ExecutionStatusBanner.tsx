@@ -2,12 +2,11 @@ import { Loader2, CheckCircle2, XCircle, Clock, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { ActiveExecution, ExecutionStatus } from '@/stores/workflowStore';
+import { useWorkflowStore, type ActiveExecution, type ExecutionStatus } from '@/stores/workflowStore';
 import ExecutionProgressBar from './ExecutionProgressBar';
 import { ENDPOINTS } from '@/config/endpoints';
 import { awsClient } from '@/integrations/aws/client';
 import { toast } from '@/hooks/use-toast';
-import { useWorkflowStore } from '@/stores/workflowStore';
 
 interface ExecutionStatusBannerProps {
   execution: ActiveExecution;

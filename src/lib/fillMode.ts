@@ -69,8 +69,8 @@ export function resolveWizardFieldFillMode(
 export function resolveWizardEffectiveFieldFillMode(
   wizardExplicit: string | undefined,
   questionDefault: FieldFillMode | undefined,
-  supportsRuntimeAI?: boolean,
-  supportsBuildtimeAI?: boolean
+  allowRuntimeAI?: boolean,
+  allowBuildtimeAI?: boolean
 ): {
   mode: FieldFillMode;
   coerced: boolean;
@@ -84,7 +84,7 @@ export function resolveWizardEffectiveFieldFillMode(
   let mode = resolveWizardFieldFillMode(wizardExplicit, questionDefault);
 
   // When the user has explicitly chosen a mode in the wizard, honor it unconditionally.
-  // supportsRuntimeAI/supportsBuildtimeAI are advisory defaults, not user restrictions.
+  // allowRuntimeAI/allowBuildtimeAI are advisory defaults, not user restrictions.
   if (hasExplicitUserChoice) {
     return { mode, coerced: false };
   }
@@ -92,7 +92,7 @@ export function resolveWizardEffectiveFieldFillMode(
   let coerced = false;
   let reason: 'runtime_not_supported' | 'buildtime_not_supported' | undefined;
 
-  if (mode === 'runtime_ai' && supportsRuntimeAI === false) {
+  if (mode === 'runtime_ai' && allowRuntimeAI === false) {
     mode =
       questionDefault === 'runtime_ai'
         ? 'manual_static'
@@ -103,7 +103,7 @@ export function resolveWizardEffectiveFieldFillMode(
     coerced = true;
     reason = 'runtime_not_supported';
   }
-  if (mode === 'buildtime_ai_once' && supportsBuildtimeAI === false) {
+  if (mode === 'buildtime_ai_once' && allowBuildtimeAI === false) {
     mode =
       questionDefault === 'buildtime_ai_once'
         ? 'manual_static'
@@ -114,7 +114,7 @@ export function resolveWizardEffectiveFieldFillMode(
     coerced = true;
     reason = 'buildtime_not_supported';
   }
-  if (mode === 'runtime_ai' && supportsRuntimeAI === false) {
+  if (mode === 'runtime_ai' && allowRuntimeAI === false) {
     mode = 'manual_static';
     coerced = true;
     reason = 'runtime_not_supported';
@@ -125,11 +125,11 @@ export function resolveWizardEffectiveFieldFillMode(
 
 /** Bulk "set to AI": runtime when allowed, else buildtime when allowed, else manual. */
 export function wizardBulkAIModeForQuestion(
-  supportsRuntimeAI?: boolean,
-  supportsBuildtimeAI?: boolean
+  allowRuntimeAI?: boolean,
+  allowBuildtimeAI?: boolean
 ): FieldFillMode {
-  if (supportsRuntimeAI !== false) return 'runtime_ai';
-  if (supportsBuildtimeAI !== false) return 'buildtime_ai_once';
+  if (allowRuntimeAI !== false) return 'runtime_ai';
+  if (allowBuildtimeAI !== false) return 'buildtime_ai_once';
   return 'manual_static';
 }
 

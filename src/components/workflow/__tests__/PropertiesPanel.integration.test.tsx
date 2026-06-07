@@ -248,7 +248,7 @@ describe('PropertiesPanel Integration with FieldOwnershipToggle', () => {
       const newMode: FieldFillMode = 'manual_static';
       
       // Optimistic update happens immediately
-      let currentMode = newMode;
+      const currentMode = newMode;
       
       expect(currentMode).toBe('manual_static');
       expect(currentMode).not.toBe(previousMode);
@@ -340,7 +340,7 @@ describe('PropertiesPanel Integration with FieldOwnershipToggle', () => {
     });
 
     it('should handle case where original value is not available', () => {
-      let originalValue: unknown = undefined;
+      const originalValue: unknown = undefined;
       let currentValue = 'User-modified value';
       let currentMode: FieldFillMode = 'manual_static';
       
