@@ -88,6 +88,8 @@ export default function WorkflowBuilder() {
     setIsDirty,
     resetWorkflow,
     resetAllNodeStatuses,
+    setActiveExecution,
+    clearActiveExecution,
   } = useWorkflowStore();
 
   useEffect(() => {
@@ -632,6 +634,7 @@ export default function WorkflowBuilder() {
       });
       setIsRunning(false);
       setActiveExecutionId(null);
+      clearActiveExecution();
     };
     window.addEventListener('workflow-execution-terminal', handler);
     return () => window.removeEventListener('workflow-execution-terminal', handler);
@@ -1132,7 +1135,18 @@ export default function WorkflowBuilder() {
       }));
 
       const executionId = data.executionId || data.execution_id;
-      if (executionId) setActiveExecutionId(executionId);
+      if (executionId) {
+        setActiveExecutionId(executionId);
+        const isQueued = response.status === 202 || data.status === 'queued';
+        setActiveExecution({
+          executionId,
+          workflowId: finalWorkflowId,
+          status: isQueued ? 'queued' : data.status === 'success' ? 'success' : 'running',
+          progress: 0,
+          currentStep: null,
+          errorMessage: null,
+        });
+      }
 
       window.dispatchEvent(new CustomEvent('workflow-execution-started', {
         detail: { executionId, workflowId: finalWorkflowId }

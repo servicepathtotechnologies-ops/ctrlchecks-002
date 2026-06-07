@@ -13,6 +13,17 @@ import { normalizeIfElseConfig } from '@/lib/ifElseConditions';
 
 export type NodeCategory = 'triggers' | 'ai' | 'logic' | 'data' | 'database' | 'storage' | 'output' | 'http_api' | 'google' | 'devops' | 'social_media' | 'crm' | 'utility' | 'productivity' | 'authentication' | 'payment' | 'ecommerce' | 'analytics' | 'cms';
 
+export type ExecutionStatus = 'idle' | 'queued' | 'running' | 'success' | 'failed';
+
+export interface ActiveExecution {
+  executionId: string;
+  workflowId: string;
+  status: ExecutionStatus;
+  progress: number;
+  currentStep: string | null;
+  errorMessage: string | null;
+}
+
 export interface NodeData {
   label: string;
   type: string;
@@ -42,6 +53,12 @@ interface WorkflowState {
   /** Number of missing connections for the currently open workflow (read by AppSidebar for badge) */
   workflowConnectionAlertCount: number;
   setWorkflowConnectionAlertCount: (count: number) => void;
+
+  /** Active execution state for async workflow tracking */
+  activeExecution: ActiveExecution | null;
+  setActiveExecution: (execution: ActiveExecution) => void;
+  updateExecutionStatus: (update: Partial<Omit<ActiveExecution, 'executionId' | 'workflowId'>>) => void;
+  clearActiveExecution: () => void;
 
   /**
    * User-initiated field ownership overrides.
@@ -106,6 +123,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   copiedNode: null,
   aiEditedNodeIds: [],
   workflowConnectionAlertCount: 0,
+  activeExecution: null,
   fieldOwnershipOverrides: {},
   undoStack: [],
   redoStack: [],
@@ -542,6 +560,16 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
   },
 
+  setActiveExecution: (execution) => set({ activeExecution: execution }),
+
+  updateExecutionStatus: (update) => {
+    const current = get().activeExecution;
+    if (!current) return;
+    set({ activeExecution: { ...current, ...update } });
+  },
+
+  clearActiveExecution: () => set({ activeExecution: null }),
+
   setWorkflowId: (id) => set({ workflowId: id }),
   setWorkflowPhase: (phase) => set({ workflowPhase: phase }),
   setWorkflowName: (name) => set({ workflowName: name, isDirty: true }),
@@ -584,6 +612,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       aiEditedNodeIds: [],
       fieldOwnershipOverrides: {},
       workflowConnectionAlertCount: 0,
+      activeExecution: null,
     });
   },
 }));

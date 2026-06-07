@@ -14,6 +14,8 @@ import { buildFormPublicUrl } from '@/lib/formPublicUrl';
 import { Json } from '@/integrations/aws/types';
 import ExecutionLogBlock from './ExecutionLogBlock';
 import { ENDPOINTS } from '@/config/endpoints';
+import ExecutionStatusBanner from './ExecutionStatusBanner';
+import { useExecutionStatus } from '@/hooks/useExecutionStatus';
 
 interface Execution {
   id: string;
@@ -111,6 +113,7 @@ function buildLogsFromSteps(steps: ExecutionStep[]) {
 
 export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionConsoleProps) {
   const { workflowId, updateNodeStatus, resetWorkflow, resetAllNodeStatuses, nodes } = useWorkflowStore();
+  const { activeExecution, reconnecting } = useExecutionStatus();
   const [executions, setExecutions] = useState<Execution[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedExecution, setSelectedExecution] = useState<Execution | null>(null);
@@ -719,7 +722,18 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
 
       {/* Console Content */}
       {isExpanded && (
-        <div className="h-[calc(100%-40px)] flex">
+        <div className="h-[calc(100%-40px)] flex flex-col">
+          {activeExecution && activeExecution.status !== 'idle' && (
+            <div className="px-4 pt-3 pb-1 shrink-0">
+              <ExecutionStatusBanner execution={activeExecution} reconnecting={reconnecting} />
+            </div>
+          )}
+          {reconnecting && !activeExecution && (
+            <div className="mx-4 mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+              Reconnecting to live updates…
+            </div>
+          )}
+          <div className="flex flex-1 min-h-0">
           {/* Execution List */}
           <div className="w-64 border-r border-border">
             <ScrollArea className="h-full">
@@ -925,6 +939,7 @@ export default function ExecutionConsole({ isExpanded, onToggle }: ExecutionCons
                   Select an execution to view details
                 </div>
               )}
+          </div>
           </div>
         </div>
       )}

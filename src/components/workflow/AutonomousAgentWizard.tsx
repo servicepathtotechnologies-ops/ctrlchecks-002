@@ -9185,3 +9185,5 @@ export function AutonomousAgentWizard() {
         </div>
     );
 }
+
+export { AutonomousAgentWizard as default };

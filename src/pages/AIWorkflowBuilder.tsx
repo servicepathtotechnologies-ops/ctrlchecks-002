@@ -1,9 +1,13 @@
+import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, CreditCard, Hammer, Loader2 } from 'lucide-react';
 import { AppBrand } from '@/components/brand/AppBrand';
-import { AutonomousAgentWizard } from '@/components/workflow/AutonomousAgentWizard';
+import { WizardLoadingSkeleton } from '@/components/workflow/WizardLoadingSkeleton';
+import { WizardErrorBoundary } from '@/components/workflow/WizardErrorBoundary';
 import { useSubscriptionUsage } from '@/components/workflow/WorkflowCreationOptions';
 import { Button } from '@/components/ui/button';
+
+const AutonomousAgentWizard = lazy(() => import('@/components/workflow/AutonomousAgentWizard'));
 
 export default function AIWorkflowBuilder() {
   const { usage, loading } = useSubscriptionUsage();
@@ -55,5 +59,11 @@ export default function AIWorkflowBuilder() {
     );
   }
 
-  return <AutonomousAgentWizard />;
+  return (
+    <WizardErrorBoundary>
+      <Suspense fallback={<WizardLoadingSkeleton />}>
+        <AutonomousAgentWizard />
+      </Suspense>
+    </WizardErrorBoundary>
+  );
 }
