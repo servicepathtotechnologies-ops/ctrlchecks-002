@@ -131,25 +131,25 @@ const KNOWN_NODE_TYPES_GAPS = new Set([
   'cache_get',         // caching node — needs UI metadata
   'cache_set',         // caching node — needs UI metadata
   'db',                // generic DB alias — needs UI metadata
-  'delay',             // utility — needs UI metadata
-  'email',             // generic SMTP alias — needs UI metadata
-  'execute_workflow',  // control flow — needs UI metadata
-  'instagram_trigger', // social trigger — needs UI metadata
+  // 'delay'            — closed Task 6
+  // 'email'            — closed Task 6
+  // 'execute_workflow' — closed Task 6
+  // 'instagram_trigger'— closed Task 6
   'lightricks',        // media AI — needs UI metadata
   'oauth2_auth',       // auth utility — needs UI metadata
   'outlook',           // email provider — needs UI metadata
-  'parallel',          // control flow — needs UI metadata
+  // 'parallel'         — closed Task 6
   'queue_consume',     // messaging — needs UI metadata
   'queue_push',        // messaging — needs UI metadata
-  'retry',             // control flow — needs UI metadata
-  'return',            // control flow — needs UI metadata
+  // 'retry'            — closed Task 6
+  // 'return'           — closed Task 6
   'sql_server',        // database — needs UI metadata
-  'timeout',           // control flow — needs UI metadata
+  // 'timeout'          — closed Task 6
   'tool',              // AI tool node — needs UI metadata
-  'try_catch',         // control flow — needs UI metadata
-  'webhook_response',  // HTTP — needs UI metadata
-  'whatsapp',          // messaging — needs UI metadata
-  'whatsapp_trigger',  // messaging trigger — needs UI metadata
+  // 'try_catch'        — closed Task 6
+  // 'webhook_response' — closed Task 6
+  // 'whatsapp'         — closed Task 6
+  // 'whatsapp_trigger' — closed Task 6
 ]);
 
 describe('BACKEND_SUPPORTED_NODE_TYPES ↔ NODE_TYPES parity', () => {
